@@ -1,0 +1,21 @@
+# --- FRONTEND ---
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.DS_Store
+
+# --- BACKEND ---
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.idea/
+backend/*.class
+backend/.settings/
+backend/.classpath
+backend/.project
+backend/logs/
+
+# --- GENEL ---
+.DS_Store
+.vscode/

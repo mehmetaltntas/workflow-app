@@ -1,0 +1,377 @@
+:root {
+  --bg-body: #0d0e10;
+  --bg-card: rgba(25, 27, 31, 0.7);
+  --bg-input: #151618;
+  --text-main: #f3f5f7;
+  --text-muted: #9ba1a6;
+  --primary: #4dabf7;
+  --primary-hover: #339af0;
+  --danger: #ff6b6b;
+  --success: #51cf66;
+  --border: rgba(255, 255, 255, 0.08);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.3);
+
+  /* Menu Design System */
+  --menu-bg: rgba(20, 21, 24, 0.95);
+  --menu-border: rgba(255, 255, 255, 0.08);
+  --menu-hover: rgba(255, 255, 255, 0.06);
+  --menu-active: rgba(77, 171, 247, 0.12);
+  --menu-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism Utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* INPUT DÜZELTMESİ */
+input,
+textarea,
+select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-family: inherit;
+  padding: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+}
+
+/* Butonlar */
+.btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #000;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 0 15px rgba(77, 171, 247, 0.3);
+}
+
+.btn-danger {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Task Card Modernization */
+.task-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Dropdown Item Custom Styles */
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== Modern Menu System ===== */
+
+/* Menu Trigger Button */
+.menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-trigger:hover {
+  background: var(--menu-hover);
+  border-color: var(--menu-border);
+  color: var(--text-main);
+}
+
+.menu-trigger.active {
+  background: var(--menu-active);
+  border-color: rgba(77, 171, 247, 0.2);
+  color: var(--primary);
+}
+
+/* Menu Dropdown Container */
+.menu-dropdown {
+  position: absolute;
+  z-index: 999;
+  min-width: 180px;
+  padding: 6px;
+  background: var(--menu-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--menu-border);
+  border-radius: 14px;
+  box-shadow: var(--menu-shadow);
+  animation: menuSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Menu Item Base */
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.menu-item:hover {
+  background: var(--menu-hover);
+}
+
+.menu-item:active {
+  transform: scale(0.98);
+}
+
+/* Menu Item Variants */
+.menu-item--danger {
+  color: var(--danger);
+}
+
+.menu-item--danger:hover {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.menu-item--success {
+  color: var(--success);
+}
+
+.menu-item--success:hover {
+  background: rgba(81, 207, 102, 0.1);
+}
+
+/* Menu Item Icon */
+.menu-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.menu-item--danger .menu-item-icon {
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--danger);
+}
+
+.menu-item--success .menu-item-icon {
+  background: rgba(81, 207, 102, 0.1);
+  color: var(--success);
+}
+
+/* Menu Divider */
+.menu-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: linear-gradient(90deg, transparent, var(--menu-border), transparent);
+}
+
+/* Navigation Pill Style */
+.nav-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.nav-pill:hover {
+  background: var(--menu-hover);
+  color: var(--text-main);
+}
+
+.nav-pill.active {
+  background: var(--menu-active);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* User Avatar */
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #7950f2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.user-avatar:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+}
+
+/* Menu Animations */
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
