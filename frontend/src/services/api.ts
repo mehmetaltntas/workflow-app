@@ -78,6 +78,19 @@ export const taskService = {
     apiClient.put(`/tasks/${taskId}`, data),
 };
 
+// 6. Kullanıcı Profil İşlemleri
+export const userService = {
+  getUser: (userId: number) => {
+    return apiClient.get(`/users/${userId}`);
+  },
+  updateProfile: (userId: number, data: { username?: string; profilePicture?: string }) => {
+    return apiClient.put(`/users/${userId}/profile`, data);
+  },
+  updatePassword: (userId: number, data: { currentPassword: string; newPassword: string }) => {
+    return apiClient.put(`/users/${userId}/password`, data);
+  },
+};
+
 // ... Request Interceptor'ın altına ...
 
 // RESPONSE INTERCEPTOR (Cevap Kontrolü)

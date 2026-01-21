@@ -3,10 +3,7 @@ package com.workflow.backend.dto;
 import lombok.Data;
 
 @Data
-public class UserResponse {
-    private Long id;
+public class UpdateProfileRequest {
     private String username;
-    private String email;
     private String profilePicture; // Base64 encoded image
-    private String token; // YENİ ALAN
 }

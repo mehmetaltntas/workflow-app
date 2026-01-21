@@ -5,6 +5,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BoardsPage from "./pages/BoardsPage";
 import BoardDetailPage from "./pages/BoardDetailPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 
@@ -57,8 +59,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/boards" element={<BoardsPage />} />
           <Route path="/boards/:slug" element={<BoardDetailPage />} />
-          <Route path="/profile" element={<div style={{padding: "40px"}}><h2>Profil (Yapım Aşamasında)</h2></div>} />
-          <Route path="/settings" element={<div style={{padding: "40px"}}><h2>Ayarlar (Yapım Aşamasında)</h2></div>} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

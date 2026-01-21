@@ -9,7 +9,7 @@ import { useBoards } from "../hooks/useBoards";
 // onEdit and onDelete should be optional in BoardCard props but here we pass them.
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
-import { ConfirmationModal } from "../components/ConfirmationModal";
+import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 
 const BoardsPage = () => {
@@ -189,14 +189,15 @@ const BoardsPage = () => {
         })}
       </div>
 
-      <ConfirmationModal 
+      <DeleteConfirmation 
         isOpen={!!deleteBoardId}
-        title="Panoyu Sil?"
-        message="Bu panoyu ve içindeki tüm listeleri/görevleri silmek istediğine emin misin? Bu işlem geri alınamaz."
+        title="Panoyu silmek istiyor musun?"
+        message="Bu pano ve içindeki tüm listeler/görevler kalıcı olarak silinecek."
         onConfirm={handleDeleteBoard}
         onCancel={() => setDeleteBoardId(null)}
         confirmText="Evet, Sil"
         variant="danger"
+        autoCloseDelay={6000}
       />
 
       {/* Yeni Pano Ekleme Butonu (Floating Action Button stilinde sağ alt) */}
