@@ -124,7 +124,7 @@ const Layout = () => {
         </div>
 
         {/* Sağ Taraf: Kullanıcı Profili */}
-        <div style={{ position: "relative" }} ref={dropdownRef}>
+        <div style={{ position: "relative", marginLeft: "auto" }} ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             style={{
