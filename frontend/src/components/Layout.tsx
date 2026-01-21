@@ -46,7 +46,7 @@ const Layout = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Modern Navbar */}
       <nav
         style={{
@@ -221,7 +221,7 @@ const Layout = () => {
       </nav>
 
       {/* Sayfa İçeriği */}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
         <Outlet />
       </main>
     </div>

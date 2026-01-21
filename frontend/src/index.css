@@ -38,6 +38,7 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
 }
 
 /* Glassmorphism Utility */
@@ -399,10 +400,34 @@ select:focus {
 /* ===== Board Grid Layout ===== */
 .board-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  max-width: calc(340px * 4 + 80px); /* 4 columns + gaps */
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 100%;
+  margin: 0 auto;
   gap: 20px;
   align-items: start;
+  justify-content: center;
+  padding: 24px 32px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Responsive - 4'ten az ekran genişliğinde */
+@media (max-width: 1400px) {
+  .board-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1050px) {
+  .board-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .board-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* List Container Fixed Height */
@@ -418,29 +443,33 @@ select:focus {
   padding-bottom: 8px;
 }
 
-/* Scroll Indicator */
+/* Scroll Indicator - artık sticky, en alt kart ile birlikte hareket eder */
 .list-scroll-indicator {
-  position: absolute;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 48px;
-  background: linear-gradient(transparent, rgba(20, 21, 24, 0.95));
+  height: 36px;
+  margin-top: auto;
+  background: linear-gradient(transparent, rgba(20, 21, 24, 0.98));
   pointer-events: none;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding-bottom: 8px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.list-scroll-indicator.visible {
-  opacity: 1;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .list-scroll-indicator svg {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.list-scroll-indicator.at-bottom svg {
+  transform: rotate(180deg);
+}
+
+.list-scroll-indicator:not(.at-bottom) svg {
   animation: bounceDown 1.5s infinite;
 }
 
@@ -450,7 +479,7 @@ select:focus {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
 }
 

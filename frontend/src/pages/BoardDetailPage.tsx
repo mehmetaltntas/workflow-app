@@ -224,7 +224,7 @@ const BoardDetailPage = () => {
 
   if (loading)
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-body)", color: "var(--text-muted)" }}>
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-body)", color: "var(--text-muted)" }}>
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
           <h2>Yükleniyor...</h2>
@@ -234,13 +234,13 @@ const BoardDetailPage = () => {
 
   if (!board)
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-body)", color: "var(--text-muted)" }}>
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-body)", color: "var(--text-muted)" }}>
         <h2>Pano bulunamadı.</h2>
       </div>
     );
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-body)" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--bg-body)" }}>
       <DeleteConfirmation
         isOpen={!!deleteListId}
         title="Listeyi silmek istiyor musun?"
@@ -408,7 +408,7 @@ const BoardDetailPage = () => {
       </div>
 
       {/* Board Content - Grid Layout (max 4 columns) */}
-      <div className="board-grid" style={{ flex: 1, overflowX: "auto", padding: "24px" }}>
+      <div className="board-grid" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         {[...board.taskLists].sort((a, b) => {
           if (sortBy === "name") {
             // asc: A to Z, desc: Z to A
@@ -424,8 +424,8 @@ const BoardDetailPage = () => {
             key={list.id}
             className="flex flex-col group/list"
             style={{
-              minWidth: "340px",
-              maxWidth: "340px",
+              flex: 1,
+              minWidth: 0,
               background: list.isCompleted ? "rgba(81, 207, 102, 0.03)" : "rgba(20, 21, 24, 0.6)",
               borderRadius: "20px",
               padding: "14px",
@@ -434,6 +434,8 @@ const BoardDetailPage = () => {
               boxShadow: "0 8px 32px -8px rgba(0,0,0,0.4)",
               transition: "all 0.3s ease",
               position: "relative",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             {/* List Header */}
@@ -541,13 +543,22 @@ const BoardDetailPage = () => {
             </div>
 
             {/* Tasks Container - Fixed height with scroll */}
-            <div className="list-tasks-container" style={{ position: "relative" }}>
-              {/* Scroll indicator for more tasks */}
-              {list.tasks.length > 4 && (
-                <div className="list-scroll-indicator visible">
-                  <ChevronDown size={18} />
-                </div>
-              )}
+            <div 
+              className="list-tasks-container" 
+              style={{ position: "relative" }}
+              onScroll={(e) => {
+                const target = e.currentTarget;
+                const indicator = target.querySelector('.list-scroll-indicator');
+                if (indicator) {
+                  const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+                  if (isAtBottom) {
+                    indicator.classList.add('at-bottom');
+                  } else {
+                    indicator.classList.remove('at-bottom');
+                  }
+                }
+              }}
+            >
               {[...list.tasks].sort((a,b) => {
                 if (a.createdAt && b.createdAt) return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 return a.position - b.position;
@@ -663,6 +674,12 @@ const BoardDetailPage = () => {
                   </button>
                 </div>
               ))}
+              {/* Scroll indicator at the end - sticky so it moves with scroll */}
+              {list.tasks.length > 3 && (
+                <div className="list-scroll-indicator">
+                  <ChevronDown size={18} />
+                </div>
+              )}
             </div>
 
             {/* Add Task UI */}
@@ -761,7 +778,8 @@ const BoardDetailPage = () => {
         {/* New List Column */}
         <div
           style={{
-            minWidth: "340px",
+            flex: 1,
+            minWidth: 0,
             background: "rgba(255,255,255,0.02)",
             borderRadius: "20px",
             padding: "14px",
