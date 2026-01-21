@@ -11,6 +11,7 @@ public class BoardResponse {
     private String status;
     private String slug; // YENİ EKLENDİ
     private String link;
+    private String description; // Opsiyonel açıklama
     private java.time.LocalDateTime deadline;
     private List<TaskListDto> taskLists; // YENİ EKLENDİ: Panodaki listeler
 }

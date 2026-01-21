@@ -32,7 +32,7 @@ export const useBoards = () => {
     loadBoards();
   }, [loadBoards]);
 
-  const createBoard = async (name: string, status: string = "PLANLANDI", link?: string, deadline?: string) => {
+  const createBoard = async (name: string, status: string = "PLANLANDI", link?: string, description?: string, deadline?: string) => {
     if (!name.trim() || !userId) return false;
 
     try {
@@ -41,6 +41,7 @@ export const useBoards = () => {
         status: status,
         userId: userId,
         link: link,
+        description: description,
         deadline: deadline,
       });
       toast.success("Pano oluşturuldu");
@@ -53,7 +54,7 @@ export const useBoards = () => {
     }
   };
 
-  const updateBoard = async (boardId: number, data: { name?: string; status?: string; link?: string; deadline?: string }) => {
+  const updateBoard = async (boardId: number, data: { name?: string; status?: string; link?: string; description?: string; deadline?: string }) => {
       try {
           await boardService.updateBoard(boardId, data);
           toast.success("Pano güncellendi");

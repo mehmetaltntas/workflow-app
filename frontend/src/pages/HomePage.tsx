@@ -31,9 +31,9 @@ const HomePage = () => {
     setDeleteBoardId(boardId);
   };
 
-  const handleSaveBoard = async (name: string, status: string, link?: string) => {
+  const handleSaveBoard = async (name: string, status: string, link?: string, description?: string) => {
     if (editingBoard) {
-      const success = await updateBoard(editingBoard.id, { name, status, link });
+      const success = await updateBoard(editingBoard.id, { name, status, link, description });
       if (success) {
         setIsModalOpen(false);
         setEditingBoard(null);
@@ -167,7 +167,8 @@ const HomePage = () => {
           initialData={editingBoard ? {
             name: editingBoard.name,
             status: editingBoard.status || "PLANLANDI",
-            link: editingBoard.link
+            link: editingBoard.link,
+            description: editingBoard.description
           } : undefined}
         />
       )}

@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
-import { ExternalLink, Calendar, User } from "lucide-react";
+import { ExternalLink, Calendar } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 
 interface BoardCardProps {
@@ -94,10 +94,23 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
           {board.name}
         </h3>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.5)', fontSize: '13px', fontWeight: '500' }}>
-          <User size={14} style={{ opacity: 0.6 }} />
-          <span>{board.ownerName}</span>
-        </div>
+        {board.description && (
+          <div style={{ 
+            color: 'rgba(255, 255, 255, 0.5)', 
+            fontSize: '12px', 
+            fontWeight: '400',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            lineHeight: '1.5',
+            fontStyle: 'italic',
+            wordBreak: 'break-word',
+            maxWidth: '100%'
+          }}>
+            {board.description}
+          </div>
+        )}
       </div>
 
       {/* Bottom Section: Deadline, Link & Status */}

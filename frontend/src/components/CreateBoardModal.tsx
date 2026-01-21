@@ -4,11 +4,12 @@ import { X } from "lucide-react";
 interface CreateBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string, status: string, link?: string) => void;
+  onCreate: (name: string, status: string, link?: string, description?: string) => void;
   initialData?: {
     name: string;
     status: string;
     link?: string;
+    description?: string;
   };
 }
 
@@ -16,17 +17,21 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const [name, setName] = useState(initialData?.name || "");
   const [status, setStatus] = useState(initialData?.status || "PLANLANDI");
   const [link, setLink] = useState(initialData?.link || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  
+  const MAX_DESCRIPTION_LENGTH = 105; // 35 karakter x 3 satır
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onCreate(name, status, link);
+      onCreate(name, status, link || undefined, description || undefined);
       if (!initialData) {
         setName("");
         setStatus("PLANLANDI");
         setLink("");
+        setDescription("");
       }
       onClose();
     }
@@ -137,8 +142,49 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
             />
           </div>
 
-
-
+          <div>
+             <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "14px" }}>
+              Açıklama (Opsiyonel - Max {MAX_DESCRIPTION_LENGTH} karakter)
+            </label>
+            <div style={{ position: "relative" }}>
+              <textarea
+                value={description}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_DESCRIPTION_LENGTH) {
+                    setDescription(e.target.value);
+                  }
+                }}
+                placeholder="Kısa bir açıklama..."
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  background: "var(--bg-input)",
+                  color: "var(--text-main)",
+                  fontSize: "14px",
+                  resize: "none",
+                  boxSizing: "border-box",
+                  fontFamily: "inherit"
+                }}
+              />
+              <span style={{
+                position: "absolute",
+                right: "10px",
+                bottom: "10px",
+                fontSize: "12px",
+                color: description.length >= MAX_DESCRIPTION_LENGTH ? "#ff6b6b" : "var(--text-muted)",
+                fontWeight: "500",
+                background: "var(--bg-input)",
+                padding: "2px 6px",
+                borderRadius: "4px"
+              }}>
+                {description.length}/{MAX_DESCRIPTION_LENGTH}
+              </span>
+            </div>
+          </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
             <button
               type="button"

@@ -29,13 +29,14 @@ const BoardsPage = () => {
   }, [userId, navigate]);
 
   // Hem Ekleme Hem Güncelleme için ortak fonksiyon
-  const handleSaveBoard = async (name: string, status: string, link?: string) => {
+  const handleSaveBoard = async (name: string, status: string, link?: string, description?: string) => {
     if (editingBoard) {
         // Güncelleme
         const success = await updateBoard(editingBoard.id, {
             name,
             status,
-            link
+            link,
+            description
         });
         if (success) {
             setIsModalOpen(false);
@@ -43,7 +44,7 @@ const BoardsPage = () => {
         }
     } else {
         // Yeni Ekleme
-        const success = await createBoard(name, status, link);
+        const success = await createBoard(name, status, link, description);
         if (success) {
             setIsModalOpen(false);
         }
@@ -234,7 +235,8 @@ const BoardsPage = () => {
             initialData={editingBoard ? {
                 name: editingBoard.name,
                 status: editingBoard.status || "PLANLANDI",
-                link: editingBoard.link
+                link: editingBoard.link,
+                description: editingBoard.description
             } : undefined}
         />
       )}

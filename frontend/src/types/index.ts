@@ -28,6 +28,7 @@ export interface Board {
   slug: string; // YENİ
   status?: string; // Status (PLANLANDI, DEVAM_EDIYOR, etc.)
   link?: string;
+  description?: string; // Opsiyonel açıklama (max 50 karakter)
   deadline?: string;
   ownerName: string;
   taskLists: TaskList[]; // İçinde listeler dizisi var

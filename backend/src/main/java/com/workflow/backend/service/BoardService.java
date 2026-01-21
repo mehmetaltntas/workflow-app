@@ -40,6 +40,7 @@ public class BoardService {
             board.setStatus(request.getStatus());
         }
         board.setLink(request.getLink());
+        board.setDescription(request.getDescription());
         board.setDeadline(request.getDeadline());
 
         // 3. SLUG OLUŞTURMA (YENİ)
@@ -94,6 +95,7 @@ public class BoardService {
         response.setSlug(board.getSlug()); // YENİ
         response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");
         response.setLink(board.getLink());
+        response.setDescription(board.getDescription());
         response.setDeadline(board.getDeadline());
         response.setOwnerName(board.getUser().getUsername());
 
@@ -157,6 +159,8 @@ public class BoardService {
             board.setStatus(request.getStatus());
         if (request.getLink() != null)
             board.setLink(request.getLink());
+        if (request.getDescription() != null)
+            board.setDescription(request.getDescription());
         if (request.getDeadline() != null)
             board.setDeadline(request.getDeadline());
 

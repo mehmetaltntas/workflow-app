@@ -40,14 +40,14 @@ export const boardService = {
   getUserBoards: (userId: number) => {
     return apiClient.get(`/boards/user/${userId}`);
   },
-  createBoard: (data: { name: string; userId: number; status?: string; link?: string; deadline?: string }) => {
+  createBoard: (data: { name: string; userId: number; status?: string; link?: string; description?: string; deadline?: string }) => {
     return apiClient.post("/boards", data);
   },
   getBoardDetails: (slug: string) => {
     return apiClient.get(`/boards/${slug}/details`);
   },
   deleteBoard: (boardId: number) => apiClient.delete(`/boards/${boardId}`),
-  updateBoard: (boardId: number, data: { name?: string; status?: string; link?: string; deadline?: string }) =>
+  updateBoard: (boardId: number, data: { name?: string; status?: string; link?: string; description?: string; deadline?: string }) =>
     apiClient.put(`/boards/${boardId}`, data),
   updateBoardStatus: (boardId: number, status: string) =>
     apiClient.put(`/boards/${boardId}/status`, status, {
