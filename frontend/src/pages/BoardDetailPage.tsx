@@ -5,11 +5,13 @@ import { boardService, taskService } from "../services/api";
 import type { Board, Task, TaskList } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, MessageSquare, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, MessageSquare, ExternalLink, ChevronDown } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
-import { InlineEdit } from "../components/InlineEdit";
+// InlineEdit disabled - list names only editable via menu
+// import { InlineEdit } from "../components/InlineEdit";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
+import { ListEditModal } from "../components/ListEditModal";
 
 const BoardDetailPage = () => {
   const { slug } = useParams();
@@ -30,9 +32,11 @@ const BoardDetailPage = () => {
   const [showTaskLinkInput, setShowTaskLinkInput] = useState(false);
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingList, setEditingList] = useState<TaskList | null>(null);
 
   // Sorting
-  const [sortBy, setSortBy] = useState<"name" | "date">("name");
+  // Default: Date (oldest to newest), down arrow
+  const [sortBy, setSortBy] = useState<"name" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const loadBoardData = useCallback(
@@ -103,16 +107,7 @@ const BoardDetailPage = () => {
     }
   };
 
-  const handleUpdateListName = async (listId: number, newName: string) => {
-    try {
-      await taskService.updateTaskList(listId, { name: newName });
-      loadBoardData(slug!);
-      toast.success("Güncellendi");
-    } catch (error) {
-      console.error(error);
-      toast.error("Güncellenemedi");
-    }
-  };
+  // handleUpdateListName removed - now handled via ListEditModal
 
   const handleListCompletionToggle = async (list: TaskList) => {
     try {
@@ -201,6 +196,32 @@ const BoardDetailPage = () => {
     }
   };
 
+  // Handler for updating list from modal
+  const handleUpdateList = async (listId: number, updates: { name?: string; link?: string }) => {
+    try {
+      await taskService.updateTaskList(listId, updates);
+      loadBoardData(slug!);
+      toast.success("Liste güncellendi");
+    } catch (error) {
+      console.error(error);
+      toast.error("Güncellenemedi");
+    }
+  };
+
+  // Handler for bulk deleting tasks from modal
+  const handleBulkDeleteTasks = async (taskIds: number[]) => {
+    try {
+      for (const taskId of taskIds) {
+        await taskService.deleteTask(taskId);
+      }
+      loadBoardData(slug!);
+      toast.success(`${taskIds.length} görev silindi`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Silme işlemi başarısız");
+    }
+  };
+
   if (loading)
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-body)", color: "var(--text-muted)" }}>
@@ -236,6 +257,15 @@ const BoardDetailPage = () => {
           task={editingTask} 
           onClose={() => setEditingTask(null)} 
           onSave={handleUpdateTask} 
+        />
+      )}
+
+      {editingList && (
+        <ListEditModal
+          list={editingList}
+          onClose={() => setEditingList(null)}
+          onSave={handleUpdateList}
+          onDeleteTasks={handleBulkDeleteTasks}
         />
       )}
 
@@ -377,8 +407,8 @@ const BoardDetailPage = () => {
         </div>
       </div>
 
-      {/* Board Content */}
-      <div style={{ flex: 1, overflowX: "auto", padding: "24px", display: "flex", alignItems: "flex-start", gap: "20px" }}>
+      {/* Board Content - Grid Layout (max 4 columns) */}
+      <div className="board-grid" style={{ flex: 1, overflowX: "auto", padding: "24px" }}>
         {[...board.taskLists].sort((a, b) => {
           if (sortBy === "name") {
             // asc: A to Z, desc: Z to A
@@ -424,22 +454,38 @@ const BoardDetailPage = () => {
               <ActionMenu 
                 triggerClassName="opacity-60 group-hover/header:opacity-100"
                 dropdownPosition="left"
-                onEdit={() => {
-                  const newName = window.prompt("Liste Adı:", list.name);
-                  if (newName && newName !== list.name) handleUpdateListName(list.id, newName);
-                }}
+                onEdit={() => setEditingList(list)}
                 onDelete={() => setDeleteListId(list.id)}
               />
 
-              {/* List Name */}
+              {/* List Name - Double-click disabled, edit only via menu */}
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <InlineEdit
-                  text={list.name}
-                  onSave={(val) => handleUpdateListName(list.id, val)}
-                  fontSize="14px"
-                  fontWeight="600"
-                />
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    padding: '4px 10px',
+                    borderRadius: '10px',
+                    display: 'inline-block',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                    color: 'var(--text-main)',
+                  }}
+                >
+                  {list.name}
+                </span>
               </div>
+
+              {/* Add Task Button - In Header */}
+              <button
+                onClick={() => setActiveListId(list.id)}
+                className="list-header-add-btn"
+                title="Görev Ekle"
+              >
+                <Plus size={16} />
+              </button>
 
               {/* Link Icon */}
               {list.link && (
@@ -494,8 +540,14 @@ const BoardDetailPage = () => {
               </button>
             </div>
 
-            {/* Tasks Container */}
-            <div style={{ overflowY: "auto", overflowX: "visible", display: "flex", flexDirection: "column", gap: "10px", minHeight: "180px", padding: "2px", position: "relative" }}>
+            {/* Tasks Container - Fixed height with scroll */}
+            <div className="list-tasks-container" style={{ position: "relative" }}>
+              {/* Scroll indicator for more tasks */}
+              {list.tasks.length > 4 && (
+                <div className="list-scroll-indicator visible">
+                  <ChevronDown size={18} />
+                </div>
+              )}
               {[...list.tasks].sort((a,b) => {
                 if (a.createdAt && b.createdAt) return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 return a.position - b.position;
@@ -534,14 +586,13 @@ const BoardDetailPage = () => {
                     onDelete={() => handleDeleteTask(task.id)}
                   />
 
-                  {/* Task Content */}
+                  {/* Task Content - No strikethrough, only color change on complete */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ 
+                    <div className="task-title" style={{ 
                       fontSize: "13px", 
                       fontWeight: "500", 
                       lineHeight: "1.5",
-                      textDecoration: task.isCompleted ? "line-through" : "none",
-                      color: task.isCompleted ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.9)"
+                      color: task.isCompleted ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)"
                     }}>
                       {task.title}
                     </div>
@@ -560,16 +611,16 @@ const BoardDetailPage = () => {
                     )}
                   </div>
 
-                  {/* Link Icon */}
+                  {/* Link Icon - Hidden by default, visible on hover */}
                   {task.link && (
                     <a 
                       href={task.link} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
+                      className="task-hover-element"
                       style={{ 
                         color: "var(--primary)", 
-                        opacity: 0.5,
                         display: 'flex',
                         alignItems: 'center',
                         padding: '4px',
@@ -577,11 +628,9 @@ const BoardDetailPage = () => {
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = '1';
                         e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = '0.5';
                         e.currentTarget.style.background = 'transparent';
                       }}
                     >
@@ -589,9 +638,10 @@ const BoardDetailPage = () => {
                     </a>
                   )}
 
-                  {/* Task Completion Checkbox - Right Side */}
+                  {/* Task Completion Checkbox - Hidden by default, visible on hover */}
                   <button 
                     onClick={(e) => { e.stopPropagation(); handleTaskCompletionToggle(task, list); }}
+                    className={task.isCompleted ? '' : 'task-hover-element'}
                     style={{ 
                       background: "none", 
                       border: "none", 
@@ -600,13 +650,13 @@ const BoardDetailPage = () => {
                       padding: '4px',
                       borderRadius: '6px',
                       transition: 'all 0.2s',
-                      color: task.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.3)',
+                      color: task.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.5)',
                     }}
                     onMouseEnter={(e) => {
                       if (!task.isCompleted) e.currentTarget.style.color = 'var(--success)';
                     }}
                     onMouseLeave={(e) => {
-                      if (!task.isCompleted) e.currentTarget.style.color = 'rgba(255,255,255,0.3)';
+                      if (!task.isCompleted) e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
                     }}
                   >
                     {task.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}
@@ -704,26 +754,7 @@ const BoardDetailPage = () => {
                   </button>
                 </div>
               </div>
-            ) : (
-              <button
-                onClick={() => setActiveListId(list.id)}
-                className="btn btn-ghost group/add"
-                style={{ 
-                  marginTop: "12px", 
-                  width: "100%", 
-                  justifyContent: "center", 
-                  borderRadius: "12px", 
-                  border: "1px dashed rgba(255,255,255,0.08)", 
-                  height: "40px", 
-                  color: "rgba(255,255,255,0.4)", 
-                  fontWeight: '500', 
-                  fontSize: '12px',
-                  gap: '8px',
-                }}
-              >
-                <Plus size={14} /> Görev Ekle
-              </button>
-            )}
+            ) : null}
           </div>
         ))}
 

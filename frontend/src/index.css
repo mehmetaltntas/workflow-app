@@ -309,7 +309,12 @@ select:focus {
 .menu-divider {
   height: 1px;
   margin: 6px 0;
-  background: linear-gradient(90deg, transparent, var(--menu-border), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--menu-border),
+    transparent
+  );
 }
 
 /* Navigation Pill Style */
@@ -372,8 +377,12 @@ select:focus {
 }
 
 @keyframes menuFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes menuSlideUp {
@@ -385,4 +394,103 @@ select:focus {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* ===== Board Grid Layout ===== */
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  max-width: calc(340px * 4 + 80px); /* 4 columns + gaps */
+  gap: 20px;
+  align-items: start;
+}
+
+/* List Container Fixed Height */
+.list-tasks-container {
+  max-height: 320px; /* ~4 tasks visible */
+  overflow-y: auto;
+  overflow-x: visible;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px;
+  padding-bottom: 8px;
+}
+
+/* Scroll Indicator */
+.list-scroll-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(transparent, rgba(20, 21, 24, 0.95));
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.list-scroll-indicator.visible {
+  opacity: 1;
+}
+
+.list-scroll-indicator svg {
+  color: rgba(255, 255, 255, 0.4);
+  animation: bounceDown 1.5s infinite;
+}
+
+@keyframes bounceDown {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* Task Card Hover Elements */
+.task-hover-element {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.group\/task:hover .task-hover-element,
+.task-card:hover .task-hover-element {
+  opacity: 1;
+}
+
+/* List Header Add Button */
+.list-header-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.list-header-add-btn:hover {
+  background: rgba(77, 171, 247, 0.15);
+  color: var(--primary);
+}
+
+/* Task Completed State (no strikethrough) */
+.task-completed {
+  background: rgba(81, 207, 102, 0.06) !important;
+  border-color: rgba(81, 207, 102, 0.12) !important;
+}
+
+.task-completed .task-title {
+  color: rgba(255, 255, 255, 0.5);
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Save, MessageSquare, Link as LinkIcon, Type } from "lucide-react";
+import { X, Save, Link as LinkIcon, Type } from "lucide-react";
 import type { Task } from "../types";
 
 interface TaskEditModalProps {
@@ -10,14 +10,13 @@ interface TaskEditModalProps {
 
 export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onSave }) => {
   const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description || "");
   const [link, setLink] = useState(task.link || "");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await onSave(task.id, { title, description, link });
+      await onSave(task.id, { title, link });
       onClose();
     } catch (error) {
       console.error(error);
@@ -93,31 +92,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
             />
           </div>
 
-          <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              <MessageSquare size={14} /> Açıklama
-            </label>
-            <textarea 
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detaylı açıklama ekle..."
-              style={{ 
-                width: "100%", 
-                minHeight: "140px", 
-                resize: "vertical",
-                padding: '12px 16px',
-                borderRadius: '12px',
-                border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.03)',
-                color: 'white',
-                fontSize: '15px',
-                outline: 'none',
-                lineHeight: '1.6'
-              }}
-              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
-              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-            />
-          </div>
+          {/* Description field removed - only title and link editable */}
 
           <div className="form-group">
             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
