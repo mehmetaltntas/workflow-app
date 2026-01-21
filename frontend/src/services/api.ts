@@ -70,10 +70,8 @@ export const taskService = {
   },
 
   deleteTaskList: (listId: number) => apiClient.delete(`/lists/${listId}`),
-  updateTaskList: (listId: number, name: string) =>
-    apiClient.put(`/lists/${listId}`, name, {
-      headers: { "Content-Type": "text/plain" },
-    }),
+  updateTaskList: (listId: number, data: { name?: string; link?: string; isCompleted?: boolean }) =>
+    apiClient.put(`/lists/${listId}`, data),
   // ... taskService içine ...
   deleteTask: (taskId: number) => apiClient.delete(`/tasks/${taskId}`),
   updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; }) => 

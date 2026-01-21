@@ -18,6 +18,8 @@ interface ActionMenuProps {
   className?: string;
   iconSize?: number;
   horizontal?: boolean;
+  dropdownPosition?: "left" | "right";
+  dropdownDirection?: "up" | "down";
 }
 
 export const ActionMenu: React.FC<ActionMenuProps> = ({
@@ -29,6 +31,8 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   className = "",
   iconSize = 16,
   horizontal = false,
+  dropdownPosition = "right",
+  dropdownDirection = "down",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -85,7 +89,7 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   return (
     <div 
       ref={menuRef}
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', zIndex: isOpen ? 9999 : 'auto' }}
       className={className}
       onClick={(e) => e.stopPropagation()}
     >
@@ -106,10 +110,11 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
         <div 
           style={{
             position: 'absolute',
-            right: 0,
-            top: '100%',
-            marginTop: '8px',
-            zIndex: 999,
+            ...(dropdownPosition === 'left' ? { left: 0 } : { right: 0 }),
+            ...(dropdownDirection === 'up' 
+              ? { bottom: '100%', marginBottom: '8px' } 
+              : { top: '100%', marginTop: '8px' }),
+            zIndex: 9999,
             minWidth: '180px',
             padding: '6px',
             background: 'rgba(20, 21, 24, 0.98)',
@@ -118,7 +123,8 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
             border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '14px',
             boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04)',
-            animation: 'menuSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            animation: dropdownDirection === 'up' ? 'menuSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'menuSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            isolation: 'isolate',
           }}
         >
           {menuItems.map((item, index) => {

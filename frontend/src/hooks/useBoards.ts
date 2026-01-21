@@ -67,7 +67,6 @@ export const useBoards = () => {
   };
 
   const deleteBoard = async (boardId: number) => {
-      if(!window.confirm("Bu panoyu silmek istediğinize emin misiniz?")) return;
       try {
           await boardService.deleteBoard(boardId);
           toast.success("Pano silindi");

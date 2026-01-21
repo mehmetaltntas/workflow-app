@@ -26,156 +26,179 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
       onClick={onClick}
       className="group relative"
       style={{
-        background: "rgba(12, 12, 14, 0.4)",
-        height: "180px",
-        borderRadius: "24px",
+        background: "rgba(255, 255, 255, 0.03)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        height: "190px",
+        borderRadius: "28px",
         padding: "24px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        border: "1px solid rgba(255, 255, 255, 0.03)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
         cursor: "pointer",
-        transition: "all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)",
-        overflow: "hidden"
+        transition: "all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        overflow: "hidden",
+        boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-4px)";
-        e.currentTarget.style.backgroundColor = "rgba(18, 18, 20, 0.6)";
-        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
-        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0, 0, 0, 0.4)";
+        e.currentTarget.style.transform = "translateY(-6px) scale(1.02)";
+        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)";
+        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
+        e.currentTarget.style.boxShadow = "0 22px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.backgroundColor = "rgba(12, 12, 14, 0.4)";
-        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.03)";
-        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.transform = "translateY(0) scale(1)";
+        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.03)";
+        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+        e.currentTarget.style.boxShadow = "0 8px 32px 0 rgba(0, 0, 0, 0.3)";
       }}
     >
-      {/* Accent Line */}
+      {/* Visual Accent */}
       <div style={{ 
         position: 'absolute', 
         top: 0, 
         left: 0, 
-        right: 0, 
-        height: '3px', 
-        background: statusColor,
-        opacity: 0.4
+        width: '4px',
+        bottom: 0,
+        background: `linear-gradient(to bottom, ${statusColor}, transparent)`,
+        opacity: 0.6
       }} />
 
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: '12px' }}>
-          <h3
-            style={{
-              fontSize: "19px",
-              fontWeight: "700",
-              color: "white",
-              margin: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              maxWidth: "80%",
-              letterSpacing: '-0.03em'
-            }}
-          >
-            {board.name}
-          </h3>
-          
-          {/* Action Menu (Ghost Trigger) */}
-          <div style={{ position: "absolute", top: "16px", right: "16px", zIndex: 20 }}>
-             <ActionMenu 
-                onEdit={onEdit}
-                onDelete={onDelete}
-             />
-          </div>
-        </div>
-
-
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: '500' }}>
-          <User size={14} style={{ opacity: 0.5 }} />
-          <span>{board.ownerName}</span>
-        </div>
-
-        <div style={{marginTop: "20px", display: "flex", gap: "10px", flexWrap: "wrap"}}>
-            {board.link && (
-                <a href={board.link} target="_blank" rel="noopener noreferrer" 
-                   onClick={(e) => e.stopPropagation()}
-                   style={{
-                     display: "flex", 
-                     alignItems: "center", 
-                     gap: "6px", 
-                     fontSize: "11px", 
-                     color: "#4dabf7",
-                     backgroundColor: 'rgba(77, 171, 247, 0.08)',
-                     padding: '5px 12px',
-                     borderRadius: '10px',
-                     textDecoration: 'none',
-                     fontWeight: '700',
-                     border: '1px solid rgba(77, 171, 247, 0.15)',
-                     transition: 'all 0.2s'
-                   }}
-                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(77, 171, 247, 0.15)'}
-                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(77, 171, 247, 0.08)'}
-                >
-                    <ExternalLink size={12} /> Link
-                </a>
-            )}
-            {board.deadline && (
-                 <span style={{
-                   display: "flex", 
-                   alignItems: "center", 
-                   gap: "6px", 
-                   fontSize: "11px", 
-                   color: "rgba(255, 255, 255, 0.5)",
-                   backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                   padding: '5px 12px',
-                   borderRadius: '10px',
-                   border: '1px solid rgba(255, 255, 255, 0.05)',
-                   fontWeight: '600'
-                 }}>
-                    <Calendar size={12} /> {new Date(board.deadline).toLocaleDateString()}
-                </span>
-            )}
+      {/* Top Section: Action Menu */}
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start", zIndex: 2 }}>
+        <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+          <ActionMenu 
+            onEdit={onEdit}
+            onDelete={onDelete}
+            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
+          />
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      {/* Middle Section: Title & Content */}
+      <div style={{ marginTop: "12px" }}>
+        <h3
+          style={{
+            fontSize: "20px",
+            fontWeight: "700",
+            color: "white",
+            margin: "0 0 6px 0",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            letterSpacing: '-0.02em',
+            textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+          }}
+        >
+          {board.name}
+        </h3>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.5)', fontSize: '13px', fontWeight: '500' }}>
+          <User size={14} style={{ opacity: 0.6 }} />
+          <span>{board.ownerName}</span>
+        </div>
+      </div>
+
+      {/* Bottom Section: Deadline, Link & Status */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center",
+        marginTop: "auto",
+        gap: "12px"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {board.link && (
+            <a 
+              href={board.link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center",
+                width: "32px",
+                height: "32px",
+                borderRadius: "10px",
+                background: "rgba(255, 255, 255, 0.05)",
+                color: "#4dabf7",
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(77, 171, 247, 0.15)";
+                e.currentTarget.style.borderColor = "rgba(77, 171, 247, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
+              }}
+              title="Bağlantıya Git"
+            >
+              <ExternalLink size={16} strokeWidth={2.5} />
+            </a>
+          )}
+          
+          {board.deadline && (
+            <div style={{
+              display: "flex", 
+              alignItems: "center", 
+              gap: "6px", 
+              fontSize: "12px", 
+              color: "rgba(255, 255, 255, 0.4)",
+              background: "rgba(255, 255, 255, 0.03)",
+              padding: "6px 10px",
+              borderRadius: "8px",
+              fontWeight: "600"
+            }}>
+              <Calendar size={13} />
+              {new Date(board.deadline).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+
         <div onClick={(e) => e.stopPropagation()}>
-             <select
-                value={board.status || "PLANLANDI"}
-                onChange={handleStatusChange}
-                style={{
-                    fontSize: "10px",
-                    padding: "6px 14px",
-                    borderRadius: "12px",
-                    border: `1px solid ${statusColor}33`,
-                    background: `${statusColor}08`,
-                    color: statusColor,
-                    fontWeight: "800",
-                    cursor: "pointer",
-                    outline: "none",
-                    transition: 'all 0.2s',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${statusColor}15`;
-                  e.currentTarget.style.borderColor = statusColor;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = `${statusColor}08`;
-                  e.currentTarget.style.borderColor = `${statusColor}33`;
-                }}
-             >
-                {Object.keys(STATUS_LABELS).map((key) => (
-                    <option key={key} value={key} style={{color: "black"}}>{STATUS_LABELS[key]}</option>
-                ))}
-            </select>
+          <select
+            value={board.status || "PLANLANDI"}
+            onChange={handleStatusChange}
+            style={{
+              fontSize: "11px",
+              padding: "8px 14px",
+              borderRadius: "14px",
+              border: `1px solid ${statusColor}44`,
+              background: `${statusColor}15`,
+              color: statusColor,
+              fontWeight: "700",
+              cursor: "pointer",
+              outline: "none",
+              transition: 'all 0.2s',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              backdropFilter: 'blur(10px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `${statusColor}25`;
+              e.currentTarget.style.borderColor = statusColor;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = `${statusColor}15`;
+              e.currentTarget.style.borderColor = `${statusColor}44`;
+            }}
+          >
+            {Object.keys(STATUS_LABELS).map((key) => (
+              <option key={key} value={key} style={{ background: '#1a1b1e', color: 'white' }}>
+                {STATUS_LABELS[key]}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default BoardCard;
 

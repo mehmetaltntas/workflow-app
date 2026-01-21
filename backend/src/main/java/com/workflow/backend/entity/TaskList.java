@@ -17,6 +17,8 @@ public class TaskList {
 
     private String link; // Opsiyonel link
 
+    private Boolean isCompleted = false; // Tamamlandı mı?
+
     // İLİŞKİ: Hangi Board'a ait?
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")

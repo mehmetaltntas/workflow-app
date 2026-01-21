@@ -16,6 +16,8 @@ export interface TaskList {
   id: number;
   name: string;
   link?: string;
+  isCompleted?: boolean;
+  createdAt?: string;
   tasks: Task[]; // İçinde görevler dizisi var
 }
 

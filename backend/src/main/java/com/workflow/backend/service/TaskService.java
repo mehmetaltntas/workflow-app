@@ -88,6 +88,7 @@ public class TaskService {
         dto.setId(list.getId());
         dto.setName(list.getName());
         dto.setLink(list.getLink());
+        dto.setIsCompleted(list.getIsCompleted());
         if (list.getTasks() != null) {
             dto.setTasks(list.getTasks().stream().map(this::mapToDto).toList());
         } else {
@@ -105,8 +106,8 @@ public class TaskService {
         taskListRepository.deleteById(listId);
     }
 
-    // LİSTE ADI GÜNCELLE
-    // LİSTE GÜNCELLE
+    // LİSTE GÜNCELLE (isim, link, tamamlandı durumu)
+    @Transactional
     public TaskListDto updateTaskList(Long listId, TaskListDto request) {
         TaskList list = taskListRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("Liste bulunamadı"));
@@ -120,6 +121,18 @@ public class TaskService {
 
         if (request.getLink() != null) {
             list.setLink(request.getLink());
+        }
+
+        // Liste tamamlandı durumu değiştiyse, tüm görevleri de güncelle
+        if (request.getIsCompleted() != null) {
+            list.setIsCompleted(request.getIsCompleted());
+            // Cascading: Liste tamamlandığında tüm görevleri de tamamla/geri al
+            if (list.getTasks() != null) {
+                for (Task task : list.getTasks()) {
+                    task.setIsCompleted(request.getIsCompleted());
+                    taskRepository.save(task);
+                }
+            }
         }
 
         TaskList savedList = taskListRepository.save(list);

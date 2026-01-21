@@ -8,5 +8,6 @@ public class TaskListDto {
     private Long id;
     private String name;
     private String link;
+    private Boolean isCompleted;
     private List<TaskDto> tasks; // Listenin içindeki görevler
 }

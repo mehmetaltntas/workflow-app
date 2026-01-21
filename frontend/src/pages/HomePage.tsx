@@ -1,27 +1,51 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useBoards } from "../hooks/useBoards";
-import { Plus, Layout, ArrowRight } from "lucide-react";
+import { Plus, Layout } from "lucide-react";
 import type { Board } from "../types";
+import BoardCard from "../components/BoardCard";
+import CreateBoardModal from "../components/CreateBoardModal";
+import { ConfirmationModal } from "../components/ConfirmationModal";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { boards, loading, updateBoardStatus } = useBoards();
+  const { boards, loading, updateBoardStatus, updateBoard, deleteBoard } = useBoards();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
+  const [deleteBoardId, setDeleteBoardId] = useState<number | null>(null);
 
   // Sadece "DEVAM_EDIYOR" statüsündeki panoları filtrele
   const activeBoards = boards.filter((b) => b.status === "DEVAM_EDIYOR");
 
-  const STATUS_LABELS: Record<string, string> = {
-    PLANLANDI: "Planlandı",
-    DEVAM_EDIYOR: "Devam Ediyor",
-    TAMAMLANDI: "Tamamlandı",
-    DURDURULDU: "Durduruldu",
-    BIRAKILDI: "Bırakıldı",
+  const handleStatusChange = async (board: Board, newStatus: string) => {
+    await updateBoardStatus(board.id, newStatus);
   };
 
-  const handleStatusChange = async (e: React.SyntheticEvent, board: Board, newStatus: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await updateBoardStatus(board.id, newStatus);
+  const handleEdit = (board: Board) => {
+    setEditingBoard(board);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (boardId: number) => {
+    setDeleteBoardId(boardId);
+  };
+
+  const handleSaveBoard = async (name: string, status: string, link?: string) => {
+    if (editingBoard) {
+      const success = await updateBoard(editingBoard.id, { name, status, link });
+      if (success) {
+        setIsModalOpen(false);
+        setEditingBoard(null);
+      }
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (deleteBoardId) {
+      await deleteBoard(deleteBoardId);
+      setDeleteBoardId(null);
+    }
   };
 
   if (loading) {
@@ -60,77 +84,14 @@ const HomePage = () => {
           }}
         >
           {activeBoards.map((board) => (
-            <div
+            <BoardCard
               key={board.id}
+              board={board}
               onClick={() => navigate(`/boards/${board.slug}`)}
-              style={{
-                background: "var(--bg-card)",
-                borderRadius: "16px",
-                padding: "24px",
-                border: "1px solid var(--border)",
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                <div style={{ 
-                    width: "48px", 
-                    height: "48px", 
-                    borderRadius: "12px", 
-                    background: "rgba(245, 158, 11, 0.1)", 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center",
-                    color: "#f59e0b"
-                }}>
-                    <Layout size={24} />
-                </div>
-                <select
-                    value={board.status || "DEVAM_EDIYOR"}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => handleStatusChange(e, board, e.target.value)}
-                    style={{
-                        padding: "6px 12px",
-                        borderRadius: "20px",
-                        border: "1px solid var(--border)",
-                        background: "var(--bg-body)",
-                        color: "var(--text-main)",
-                        fontSize: "12px",
-                        cursor: "pointer",
-                        outline: "none"
-                    }}
-                >
-                    {Object.keys(STATUS_LABELS).map((key) => (
-                        <option key={key} value={key}>{STATUS_LABELS[key]}</option>
-                    ))}
-                </select>
-              </div>
-
-              <div>
-                <h3 style={{ fontSize: "20px", fontWeight: "600", color: "var(--text-main)", marginBottom: "8px" }}>
-                  {board.name}
-                </h3>
-                <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-                  Aktif proje
-                </p>
-              </div>
-
-              <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: "8px", color: "var(--primary)", fontWeight: "500", fontSize: "14px" }}>
-                Panoya Git <ArrowRight size={16} />
-              </div>
-            </div>
+              onStatusChange={handleStatusChange}
+              onEdit={() => handleEdit(board)}
+              onDelete={() => handleDelete(board.id)}
+            />
           ))}
         </div>
       ) : (
@@ -183,6 +144,32 @@ const HomePage = () => {
                 <Plus size={20} /> Panolarım'a Git
             </button>
         </div>
+      )}
+
+      <ConfirmationModal 
+        isOpen={!!deleteBoardId}
+        title="Panoyu Sil?"
+        message="Bu panoyu ve içindeki tüm listeleri/görevleri silmek istediğine emin misin? Bu işlem geri alınamaz."
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteBoardId(null)}
+        confirmText="Evet, Sil"
+        variant="danger"
+      />
+
+      {isModalOpen && (
+        <CreateBoardModal 
+          isOpen={isModalOpen} 
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingBoard(null);
+          }} 
+          onCreate={handleSaveBoard}
+          initialData={editingBoard ? {
+            name: editingBoard.name,
+            status: editingBoard.status || "PLANLANDI",
+            link: editingBoard.link
+          } : undefined}
+        />
       )}
     </div>
   );
