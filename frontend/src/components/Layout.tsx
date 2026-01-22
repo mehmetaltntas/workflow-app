@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "../services/api";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(location.pathname);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,10 +63,10 @@ const Layout = () => {
       <nav
         style={{
           height: "64px",
-          background: "rgba(13, 14, 16, 0.8)",
+          background: "var(--navbar-bg)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          borderBottom: "1px solid var(--border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -108,10 +110,10 @@ const Layout = () => {
           </Link>
 
           {/* Divider */}
-          <div style={{ 
-            height: "24px", 
-            width: "1px", 
-            background: "rgba(255, 255, 255, 0.08)" 
+          <div style={{
+            height: "24px",
+            width: "1px",
+            background: "var(--border)"
           }} />
 
           {/* Navigation Pills */}
@@ -133,8 +135,41 @@ const Layout = () => {
           </div>
         </div>
 
-        {/* Sağ Taraf: Kullanıcı Profili */}
-        <div style={{ position: "relative", marginLeft: "auto" }} ref={dropdownRef}>
+        {/* Sağ Taraf: Theme Toggle ve Kullanıcı Profili */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "auto" }}>
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "40px",
+              height: "40px",
+              borderRadius: "12px",
+              border: "1px solid var(--border)",
+              background: "var(--card-bg)",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--primary)";
+              e.currentTarget.style.color = "var(--primary)";
+              e.currentTarget.style.background = "var(--menu-active)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.color = "var(--text-muted)";
+              e.currentTarget.style.background = "var(--card-bg)";
+            }}
+            title={theme === "dark" ? "Açık Tema" : "Koyu Tema"}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          {/* User Profile Dropdown */}
+          <div style={{ position: "relative" }} ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             style={{
@@ -144,9 +179,9 @@ const Layout = () => {
               cursor: "pointer",
               padding: "6px 12px",
               borderRadius: "12px",
-              background: isDropdownOpen ? "rgba(255, 255, 255, 0.05)" : "transparent",
+              background: isDropdownOpen ? "var(--menu-hover)" : "transparent",
               border: "1px solid",
-              borderColor: isDropdownOpen ? "rgba(255, 255, 255, 0.08)" : "transparent",
+              borderColor: isDropdownOpen ? "var(--border)" : "transparent",
               transition: "all 0.2s ease",
             }}
           >
@@ -181,7 +216,7 @@ const Layout = () => {
               {/* User Info Header */}
               <div style={{
                 padding: "12px",
-                borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                borderBottom: "1px solid var(--border)",
                 marginBottom: "6px",
               }}>
                 <div style={{ 
@@ -227,6 +262,7 @@ const Layout = () => {
               </button>
             </div>
           )}
+          </div>
         </div>
       </nav>
 

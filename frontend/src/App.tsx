@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { Toaster } from "react-hot-toast"; // EKLENDİ
+import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BoardsPage from "./pages/BoardsPage";
@@ -39,18 +40,23 @@ const AuthCheck = () => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthCheck />
-      
-      {/* Bildirimlerin çıkacağı yer */}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: { background: "#333", color: "#fff" },
-        }}
-      />
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthCheck />
 
-      <Routes>
+        {/* Bildirimlerin çıkacağı yer */}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: "var(--bg-card)",
+              color: "var(--text-main)",
+              border: "1px solid var(--border)",
+            },
+          }}
+        />
+
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         
@@ -63,7 +69,8 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
