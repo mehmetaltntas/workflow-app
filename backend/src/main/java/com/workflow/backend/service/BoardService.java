@@ -24,12 +24,13 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
+    private final AuthorizationService authorizationService;
 
     // PANO OLUŞTURMA
     public BoardResponse createBoard(CreateBoardRequest request) {
-        // 1. Önce kullanıcıyı veritabanından bul
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+        // 1. Mevcut kullanıcıyı JWT'den al (request.getUserId() yerine)
+        User user = currentUserService.getCurrentUser();
 
         if (boardRepository.existsByNameAndUser(request.getName(), user)) {
             throw new RuntimeException("Bu isimde bir pano zaten var!");
@@ -62,6 +63,9 @@ public class BoardService {
     // KULLANICININ PANOLARINI GETİR
     @Transactional
     public List<BoardResponse> getAllBoards(Long userId) {
+        // Kullanıcı sadece kendi panolarına erişebilir
+        authorizationService.verifyUserOwnership(userId);
+
         // Repository'de yazdığımız özel metodu kullanıyoruz
         List<Board> boards = boardRepository.findByUserId(userId);
 
@@ -79,6 +83,9 @@ public class BoardService {
     public BoardResponse getBoardDetails(String slug) {
         Board board = boardRepository.findBySlug(slug)
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
+
+        // Kullanıcı sadece kendi panosuna erişebilir
+        authorizationService.verifyBoardOwnership(board.getId());
 
         return mapToResponse(board);
     }
@@ -176,12 +183,17 @@ public class BoardService {
 
     // PANO SİL
     public void deleteBoard(Long boardId) {
+        // Kullanıcı sadece kendi panosunu silebilir
+        authorizationService.verifyBoardOwnership(boardId);
         boardRepository.deleteById(boardId);
     }
 
     // PANO ADI GÜNCELLE
     // PANO GÜNCELLE
     public BoardResponse updateBoard(Long boardId, CreateBoardRequest request) {
+        // Kullanıcı sadece kendi panosunu güncelleyebilir
+        authorizationService.verifyBoardOwnership(boardId);
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı"));
 
@@ -210,6 +222,9 @@ public class BoardService {
 
     // PANO STATÜ GÜNCELLE
     public BoardResponse updateBoardStatus(Long boardId, String newStatus) {
+        // Kullanıcı sadece kendi panosunun statüsünü güncelleyebilir
+        authorizationService.verifyBoardOwnership(boardId);
+
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı"));
         board.setStatus(newStatus);

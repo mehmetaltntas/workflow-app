@@ -33,4 +33,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // Listedeki maksimum pozisyonu bul
     @Query("SELECT COALESCE(MAX(t.position), -1) FROM Task t WHERE t.taskList.id = :listId")
     Integer findMaxPositionByListId(@Param("listId") Long listId);
+
+    // Authorization: Task'ın belirli bir kullanıcıya ait olup olmadığını kontrol et
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Task t WHERE t.id = :taskId AND t.taskList.board.user.id = :userId")
+    boolean existsByIdAndTaskListBoardUserId(@Param("taskId") Long taskId, @Param("userId") Long userId);
 }

@@ -18,9 +18,13 @@ public class LabelService {
 
     private final LabelRepository labelRepository;
     private final BoardRepository boardRepository;
+    private final AuthorizationService authorizationService;
 
     // Panoya ait tüm etiketleri getir
     public List<LabelDto> getLabelsByBoardId(Long boardId) {
+        // Kullanıcı sadece kendi panosunun etiketlerini görebilir
+        authorizationService.verifyBoardOwnership(boardId);
+
         return labelRepository.findByBoardId(boardId).stream()
                 .map(this::mapToDto)
                 .toList();
@@ -29,6 +33,9 @@ public class LabelService {
     // Yeni etiket oluştur
     @Transactional
     public LabelDto createLabel(CreateLabelRequest request) {
+        // Kullanıcı sadece kendi panosuna etiket ekleyebilir
+        authorizationService.verifyBoardOwnership(request.getBoardId());
+
         Board board = boardRepository.findById(request.getBoardId())
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
 
@@ -49,6 +56,9 @@ public class LabelService {
     // Etiket güncelle
     @Transactional
     public LabelDto updateLabel(Long labelId, LabelDto request) {
+        // Kullanıcı sadece kendi etiketini güncelleyebilir
+        authorizationService.verifyLabelOwnership(labelId);
+
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
 
@@ -71,6 +81,9 @@ public class LabelService {
     // Etiket sil
     @Transactional
     public void deleteLabel(Long labelId) {
+        // Kullanıcı sadece kendi etiketini silebilir
+        authorizationService.verifyLabelOwnership(labelId);
+
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
 

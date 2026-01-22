@@ -51,6 +51,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Yetkisiz erişim hatalarını yakala (403 Forbidden)
+     */
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedAccessException(UnauthorizedAccessException ex) {
+        logger.warn("Yetkisiz erişim denemesi: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                "Yetkisiz Erişim",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    /**
      * Genel RuntimeException'ları yakala (Kullanıcı bulunamadı, şifre hatalı vb.)
      */
     @ExceptionHandler(RuntimeException.class)

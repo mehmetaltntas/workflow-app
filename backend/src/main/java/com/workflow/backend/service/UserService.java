@@ -21,6 +21,7 @@ public class UserService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final AuthorizationService authorizationService;
 
     // KAYIT OLMA İŞLEMİ
     public UserResponse register(RegisterRequest request) {
@@ -81,6 +82,9 @@ public class UserService {
 
     // KULLANICI BİLGİLERİNİ GETİR
     public UserResponse getUserById(Long id) {
+        // Kullanıcı sadece kendi bilgilerini görebilir
+        authorizationService.verifyUserOwnership(id);
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
         return mapToResponse(user);
@@ -88,6 +92,9 @@ public class UserService {
 
     // PROFİL GÜNCELLEME İŞLEMİ
     public UserResponse updateProfile(Long id, UpdateProfileRequest request) {
+        // Kullanıcı sadece kendi profilini güncelleyebilir
+        authorizationService.verifyUserOwnership(id);
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
 
@@ -111,6 +118,9 @@ public class UserService {
 
     // ŞİFRE GÜNCELLEME İŞLEMİ
     public void updatePassword(Long id, UpdatePasswordRequest request) {
+        // Kullanıcı sadece kendi şifresini güncelleyebilir
+        authorizationService.verifyUserOwnership(id);
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
 

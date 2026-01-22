@@ -28,9 +28,13 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final BoardRepository boardRepository;
     private final LabelRepository labelRepository;
+    private final AuthorizationService authorizationService;
 
     // 1. YENİ LİSTE (SÜTUN) OLUŞTURMA
     public TaskListDto createTaskList(CreateTaskListRequest request) {
+        // Kullanıcı sadece kendi panosuna liste ekleyebilir
+        authorizationService.verifyBoardOwnership(request.getBoardId());
+
         Board board = boardRepository.findById(request.getBoardId())
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
 
@@ -50,6 +54,9 @@ public class TaskService {
     // 2. YENİ GÖREV (KART) OLUŞTURMA
     @Transactional
     public TaskDto createTask(CreateTaskRequest request) {
+        // Kullanıcı sadece kendi listesine görev ekleyebilir
+        authorizationService.verifyTaskListOwnership(request.getTaskListId());
+
         TaskList taskList = taskListRepository.findById(request.getTaskListId())
                 .orElseThrow(() -> new RuntimeException("Liste bulunamadı!"));
 
@@ -79,6 +86,10 @@ public class TaskService {
     // 3. GÖREV TAŞIMA / SIRALAMA (Drag & Drop)
     @Transactional
     public TaskDto reorderTask(Long taskId, ReorderTaskRequest request) {
+        // Kullanıcı sadece kendi görevini taşıyabilir ve kendi listesine taşıyabilir
+        authorizationService.verifyTaskOwnership(taskId);
+        authorizationService.verifyTaskListOwnership(request.getTargetListId());
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
 
@@ -146,6 +157,9 @@ public class TaskService {
     // 4. TOPLU SIRALAMA (Batch Reorder)
     @Transactional
     public List<TaskDto> batchReorder(BatchReorderRequest request) {
+        // Kullanıcı sadece kendi listesindeki görevleri sıralayabilir
+        authorizationService.verifyTaskListOwnership(request.getListId());
+
         TaskList list = taskListRepository.findById(request.getListId())
                 .orElseThrow(() -> new RuntimeException("Liste bulunamadı!"));
 
@@ -169,12 +183,17 @@ public class TaskService {
 
     // LİSTE SİL
     public void deleteTaskList(Long listId) {
+        // Kullanıcı sadece kendi listesini silebilir
+        authorizationService.verifyTaskListOwnership(listId);
         taskListRepository.deleteById(listId);
     }
 
     // LİSTE GÜNCELLE
     @Transactional
     public TaskListDto updateTaskList(Long listId, TaskListDto request) {
+        // Kullanıcı sadece kendi listesini güncelleyebilir
+        authorizationService.verifyTaskListOwnership(listId);
+
         TaskList list = taskListRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("Liste bulunamadı"));
 
@@ -206,6 +225,9 @@ public class TaskService {
     // GÖREV SİL
     @Transactional
     public void deleteTask(Long taskId) {
+        // Kullanıcı sadece kendi görevini silebilir
+        authorizationService.verifyTaskOwnership(taskId);
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
 
@@ -221,6 +243,9 @@ public class TaskService {
     // GÖREV GÜNCELLE
     @Transactional
     public TaskDto updateTask(Long taskId, TaskDto request) {
+        // Kullanıcı sadece kendi görevini güncelleyebilir
+        authorizationService.verifyTaskOwnership(taskId);
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
 

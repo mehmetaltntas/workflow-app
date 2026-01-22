@@ -18,10 +18,14 @@ public class SubtaskService {
 
     private final SubtaskRepository subtaskRepository;
     private final TaskRepository taskRepository;
+    private final AuthorizationService authorizationService;
 
     // Alt görev oluştur
     @Transactional
     public SubtaskDto createSubtask(CreateSubtaskRequest request) {
+        // Kullanıcı sadece kendi görevine alt görev ekleyebilir
+        authorizationService.verifyTaskOwnership(request.getTaskId());
+
         Task task = taskRepository.findById(request.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
 
@@ -42,6 +46,9 @@ public class SubtaskService {
     // Alt görevi güncelle
     @Transactional
     public SubtaskDto updateSubtask(Long subtaskId, SubtaskDto request) {
+        // Kullanıcı sadece kendi alt görevini güncelleyebilir
+        authorizationService.verifySubtaskOwnership(subtaskId);
+
         Subtask subtask = subtaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
 
@@ -59,11 +66,16 @@ public class SubtaskService {
     // Alt görevi sil
     @Transactional
     public void deleteSubtask(Long subtaskId) {
+        // Kullanıcı sadece kendi alt görevini silebilir
+        authorizationService.verifySubtaskOwnership(subtaskId);
         subtaskRepository.deleteById(subtaskId);
     }
 
     // Görevin alt görevlerini getir
     public List<SubtaskDto> getSubtasksByTaskId(Long taskId) {
+        // Kullanıcı sadece kendi görevinin alt görevlerini görebilir
+        authorizationService.verifyTaskOwnership(taskId);
+
         return subtaskRepository.findByTaskIdOrderByPositionAsc(taskId)
                 .stream()
                 .map(this::mapToDto)
@@ -73,6 +85,9 @@ public class SubtaskService {
     // Tamamlanma/tamamlanmama toggle
     @Transactional
     public SubtaskDto toggleComplete(Long subtaskId) {
+        // Kullanıcı sadece kendi alt görevini toggle edebilir
+        authorizationService.verifySubtaskOwnership(subtaskId);
+
         Subtask subtask = subtaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
 

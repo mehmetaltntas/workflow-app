@@ -14,4 +14,7 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     java.util.Optional<Board> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
+
+    // Authorization: Board'un belirli bir kullanıcıya ait olup olmadığını kontrol et
+    boolean existsByIdAndUserId(Long boardId, Long userId);
 }
