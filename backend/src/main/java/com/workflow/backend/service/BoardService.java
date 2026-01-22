@@ -9,7 +9,6 @@ import com.workflow.backend.dto.TaskListDto;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.repository.BoardRepository;
-import com.workflow.backend.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
 
