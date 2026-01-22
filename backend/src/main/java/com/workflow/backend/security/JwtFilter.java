@@ -40,30 +40,40 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 2. Token'ı al
         jwt = authHeader.substring(7); // "Bearer " kısmını at
-        username = jwtService.extractUsername(jwt);
-        System.out.println("JwtFilter: Processing token for user: " + username);
 
-        // 3. Kullanıcı doğrulaması
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = userRepository.findByUsername(username);
+        try {
+            username = jwtService.extractUsername(jwt);
+            System.out.println("JwtFilter: Processing token for user: " + username);
 
-            if (user != null && jwtService.isTokenValid(jwt, username)) {
-                // Spring Security'ye "Bu adam güvenli, içeri al" diyoruz
-                UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                        user.getUsername(),
-                        user.getPassword(),
-                        new ArrayList<>() // Yetkiler (Roles) şimdilik boş
-                );
+            // 3. Kullanıcı doğrulaması
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                User user = userRepository.findByUsername(username);
 
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                if (user != null && jwtService.isTokenValid(jwt, username)) {
+                    // Spring Security'ye "Bu adam güvenli, içeri al" diyoruz
+                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                            user.getUsername(),
+                            user.getPassword(),
+                            new ArrayList<>() // Yetkiler (Roles) şimdilik boş
+                    );
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println("JwtFilter: Authenticated user: " + username);
-            } else {
-                System.out.println("JwtFilter: Token invalid or user not found");
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("JwtFilter: Authenticated user: " + username);
+                } else {
+                    System.out.println("JwtFilter: Token invalid or user not found");
+                }
             }
+        } catch (Exception e) {
+            // JWT geçersiz veya imza uyuşmazlığı - 401 Unauthorized döndür
+            System.out.println("JwtFilter: Invalid JWT token - " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Geçersiz veya süresi dolmuş token. Lütfen tekrar giriş yapın.\"}");
+            return;
         }
 
         filterChain.doFilter(request, response);
