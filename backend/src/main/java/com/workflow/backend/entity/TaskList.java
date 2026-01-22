@@ -2,6 +2,7 @@ package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.BatchSize;
 import java.util.List;
 
 @Entity
@@ -27,6 +28,8 @@ public class TaskList {
     // İLİŞKİ: Bu listenin içindeki görevler
     // Task silinirse, liste silinmesin ama Liste silinirse içindeki Tasklar
     // silinsin (Cascade)
+    // @BatchSize: N+1 sorgu yerine batch halinde yükle
     @OneToMany(mappedBy = "taskList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     private List<Task> tasks;
 }

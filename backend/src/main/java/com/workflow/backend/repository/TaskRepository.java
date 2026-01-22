@@ -37,4 +37,16 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // Authorization: Task'ın belirli bir kullanıcıya ait olup olmadığını kontrol et
     @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Task t WHERE t.id = :taskId AND t.taskList.board.user.id = :userId")
     boolean existsByIdAndTaskListBoardUserId(@Param("taskId") Long taskId, @Param("userId") Long userId);
+
+    // N+1 Optimizasyonu: Board'a ait tüm task'ları labels ile birlikte getir
+    @Query("SELECT DISTINCT t FROM Task t " +
+           "LEFT JOIN FETCH t.labels " +
+           "WHERE t.taskList.board.id = :boardId")
+    List<Task> findByBoardIdWithLabels(@Param("boardId") Long boardId);
+
+    // N+1 Optimizasyonu: Board'a ait tüm task'ları subtasks ile birlikte getir
+    @Query("SELECT DISTINCT t FROM Task t " +
+           "LEFT JOIN FETCH t.subtasks " +
+           "WHERE t.taskList.board.id = :boardId")
+    List<Task> findByBoardIdWithSubtasks(@Param("boardId") Long boardId);
 }

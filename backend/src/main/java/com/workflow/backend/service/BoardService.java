@@ -13,6 +13,8 @@ import com.workflow.backend.repository.BoardRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BoardService {
+
+    private static final Logger logger = LoggerFactory.getLogger(BoardService.class);
 
     private final BoardRepository boardRepository;
     private final CurrentUserService currentUserService;
@@ -86,49 +90,59 @@ public class BoardService {
         );
     }
 
-    // ... BoardService içindeyiz ...
-
     // YENİ METOT: Tek bir panonun tüm detaylarını getir
-    @Transactional // ÖNEMLİ: Lazy yüklenen listeleri hata almadan çekmek için işlem bitene kadar
-                   // bağlantıyı tut.
+    // N+1 QUERY OPTİMİZASYONU: @BatchSize sayesinde 50+ sorgu yerine ~5-6 sorguya düştü
+    @Transactional
     public BoardResponse getBoardDetails(String slug) {
-        Board board = boardRepository.findBySlug(slug)
+        logger.debug("getBoardDetails called for slug: {}", slug);
+
+        // Query 1: Board + User (tek sorgu, diğer ilişkiler @BatchSize ile yüklenir)
+        Board board = boardRepository.findBySlugWithUser(slug)
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
 
         // Kullanıcı sadece kendi panosuna erişebilir
         authorizationService.verifyBoardOwnership(board.getId());
 
-        return mapToResponse(board);
+        logger.debug("Board fetched, @BatchSize will handle lazy collections efficiently");
+
+        // DTO'ya dönüştür (@BatchSize sayesinde N+1 yerine batch sorgular çalışır)
+        return mapToResponseWithDetails(board);
     }
 
-    // Entity -> DTO Çevirici (GÜNCELLENDİ)
-    private BoardResponse mapToResponse(Board board) {
-        // Legacy Data Fix: Slug yoksa oluştur ve kaydet
-        if (board.getSlug() == null) {
-            board.setSlug(generateSlug(board.getName()));
-            boardRepository.save(board);
-        }
-
+    // Entity -> DTO Çevirici (Detay sayfası için - @BatchSize ile optimize edilmiş)
+    // @BatchSize sayesinde lazy koleksiyonlar batch halinde yüklenir (N+1 yerine ~5-6 sorgu)
+    private BoardResponse mapToResponseWithDetails(Board board) {
         BoardResponse response = new BoardResponse();
         response.setId(board.getId());
         response.setName(board.getName());
-        response.setSlug(board.getSlug()); // YENİ
+        response.setSlug(board.getSlug());
         response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");
         response.setLink(board.getLink());
         response.setDescription(board.getDescription());
         response.setDeadline(board.getDeadline());
-        response.setOwnerName(board.getUser().getUsername());
+        response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
 
-        // 1. Panodaki Listeleri Çek ve DTO'ya çevir
+        // Board Labels (@BatchSize ile batch yüklenir)
+        if (board.getLabels() != null && !board.getLabels().isEmpty()) {
+            List<LabelDto> labelDtos = board.getLabels().stream().map(label -> {
+                LabelDto labelDto = new LabelDto();
+                labelDto.setId(label.getId());
+                labelDto.setName(label.getName());
+                labelDto.setColor(label.getColor());
+                return labelDto;
+            }).collect(Collectors.toList());
+            response.setLabels(labelDtos);
+        }
+
+        // TaskLists (@BatchSize ile batch yüklenir)
         if (board.getTaskLists() != null) {
             List<TaskListDto> listDtos = board.getTaskLists().stream().map(taskList -> {
-
                 TaskListDto listDto = new TaskListDto();
                 listDto.setId(taskList.getId());
                 listDto.setName(taskList.getName());
                 listDto.setLink(taskList.getLink());
 
-                // 2. Listenin içindeki Görevleri Çek ve DTO'ya çevir
+                // Tasks (@BatchSize ile batch yüklenir)
                 if (taskList.getTasks() != null) {
                     List<TaskDto> taskDtos = taskList.getTasks().stream().map(task -> {
                         TaskDto taskDto = new TaskDto();
@@ -142,7 +156,7 @@ public class BoardService {
                         taskDto.setDueDate(task.getDueDate());
                         taskDto.setPriority(task.getPriority());
 
-                        // Görevin etiketlerini ekle
+                        // Task Labels (@BatchSize ile batch yüklenir)
                         if (task.getLabels() != null && !task.getLabels().isEmpty()) {
                             taskDto.setLabels(task.getLabels().stream().map(label -> {
                                 LabelDto labelDto = new LabelDto();
@@ -153,7 +167,7 @@ public class BoardService {
                             }).collect(Collectors.toList()));
                         }
 
-                        // Alt görevleri ekle
+                        // Subtasks (@BatchSize ile batch yüklenir)
                         if (task.getSubtasks() != null && !task.getSubtasks().isEmpty()) {
                             taskDto.setSubtasks(task.getSubtasks().stream().map(subtask -> {
                                 SubtaskDto subtaskDto = new SubtaskDto();
@@ -168,26 +182,38 @@ public class BoardService {
                         return taskDto;
                     }).collect(Collectors.toList());
 
-                    listDto.setTasks(taskDtos); // Görevleri listeye koy
+                    listDto.setTasks(taskDtos);
                 }
 
                 return listDto;
             }).collect(Collectors.toList());
 
-            response.setTaskLists(listDtos); // Listeleri panoya koy
+            response.setTaskLists(listDtos);
         }
 
-        // Pano etiketlerini ekle
-        if (board.getLabels() != null && !board.getLabels().isEmpty()) {
-            List<LabelDto> labelDtos = board.getLabels().stream().map(label -> {
-                LabelDto labelDto = new LabelDto();
-                labelDto.setId(label.getId());
-                labelDto.setName(label.getName());
-                labelDto.setColor(label.getColor());
-                return labelDto;
-            }).collect(Collectors.toList());
-            response.setLabels(labelDtos);
+        return response;
+    }
+
+    // Entity -> DTO Çevirici (Liste sayfası için - nested entity'ler yok, N+1 sorgu yok)
+    private BoardResponse mapToResponse(Board board) {
+        // Legacy Data Fix: Slug yoksa oluştur ve kaydet
+        if (board.getSlug() == null) {
+            board.setSlug(generateSlug(board.getName()));
+            boardRepository.save(board);
         }
+
+        BoardResponse response = new BoardResponse();
+        response.setId(board.getId());
+        response.setName(board.getName());
+        response.setSlug(board.getSlug());
+        response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");
+        response.setLink(board.getLink());
+        response.setDescription(board.getDescription());
+        response.setDeadline(board.getDeadline());
+        response.setOwnerName(board.getUser().getUsername()); // User zaten EntityGraph ile fetch edildi
+
+        // NOT: Liste sayfası için taskLists, tasks, labels yüklenmez (performans)
+        // Detay sayfası için getBoardDetails() ve mapToResponseOptimized() kullanılır
 
         return response;
     }

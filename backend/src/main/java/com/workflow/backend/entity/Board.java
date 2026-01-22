@@ -2,6 +2,7 @@ package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "boards")
@@ -36,10 +37,13 @@ public class Board {
     private User user;
 
     // Bir Pano'nun birden çok Listesi olur (To Do, Done vb.)
+    // @BatchSize: N+1 sorgu yerine batch halinde yükle (örn: 20 list için 1 sorgu)
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
     private java.util.List<TaskList> taskLists;
 
     // Bir Pano'nun birden çok etiketi olabilir
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     private java.util.List<Label> labels;
 }

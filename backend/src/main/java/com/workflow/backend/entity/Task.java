@@ -3,6 +3,7 @@ package com.workflow.backend.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -49,17 +50,21 @@ public class Task {
     private User assignee;
 
     // İLİŞKİ: Bir görevin birden fazla etiketi olabilir (Many-to-Many)
+    // @BatchSize: N+1 sorgu yerine batch halinde yükle
     @ManyToMany
     @JoinTable(
         name = "task_labels",
         joinColumns = @JoinColumn(name = "task_id"),
         inverseJoinColumns = @JoinColumn(name = "label_id")
     )
+    @BatchSize(size = 50)
     private Set<Label> labels = new HashSet<>();
 
     // İLİŞKİ: Bir görevin birden fazla alt görevi olabilir
+    // @BatchSize: N+1 sorgu yerine batch halinde yükle
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
+    @BatchSize(size = 50)
     private java.util.List<Subtask> subtasks = new java.util.ArrayList<>();
 
     @PrePersist
