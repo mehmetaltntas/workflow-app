@@ -72,10 +72,16 @@ export const taskService = {
   deleteTaskList: (listId: number) => apiClient.delete(`/lists/${listId}`),
   updateTaskList: (listId: number, data: { name?: string; link?: string; isCompleted?: boolean }) =>
     apiClient.put(`/lists/${listId}`, data),
-  // ... taskService içine ...
   deleteTask: (taskId: number) => apiClient.delete(`/tasks/${taskId}`),
-  updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; }) => 
+  updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; }) =>
     apiClient.put(`/tasks/${taskId}`, data),
+
+  // Drag & Drop İşlemleri
+  reorderTask: (taskId: number, data: { targetListId: number; newPosition: number }) =>
+    apiClient.put(`/tasks/${taskId}/reorder`, data),
+
+  batchReorder: (data: { listId: number; taskPositions: Array<{ taskId: number; position: number }> }) =>
+    apiClient.put("/tasks/batch-reorder", data),
 };
 
 // 6. Kullanıcı Profil İşlemleri

@@ -5,13 +5,26 @@ import { boardService, taskService } from "../services/api";
 import type { Board, Task, TaskList } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, MessageSquare, ExternalLink, ChevronDown } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
-// InlineEdit disabled - list names only editable via menu
-// import { InlineEdit } from "../components/InlineEdit";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
 import { ListEditModal } from "../components/ListEditModal";
+import { SortableTask } from "../components/SortableTask";
+
+// Drag & Drop
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+  DragOverlay,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 const BoardDetailPage = () => {
   const { slug } = useParams();
@@ -38,6 +51,18 @@ const BoardDetailPage = () => {
   // Default: Date (oldest to newest), down arrow
   const [sortBy, setSortBy] = useState<"name" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Drag & Drop State
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  // Drag & Drop Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px hareket etmeden drag başlamaz (click ile karışmaması için)
+      },
+    })
+  );
 
   const loadBoardData = useCallback(
     async (boardSlug: string) => {
@@ -219,6 +244,133 @@ const BoardDetailPage = () => {
     } catch (error) {
       console.error(error);
       toast.error("Silme işlemi başarısız");
+    }
+  };
+
+  // ==================== DRAG & DROP HANDLERS ====================
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const taskId = active.id as number;
+
+    // Sürüklenen task'ı bul
+    for (const list of board?.taskLists || []) {
+      const task = list.tasks.find(t => t.id === taskId);
+      if (task) {
+        setActiveTask(task);
+        break;
+      }
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over || !board) return;
+
+    const activeId = active.id as number;
+    const overId = over.id;
+
+    // Hangi listeden hangi listeye taşınıyor?
+    let sourceList: TaskList | undefined;
+    let destList: TaskList | undefined;
+
+    for (const list of board.taskLists) {
+      if (list.tasks.some(t => t.id === activeId)) {
+        sourceList = list;
+      }
+      // overId bir task id mi yoksa liste id mi kontrol et
+      if (list.tasks.some(t => t.id === overId) || list.id === overId) {
+        destList = list;
+      }
+    }
+
+    // Aynı liste içindeyse veya bulunamadıysa bir şey yapma
+    if (!sourceList || !destList || sourceList.id === destList.id) return;
+
+    // Optimistic update: Local state'i güncelle
+    setBoard(prev => {
+      if (!prev) return prev;
+
+      const newTaskLists = prev.taskLists.map(list => {
+        if (list.id === sourceList!.id) {
+          return {
+            ...list,
+            tasks: list.tasks.filter(t => t.id !== activeId)
+          };
+        }
+        if (list.id === destList!.id) {
+          const activeTask = sourceList!.tasks.find(t => t.id === activeId);
+          if (!activeTask) return list;
+
+          const overIndex = list.tasks.findIndex(t => t.id === overId);
+          const newTasks = [...list.tasks];
+
+          if (overIndex >= 0) {
+            newTasks.splice(overIndex, 0, activeTask);
+          } else {
+            newTasks.push(activeTask);
+          }
+
+          return { ...list, tasks: newTasks };
+        }
+        return list;
+      });
+
+      return { ...prev, taskLists: newTaskLists };
+    });
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over || !board) return;
+
+    const activeId = active.id as number;
+    const overId = over.id;
+
+    // Task ve hedef listeyi bul
+    let sourceList: TaskList | undefined;
+    let destList: TaskList | undefined;
+    let activeTaskObj: Task | undefined;
+
+    for (const list of board.taskLists) {
+      const task = list.tasks.find(t => t.id === activeId);
+      if (task) {
+        sourceList = list;
+        activeTaskObj = task;
+      }
+      if (list.tasks.some(t => t.id === overId) || list.id === overId) {
+        destList = list;
+      }
+    }
+
+    if (!sourceList || !destList || !activeTaskObj) return;
+
+    // Yeni pozisyonu hesapla
+    const destTasks = destList.tasks.filter(t => t.id !== activeId);
+    const overIndex = destTasks.findIndex(t => t.id === overId);
+    const newPosition = overIndex >= 0 ? overIndex : destTasks.length;
+
+    // Aynı liste içinde aynı pozisyondaysa bir şey yapma
+    if (sourceList.id === destList.id) {
+      const oldIndex = sourceList.tasks.findIndex(t => t.id === activeId);
+      if (oldIndex === newPosition) return;
+    }
+
+    try {
+      await taskService.reorderTask(activeId, {
+        targetListId: destList.id,
+        newPosition: newPosition,
+      });
+
+      // Başarılı olursa veriyi yeniden yükle
+      loadBoardData(slug!);
+    } catch (error) {
+      console.error("Drag & drop hatası:", error);
+      toast.error("Taşıma başarısız");
+      // Hata durumunda veriyi yeniden yükle
+      loadBoardData(slug!);
     }
   };
 
@@ -408,6 +560,13 @@ const BoardDetailPage = () => {
       </div>
 
       {/* Board Content - Grid Layout (max 4 columns) */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
       <div className="board-grid" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         {[...board.taskLists].sort((a, b) => {
           if (sortBy === "name") {
@@ -543,144 +702,48 @@ const BoardDetailPage = () => {
             </div>
 
             {/* Tasks Container - Fixed height with scroll */}
-            <div 
-              className="list-tasks-container" 
-              style={{ position: "relative" }}
-              onScroll={(e) => {
-                const target = e.currentTarget;
-                const indicator = target.querySelector('.list-scroll-indicator');
-                if (indicator) {
-                  const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
-                  if (isAtBottom) {
-                    indicator.classList.add('at-bottom');
-                  } else {
-                    indicator.classList.remove('at-bottom');
-                  }
-                }
-              }}
+            <SortableContext
+              items={list.tasks.map(t => t.id)}
+              strategy={verticalListSortingStrategy}
             >
-              {[...list.tasks].sort((a,b) => {
-                if (a.createdAt && b.createdAt) return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                return a.position - b.position;
-              }).map((task: Task, index: number) => (
-                <div
-                  key={task.id}
-                  className="group/task"
-                  style={{
-                    background: task.isCompleted ? "rgba(81, 207, 102, 0.03)" : "rgba(255, 255, 255, 0.04)",
-                    padding: "12px 14px",
-                    borderRadius: "14px",
-                    border: task.isCompleted ? "1px solid rgba(81, 207, 102, 0.08)" : "1px solid rgba(255, 255, 255, 0.06)",
-                    transition: "all 0.2s ease",
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!task.isCompleted) {
-                      e.currentTarget.style.background = "rgba(255, 255, 255, 0.07)";
-                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+              <div
+                className="list-tasks-container"
+                style={{ position: "relative" }}
+                onScroll={(e) => {
+                  const target = e.currentTarget;
+                  const indicator = target.querySelector('.list-scroll-indicator');
+                  if (indicator) {
+                    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+                    if (isAtBottom) {
+                      indicator.classList.add('at-bottom');
+                    } else {
+                      indicator.classList.remove('at-bottom');
                     }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = task.isCompleted ? "rgba(81, 207, 102, 0.03)" : "rgba(255, 255, 255, 0.04)";
-                    e.currentTarget.style.borderColor = task.isCompleted ? "rgba(81, 207, 102, 0.08)" : "rgba(255, 255, 255, 0.06)";
-                  }}
-                >
-                  {/* Action Menu - Left Side */}
-                  <ActionMenu 
-                    triggerClassName="opacity-0 group-hover/task:opacity-60 hover:!opacity-100"
-                    dropdownPosition="left"
-                    dropdownDirection={index < 2 ? "down" : "up"}
-                    iconSize={14}
-                    onEdit={() => setEditingTask(task)}
-                    onDelete={() => handleDeleteTask(task.id)}
+                  }
+                }}
+              >
+                {[...list.tasks].sort((a,b) => {
+                  // Pozisyona göre sırala (drag & drop için önemli)
+                  return (a.position ?? 0) - (b.position ?? 0);
+                }).map((task: Task, index: number) => (
+                  <SortableTask
+                    key={task.id}
+                    task={task}
+                    list={list}
+                    index={index}
+                    onEdit={setEditingTask}
+                    onDelete={handleDeleteTask}
+                    onToggleComplete={handleTaskCompletionToggle}
                   />
-
-                  {/* Task Content - No strikethrough, only color change on complete */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="task-title" style={{ 
-                      fontSize: "13px", 
-                      fontWeight: "500", 
-                      lineHeight: "1.5",
-                      color: task.isCompleted ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)"
-                    }}>
-                      {task.title}
-                    </div>
-                    {task.description && (
-                      <div style={{ 
-                        marginTop: "4px", 
-                        fontSize: "11px",
-                        color: "rgba(255,255,255,0.35)",
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <MessageSquare size={10} />
-                        <span>Not var</span>
-                      </div>
-                    )}
+                ))}
+                {/* Scroll indicator at the end */}
+                {list.tasks.length > 3 && (
+                  <div className="list-scroll-indicator">
+                    <ChevronDown size={18} />
                   </div>
-
-                  {/* Link Icon - Hidden by default, visible on hover */}
-                  {task.link && (
-                    <a 
-                      href={task.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="task-hover-element"
-                      style={{ 
-                        color: "var(--primary)", 
-                        display: 'flex',
-                        alignItems: 'center',
-                        padding: '4px',
-                        borderRadius: '6px',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                    >
-                      <LinkIcon size={14} />
-                    </a>
-                  )}
-
-                  {/* Task Completion Checkbox - Hidden by default, visible on hover */}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleTaskCompletionToggle(task, list); }}
-                    className={task.isCompleted ? '' : 'task-hover-element'}
-                    style={{ 
-                      background: "none", 
-                      border: "none", 
-                      cursor: "pointer", 
-                      display: 'flex',
-                      padding: '4px',
-                      borderRadius: '6px',
-                      transition: 'all 0.2s',
-                      color: task.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.5)',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!task.isCompleted) e.currentTarget.style.color = 'var(--success)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!task.isCompleted) e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
-                    }}
-                  >
-                    {task.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}
-                  </button>
-                </div>
-              ))}
-              {/* Scroll indicator at the end - sticky so it moves with scroll */}
-              {list.tasks.length > 3 && (
-                <div className="list-scroll-indicator">
-                  <ChevronDown size={18} />
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </SortableContext>
 
             {/* Add Task UI */}
             {activeListId === list.id ? (
@@ -866,6 +929,36 @@ const BoardDetailPage = () => {
           )}
         </div>
       </div>
+
+      {/* Drag Overlay - Sürükleme sırasında görünen önizleme */}
+      <DragOverlay>
+        {activeTask ? (
+          <div
+            style={{
+              background: "rgba(77, 171, 247, 0.2)",
+              padding: "12px 14px",
+              borderRadius: "14px",
+              border: "1px solid rgba(77, 171, 247, 0.4)",
+              boxShadow: "0 8px 32px rgba(77, 171, 247, 0.3)",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              minWidth: '200px',
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: "13px",
+                fontWeight: "500",
+                color: "white"
+              }}>
+                {activeTask.title}
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </DragOverlay>
+      </DndContext>
     </div>
   );
 };
