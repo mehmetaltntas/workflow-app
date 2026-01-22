@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
 import { boardService, taskService } from "../services/api";
@@ -15,15 +15,13 @@ import { SortableTask } from "../components/SortableTask";
 // Drag & Drop
 import {
   DndContext,
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
   closestCorners,
   DragOverlay,
 } from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 const BoardDetailPage = () => {
@@ -98,7 +96,7 @@ const BoardDetailPage = () => {
     if (slug) loadBoardData(slug);
   }, [slug, loadBoardData]);
 
-  const handleCreateList = async () => {
+  const handleCreateList = useCallback(async () => {
     if (!newListName) return;
     try {
       await taskService.createTaskList({
@@ -116,9 +114,9 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  };
+  }, [newListName, newListLink, board, loadBoardData, slug]);
 
-  const handleDeleteList = async () => {
+  const handleDeleteList = useCallback(async () => {
     if (deleteListId) {
       try {
         await taskService.deleteTaskList(deleteListId);
@@ -130,11 +128,11 @@ const BoardDetailPage = () => {
         toast.error("Silinemedi");
       }
     }
-  };
+  }, [deleteListId, loadBoardData, slug]);
 
   // handleUpdateListName removed - now handled via ListEditModal
 
-  const handleListCompletionToggle = async (list: TaskList) => {
+  const handleListCompletionToggle = useCallback(async (list: TaskList) => {
     try {
       await taskService.updateTaskList(list.id, { isCompleted: !list.isCompleted });
       loadBoardData(slug!);
@@ -146,9 +144,9 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  };
+  }, [loadBoardData, slug]);
 
-  const handleCreateTask = async (listId: number) => {
+  const handleCreateTask = useCallback(async (listId: number) => {
     if (!newTaskTitle) return;
     try {
       await taskService.createTask({
@@ -167,18 +165,18 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Eklenemedi");
     }
-  };
+  }, [newTaskTitle, newTaskLink, loadBoardData, slug]);
 
-  const handleTaskCompletionToggle = async (task: Task, list: TaskList) => {
+  const handleTaskCompletionToggle = useCallback(async (task: Task, list: TaskList) => {
     try {
       const newIsCompleted = !task.isCompleted;
       await taskService.updateTask(task.id, { isCompleted: newIsCompleted });
-      
+
       // Check if all tasks in list will be completed
-      const allTasksCompleted = list.tasks.every(t => 
+      const allTasksCompleted = list.tasks.every(t =>
         t.id === task.id ? newIsCompleted : t.isCompleted
       );
-      
+
       // If all tasks are completed, mark list as completed
       if (allTasksCompleted && !list.isCompleted) {
         await taskService.updateTaskList(list.id, { isCompleted: true });
@@ -187,7 +185,7 @@ const BoardDetailPage = () => {
       else if (!newIsCompleted && list.isCompleted) {
         await taskService.updateTaskList(list.id, { isCompleted: false });
       }
-      
+
       loadBoardData(slug!);
       toast.success(task.isCompleted ? "Devam ediyor" : "Tamamlandı", {
         icon: task.isCompleted ? "⏳" : "✅",
@@ -197,9 +195,9 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  };
+  }, [loadBoardData, slug]);
 
-  const handleDeleteTask = async (taskId: number) => {
+  const handleDeleteTask = useCallback(async (taskId: number) => {
     try {
       await taskService.deleteTask(taskId);
       loadBoardData(slug!);
@@ -208,9 +206,9 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Silinemedi");
     }
-  };
+  }, [loadBoardData, slug]);
 
-  const handleUpdateTask = async (taskId: number, updates: Partial<Task>) => {
+  const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task>) => {
     try {
       await taskService.updateTask(taskId, updates);
       loadBoardData(slug!);
@@ -219,10 +217,10 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  };
+  }, [loadBoardData, slug]);
 
   // Handler for updating list from modal
-  const handleUpdateList = async (listId: number, updates: { name?: string; link?: string }) => {
+  const handleUpdateList = useCallback(async (listId: number, updates: { name?: string; link?: string }) => {
     try {
       await taskService.updateTaskList(listId, updates);
       loadBoardData(slug!);
@@ -231,10 +229,10 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Güncellenemedi");
     }
-  };
+  }, [loadBoardData, slug]);
 
   // Handler for bulk deleting tasks from modal
-  const handleBulkDeleteTasks = async (taskIds: number[]) => {
+  const handleBulkDeleteTasks = useCallback(async (taskIds: number[]) => {
     try {
       for (const taskId of taskIds) {
         await taskService.deleteTask(taskId);
@@ -245,11 +243,11 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Silme işlemi başarısız");
     }
-  };
+  }, [loadBoardData, slug]);
 
   // ==================== DRAG & DROP HANDLERS ====================
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
     const taskId = active.id as number;
 
@@ -261,66 +259,9 @@ const BoardDetailPage = () => {
         break;
       }
     }
-  };
+  }, [board?.taskLists]);
 
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over || !board) return;
-
-    const activeId = active.id as number;
-    const overId = over.id;
-
-    // Hangi listeden hangi listeye taşınıyor?
-    let sourceList: TaskList | undefined;
-    let destList: TaskList | undefined;
-
-    for (const list of board.taskLists) {
-      if (list.tasks.some(t => t.id === activeId)) {
-        sourceList = list;
-      }
-      // overId bir task id mi yoksa liste id mi kontrol et
-      if (list.tasks.some(t => t.id === overId) || list.id === overId) {
-        destList = list;
-      }
-    }
-
-    // Aynı liste içindeyse veya bulunamadıysa bir şey yapma
-    if (!sourceList || !destList || sourceList.id === destList.id) return;
-
-    // Optimistic update: Local state'i güncelle
-    setBoard(prev => {
-      if (!prev) return prev;
-
-      const newTaskLists = prev.taskLists.map(list => {
-        if (list.id === sourceList!.id) {
-          return {
-            ...list,
-            tasks: list.tasks.filter(t => t.id !== activeId)
-          };
-        }
-        if (list.id === destList!.id) {
-          const activeTask = sourceList!.tasks.find(t => t.id === activeId);
-          if (!activeTask) return list;
-
-          const overIndex = list.tasks.findIndex(t => t.id === overId);
-          const newTasks = [...list.tasks];
-
-          if (overIndex >= 0) {
-            newTasks.splice(overIndex, 0, activeTask);
-          } else {
-            newTasks.push(activeTask);
-          }
-
-          return { ...list, tasks: newTasks };
-        }
-        return list;
-      });
-
-      return { ...prev, taskLists: newTaskLists };
-    });
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
 
@@ -369,10 +310,26 @@ const BoardDetailPage = () => {
     } catch (error) {
       console.error("Drag & drop hatası:", error);
       toast.error("Taşıma başarısız");
-      // Hata durumunda veriyi yeniden yükle
       loadBoardData(slug!);
     }
-  };
+  }, [board, loadBoardData, slug]);
+
+  // Memoize sorted task lists to avoid re-sorting on every render
+  const sortedTaskLists = useMemo(() => {
+    if (!board?.taskLists) return [];
+    return [...board.taskLists].sort((a, b) => {
+      if (sortBy === "name") {
+        return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      }
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    }).map(list => ({
+      ...list,
+      // Pre-sort tasks by position
+      tasks: [...list.tasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    }));
+  }, [board?.taskLists, sortBy, sortOrder]);
 
   if (loading)
     return (
@@ -564,21 +521,10 @@ const BoardDetailPage = () => {
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
       <div className="board-grid" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-        {[...board.taskLists].sort((a, b) => {
-          if (sortBy === "name") {
-            // asc: A to Z, desc: Z to A
-            return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-          }
-          // Date sorting: use createdAt if available, fallback to id
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
-          // asc: oldest to newest (small to big), desc: newest to oldest (big to small)
-          return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-        }).map((list) => (
+        {sortedTaskLists.map((list) => (
           <div
             key={list.id}
             className="flex flex-col group/list"
@@ -722,10 +668,8 @@ const BoardDetailPage = () => {
                   }
                 }}
               >
-                {[...list.tasks].sort((a,b) => {
-                  // Pozisyona göre sırala (drag & drop için önemli)
-                  return (a.position ?? 0) - (b.position ?? 0);
-                }).map((task: Task, index: number) => (
+                {/* Tasks already sorted by position in useMemo */}
+                {list.tasks.map((task: Task, index: number) => (
                   <SortableTask
                     key={task.id}
                     task={task}

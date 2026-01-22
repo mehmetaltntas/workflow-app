@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical } from "lucide-react";
@@ -13,7 +14,7 @@ interface SortableTaskProps {
   onToggleComplete: (task: Task, list: TaskList) => void;
 }
 
-export const SortableTask = ({ task, list, index, onEdit, onDelete, onToggleComplete }: SortableTaskProps) => {
+export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggleComplete }: SortableTaskProps) => {
   const {
     attributes,
     listeners,
@@ -65,17 +66,10 @@ export const SortableTask = ({ task, list, index, onEdit, onDelete, onToggleComp
           color: 'rgba(255,255,255,0.2)',
           display: 'flex',
           alignItems: 'center',
-          transition: 'all 0.2s',
+          transition: 'color 0.2s, background 0.2s',
+          touchAction: 'none',
         }}
-        className="drag-handle opacity-0 group-hover/task:opacity-60 hover:!opacity-100"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = 'var(--primary)';
-          e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = 'rgba(255,255,255,0.2)';
-          e.currentTarget.style.background = 'transparent';
-        }}
+        className="drag-handle opacity-0 group-hover/task:opacity-60 hover:!opacity-100 hover:!text-[var(--primary)] hover:!bg-[rgba(77,171,247,0.1)]"
       >
         <GripVertical size={14} />
       </div>
@@ -131,12 +125,6 @@ export const SortableTask = ({ task, list, index, onEdit, onDelete, onToggleComp
             borderRadius: '6px',
             transition: 'all 0.2s',
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-          }}
         >
           <LinkIcon size={14} />
         </a>
@@ -156,15 +144,21 @@ export const SortableTask = ({ task, list, index, onEdit, onDelete, onToggleComp
           transition: 'all 0.2s',
           color: task.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.5)',
         }}
-        onMouseEnter={(e) => {
-          if (!task.isCompleted) e.currentTarget.style.color = 'var(--success)';
-        }}
-        onMouseLeave={(e) => {
-          if (!task.isCompleted) e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
-        }}
       >
         {task.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}
       </button>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison - sadece önemli prop'lar değiştiğinde re-render
+  return (
+    prevProps.task.id === nextProps.task.id &&
+    prevProps.task.title === nextProps.task.title &&
+    prevProps.task.description === nextProps.task.description &&
+    prevProps.task.isCompleted === nextProps.task.isCompleted &&
+    prevProps.task.link === nextProps.task.link &&
+    prevProps.task.position === nextProps.task.position &&
+    prevProps.index === nextProps.index &&
+    prevProps.list.id === nextProps.list.id
+  );
+});
