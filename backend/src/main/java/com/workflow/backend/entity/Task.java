@@ -23,6 +23,8 @@ public class Task {
 
     private java.time.LocalDateTime createdAt; // Oluşturulma tarihi
 
+    private java.time.LocalDate dueDate; // Son tarih (deadline)
+
     // Sürükle bırak için sıralama sayısı (0, 1, 2...)
     private Integer position;
 

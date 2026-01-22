@@ -1,7 +1,7 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical } from "lucide-react";
+import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical, Calendar } from "lucide-react";
 import type { Task, TaskList } from "../types";
 import { ActionMenu } from "./ActionMenu";
 
@@ -13,6 +13,34 @@ interface SortableTaskProps {
   onDelete: (taskId: number) => void;
   onToggleComplete: (task: Task, list: TaskList) => void;
 }
+
+// Due date durumunu hesapla
+const getDueDateStatus = (dueDate: string | null | undefined): { status: 'overdue' | 'today' | 'tomorrow' | 'upcoming' | 'none'; label: string; color: string } => {
+  if (!dueDate) return { status: 'none', label: '', color: '' };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return { status: 'overdue', label: `${Math.abs(diffDays)} gün gecikti`, color: 'var(--danger)' };
+  } else if (diffDays === 0) {
+    return { status: 'today', label: 'Bugün', color: '#f59e0b' }; // Turuncu
+  } else if (diffDays === 1) {
+    return { status: 'tomorrow', label: 'Yarın', color: '#f59e0b' }; // Turuncu
+  } else if (diffDays <= 7) {
+    return { status: 'upcoming', label: `${diffDays} gün`, color: 'var(--primary)' };
+  } else {
+    // Format date as "15 Oca" style
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+    return { status: 'upcoming', label: due.toLocaleDateString('tr-TR', options), color: 'rgba(255,255,255,0.4)' };
+  }
+};
 
 export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggleComplete }: SortableTaskProps) => {
   const {
@@ -30,6 +58,9 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 1000 : 1,
   };
+
+  // Due date status hesapla (memoized)
+  const dueDateInfo = useMemo(() => getDueDateStatus(task.dueDate), [task.dueDate]);
 
   return (
     <div
@@ -94,19 +125,41 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
         }}>
           {task.title}
         </div>
-        {task.description && (
-          <div style={{
-            marginTop: "4px",
-            fontSize: "11px",
-            color: "rgba(255,255,255,0.35)",
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <MessageSquare size={10} />
-            <span>Not var</span>
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' ? '4px' : '0' }}>
+          {task.description && (
+            <div style={{
+              fontSize: "11px",
+              color: "rgba(255,255,255,0.35)",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <MessageSquare size={10} />
+              <span>Not var</span>
+            </div>
+          )}
+          {/* Due Date Badge */}
+          {dueDateInfo.status !== 'none' && !task.isCompleted && (
+            <div style={{
+              fontSize: "10px",
+              fontWeight: "600",
+              color: dueDateInfo.color,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              background: dueDateInfo.status === 'overdue'
+                ? 'rgba(239, 68, 68, 0.15)'
+                : dueDateInfo.status === 'today' || dueDateInfo.status === 'tomorrow'
+                  ? 'rgba(245, 158, 11, 0.15)'
+                  : 'rgba(255,255,255,0.05)',
+            }}>
+              <Calendar size={9} />
+              <span>{dueDateInfo.label}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Link Icon */}
@@ -158,6 +211,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
     prevProps.task.isCompleted === nextProps.task.isCompleted &&
     prevProps.task.link === nextProps.task.link &&
     prevProps.task.position === nextProps.task.position &&
+    prevProps.task.dueDate === nextProps.task.dueDate &&
     prevProps.index === nextProps.index &&
     prevProps.list.id === nextProps.list.id
   );

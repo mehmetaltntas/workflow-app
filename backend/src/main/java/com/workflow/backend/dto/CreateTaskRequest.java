@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
+import java.time.LocalDate;
+
 @Data
 public class CreateTaskRequest {
 
@@ -21,4 +23,6 @@ public class CreateTaskRequest {
 
     @NotNull(message = "Liste ID boş olamaz")
     private Long taskListId;
+
+    private LocalDate dueDate; // Son tarih (opsiyonel)
 }

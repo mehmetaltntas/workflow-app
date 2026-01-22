@@ -5,7 +5,7 @@ import { boardService, taskService } from "../services/api";
 import type { Board, Task, TaskList } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
@@ -40,7 +40,9 @@ const BoardDetailPage = () => {
   const [activeListId, setActiveListId] = useState<number | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskLink, setNewTaskLink] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
   const [showTaskLinkInput, setShowTaskLinkInput] = useState(false);
+  const [showTaskDueDateInput, setShowTaskDueDateInput] = useState(false);
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
@@ -153,11 +155,14 @@ const BoardDetailPage = () => {
         title: newTaskTitle,
         description: "",
         link: newTaskLink || undefined,
+        dueDate: newTaskDueDate || undefined,
         taskListId: listId,
       });
       setNewTaskTitle("");
       setNewTaskLink("");
+      setNewTaskDueDate("");
       setShowTaskLinkInput(false);
+      setShowTaskDueDateInput(false);
       setActiveListId(null);
       loadBoardData(slug!);
       toast.success("Eklendi");
@@ -165,7 +170,7 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Eklenemedi");
     }
-  }, [newTaskTitle, newTaskLink, loadBoardData, slug]);
+  }, [newTaskTitle, newTaskLink, newTaskDueDate, loadBoardData, slug]);
 
   const handleTaskCompletionToggle = useCallback(async (task: Task, list: TaskList) => {
     try {
@@ -731,35 +736,88 @@ const BoardDetailPage = () => {
                       }}
                     />
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setShowTaskLinkInput(true)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '6px 10px',
-                      marginBottom: '10px',
-                      background: 'transparent',
-                      border: '1px dashed rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                      color: 'rgba(255,255,255,0.4)',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.3)';
-                      e.currentTarget.style.color = 'var(--primary)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
-                    }}
-                  >
-                    <LinkIcon size={12} /> Link Ekle
-                  </button>
-                )}
+                ) : null}
+
+                {/* Due Date Input Toggle */}
+                {showTaskDueDateInput ? (
+                  <div style={{ marginBottom: '10px' }}>
+                    <input
+                      type="date"
+                      value={newTaskDueDate}
+                      onChange={(e) => setNewTaskDueDate(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        fontSize: '12px',
+                        color: 'white',
+                        colorScheme: 'dark'
+                      }}
+                    />
+                  </div>
+                ) : null}
+
+                {/* Quick action buttons */}
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
+                  {!showTaskLinkInput && (
+                    <button
+                      onClick={() => setShowTaskLinkInput(true)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '6px 10px',
+                        background: 'transparent',
+                        border: '1px dashed rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.3)';
+                        e.currentTarget.style.color = 'var(--primary)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                      }}
+                    >
+                      <LinkIcon size={11} /> Link
+                    </button>
+                  )}
+                  {!showTaskDueDateInput && (
+                    <button
+                      onClick={() => setShowTaskDueDateInput(true)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '6px 10px',
+                        background: 'transparent',
+                        border: '1px dashed rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                        e.currentTarget.style.color = '#f59e0b';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                      }}
+                    >
+                      <Calendar size={11} /> Tarih
+                    </button>
+                  )}
+                </div>
 
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button 
@@ -769,9 +827,15 @@ const BoardDetailPage = () => {
                   >
                     Ekle
                   </button>
-                  <button 
-                    onClick={() => { setActiveListId(null); setShowTaskLinkInput(false); setNewTaskLink(''); }} 
-                    className="btn btn-ghost" 
+                  <button
+                    onClick={() => {
+                      setActiveListId(null);
+                      setShowTaskLinkInput(false);
+                      setShowTaskDueDateInput(false);
+                      setNewTaskLink('');
+                      setNewTaskDueDate('');
+                    }}
+                    className="btn btn-ghost"
                     style={{ padding: "8px", borderRadius: '10px', height: '36px' }}
                   >
                     <X size={16} />

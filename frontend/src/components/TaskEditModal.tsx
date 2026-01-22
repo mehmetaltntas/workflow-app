@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Save, Link as LinkIcon, Type } from "lucide-react";
+import { X, Save, Link as LinkIcon, Type, Calendar } from "lucide-react";
 import type { Task } from "../types";
 
 interface TaskEditModalProps {
@@ -11,12 +11,13 @@ interface TaskEditModalProps {
 export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onSave }) => {
   const [title, setTitle] = useState(task.title);
   const [link, setLink] = useState(task.link || "");
+  const [dueDate, setDueDate] = useState(task.dueDate || "");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await onSave(task.id, { title, link });
+      await onSave(task.id, { title, link, dueDate: dueDate || null });
       onClose();
     } catch (error) {
       console.error(error);
@@ -99,12 +100,12 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
               <LinkIcon size={14} /> Link
             </label>
             <div style={{ position: 'relative' }}>
-              <input 
+              <input
                 type="url"
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
                 placeholder="https://..."
-                style={{ 
+                style={{
                   width: "100%",
                   padding: '12px 16px',
                   borderRadius: '12px',
@@ -118,6 +119,59 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
                 onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
                 onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
               />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <Calendar size={14} /> Son Tarih
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--border)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: 'white',
+                  fontSize: '14px',
+                  outline: 'none',
+                  fontWeight: '500',
+                  colorScheme: 'dark'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+              />
+              {dueDate && (
+                <button
+                  type="button"
+                  onClick={() => setDueDate("")}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    color: 'var(--text-muted)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--danger)';
+                    e.currentTarget.style.color = 'var(--danger)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                  }}
+                >
+                  Kaldır
+                </button>
+              )}
             </div>
           </div>
         </div>

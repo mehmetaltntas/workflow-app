@@ -63,6 +63,7 @@ public class TaskService {
         task.setPosition(newPosition);
         task.setTaskList(taskList);
         task.setLink(request.getLink());
+        task.setDueDate(request.getDueDate());
 
         Task savedTask = taskRepository.save(task);
         logger.info("Yeni görev oluşturuldu: {} (pozisyon: {})", savedTask.getTitle(), savedTask.getPosition());
@@ -225,6 +226,8 @@ public class TaskService {
             task.setLink(request.getLink());
         if (request.getIsCompleted() != null)
             task.setIsCompleted(request.getIsCompleted());
+        // dueDate null olarak da gönderilebilir (tarihi kaldırmak için)
+        task.setDueDate(request.getDueDate());
 
         return mapToDto(taskRepository.save(task));
     }
@@ -239,6 +242,7 @@ public class TaskService {
         dto.setLink(task.getLink());
         dto.setIsCompleted(task.getIsCompleted());
         dto.setCreatedAt(task.getCreatedAt());
+        dto.setDueDate(task.getDueDate());
         return dto;
     }
 

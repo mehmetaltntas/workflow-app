@@ -9,6 +9,7 @@ export interface Task {
   link?: string;
   isCompleted?: boolean;
   createdAt?: string;
+  dueDate?: string | null; // Son tarih (YYYY-MM-DD formatında)
 }
 
 // Sütun (Liste)

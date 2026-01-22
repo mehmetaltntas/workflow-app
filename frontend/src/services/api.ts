@@ -95,6 +95,7 @@ export const taskService = {
     description: string;
     taskListId: number;
     link?: string;
+    dueDate?: string;
   }) => {
     return apiClient.post("/tasks", data);
   },
@@ -103,7 +104,7 @@ export const taskService = {
   updateTaskList: (listId: number, data: { name?: string; link?: string; isCompleted?: boolean }) =>
     apiClient.put(`/lists/${listId}`, data),
   deleteTask: (taskId: number) => apiClient.delete(`/tasks/${taskId}`),
-  updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; }) =>
+  updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; dueDate?: string | null; }) =>
     apiClient.put(`/tasks/${taskId}`, data),
 
   // Drag & Drop İşlemleri

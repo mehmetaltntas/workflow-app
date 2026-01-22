@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,4 +23,5 @@ public class TaskDto {
     private Boolean isCompleted;
     private LocalDateTime createdAt;
     private Integer position;
+    private LocalDate dueDate; // Son tarih (deadline)
 }
