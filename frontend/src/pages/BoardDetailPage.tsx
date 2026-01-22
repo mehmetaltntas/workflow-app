@@ -5,7 +5,7 @@ import { boardService, taskService, labelService } from "../services/api";
 import type { Board, Task, TaskList, Priority } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag, Flag } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag, Flag, LayoutGrid, CalendarDays } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
@@ -14,6 +14,7 @@ import { SortableTask } from "../components/SortableTask";
 import { LabelManager } from "../components/LabelManager";
 import { FilterBar, getDefaultFilters } from "../components/FilterBar";
 import { StatsBar } from "../components/StatsBar";
+import { CalendarView } from "../components/CalendarView";
 import type { FilterState } from "../components/FilterBar";
 
 // Drag & Drop
@@ -54,6 +55,7 @@ const BoardDetailPage = () => {
   const [editingList, setEditingList] = useState<TaskList | null>(null);
   const [showLabelManager, setShowLabelManager] = useState(false);
   const [filters, setFilters] = useState<FilterState>(getDefaultFilters());
+  const [viewMode, setViewMode] = useState<"board" | "calendar">("board");
 
   // Sorting
   // Default: Date (oldest to newest), down arrow
@@ -527,6 +529,58 @@ const BoardDetailPage = () => {
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {/* View Toggle */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(0, 0, 0, 0.4)',
+            padding: '4px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(10px)',
+          }}>
+            <button
+              onClick={() => setViewMode("board")}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: viewMode === "board" ? 'rgba(77, 171, 247, 0.15)' : 'transparent',
+                color: viewMode === "board" ? 'var(--primary)' : 'rgba(255,255,255,0.5)',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              <LayoutGrid size={14} />
+              Pano
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: viewMode === "calendar" ? 'rgba(77, 171, 247, 0.15)' : 'transparent',
+                color: viewMode === "calendar" ? 'var(--primary)' : 'rgba(255,255,255,0.5)',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              <CalendarDays size={14} />
+              Takvim
+            </button>
+          </div>
+
           {/* Labels Button */}
           <button
             onClick={() => setShowLabelManager(true)}
@@ -708,7 +762,11 @@ const BoardDetailPage = () => {
         onFilterChange={setFilters}
       />
 
-      {/* Board Content - Grid Layout (max 4 columns) */}
+      {/* Content Area */}
+      {viewMode === "calendar" ? (
+        <CalendarView board={board} onTaskClick={setEditingTask} />
+      ) : (
+      /* Board Content - Grid Layout (max 4 columns) */
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -1232,6 +1290,7 @@ const BoardDetailPage = () => {
         ) : null}
       </DragOverlay>
       </DndContext>
+      )}
     </div>
   );
 };
