@@ -300,8 +300,8 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
     prevProps.index === nextProps.index &&
     prevProps.list.id === nextProps.list.id &&
     // Labels comparison - compare by stringifying IDs
-    JSON.stringify(prevProps.task.labels?.map(l => l.id).sort()) ===
-    JSON.stringify(nextProps.task.labels?.map(l => l.id).sort()) &&
+    JSON.stringify(prevProps.task.labels?.map(l => l.id)?.sort()) ===
+    JSON.stringify(nextProps.task.labels?.map(l => l.id)?.sort()) &&
     // Subtasks comparison - compare by stringifying
     JSON.stringify(prevProps.task.subtasks?.map(s => ({ id: s.id, isCompleted: s.isCompleted }))) ===
     JSON.stringify(nextProps.task.subtasks?.map(s => ({ id: s.id, isCompleted: s.isCompleted })))
