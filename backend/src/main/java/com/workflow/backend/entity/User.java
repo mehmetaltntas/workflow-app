@@ -21,8 +21,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Lob // Base64 encoded image (büyük metin için)
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "TEXT") // Base64 encoded image (PostgreSQL için TEXT)
     private String profilePicture;
 
     // İLİŞKİ: Bir kullanıcının birden fazla panosu olabilir.

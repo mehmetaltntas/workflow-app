@@ -4,6 +4,7 @@ import com.workflow.backend.dto.UpdatePasswordRequest;
 import com.workflow.backend.dto.UpdateProfileRequest;
 import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class UserController {
     @PutMapping("/{id}/profile")
     public ResponseEntity<UserResponse> updateProfile(
             @PathVariable Long id,
-            @RequestBody UpdateProfileRequest request) {
+            @Valid @RequestBody UpdateProfileRequest request) {
         UserResponse updated = userService.updateProfile(id, request);
         return ResponseEntity.ok(updated);
     }
@@ -35,7 +36,7 @@ public class UserController {
     @PutMapping("/{id}/password")
     public ResponseEntity<String> updatePassword(
             @PathVariable Long id,
-            @RequestBody UpdatePasswordRequest request) {
+            @Valid @RequestBody UpdatePasswordRequest request) {
         userService.updatePassword(id, request);
         return ResponseEntity.ok("Şifre başarıyla güncellendi!");
     }

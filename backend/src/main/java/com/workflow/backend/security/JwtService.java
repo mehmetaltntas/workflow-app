@@ -3,10 +3,11 @@ package com.workflow.backend.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
@@ -14,17 +15,33 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // BU ANAHTAR ÇOK GİZLİ OLMALI! (Normalde Environment Variable'dan okunur)
-    // Buraya rastgele uzun bir şifre yaz (En az 256 bit - 32 karakter)
-    private static final String SECRET_KEY = "benimcokgizliuzunveguvenliworkflowsifrembudur";
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
+
+    private Key signingKey;
+
+    @PostConstruct
+    public void init() {
+        // Secret key en az 64 karakter olmalı (HS256 için 256 bit)
+        if (secretKey == null || secretKey.length() < 64) {
+            throw new IllegalStateException(
+                "JWT Secret key en az 64 karakter olmalı! " +
+                "Lütfen application.properties veya environment variable'da jwt.secret değerini ayarlayın."
+            );
+        }
+        this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
 
     // 1. Kullanıcı adı ile Token Üret
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 Saat geçerli
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -42,7 +59,7 @@ public class JwtService {
     // Yardımcı Metotlar
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -51,10 +68,5 @@ public class JwtService {
 
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
-    }
-
-    private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(io.jsonwebtoken.io.Encoders.BASE64.encode(SECRET_KEY.getBytes()));
-        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

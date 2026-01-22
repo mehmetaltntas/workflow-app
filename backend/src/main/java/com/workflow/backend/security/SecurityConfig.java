@@ -1,6 +1,7 @@
 package com.workflow.backend.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,25 +25,27 @@ public class SecurityConfig {
 
         private final JwtFilter jwtFilter;
 
+        @Value("${cors.allowed-origins}")
+        private String allowedOrigins;
+
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .headers(headers -> headers
-                                                .frameOptions(frame -> frame.disable())
+                                                .frameOptions(frame -> frame.deny())
                                                 .contentSecurityPolicy(csp -> csp
                                                                 .policyDirectives("default-src 'self'; " +
-                                                                                "connect-src 'self' http://localhost:8080 http://localhost:5173 http://localhost:5174; "
-                                                                                +
-                                                                                "script-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:5173; "
-                                                                                +
+                                                                                "connect-src 'self' " + getAllowedOriginsForCSP() + "; " +
+                                                                                "script-src 'self'; " +
                                                                                 "style-src 'self' 'unsafe-inline'; " +
                                                                                 "img-src 'self' data:; " +
-                                                                                "font-src 'self' data:;")))
+                                                                                "font-src 'self' data:;"))
+                                                .xssProtection(xss -> xss.disable())
+                                                .contentTypeOptions(contentType -> {}))
                                 .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/auth/**", "/error").permitAll() // Added /error to
-                                                                                                   // permit list
+                                                .requestMatchers("/auth/**", "/error").permitAll()
                                                 .anyRequest().authenticated())
                                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -53,11 +56,16 @@ public class SecurityConfig {
         @Bean
         public UrlBasedCorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173",
-                                "http://localhost:5174"));
+
+                // Environment variable'dan origin'leri oku
+                List<String> origins = Arrays.asList(allowedOrigins.split(","));
+                configuration.setAllowedOrigins(origins);
+
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-                configuration.setAllowedHeaders(List.of("*"));
+                configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+                configuration.setExposedHeaders(List.of("Authorization"));
                 configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L); // 1 saat preflight cache
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", configuration);
@@ -66,6 +74,10 @@ public class SecurityConfig {
 
         @Bean
         public PasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder();
+                return new BCryptPasswordEncoder(12); // Güvenlik için strength artırıldı
+        }
+
+        private String getAllowedOriginsForCSP() {
+                return String.join(" ", allowedOrigins.split(","));
         }
 }
