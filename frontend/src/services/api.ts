@@ -116,7 +116,30 @@ export const taskService = {
     apiClient.put("/tasks/batch-reorder", data),
 };
 
-// 6. Etiket İşlemleri
+// 6. Alt Görev İşlemleri
+export const subtaskService = {
+  // Alt görev oluştur
+  createSubtask: (data: { title: string; taskId: number }) =>
+    apiClient.post("/subtasks", data),
+
+  // Alt görevi güncelle
+  updateSubtask: (subtaskId: number, data: { title?: string; isCompleted?: boolean }) =>
+    apiClient.put(`/subtasks/${subtaskId}`, data),
+
+  // Alt görevi sil
+  deleteSubtask: (subtaskId: number) =>
+    apiClient.delete(`/subtasks/${subtaskId}`),
+
+  // Tamamlanma durumunu değiştir
+  toggleSubtask: (subtaskId: number) =>
+    apiClient.patch(`/subtasks/${subtaskId}/toggle`),
+
+  // Görevin alt görevlerini getir
+  getSubtasksByTask: (taskId: number) =>
+    apiClient.get(`/subtasks/task/${taskId}`),
+};
+
+// 7. Etiket İşlemleri
 export const labelService = {
   // Panoya ait etiketleri getir
   getLabelsByBoard: (boardId: number) => apiClient.get(`/labels/board/${boardId}`),

@@ -30,4 +30,5 @@ public class TaskDto {
     private Priority priority; // Öncelik seviyesi
     private List<LabelDto> labels; // Görevin etiketleri
     private List<Long> labelIds; // Güncelleme için etiket ID'leri
+    private List<SubtaskDto> subtasks; // Alt görevler
 }

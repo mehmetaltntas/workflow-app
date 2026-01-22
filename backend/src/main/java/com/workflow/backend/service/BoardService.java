@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.LabelDto;
+import com.workflow.backend.dto.SubtaskDto;
 import com.workflow.backend.dto.TaskDto;
 import com.workflow.backend.dto.TaskListDto;
 import com.workflow.backend.entity.Board;
@@ -131,6 +132,18 @@ public class BoardService {
                                 labelDto.setName(label.getName());
                                 labelDto.setColor(label.getColor());
                                 return labelDto;
+                            }).collect(Collectors.toList()));
+                        }
+
+                        // Alt görevleri ekle
+                        if (task.getSubtasks() != null && !task.getSubtasks().isEmpty()) {
+                            taskDto.setSubtasks(task.getSubtasks().stream().map(subtask -> {
+                                SubtaskDto subtaskDto = new SubtaskDto();
+                                subtaskDto.setId(subtask.getId());
+                                subtaskDto.setTitle(subtask.getTitle());
+                                subtaskDto.setIsCompleted(subtask.getIsCompleted());
+                                subtaskDto.setPosition(subtask.getPosition());
+                                return subtaskDto;
                             }).collect(Collectors.toList()));
                         }
 

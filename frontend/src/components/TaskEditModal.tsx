@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check, Flag } from "lucide-react";
-import type { Task, Label, Priority } from "../types";
+import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check, Flag, ListChecks, Plus, Trash2, Square, CheckSquare } from "lucide-react";
+import type { Task, Label, Priority, Subtask } from "../types";
+import { subtaskService } from "../services/api";
 
 interface TaskEditModalProps {
   task: Task;
@@ -24,6 +25,9 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
   const [selectedLabelIds, setSelectedLabelIds] = useState<number[]>(
     task.labels?.map(l => l.id) || []
   );
+  const [subtasks, setSubtasks] = useState<Subtask[]>(task.subtasks || []);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const toggleLabel = (labelId: number) => {
@@ -32,6 +36,40 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
         ? prev.filter(id => id !== labelId)
         : [...prev, labelId]
     );
+  };
+
+  // Subtask handlers
+  const handleAddSubtask = async () => {
+    if (!newSubtaskTitle.trim()) return;
+    try {
+      const response = await subtaskService.createSubtask({
+        title: newSubtaskTitle.trim(),
+        taskId: task.id,
+      });
+      setSubtasks([...subtasks, response.data]);
+      setNewSubtaskTitle("");
+      setIsAddingSubtask(false);
+    } catch (error) {
+      console.error("Alt görev eklenemedi:", error);
+    }
+  };
+
+  const handleToggleSubtask = async (subtaskId: number) => {
+    try {
+      const response = await subtaskService.toggleSubtask(subtaskId);
+      setSubtasks(subtasks.map(s => s.id === subtaskId ? response.data : s));
+    } catch (error) {
+      console.error("Alt görev güncellenemedi:", error);
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: number) => {
+    try {
+      await subtaskService.deleteSubtask(subtaskId);
+      setSubtasks(subtasks.filter(s => s.id !== subtaskId));
+    } catch (error) {
+      console.error("Alt görev silinemedi:", error);
+    }
   };
 
   const handleSave = async () => {
@@ -303,17 +341,189 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
               </div>
             </div>
           )}
+
+          {/* Subtasks Section */}
+          <div className="form-group">
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <ListChecks size={14} /> Alt Görevler
+              {subtasks.length > 0 && (
+                <span style={{
+                  fontSize: '10px',
+                  background: 'rgba(255,255,255,0.1)',
+                  padding: '2px 6px',
+                  borderRadius: '6px',
+                  fontWeight: '600'
+                }}>
+                  {subtasks.filter(s => s.isCompleted).length}/{subtasks.length}
+                </span>
+              )}
+            </label>
+
+            {/* Subtask List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: subtasks.length > 0 ? '10px' : '0' }}>
+              {subtasks.map(subtask => (
+                <div
+                  key={subtask.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: subtask.isCompleted ? 'rgba(81, 207, 102, 0.08)' : 'rgba(255,255,255,0.03)',
+                    border: subtask.isCompleted ? '1px solid rgba(81, 207, 102, 0.15)' : '1px solid rgba(255,255,255,0.06)',
+                    transition: 'all 0.2s',
+                  }}
+                  className="group/subtask"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSubtask(subtask.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '2px',
+                      display: 'flex',
+                      color: subtask.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.4)',
+                      transition: 'color 0.2s',
+                    }}
+                  >
+                    {subtask.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}
+                  </button>
+                  <span style={{
+                    flex: 1,
+                    fontSize: '13px',
+                    color: subtask.isCompleted ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)',
+                    textDecoration: subtask.isCompleted ? 'line-through' : 'none',
+                  }}>
+                    {subtask.title}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSubtask(subtask.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      color: 'rgba(255,255,255,0.3)',
+                      opacity: 0,
+                      transition: 'all 0.2s',
+                      borderRadius: '4px',
+                    }}
+                    className="group-hover/subtask:!opacity-100"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--danger)';
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.3)';
+                      e.currentTarget.style.background = 'none';
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Subtask */}
+            {isAddingSubtask ? (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  autoFocus
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  placeholder="Alt görev başlığı..."
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border)',
+                    background: 'rgba(255,255,255,0.03)',
+                    color: 'white',
+                    fontSize: '13px',
+                    outline: 'none',
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAddSubtask();
+                    if (e.key === 'Escape') {
+                      setIsAddingSubtask(false);
+                      setNewSubtaskTitle("");
+                    }
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddSubtask}
+                  disabled={!newSubtaskTitle.trim()}
+                  className="btn btn-primary"
+                  style={{ padding: '10px 16px', fontSize: '12px', fontWeight: '600' }}
+                >
+                  Ekle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingSubtask(false);
+                    setNewSubtaskTitle("");
+                  }}
+                  className="btn btn-ghost"
+                  style={{ padding: '10px' }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsAddingSubtask(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  border: '1px dashed rgba(255,255,255,0.15)',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.5)',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  width: '100%',
+                  justifyContent: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.4)';
+                  e.currentTarget.style.color = 'var(--primary)';
+                  e.currentTarget.style.background = 'rgba(77, 171, 247, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <Plus size={14} /> Alt Görev Ekle
+              </button>
+            )}
+          </div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "12px" }}>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="btn btn-ghost"
             style={{ padding: '12px 24px', fontWeight: '600' }}
           >
             İptal
           </button>
-          <button 
+          <button
             onClick={handleSave} 
             className="btn btn-primary"
             disabled={isSaving || !title.trim()}

@@ -57,6 +57,11 @@ public class Task {
     )
     private Set<Label> labels = new HashSet<>();
 
+    // İLİŞKİ: Bir görevin birden fazla alt görevi olabilir
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC")
+    private java.util.List<Subtask> subtasks = new java.util.ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = java.time.LocalDateTime.now();

@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical, Calendar, Flag } from "lucide-react";
+import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical, Calendar, Flag, ListChecks } from "lucide-react";
 import type { Task, TaskList, Priority } from "../types";
 import { ActionMenu } from "./ActionMenu";
 
@@ -78,6 +78,14 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
 
   // Priority info hesapla (memoized)
   const priorityInfo = useMemo(() => getPriorityInfo(task.priority), [task.priority]);
+
+  // Subtask progress hesapla (memoized)
+  const subtaskProgress = useMemo(() => {
+    if (!task.subtasks || task.subtasks.length === 0) return null;
+    const completed = task.subtasks.filter(s => s.isCompleted).length;
+    const total = task.subtasks.length;
+    return { completed, total, percent: Math.round((completed / total) * 100) };
+  }, [task.subtasks]);
 
   return (
     <div
@@ -163,7 +171,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
         }}>
           {task.title}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' || priorityInfo.color ? '4px' : '0', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' || priorityInfo.color || subtaskProgress ? '4px' : '0', flexWrap: 'wrap' }}>
           {task.description && (
             <div style={{
               fontSize: "11px",
@@ -174,6 +182,27 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
             }}>
               <MessageSquare size={10} />
               <span>Not var</span>
+            </div>
+          )}
+          {/* Subtasks Progress Badge */}
+          {subtaskProgress && !task.isCompleted && (
+            <div style={{
+              fontSize: "10px",
+              fontWeight: "600",
+              color: subtaskProgress.completed === subtaskProgress.total
+                ? 'var(--success)'
+                : 'rgba(255,255,255,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              background: subtaskProgress.completed === subtaskProgress.total
+                ? 'rgba(81, 207, 102, 0.15)'
+                : 'rgba(255,255,255,0.05)',
+            }}>
+              <ListChecks size={10} />
+              <span>{subtaskProgress.completed}/{subtaskProgress.total}</span>
             </div>
           )}
           {/* Priority Badge */}
@@ -272,6 +301,9 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
     prevProps.list.id === nextProps.list.id &&
     // Labels comparison - compare by stringifying IDs
     JSON.stringify(prevProps.task.labels?.map(l => l.id).sort()) ===
-    JSON.stringify(nextProps.task.labels?.map(l => l.id).sort())
+    JSON.stringify(nextProps.task.labels?.map(l => l.id).sort()) &&
+    // Subtasks comparison - compare by stringifying
+    JSON.stringify(prevProps.task.subtasks?.map(s => ({ id: s.id, isCompleted: s.isCompleted }))) ===
+    JSON.stringify(nextProps.task.subtasks?.map(s => ({ id: s.id, isCompleted: s.isCompleted })))
   );
 });

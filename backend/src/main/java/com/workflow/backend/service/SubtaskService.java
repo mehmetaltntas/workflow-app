@@ -1,0 +1,93 @@
+package com.workflow.backend.service;
+
+import com.workflow.backend.dto.CreateSubtaskRequest;
+import com.workflow.backend.dto.SubtaskDto;
+import com.workflow.backend.entity.Subtask;
+import com.workflow.backend.entity.Task;
+import com.workflow.backend.repository.SubtaskRepository;
+import com.workflow.backend.repository.TaskRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class SubtaskService {
+
+    private final SubtaskRepository subtaskRepository;
+    private final TaskRepository taskRepository;
+
+    // Alt görev oluştur
+    @Transactional
+    public SubtaskDto createSubtask(CreateSubtaskRequest request) {
+        Task task = taskRepository.findById(request.getTaskId())
+                .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
+
+        // Yeni pozisyon hesapla
+        Integer maxPosition = subtaskRepository.findMaxPositionByTaskId(task.getId());
+        int newPosition = maxPosition + 1;
+
+        Subtask subtask = new Subtask();
+        subtask.setTitle(request.getTitle());
+        subtask.setIsCompleted(false);
+        subtask.setPosition(newPosition);
+        subtask.setTask(task);
+
+        Subtask saved = subtaskRepository.save(subtask);
+        return mapToDto(saved);
+    }
+
+    // Alt görevi güncelle
+    @Transactional
+    public SubtaskDto updateSubtask(Long subtaskId, SubtaskDto request) {
+        Subtask subtask = subtaskRepository.findById(subtaskId)
+                .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
+
+        if (request.getTitle() != null) {
+            subtask.setTitle(request.getTitle());
+        }
+        if (request.getIsCompleted() != null) {
+            subtask.setIsCompleted(request.getIsCompleted());
+        }
+
+        Subtask saved = subtaskRepository.save(subtask);
+        return mapToDto(saved);
+    }
+
+    // Alt görevi sil
+    @Transactional
+    public void deleteSubtask(Long subtaskId) {
+        subtaskRepository.deleteById(subtaskId);
+    }
+
+    // Görevin alt görevlerini getir
+    public List<SubtaskDto> getSubtasksByTaskId(Long taskId) {
+        return subtaskRepository.findByTaskIdOrderByPositionAsc(taskId)
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    // Tamamlanma/tamamlanmama toggle
+    @Transactional
+    public SubtaskDto toggleComplete(Long subtaskId) {
+        Subtask subtask = subtaskRepository.findById(subtaskId)
+                .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
+
+        subtask.setIsCompleted(!subtask.getIsCompleted());
+        Subtask saved = subtaskRepository.save(subtask);
+        return mapToDto(saved);
+    }
+
+    // Entity -> DTO
+    private SubtaskDto mapToDto(Subtask subtask) {
+        SubtaskDto dto = new SubtaskDto();
+        dto.setId(subtask.getId());
+        dto.setTitle(subtask.getTitle());
+        dto.setIsCompleted(subtask.getIsCompleted());
+        dto.setPosition(subtask.getPosition());
+        return dto;
+    }
+}

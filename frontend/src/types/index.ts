@@ -10,6 +10,14 @@ export interface Label {
   color: string; // Hex color code (e.g., "#ff5733")
 }
 
+// Alt Görev
+export interface Subtask {
+  id: number;
+  title: string;
+  isCompleted: boolean;
+  position: number;
+}
+
 // Görev Kartı
 export interface Task {
   id: number;
@@ -22,6 +30,7 @@ export interface Task {
   dueDate?: string | null; // Son tarih (YYYY-MM-DD formatında)
   priority?: Priority; // Öncelik seviyesi
   labels?: Label[]; // Görevin etiketleri
+  subtasks?: Subtask[]; // Alt görevler
 }
 
 // Sütun (Liste)

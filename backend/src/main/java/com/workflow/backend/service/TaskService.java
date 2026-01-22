@@ -271,6 +271,18 @@ public class TaskService {
             }).toList());
         }
 
+        // Alt görevleri ekle
+        if (task.getSubtasks() != null && !task.getSubtasks().isEmpty()) {
+            dto.setSubtasks(task.getSubtasks().stream().map(subtask -> {
+                SubtaskDto subtaskDto = new SubtaskDto();
+                subtaskDto.setId(subtask.getId());
+                subtaskDto.setTitle(subtask.getTitle());
+                subtaskDto.setIsCompleted(subtask.getIsCompleted());
+                subtaskDto.setPosition(subtask.getPosition());
+                return subtaskDto;
+            }).toList());
+        }
+
         return dto;
     }
 
