@@ -13,6 +13,7 @@ import { ListEditModal } from "../components/ListEditModal";
 import { SortableTask } from "../components/SortableTask";
 import { LabelManager } from "../components/LabelManager";
 import { FilterBar, getDefaultFilters } from "../components/FilterBar";
+import { StatsBar } from "../components/StatsBar";
 import type { FilterState } from "../components/FilterBar";
 
 // Drag & Drop
@@ -696,6 +697,9 @@ const BoardDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Stats Bar */}
+      <StatsBar board={board} />
 
       {/* Filter Bar */}
       <FilterBar

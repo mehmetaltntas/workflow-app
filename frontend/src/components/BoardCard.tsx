@@ -3,6 +3,7 @@ import type { Board } from "../types";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { ExternalLink, Calendar } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
+import { MiniStats } from "./StatsBar";
 
 interface BoardCardProps {
   board: Board;
@@ -95,13 +96,13 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
         </h3>
         
         {board.description && (
-          <div style={{ 
-            color: 'rgba(255, 255, 255, 0.5)', 
-            fontSize: '12px', 
+          <div style={{
+            color: 'rgba(255, 255, 255, 0.5)',
+            fontSize: '12px',
             fontWeight: '400',
             overflow: 'hidden',
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             lineHeight: '1.5',
             fontStyle: 'italic',
@@ -111,6 +112,11 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
             {board.description}
           </div>
         )}
+
+        {/* Mini Stats */}
+        <div style={{ marginTop: '10px' }}>
+          <MiniStats board={board} />
+        </div>
       </div>
 
       {/* Bottom Section: Deadline, Link & Status */}
