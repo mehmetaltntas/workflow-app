@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 // 1. Temel Ayarlar
 const apiClient = axios.create({
@@ -9,6 +10,27 @@ const apiClient = axios.create({
   // Cookie taşıyabilmesi için (İleride HttpOnly cookie'ye geçersek lazım olur)
   withCredentials: true,
 });
+
+// Token yenileme durumu için flag
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+  config: InternalAxiosRequestConfig;
+}> = [];
+
+// Bekleyen istekleri işle
+const processQueue = (error: AxiosError | null, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else if (token) {
+      prom.config.headers.Authorization = `Bearer ${token}`;
+      prom.resolve(apiClient(prom.config));
+    }
+  });
+  failedQueue = [];
+};
 
 // 2. TOKEN INTERCEPTOR (ÖNEMLİ KISIM)
 // Her istekten önce çalışır ve token'ı ekler
@@ -32,6 +54,14 @@ export const authService = {
   },
   register: (data: { username: string; email: string; password: string }) => {
     return apiClient.post("/auth/register", data);
+  },
+  // Refresh token ile yeni access token al
+  refreshToken: (refreshToken: string) => {
+    return apiClient.post("/auth/refresh", { refreshToken });
+  },
+  // Logout - refresh token'ı sil
+  logout: () => {
+    return apiClient.post("/auth/logout");
   },
 };
 
@@ -97,30 +127,84 @@ export const userService = {
   },
 };
 
-// ... Request Interceptor'ın altına ...
-
-// RESPONSE INTERCEPTOR (Cevap Kontrolü)
+// RESPONSE INTERCEPTOR (Cevap Kontrolü + Token Yenileme)
 apiClient.interceptors.response.use(
   (response) => {
     // Her şey yolundaysa cevabı olduğu gibi dön
     return response;
   },
-  (error) => {
-    // 401 (Yetkisiz) veya 403 (Yasak/Süre Doldu) hatalarını yakala
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      console.error(`Yetkilendirme hatası (${error.response.status}):`, error.response.data);
-      
-      // Eğer kullanıcı zaten login'de değilse yönlendir
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // 401 hatası ve henüz retry yapılmamışsa
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Login veya refresh endpoint'iyse direkt hata dön
+      if (
+        originalRequest.url?.includes("/auth/login") ||
+        originalRequest.url?.includes("/auth/refresh") ||
+        originalRequest.url?.includes("/auth/register")
+      ) {
+        return Promise.reject(error);
+      }
+
+      // Refresh işlemi zaten devam ediyorsa, kuyruğa ekle
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject, config: originalRequest });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      // Refresh token yoksa logout yap
+      if (!refreshToken) {
+        isRefreshing = false;
+        console.warn("Refresh token bulunamadı, çıkış yapılıyor...");
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      try {
+        // Yeni access token al
+        const response = await apiClient.post("/auth/refresh", { refreshToken });
+        const { accessToken } = response.data;
+
+        // Yeni token'ı kaydet
+        localStorage.setItem("token", accessToken);
+
+        // Bekleyen istekleri işle
+        processQueue(null, accessToken);
+
+        // Orijinal isteği yeni token ile tekrarla
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh başarısız - logout yap
+        processQueue(refreshError as AxiosError, null);
+        console.warn("Token yenileme başarısız, çıkış yapılıyor...");
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // 403 hatası - yetkisiz erişim
+    if (error.response?.status === 403) {
+      console.error("Yetkisiz erişim (403):", error.response.data);
       if (!window.location.pathname.startsWith("/login")) {
-        console.warn("Oturum süresi doldu veya yetkisiz erişim! Çıkış yapılıyor...");
         localStorage.clear();
         window.location.href = "/login";
       }
     }
+
     return Promise.reject(error);
   },
 );
-
-// ... export default apiClient ...
 
 export default apiClient;

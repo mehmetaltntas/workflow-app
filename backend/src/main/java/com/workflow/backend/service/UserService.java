@@ -5,6 +5,7 @@ import com.workflow.backend.dto.RegisterRequest;
 import com.workflow.backend.dto.UpdatePasswordRequest;
 import com.workflow.backend.dto.UpdateProfileRequest;
 import com.workflow.backend.dto.UserResponse;
+import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.repository.UserRepository;
 import com.workflow.backend.security.JwtService;
@@ -19,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     // KAYIT OLMA İŞLEMİ
     public UserResponse register(RegisterRequest request) {
@@ -41,12 +43,16 @@ public class UserService {
         // 3. Kaydet
         User savedUser = userRepository.save(user);
 
-        // 4. Token Üret
-        String token = jwtService.generateToken(savedUser.getUsername());
+        // 4. Access Token Üret
+        String accessToken = jwtService.generateAccessToken(savedUser.getUsername());
 
-        // 5. Response DTO'ya çevirip dön
+        // 5. Refresh Token Üret
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
+
+        // 6. Response DTO'ya çevirip dön
         UserResponse response = mapToResponse(savedUser);
-        response.setToken(token); // Token'ı kutuya koyduk
+        response.setToken(accessToken);
+        response.setRefreshToken(refreshToken.getToken());
         return response;
     }
 
@@ -60,12 +66,16 @@ public class UserService {
             throw new RuntimeException("Kullanıcı adı veya şifre hatalı!");
         }
 
-        // 3. Token Üret
-        String token = jwtService.generateToken(user.getUsername());
+        // 3. Access Token Üret
+        String accessToken = jwtService.generateAccessToken(user.getUsername());
 
-        // 4. Giriş başarılı, bilgileri ve token'ı dön
+        // 4. Refresh Token Üret
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+
+        // 5. Giriş başarılı, bilgileri ve token'ları dön
         UserResponse response = mapToResponse(user);
-        response.setToken(token);
+        response.setToken(accessToken);
+        response.setRefreshToken(refreshToken.getToken());
         return response;
     }
 

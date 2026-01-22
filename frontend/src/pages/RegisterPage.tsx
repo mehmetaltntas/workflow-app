@@ -24,6 +24,7 @@ const RegisterPage = () => {
 
       // Token ve bilgileri kaydet
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("userId", response.data.id);
       localStorage.setItem("username", response.data.username);
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
+import { authService } from "../services/api";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -20,10 +21,19 @@ const Layout = () => {
   // Avatar için baş harfler
   const initials = username.substring(0, 2).toUpperCase();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    toast.success("Çıkış yapıldı");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      // Backend'de refresh token'ı geçersiz kıl
+      await authService.logout();
+    } catch (error) {
+      // Logout API hatası olsa bile devam et
+      console.warn("Logout API hatası:", error);
+    } finally {
+      // Her durumda localStorage'ı temizle ve yönlendir
+      localStorage.clear();
+      toast.success("Çıkış yapıldı");
+      navigate("/login");
+    }
   };
 
   // Dropdown dışına tıklanınca kapat

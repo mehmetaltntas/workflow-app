@@ -18,8 +18,8 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    @Value("${jwt.access-token.expiration}")
+    private long accessTokenExpiration;
 
     private Key signingKey;
 
@@ -35,12 +35,17 @@ public class JwtService {
         this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    // 1. Kullanıcı adı ile Token Üret
+    // 1. Kullanıcı adı ile Access Token Üret
     public String generateToken(String username) {
+        return generateAccessToken(username);
+    }
+
+    // Access Token Üret (kısa süreli - 15 dakika)
+    public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }

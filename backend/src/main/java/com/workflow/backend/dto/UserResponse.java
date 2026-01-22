@@ -8,5 +8,6 @@ public class UserResponse {
     private String username;
     private String email;
     private String profilePicture; // Base64 encoded image
-    private String token; // YENİ ALAN
+    private String token; // Access Token (kısa süreli - 15 dk)
+    private String refreshToken; // Refresh Token (uzun süreli - 7 gün)
 }
