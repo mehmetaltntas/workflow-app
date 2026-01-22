@@ -12,6 +12,8 @@ import { TaskEditModal } from "../components/TaskEditModal";
 import { ListEditModal } from "../components/ListEditModal";
 import { SortableTask } from "../components/SortableTask";
 import { LabelManager } from "../components/LabelManager";
+import { FilterBar, getDefaultFilters } from "../components/FilterBar";
+import type { FilterState } from "../components/FilterBar";
 
 // Drag & Drop
 import {
@@ -48,6 +50,7 @@ const BoardDetailPage = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
   const [showLabelManager, setShowLabelManager] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(getDefaultFilters());
 
   // Sorting
   // Default: Date (oldest to newest), down arrow
@@ -355,7 +358,70 @@ const BoardDetailPage = () => {
     }
   }, [board, loadBoardData, slug]);
 
-  // Memoize sorted task lists to avoid re-sorting on every render
+  // Filter function for tasks
+  const filterTask = useCallback((task: Task): boolean => {
+    // Search text filter
+    if (filters.searchText) {
+      const searchLower = filters.searchText.toLowerCase();
+      if (!task.title.toLowerCase().includes(searchLower)) {
+        return false;
+      }
+    }
+
+    // Labels filter
+    if (filters.selectedLabels.length > 0) {
+      const taskLabelIds = task.labels?.map(l => l.id) || [];
+      const hasMatchingLabel = filters.selectedLabels.some(id => taskLabelIds.includes(id));
+      if (!hasMatchingLabel) {
+        return false;
+      }
+    }
+
+    // Completion filter
+    if (filters.completionFilter !== "all") {
+      if (filters.completionFilter === "completed" && !task.isCompleted) {
+        return false;
+      }
+      if (filters.completionFilter === "pending" && task.isCompleted) {
+        return false;
+      }
+    }
+
+    // Due date filter
+    if (filters.dueDateFilter !== "all") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (filters.dueDateFilter === "nodate") {
+        if (task.dueDate) return false;
+      } else {
+        if (!task.dueDate) return false;
+
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+        switch (filters.dueDateFilter) {
+          case "overdue":
+            if (diffDays >= 0) return false;
+            break;
+          case "today":
+            if (diffDays !== 0) return false;
+            break;
+          case "tomorrow":
+            if (diffDays !== 1) return false;
+            break;
+          case "week":
+            if (diffDays < 0 || diffDays > 7) return false;
+            break;
+        }
+      }
+    }
+
+    return true;
+  }, [filters]);
+
+  // Memoize sorted and filtered task lists
   const sortedTaskLists = useMemo(() => {
     if (!board?.taskLists) return [];
     return [...board.taskLists].sort((a, b) => {
@@ -367,10 +433,12 @@ const BoardDetailPage = () => {
       return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     }).map(list => ({
       ...list,
-      // Pre-sort tasks by position
-      tasks: [...list.tasks].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+      // Pre-sort and filter tasks
+      tasks: [...list.tasks]
+        .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+        .filter(filterTask)
     }));
-  }, [board?.taskLists, sortBy, sortOrder]);
+  }, [board?.taskLists, sortBy, sortOrder, filterTask]);
 
   if (loading)
     return (
@@ -615,6 +683,13 @@ const BoardDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Filter Bar */}
+      <FilterBar
+        labels={board.labels || []}
+        filters={filters}
+        onFilterChange={setFilters}
+      />
 
       {/* Board Content - Grid Layout (max 4 columns) */}
       <DndContext
