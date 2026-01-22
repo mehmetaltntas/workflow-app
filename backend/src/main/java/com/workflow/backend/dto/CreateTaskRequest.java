@@ -1,5 +1,6 @@
 package com.workflow.backend.dto;
 
+import com.workflow.backend.entity.Priority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,4 +26,6 @@ public class CreateTaskRequest {
     private Long taskListId;
 
     private LocalDate dueDate; // Son tarih (opsiyonel)
+
+    private Priority priority; // Öncelik seviyesi (opsiyonel)
 }

@@ -1,18 +1,26 @@
 import React, { useState } from "react";
-import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check } from "lucide-react";
-import type { Task, Label } from "../types";
+import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check, Flag } from "lucide-react";
+import type { Task, Label, Priority } from "../types";
 
 interface TaskEditModalProps {
   task: Task;
   boardLabels?: Label[];
   onClose: () => void;
-  onSave: (taskId: number, updates: Partial<Task> & { labelIds?: number[] }) => Promise<void>;
+  onSave: (taskId: number, updates: Partial<Task> & { labelIds?: number[]; priority?: Priority }) => Promise<void>;
 }
+
+const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
+  { value: 'NONE', label: 'Yok', color: 'rgba(255,255,255,0.4)' },
+  { value: 'LOW', label: 'Düşük', color: '#22c55e' },
+  { value: 'MEDIUM', label: 'Orta', color: '#f59e0b' },
+  { value: 'HIGH', label: 'Yüksek', color: '#ef4444' },
+];
 
 export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels = [], onClose, onSave }) => {
   const [title, setTitle] = useState(task.title);
   const [link, setLink] = useState(task.link || "");
   const [dueDate, setDueDate] = useState(task.dueDate || "");
+  const [priority, setPriority] = useState<Priority>(task.priority || 'NONE');
   const [selectedLabelIds, setSelectedLabelIds] = useState<number[]>(
     task.labels?.map(l => l.id) || []
   );
@@ -33,6 +41,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
         title,
         link,
         dueDate: dueDate || null,
+        priority,
         labelIds: selectedLabelIds
       });
       onClose();
@@ -189,6 +198,59 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                   Kaldır
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Priority Section */}
+          <div className="form-group">
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <Flag size={14} /> Öncelik
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {PRIORITY_OPTIONS.map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setPriority(option.value)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: priority === option.value
+                      ? `1px solid ${option.color}`
+                      : '1px solid rgba(255,255,255,0.1)',
+                    background: priority === option.value
+                      ? `${option.color}20`
+                      : 'rgba(255,255,255,0.03)',
+                    color: priority === option.value
+                      ? option.color
+                      : 'rgba(255,255,255,0.6)',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (priority !== option.value) {
+                      e.currentTarget.style.borderColor = `${option.color}60`;
+                      e.currentTarget.style.background = `${option.color}10`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (priority !== option.value) {
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                    }
+                  }}
+                >
+                  {option.value !== 'NONE' && <Flag size={12} />}
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 

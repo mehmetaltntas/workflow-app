@@ -1,5 +1,8 @@
 // src/types/index.ts
 
+// Öncelik seviyeleri
+export type Priority = 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
+
 // Etiket
 export interface Label {
   id: number;
@@ -17,6 +20,7 @@ export interface Task {
   isCompleted?: boolean;
   createdAt?: string;
   dueDate?: string | null; // Son tarih (YYYY-MM-DD formatında)
+  priority?: Priority; // Öncelik seviyesi
   labels?: Label[]; // Görevin etiketleri
 }
 

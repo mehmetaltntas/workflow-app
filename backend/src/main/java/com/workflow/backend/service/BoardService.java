@@ -121,6 +121,7 @@ public class BoardService {
                         taskDto.setIsCompleted(task.getIsCompleted());
                         taskDto.setCreatedAt(task.getCreatedAt());
                         taskDto.setDueDate(task.getDueDate());
+                        taskDto.setPriority(task.getPriority());
 
                         // Görevin etiketlerini ekle
                         if (task.getLabels() != null && !task.getLabels().isEmpty()) {

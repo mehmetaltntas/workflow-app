@@ -1,8 +1,8 @@
 import { memo, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical, Calendar } from "lucide-react";
-import type { Task, TaskList } from "../types";
+import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical, Calendar, Flag } from "lucide-react";
+import type { Task, TaskList, Priority } from "../types";
 import { ActionMenu } from "./ActionMenu";
 
 interface SortableTaskProps {
@@ -13,6 +13,20 @@ interface SortableTaskProps {
   onDelete: (taskId: number) => void;
   onToggleComplete: (task: Task, list: TaskList) => void;
 }
+
+// Priority renk ve etiket bilgisi
+const getPriorityInfo = (priority: Priority | undefined): { label: string; color: string; bgColor: string } => {
+  switch (priority) {
+    case 'HIGH':
+      return { label: 'Yüksek', color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.15)' };
+    case 'MEDIUM':
+      return { label: 'Orta', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)' };
+    case 'LOW':
+      return { label: 'Düşük', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)' };
+    default:
+      return { label: '', color: '', bgColor: '' };
+  }
+};
 
 // Due date durumunu hesapla
 const getDueDateStatus = (dueDate: string | null | undefined): { status: 'overdue' | 'today' | 'tomorrow' | 'upcoming' | 'none'; label: string; color: string } => {
@@ -61,6 +75,9 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
 
   // Due date status hesapla (memoized)
   const dueDateInfo = useMemo(() => getDueDateStatus(task.dueDate), [task.dueDate]);
+
+  // Priority info hesapla (memoized)
+  const priorityInfo = useMemo(() => getPriorityInfo(task.priority), [task.priority]);
 
   return (
     <div
@@ -146,7 +163,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
         }}>
           {task.title}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' ? '4px' : '0', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' || priorityInfo.color ? '4px' : '0', flexWrap: 'wrap' }}>
           {task.description && (
             <div style={{
               fontSize: "11px",
@@ -157,6 +174,23 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
             }}>
               <MessageSquare size={10} />
               <span>Not var</span>
+            </div>
+          )}
+          {/* Priority Badge */}
+          {priorityInfo.color && !task.isCompleted && (
+            <div style={{
+              fontSize: "10px",
+              fontWeight: "600",
+              color: priorityInfo.color,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              background: priorityInfo.bgColor,
+            }}>
+              <Flag size={9} />
+              <span>{priorityInfo.label}</span>
             </div>
           )}
           {/* Due Date Badge */}
@@ -233,6 +267,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
     prevProps.task.link === nextProps.task.link &&
     prevProps.task.position === nextProps.task.position &&
     prevProps.task.dueDate === nextProps.task.dueDate &&
+    prevProps.task.priority === nextProps.task.priority &&
     prevProps.index === nextProps.index &&
     prevProps.list.id === nextProps.list.id &&
     // Labels comparison - compare by stringifying IDs

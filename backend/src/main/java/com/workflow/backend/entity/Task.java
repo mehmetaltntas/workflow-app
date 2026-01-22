@@ -30,6 +30,10 @@ public class Task {
 
     private java.time.LocalDate dueDate; // Son tarih (deadline)
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Priority priority = Priority.NONE; // Öncelik seviyesi
+
     // Sürükle bırak için sıralama sayısı (0, 1, 2...)
     private Integer position;
 

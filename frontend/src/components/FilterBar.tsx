@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Search, X, Filter, Calendar, CheckSquare, Tag, ChevronDown } from "lucide-react";
-import type { Label } from "../types";
+import { Search, X, Filter, Calendar, CheckSquare, Tag, ChevronDown, Flag } from "lucide-react";
+import type { Label, Priority } from "../types";
 
 export interface FilterState {
   searchText: string;
   selectedLabels: number[];
   dueDateFilter: "all" | "overdue" | "today" | "tomorrow" | "week" | "nodate";
   completionFilter: "all" | "completed" | "pending";
+  priorityFilter: "all" | Priority;
 }
 
 interface FilterBarProps {
@@ -30,10 +31,19 @@ const completionOptions = [
   { value: "completed", label: "Tamamlanan" },
 ];
 
+const priorityOptions = [
+  { value: "all", label: "Tümü", color: null },
+  { value: "HIGH", label: "Yüksek", color: "#ef4444" },
+  { value: "MEDIUM", label: "Orta", color: "#f59e0b" },
+  { value: "LOW", label: "Düşük", color: "#22c55e" },
+  { value: "NONE", label: "Önceliksiz", color: "rgba(255,255,255,0.4)" },
+];
+
 export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterChange }) => {
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [showCompletionDropdown, setShowCompletionDropdown] = useState(false);
+  const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFilterChange({ ...filters, [key]: value });
@@ -52,6 +62,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       selectedLabels: [],
       dueDateFilter: "all",
       completionFilter: "all",
+      priorityFilter: "all",
     });
   };
 
@@ -59,13 +70,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
     filters.searchText ||
     filters.selectedLabels.length > 0 ||
     filters.dueDateFilter !== "all" ||
-    filters.completionFilter !== "all";
+    filters.completionFilter !== "all" ||
+    filters.priorityFilter !== "all";
 
   const activeFilterCount =
     (filters.searchText ? 1 : 0) +
     (filters.selectedLabels.length > 0 ? 1 : 0) +
     (filters.dueDateFilter !== "all" ? 1 : 0) +
-    (filters.completionFilter !== "all" ? 1 : 0);
+    (filters.completionFilter !== "all" ? 1 : 0) +
+    (filters.priorityFilter !== "all" ? 1 : 0);
 
   return (
     <div
@@ -501,6 +514,113 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
         )}
       </div>
 
+      {/* Priority Filter Dropdown */}
+      <div style={{ position: "relative" }}>
+        <button
+          onClick={() => {
+            setShowPriorityDropdown(!showPriorityDropdown);
+            setShowLabelDropdown(false);
+            setShowDateDropdown(false);
+            setShowCompletionDropdown(false);
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            border: filters.priorityFilter !== "all"
+              ? "1px solid var(--primary)"
+              : "1px solid rgba(255,255,255,0.1)",
+            background: filters.priorityFilter !== "all"
+              ? "rgba(77, 171, 247, 0.15)"
+              : "rgba(255,255,255,0.04)",
+            color: filters.priorityFilter !== "all" ? "var(--primary)" : "rgba(255,255,255,0.6)",
+            fontSize: "12px",
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          <Flag size={14} />
+          {priorityOptions.find((o) => o.value === filters.priorityFilter)?.label || "Öncelik"}
+          <ChevronDown size={12} style={{ transform: showPriorityDropdown ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }} />
+        </button>
+
+        {showPriorityDropdown && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 6px)",
+              left: 0,
+              minWidth: "150px",
+              background: "var(--bg-card)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "12px",
+              padding: "8px",
+              zIndex: 100,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+            }}
+          >
+            {priorityOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  updateFilter("priorityFilter", option.value as FilterState["priorityFilter"]);
+                  setShowPriorityDropdown(false);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  width: "100%",
+                  padding: "8px 10px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: filters.priorityFilter === option.value
+                    ? "rgba(77, 171, 247, 0.15)"
+                    : "transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  if (filters.priorityFilter !== option.value) {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (filters.priorityFilter !== option.value) {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                {option.color && (
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      background: option.color,
+                    }}
+                  />
+                )}
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    color: filters.priorityFilter === option.value
+                      ? "var(--primary)"
+                      : "rgba(255,255,255,0.8)",
+                  }}
+                >
+                  {option.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Clear All Filters */}
       {hasActiveFilters && (
         <button
@@ -533,7 +653,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       )}
 
       {/* Click outside to close dropdowns */}
-      {(showLabelDropdown || showDateDropdown || showCompletionDropdown) && (
+      {(showLabelDropdown || showDateDropdown || showCompletionDropdown || showPriorityDropdown) && (
         <div
           style={{
             position: "fixed",
@@ -547,6 +667,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
             setShowLabelDropdown(false);
             setShowDateDropdown(false);
             setShowCompletionDropdown(false);
+            setShowPriorityDropdown(false);
           }}
         />
       )}
@@ -559,4 +680,5 @@ export const getDefaultFilters = (): FilterState => ({
   selectedLabels: [],
   dueDateFilter: "all",
   completionFilter: "all",
+  priorityFilter: "all",
 });

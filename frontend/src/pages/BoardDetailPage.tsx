@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
 import { boardService, taskService, labelService } from "../services/api";
-import type { Board, Task, TaskList } from "../types";
+import type { Board, Task, TaskList, Priority } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag, Flag } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
@@ -44,8 +44,10 @@ const BoardDetailPage = () => {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskLink, setNewTaskLink] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState<Priority>("NONE");
   const [showTaskLinkInput, setShowTaskLinkInput] = useState(false);
   const [showTaskDueDateInput, setShowTaskDueDateInput] = useState(false);
+  const [showTaskPriorityInput, setShowTaskPriorityInput] = useState(false);
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
@@ -161,13 +163,16 @@ const BoardDetailPage = () => {
         description: "",
         link: newTaskLink || undefined,
         dueDate: newTaskDueDate || undefined,
+        priority: newTaskPriority !== "NONE" ? newTaskPriority : undefined,
         taskListId: listId,
       });
       setNewTaskTitle("");
       setNewTaskLink("");
       setNewTaskDueDate("");
+      setNewTaskPriority("NONE");
       setShowTaskLinkInput(false);
       setShowTaskDueDateInput(false);
+      setShowTaskPriorityInput(false);
       setActiveListId(null);
       loadBoardData(slug!);
       toast.success("Eklendi");
@@ -175,7 +180,7 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Eklenemedi");
     }
-  }, [newTaskTitle, newTaskLink, newTaskDueDate, loadBoardData, slug]);
+  }, [newTaskTitle, newTaskLink, newTaskDueDate, newTaskPriority, loadBoardData, slug]);
 
   const handleTaskCompletionToggle = useCallback(async (task: Task, list: TaskList) => {
     try {
@@ -383,6 +388,14 @@ const BoardDetailPage = () => {
         return false;
       }
       if (filters.completionFilter === "pending" && task.isCompleted) {
+        return false;
+      }
+    }
+
+    // Priority filter
+    if (filters.priorityFilter !== "all") {
+      const taskPriority = task.priority || "NONE";
+      if (taskPriority !== filters.priorityFilter) {
         return false;
       }
     }
@@ -929,6 +942,54 @@ const BoardDetailPage = () => {
                   </div>
                 ) : null}
 
+                {/* Priority Input */}
+                {showTaskPriorityInput ? (
+                  <div style={{ marginBottom: '10px', display: 'flex', gap: '4px' }}>
+                    {(['NONE', 'LOW', 'MEDIUM', 'HIGH'] as Priority[]).map(p => {
+                      const colors: Record<Priority, string> = {
+                        NONE: 'rgba(255,255,255,0.4)',
+                        LOW: '#22c55e',
+                        MEDIUM: '#f59e0b',
+                        HIGH: '#ef4444'
+                      };
+                      const labels: Record<Priority, string> = {
+                        NONE: 'Yok',
+                        LOW: 'Düşük',
+                        MEDIUM: 'Orta',
+                        HIGH: 'Yüksek'
+                      };
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => setNewTaskPriority(p)}
+                          style={{
+                            flex: 1,
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: newTaskPriority === p
+                              ? `1px solid ${colors[p]}`
+                              : '1px solid rgba(255,255,255,0.08)',
+                            background: newTaskPriority === p
+                              ? `${colors[p]}20`
+                              : 'rgba(255,255,255,0.03)',
+                            color: newTaskPriority === p ? colors[p] : 'rgba(255,255,255,0.5)',
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          {p !== 'NONE' && <Flag size={9} />}
+                          {labels[p]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
                 {/* Quick action buttons */}
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
                   {!showTaskLinkInput && (
@@ -987,6 +1048,34 @@ const BoardDetailPage = () => {
                       <Calendar size={11} /> Tarih
                     </button>
                   )}
+                  {!showTaskPriorityInput && (
+                    <button
+                      onClick={() => setShowTaskPriorityInput(true)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '6px 10px',
+                        background: 'transparent',
+                        border: '1px dashed rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                        e.currentTarget.style.color = '#ef4444';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                      }}
+                    >
+                      <Flag size={11} /> Öncelik
+                    </button>
+                  )}
                 </div>
 
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -1002,8 +1091,10 @@ const BoardDetailPage = () => {
                       setActiveListId(null);
                       setShowTaskLinkInput(false);
                       setShowTaskDueDateInput(false);
+                      setShowTaskPriorityInput(false);
                       setNewTaskLink('');
                       setNewTaskDueDate('');
+                      setNewTaskPriority('NONE');
                     }}
                     className="btn btn-ghost"
                     style={{ padding: "8px", borderRadius: '10px', height: '36px' }}

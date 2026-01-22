@@ -68,6 +68,7 @@ public class TaskService {
         task.setTaskList(taskList);
         task.setLink(request.getLink());
         task.setDueDate(request.getDueDate());
+        task.setPriority(request.getPriority());
 
         Task savedTask = taskRepository.save(task);
         logger.info("Yeni görev oluşturuldu: {} (pozisyon: {})", savedTask.getTitle(), savedTask.getPosition());
@@ -233,6 +234,9 @@ public class TaskService {
             task.setIsCompleted(request.getIsCompleted());
         // dueDate null olarak da gönderilebilir (tarihi kaldırmak için)
         task.setDueDate(request.getDueDate());
+        // priority null olarak da gönderilebilir
+        if (request.getPriority() != null)
+            task.setPriority(request.getPriority());
 
         // Etiketleri güncelle (labelIds gönderildiyse)
         if (request.getLabelIds() != null) {
@@ -254,6 +258,7 @@ public class TaskService {
         dto.setIsCompleted(task.getIsCompleted());
         dto.setCreatedAt(task.getCreatedAt());
         dto.setDueDate(task.getDueDate());
+        dto.setPriority(task.getPriority());
 
         // Etiketleri ekle
         if (task.getLabels() != null && !task.getLabels().isEmpty()) {

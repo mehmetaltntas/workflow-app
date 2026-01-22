@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
+import com.workflow.backend.entity.Priority;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +27,7 @@ public class TaskDto {
     private LocalDateTime createdAt;
     private Integer position;
     private LocalDate dueDate; // Son tarih (deadline)
+    private Priority priority; // Öncelik seviyesi
     private List<LabelDto> labels; // Görevin etiketleri
     private List<Long> labelIds; // Güncelleme için etiket ID'leri
 }
