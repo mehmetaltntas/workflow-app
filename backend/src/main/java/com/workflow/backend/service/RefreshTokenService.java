@@ -1,11 +1,11 @@
 package com.workflow.backend.service;
 
+import com.workflow.backend.config.JwtProperties;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.repository.RefreshTokenRepository;
 import com.workflow.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +19,7 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
-
-    @Value("${jwt.refresh-token.expiration}")
-    private Long refreshTokenExpiration;
+    private final JwtProperties jwtProperties;
 
     /**
      * Kullanıcı için yeni bir refresh token oluşturur.
@@ -41,7 +39,7 @@ public class RefreshTokenService {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
         refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenExpiration));
+        refreshToken.setExpiryDate(Instant.now().plusMillis(jwtProperties.getRefreshToken().getExpiration()));
 
         return refreshTokenRepository.save(refreshToken);
     }

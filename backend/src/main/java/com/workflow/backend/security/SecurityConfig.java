@@ -1,7 +1,7 @@
 package com.workflow.backend.security;
 
+import com.workflow.backend.config.CorsProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,9 +24,7 @@ import java.util.List;
 public class SecurityConfig {
 
         private final JwtFilter jwtFilter;
-
-        @Value("${cors.allowed-origins}")
-        private String allowedOrigins;
+        private final CorsProperties corsProperties;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -58,7 +56,7 @@ public class SecurityConfig {
                 CorsConfiguration configuration = new CorsConfiguration();
 
                 // Environment variable'dan origin'leri oku
-                List<String> origins = Arrays.asList(allowedOrigins.split(","));
+                List<String> origins = Arrays.asList(corsProperties.getAllowedOriginsArray());
                 configuration.setAllowedOrigins(origins);
 
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
@@ -78,6 +76,6 @@ public class SecurityConfig {
         }
 
         private String getAllowedOriginsForCSP() {
-                return String.join(" ", allowedOrigins.split(","));
+                return String.join(" ", corsProperties.getAllowedOriginsArray());
         }
 }

@@ -1,0 +1,27 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT secret key for signing tokens. Must be at least 64 characters for HS256."
+    },
+    {
+      "name": "jwt.access-token.expiration",
+      "type": "java.lang.Long",
+      "description": "Access token expiration time in milliseconds. Default: 900000 (15 minutes).",
+      "defaultValue": 900000
+    },
+    {
+      "name": "jwt.refresh-token.expiration",
+      "type": "java.lang.Long",
+      "description": "Refresh token expiration time in milliseconds. Default: 604800000 (7 days).",
+      "defaultValue": 604800000
+    },
+    {
+      "name": "cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed CORS origins.",
+      "defaultValue": "http://localhost:3000,http://localhost:5173"
+    }
+  ]
+}

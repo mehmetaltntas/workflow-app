@@ -1,10 +1,11 @@
 package com.workflow.backend.security;
 
+import com.workflow.backend.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -13,26 +14,24 @@ import java.util.Date;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String secretKey;
-
-    @Value("${jwt.access-token.expiration}")
-    private long accessTokenExpiration;
+    private final JwtProperties jwtProperties;
 
     private Key signingKey;
 
     @PostConstruct
     public void init() {
+        String secret = jwtProperties.getSecret();
         // Secret key en az 64 karakter olmalı (HS256 için 256 bit)
-        if (secretKey == null || secretKey.length() < 64) {
+        if (secret == null || secret.length() < 64) {
             throw new IllegalStateException(
                 "JWT Secret key en az 64 karakter olmalı! " +
                 "Lütfen application.properties veya environment variable'da jwt.secret değerini ayarlayın."
             );
         }
-        this.signingKey = Keys.hmacShaKeyFor(secretKey.getBytes());
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     // 1. Kullanıcı adı ile Access Token Üret
@@ -45,7 +44,7 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessToken().getExpiration()))
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
