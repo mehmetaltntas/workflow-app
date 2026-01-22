@@ -117,6 +117,27 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
 
       {/* Task Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Labels */}
+        {task.labels && task.labels.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
+            {task.labels.map(label => (
+              <span
+                key={label.id}
+                style={{
+                  fontSize: '9px',
+                  fontWeight: '600',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  background: label.color + '25', // 25 = 15% opacity in hex
+                  color: label.color,
+                  border: `1px solid ${label.color}40`, // 40 = 25% opacity
+                }}
+              >
+                {label.name}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="task-title" style={{
           fontSize: "13px",
           fontWeight: "500",
@@ -125,7 +146,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
         }}>
           {task.title}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' ? '4px' : '0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' ? '4px' : '0', flexWrap: 'wrap' }}>
           {task.description && (
             <div style={{
               fontSize: "11px",
@@ -213,6 +234,9 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
     prevProps.task.position === nextProps.task.position &&
     prevProps.task.dueDate === nextProps.task.dueDate &&
     prevProps.index === nextProps.index &&
-    prevProps.list.id === nextProps.list.id
+    prevProps.list.id === nextProps.list.id &&
+    // Labels comparison - compare by stringifying IDs
+    JSON.stringify(prevProps.task.labels?.map(l => l.id).sort()) ===
+    JSON.stringify(nextProps.task.labels?.map(l => l.id).sort())
   );
 });

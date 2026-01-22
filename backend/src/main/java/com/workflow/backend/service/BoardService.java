@@ -2,6 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
+import com.workflow.backend.dto.LabelDto;
 import com.workflow.backend.dto.TaskDto;
 import com.workflow.backend.dto.TaskListDto;
 import com.workflow.backend.entity.Board;
@@ -119,6 +120,19 @@ public class BoardService {
                         taskDto.setLink(task.getLink());
                         taskDto.setIsCompleted(task.getIsCompleted());
                         taskDto.setCreatedAt(task.getCreatedAt());
+                        taskDto.setDueDate(task.getDueDate());
+
+                        // Görevin etiketlerini ekle
+                        if (task.getLabels() != null && !task.getLabels().isEmpty()) {
+                            taskDto.setLabels(task.getLabels().stream().map(label -> {
+                                LabelDto labelDto = new LabelDto();
+                                labelDto.setId(label.getId());
+                                labelDto.setName(label.getName());
+                                labelDto.setColor(label.getColor());
+                                return labelDto;
+                            }).collect(Collectors.toList()));
+                        }
+
                         return taskDto;
                     }).collect(Collectors.toList());
 
@@ -129,6 +143,18 @@ public class BoardService {
             }).collect(Collectors.toList());
 
             response.setTaskLists(listDtos); // Listeleri panoya koy
+        }
+
+        // Pano etiketlerini ekle
+        if (board.getLabels() != null && !board.getLabels().isEmpty()) {
+            List<LabelDto> labelDtos = board.getLabels().stream().map(label -> {
+                LabelDto labelDto = new LabelDto();
+                labelDto.setId(label.getId());
+                labelDto.setName(label.getName());
+                labelDto.setColor(label.getColor());
+                return labelDto;
+            }).collect(Collectors.toList());
+            response.setLabels(labelDtos);
         }
 
         return response;

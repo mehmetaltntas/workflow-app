@@ -104,7 +104,7 @@ export const taskService = {
   updateTaskList: (listId: number, data: { name?: string; link?: string; isCompleted?: boolean }) =>
     apiClient.put(`/lists/${listId}`, data),
   deleteTask: (taskId: number) => apiClient.delete(`/tasks/${taskId}`),
-  updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; dueDate?: string | null; }) =>
+  updateTask: (taskId: number, data: { title?: string; description?: string; link?: string; isCompleted?: boolean; dueDate?: string | null; labelIds?: number[]; }) =>
     apiClient.put(`/tasks/${taskId}`, data),
 
   // Drag & Drop İşlemleri
@@ -115,7 +115,24 @@ export const taskService = {
     apiClient.put("/tasks/batch-reorder", data),
 };
 
-// 6. Kullanıcı Profil İşlemleri
+// 6. Etiket İşlemleri
+export const labelService = {
+  // Panoya ait etiketleri getir
+  getLabelsByBoard: (boardId: number) => apiClient.get(`/labels/board/${boardId}`),
+
+  // Yeni etiket oluştur
+  createLabel: (data: { name: string; color: string; boardId: number }) =>
+    apiClient.post("/labels", data),
+
+  // Etiket güncelle
+  updateLabel: (labelId: number, data: { name?: string; color?: string }) =>
+    apiClient.put(`/labels/${labelId}`, data),
+
+  // Etiket sil
+  deleteLabel: (labelId: number) => apiClient.delete(`/labels/${labelId}`),
+};
+
+// 7. Kullanıcı Profil İşlemleri
 export const userService = {
   getUser: (userId: number) => {
     return apiClient.get(`/users/${userId}`);

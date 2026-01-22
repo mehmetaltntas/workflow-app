@@ -2,9 +2,11 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.Board;
+import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.repository.BoardRepository;
+import com.workflow.backend.repository.LabelRepository;
 import com.workflow.backend.repository.TaskListRepository;
 import com.workflow.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -24,6 +27,7 @@ public class TaskService {
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
     private final BoardRepository boardRepository;
+    private final LabelRepository labelRepository;
 
     // 1. YENİ LİSTE (SÜTUN) OLUŞTURMA
     public TaskListDto createTaskList(CreateTaskListRequest request) {
@@ -214,6 +218,7 @@ public class TaskService {
     }
 
     // GÖREV GÜNCELLE
+    @Transactional
     public TaskDto updateTask(Long taskId, TaskDto request) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
@@ -229,6 +234,12 @@ public class TaskService {
         // dueDate null olarak da gönderilebilir (tarihi kaldırmak için)
         task.setDueDate(request.getDueDate());
 
+        // Etiketleri güncelle (labelIds gönderildiyse)
+        if (request.getLabelIds() != null) {
+            List<Label> labels = labelRepository.findAllById(request.getLabelIds());
+            task.setLabels(new HashSet<>(labels));
+        }
+
         return mapToDto(taskRepository.save(task));
     }
 
@@ -243,6 +254,18 @@ public class TaskService {
         dto.setIsCompleted(task.getIsCompleted());
         dto.setCreatedAt(task.getCreatedAt());
         dto.setDueDate(task.getDueDate());
+
+        // Etiketleri ekle
+        if (task.getLabels() != null && !task.getLabels().isEmpty()) {
+            dto.setLabels(task.getLabels().stream().map(label -> {
+                LabelDto labelDto = new LabelDto();
+                labelDto.setId(label.getId());
+                labelDto.setName(label.getName());
+                labelDto.setColor(label.getColor());
+                return labelDto;
+            }).toList());
+        }
+
         return dto;
     }
 

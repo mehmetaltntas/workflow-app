@@ -1,5 +1,12 @@
 // src/types/index.ts
 
+// Etiket
+export interface Label {
+  id: number;
+  name: string;
+  color: string; // Hex color code (e.g., "#ff5733")
+}
+
 // Görev Kartı
 export interface Task {
   id: number;
@@ -10,6 +17,7 @@ export interface Task {
   isCompleted?: boolean;
   createdAt?: string;
   dueDate?: string | null; // Son tarih (YYYY-MM-DD formatında)
+  labels?: Label[]; // Görevin etiketleri
 }
 
 // Sütun (Liste)
@@ -33,6 +41,7 @@ export interface Board {
   deadline?: string;
   ownerName: string;
   taskLists: TaskList[]; // İçinde listeler dizisi var
+  labels?: Label[]; // Panoya ait etiketler
 }
 
 // Kullanıcı (Login olunca dönen veri)

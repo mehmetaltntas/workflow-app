@@ -1,23 +1,40 @@
 import React, { useState } from "react";
-import { X, Save, Link as LinkIcon, Type, Calendar } from "lucide-react";
-import type { Task } from "../types";
+import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check } from "lucide-react";
+import type { Task, Label } from "../types";
 
 interface TaskEditModalProps {
   task: Task;
+  boardLabels?: Label[];
   onClose: () => void;
-  onSave: (taskId: number, updates: Partial<Task>) => Promise<void>;
+  onSave: (taskId: number, updates: Partial<Task> & { labelIds?: number[] }) => Promise<void>;
 }
 
-export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onSave }) => {
+export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels = [], onClose, onSave }) => {
   const [title, setTitle] = useState(task.title);
   const [link, setLink] = useState(task.link || "");
   const [dueDate, setDueDate] = useState(task.dueDate || "");
+  const [selectedLabelIds, setSelectedLabelIds] = useState<number[]>(
+    task.labels?.map(l => l.id) || []
+  );
   const [isSaving, setIsSaving] = useState(false);
+
+  const toggleLabel = (labelId: number) => {
+    setSelectedLabelIds(prev =>
+      prev.includes(labelId)
+        ? prev.filter(id => id !== labelId)
+        : [...prev, labelId]
+    );
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await onSave(task.id, { title, link, dueDate: dueDate || null });
+      await onSave(task.id, {
+        title,
+        link,
+        dueDate: dueDate || null,
+        labelIds: selectedLabelIds
+      });
       onClose();
     } catch (error) {
       console.error(error);
@@ -174,6 +191,56 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
               )}
             </div>
           </div>
+
+          {/* Labels Section */}
+          {boardLabels.length > 0 && (
+            <div className="form-group">
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <Tag size={14} /> Etiketler
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {boardLabels.map(label => {
+                  const isSelected = selectedLabelIds.includes(label.id);
+                  return (
+                    <button
+                      key={label.id}
+                      type="button"
+                      onClick={() => toggleLabel(label.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 12px',
+                        borderRadius: '10px',
+                        border: `1px solid ${isSelected ? label.color : 'rgba(255,255,255,0.1)'}`,
+                        background: isSelected ? `${label.color}25` : 'rgba(255,255,255,0.03)',
+                        color: isSelected ? label.color : 'rgba(255,255,255,0.6)',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.borderColor = `${label.color}60`;
+                          e.currentTarget.style.background = `${label.color}15`;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                        }
+                      }}
+                    >
+                      {isSelected && <Check size={12} />}
+                      {label.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "12px" }}>

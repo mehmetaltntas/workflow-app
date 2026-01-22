@@ -2,10 +2,15 @@ package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tasks")
 @Data
+@EqualsAndHashCode(exclude = {"labels", "taskList", "assignee"})
 public class Task {
 
     @Id
@@ -38,6 +43,15 @@ public class Task {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id") // Atanan kişi
     private User assignee;
+
+    // İLİŞKİ: Bir görevin birden fazla etiketi olabilir (Many-to-Many)
+    @ManyToMany
+    @JoinTable(
+        name = "task_labels",
+        joinColumns = @JoinColumn(name = "task_id"),
+        inverseJoinColumns = @JoinColumn(name = "label_id")
+    )
+    private Set<Label> labels = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

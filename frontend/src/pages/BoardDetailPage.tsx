@@ -1,16 +1,17 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
-import { boardService, taskService } from "../services/api";
+import { boardService, taskService, labelService } from "../services/api";
 import type { Board, Task, TaskList } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
 import { ListEditModal } from "../components/ListEditModal";
 import { SortableTask } from "../components/SortableTask";
+import { LabelManager } from "../components/LabelManager";
 
 // Drag & Drop
 import {
@@ -46,6 +47,7 @@ const BoardDetailPage = () => {
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
+  const [showLabelManager, setShowLabelManager] = useState(false);
 
   // Sorting
   // Default: Date (oldest to newest), down arrow
@@ -213,7 +215,7 @@ const BoardDetailPage = () => {
     }
   }, [loadBoardData, slug]);
 
-  const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task>) => {
+  const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task> & { labelIds?: number[] }) => {
     try {
       await taskService.updateTask(taskId, updates);
       loadBoardData(slug!);
@@ -247,6 +249,40 @@ const BoardDetailPage = () => {
     } catch (error) {
       console.error(error);
       toast.error("Silme işlemi başarısız");
+    }
+  }, [loadBoardData, slug]);
+
+  // Label handlers
+  const handleCreateLabel = useCallback(async (data: { name: string; color: string; boardId: number }) => {
+    try {
+      await labelService.createLabel(data);
+      loadBoardData(slug!);
+      toast.success("Etiket oluşturuldu");
+    } catch (error) {
+      console.error(error);
+      toast.error("Etiket oluşturulamadı");
+    }
+  }, [loadBoardData, slug]);
+
+  const handleUpdateLabel = useCallback(async (labelId: number, data: { name?: string; color?: string }) => {
+    try {
+      await labelService.updateLabel(labelId, data);
+      loadBoardData(slug!);
+      toast.success("Etiket güncellendi");
+    } catch (error) {
+      console.error(error);
+      toast.error("Etiket güncellenemedi");
+    }
+  }, [loadBoardData, slug]);
+
+  const handleDeleteLabel = useCallback(async (labelId: number) => {
+    try {
+      await labelService.deleteLabel(labelId);
+      loadBoardData(slug!);
+      toast.success("Etiket silindi");
+    } catch (error) {
+      console.error(error);
+      toast.error("Etiket silinemedi");
     }
   }, [loadBoardData, slug]);
 
@@ -367,10 +403,11 @@ const BoardDetailPage = () => {
       />
 
       {editingTask && (
-        <TaskEditModal 
-          task={editingTask} 
-          onClose={() => setEditingTask(null)} 
-          onSave={handleUpdateTask} 
+        <TaskEditModal
+          task={editingTask}
+          boardLabels={board.labels}
+          onClose={() => setEditingTask(null)}
+          onSave={handleUpdateTask}
         />
       )}
 
@@ -380,6 +417,17 @@ const BoardDetailPage = () => {
           onClose={() => setEditingList(null)}
           onSave={handleUpdateList}
           onDeleteTasks={handleBulkDeleteTasks}
+        />
+      )}
+
+      {showLabelManager && (
+        <LabelManager
+          boardId={board.id}
+          labels={board.labels || []}
+          onClose={() => setShowLabelManager(false)}
+          onCreateLabel={handleCreateLabel}
+          onUpdateLabel={handleUpdateLabel}
+          onDeleteLabel={handleDeleteLabel}
         />
       )}
 
@@ -397,12 +445,59 @@ const BoardDetailPage = () => {
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <div style={{ 
-            display: 'flex', 
+          {/* Labels Button */}
+          <button
+            onClick={() => setShowLabelManager(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              background: 'rgba(0, 0, 0, 0.4)',
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              backdropFilter: 'blur(10px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.3)';
+              e.currentTarget.style.color = 'var(--primary)';
+              e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
+              e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)';
+            }}
+          >
+            <Tag size={14} />
+            Etiketler
+            {board.labels && board.labels.length > 0 && (
+              <span style={{
+                background: 'var(--primary)',
+                color: 'white',
+                fontSize: '10px',
+                fontWeight: '700',
+                padding: '2px 6px',
+                borderRadius: '8px',
+                minWidth: '18px',
+                textAlign: 'center',
+              }}>
+                {board.labels.length}
+              </span>
+            )}
+          </button>
+
+          <div style={{
+            display: 'flex',
             alignItems: 'center',
-            background: 'rgba(0, 0, 0, 0.4)', 
-            padding: '4px', 
-            borderRadius: '14px', 
+            background: 'rgba(0, 0, 0, 0.4)',
+            padding: '4px',
+            borderRadius: '14px',
             border: '1px solid rgba(255, 255, 255, 0.06)',
             backdropFilter: 'blur(10px)',
             boxShadow: '0 4px 12px rgba(0,0,0,0.2)',

@@ -14,4 +14,5 @@ public class BoardResponse {
     private String description; // Opsiyonel açıklama
     private java.time.LocalDateTime deadline;
     private List<TaskListDto> taskLists; // YENİ EKLENDİ: Panodaki listeler
+    private List<LabelDto> labels; // Panoya ait etiketler
 }

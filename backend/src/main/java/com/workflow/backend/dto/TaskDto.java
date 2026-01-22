@@ -6,6 +6,7 @@ import org.hibernate.validator.constraints.URL;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class TaskDto {
@@ -24,4 +25,6 @@ public class TaskDto {
     private LocalDateTime createdAt;
     private Integer position;
     private LocalDate dueDate; // Son tarih (deadline)
+    private List<LabelDto> labels; // Görevin etiketleri
+    private List<Long> labelIds; // Güncelleme için etiket ID'leri
 }

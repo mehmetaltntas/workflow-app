@@ -38,4 +38,8 @@ public class Board {
     // Bir Pano'nun birden çok Listesi olur (To Do, Done vb.)
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<TaskList> taskLists;
+
+    // Bir Pano'nun birden çok etiketi olabilir
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Label> labels;
 }
