@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.LabelDto;
+import com.workflow.backend.dto.PaginatedResponse;
 import com.workflow.backend.dto.SubtaskDto;
 import com.workflow.backend.dto.TaskDto;
 import com.workflow.backend.dto.TaskListDto;
@@ -12,6 +13,8 @@ import com.workflow.backend.repository.BoardRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -58,19 +61,29 @@ public class BoardService {
         return mapToResponse(savedBoard);
     }
 
-    // KULLANICININ PANOLARINI GETİR
+    // KULLANICININ PANOLARINI GETİR (Pagination destekli)
     @Transactional
-    public List<BoardResponse> getAllBoards(Long userId) {
+    public PaginatedResponse<BoardResponse> getAllBoards(Long userId, Pageable pageable) {
         // Kullanıcı sadece kendi panolarına erişebilir
         authorizationService.verifyUserOwnership(userId);
 
-        // Repository'de yazdığımız özel metodu kullanıyoruz
-        List<Board> boards = boardRepository.findByUserId(userId);
+        // Repository'de yazdığımız pagination destekli metodu kullanıyoruz
+        Page<Board> boardPage = boardRepository.findByUserId(userId, pageable);
 
-        // List<Board> -> List<BoardResponse> dönüşümü (Java 8 Stream API)
-        return boards.stream()
+        // Page<Board> -> PaginatedResponse<BoardResponse> dönüşümü
+        List<BoardResponse> content = boardPage.getContent().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+
+        return new PaginatedResponse<>(
+                content,
+                boardPage.getNumber(),
+                boardPage.getSize(),
+                boardPage.getTotalElements(),
+                boardPage.getTotalPages(),
+                boardPage.isFirst(),
+                boardPage.isLast()
+        );
     }
 
     // ... BoardService içindeyiz ...

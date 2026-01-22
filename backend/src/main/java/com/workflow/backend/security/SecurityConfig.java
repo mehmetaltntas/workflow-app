@@ -24,6 +24,7 @@ import java.util.List;
 public class SecurityConfig {
 
         private final JwtFilter jwtFilter;
+        private final RateLimitFilter rateLimitFilter;
         private final CorsProperties corsProperties;
 
         @Bean
@@ -46,6 +47,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/auth/**", "/error").permitAll()
                                                 .anyRequest().authenticated())
                                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
