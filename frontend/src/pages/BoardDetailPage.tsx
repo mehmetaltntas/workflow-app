@@ -16,22 +16,14 @@ import { FilterBar, getDefaultFilters } from "../components/FilterBar";
 import { StatsBar } from "../components/StatsBar";
 import { CalendarView } from "../components/CalendarView";
 import type { FilterState } from "../components/FilterBar";
-
-// Drag & Drop
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-  DragOverlay,
-} from "@dnd-kit/core";
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
 
 const BoardDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const colors = getThemeColors(theme);
 
   // Data State
   const [board, setBoard] = useState<Board | null>(null);
@@ -61,18 +53,6 @@ const BoardDetailPage = () => {
   // Default: Date (oldest to newest), down arrow
   const [sortBy, setSortBy] = useState<"name" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-
-  // Drag & Drop State
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
-
-  // Drag & Drop Sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px hareket etmeden drag başlamaz (click ile karışmaması için)
-      },
-    })
-  );
 
   const loadBoardData = useCallback(
     async (boardSlug: string) => {
@@ -297,75 +277,6 @@ const BoardDetailPage = () => {
     }
   }, [loadBoardData, slug]);
 
-  // ==================== DRAG & DROP HANDLERS ====================
-
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const taskId = active.id as number;
-
-    // Sürüklenen task'ı bul
-    for (const list of board?.taskLists || []) {
-      const task = list.tasks.find(t => t.id === taskId);
-      if (task) {
-        setActiveTask(task);
-        break;
-      }
-    }
-  }, [board?.taskLists]);
-
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveTask(null);
-
-    if (!over || !board) return;
-
-    const activeId = active.id as number;
-    const overId = over.id;
-
-    // Task ve hedef listeyi bul
-    let sourceList: TaskList | undefined;
-    let destList: TaskList | undefined;
-    let activeTaskObj: Task | undefined;
-
-    for (const list of board.taskLists) {
-      const task = list.tasks.find(t => t.id === activeId);
-      if (task) {
-        sourceList = list;
-        activeTaskObj = task;
-      }
-      if (list.tasks.some(t => t.id === overId) || list.id === overId) {
-        destList = list;
-      }
-    }
-
-    if (!sourceList || !destList || !activeTaskObj) return;
-
-    // Yeni pozisyonu hesapla
-    const destTasks = destList.tasks.filter(t => t.id !== activeId);
-    const overIndex = destTasks.findIndex(t => t.id === overId);
-    const newPosition = overIndex >= 0 ? overIndex : destTasks.length;
-
-    // Aynı liste içinde aynı pozisyondaysa bir şey yapma
-    if (sourceList.id === destList.id) {
-      const oldIndex = sourceList.tasks.findIndex(t => t.id === activeId);
-      if (oldIndex === newPosition) return;
-    }
-
-    try {
-      await taskService.reorderTask(activeId, {
-        targetListId: destList.id,
-        newPosition: newPosition,
-      });
-
-      // Başarılı olursa veriyi yeniden yükle
-      loadBoardData(slug!);
-    } catch (error) {
-      console.error("Drag & drop hatası:", error);
-      toast.error("Taşıma başarısız");
-      loadBoardData(slug!);
-    }
-  }, [board, loadBoardData, slug]);
-
   // Filter function for tasks
   const filterTask = useCallback((task: Task): boolean => {
     // Search text filter
@@ -516,14 +427,14 @@ const BoardDetailPage = () => {
       )}
 
       {/* Modern Header */}
-      <div style={{ padding: "16px 24px", background: "rgba(13, 14, 16, 0.8)", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)", zIndex: 10 }}>
+      <div style={{ padding: "16px 24px", background: colors.bgHeader, borderBottom: `1px solid ${colors.borderDefault}`, display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-          <button onClick={() => navigate("/boards")} className="btn btn-ghost hover:bg-white/5" style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", borderRadius: '12px', color: 'var(--text-muted)' }}>
+          <button onClick={() => navigate("/boards")} className="btn btn-ghost" style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", borderRadius: '12px', color: 'var(--text-muted)' }}>
             <ArrowLeft size={16} />
             <span style={{ fontWeight: '600', fontSize: '14px' }}>Panolar</span>
           </button>
-          <div style={{ height: "24px", width: "1px", background: "rgba(255,255,255,0.1)" }}></div>
-          <h2 style={{ margin: 0, fontSize: "18px", fontVariantNumeric: 'tabular-nums', fontWeight: "700", color: "white", letterSpacing: "-0.03em" }}>
+          <div style={{ height: "24px", width: "1px", background: colors.divider }}></div>
+          <h2 style={{ margin: 0, fontSize: "18px", fontVariantNumeric: 'tabular-nums', fontWeight: "700", color: "var(--text-main)", letterSpacing: "-0.03em" }}>
             {board.name}
           </h2>
         </div>
@@ -533,10 +444,10 @@ const BoardDetailPage = () => {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            background: 'rgba(0, 0, 0, 0.4)',
+            background: colors.bgElevated,
             padding: '4px',
             borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            border: `1px solid ${colors.borderDefault}`,
             backdropFilter: 'blur(10px)',
           }}>
             <button
@@ -548,8 +459,8 @@ const BoardDetailPage = () => {
                 padding: '6px 12px',
                 borderRadius: '8px',
                 border: 'none',
-                background: viewMode === "board" ? 'rgba(77, 171, 247, 0.15)' : 'transparent',
-                color: viewMode === "board" ? 'var(--primary)' : 'rgba(255,255,255,0.5)',
+                background: viewMode === "board" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
+                color: viewMode === "board" ? 'var(--primary)' : colors.textTertiary,
                 fontSize: '12px',
                 fontWeight: '600',
                 cursor: 'pointer',
@@ -568,8 +479,8 @@ const BoardDetailPage = () => {
                 padding: '6px 12px',
                 borderRadius: '8px',
                 border: 'none',
-                background: viewMode === "calendar" ? 'rgba(77, 171, 247, 0.15)' : 'transparent',
-                color: viewMode === "calendar" ? 'var(--primary)' : 'rgba(255,255,255,0.5)',
+                background: viewMode === "calendar" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
+                color: viewMode === "calendar" ? 'var(--primary)' : colors.textTertiary,
                 fontSize: '12px',
                 fontWeight: '600',
                 cursor: 'pointer',
@@ -584,30 +495,21 @@ const BoardDetailPage = () => {
           {/* Labels Button */}
           <button
             onClick={() => setShowLabelManager(true)}
+            className="header-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               padding: '8px 14px',
               borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              background: 'rgba(0, 0, 0, 0.4)',
-              color: 'rgba(255,255,255,0.6)',
+              border: `1px solid ${colors.borderDefault}`,
+              background: colors.bgElevated,
+              color: colors.textSecondary,
               fontSize: '12px',
               fontWeight: '600',
               cursor: 'pointer',
               transition: 'all 0.2s',
               backdropFilter: 'blur(10px)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.3)';
-              e.currentTarget.style.color = 'var(--primary)';
-              e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)';
-              e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
-              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.4)';
             }}
           >
             <Tag size={14} />
@@ -631,16 +533,16 @@ const BoardDetailPage = () => {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            background: 'rgba(0, 0, 0, 0.4)',
+            background: colors.bgElevated,
             padding: '4px',
             borderRadius: '14px',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            border: `1px solid ${colors.borderDefault}`,
             backdropFilter: 'blur(10px)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            boxShadow: 'var(--shadow-md)',
           }}>
             {/* Sort Type Buttons */}
             <div style={{ display: 'flex', gap: '2px' }}>
-              <button 
+              <button
                 onClick={() => setSortBy("name")}
                 style={{
                   display: 'flex',
@@ -654,26 +556,14 @@ const BoardDetailPage = () => {
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  background: sortBy === "name" ? 'rgba(77, 171, 247, 0.15)' : 'transparent',
-                  color: sortBy === "name" ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                  boxShadow: sortBy === "name" ? '0 2px 8px rgba(77, 171, 247, 0.2)' : 'none',
-                }}
-                onMouseEnter={(e) => {
-                  if (sortBy !== "name") {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (sortBy !== "name") {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
-                  }
+                  background: sortBy === "name" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
+                  color: sortBy === "name" ? 'var(--primary)' : colors.textMuted,
+                  boxShadow: sortBy === "name" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
                 }}
               >
                 Alfabetik
               </button>
-              <button 
+              <button
                 onClick={() => setSortBy("date")}
                 style={{
                   display: 'flex',
@@ -687,21 +577,9 @@ const BoardDetailPage = () => {
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  background: sortBy === "date" ? 'rgba(77, 171, 247, 0.15)' : 'transparent',
-                  color: sortBy === "date" ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                  boxShadow: sortBy === "date" ? '0 2px 8px rgba(77, 171, 247, 0.2)' : 'none',
-                }}
-                onMouseEnter={(e) => {
-                  if (sortBy !== "date") {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (sortBy !== "date") {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
-                  }
+                  background: sortBy === "date" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
+                  color: sortBy === "date" ? 'var(--primary)' : colors.textMuted,
+                  boxShadow: sortBy === "date" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
                 }}
               >
                 Tarih
@@ -709,15 +587,15 @@ const BoardDetailPage = () => {
             </div>
 
             {/* Divider */}
-            <div style={{ 
-              width: '1px', 
-              height: '20px', 
-              background: 'rgba(255,255,255,0.08)', 
-              margin: '0 6px' 
+            <div style={{
+              width: '1px',
+              height: '20px',
+              background: colors.divider,
+              margin: '0 6px'
             }} />
-            
+
             {/* Direction Toggle Arrow */}
-            <button 
+            <button
               onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
               style={{
                 display: 'flex',
@@ -728,20 +606,12 @@ const BoardDetailPage = () => {
                 borderRadius: '8px',
                 border: 'none',
                 cursor: 'pointer',
-                background: 'rgba(255,255,255,0.05)',
+                background: colors.bgHover,
                 color: 'var(--primary)',
                 transition: 'all 0.2s ease',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(77, 171, 247, 0.15)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
               title={
-                sortBy === "name" 
+                sortBy === "name"
                   ? (sortOrder === "asc" ? "A'dan Z'ye" : "Z'den A'ya")
                   : (sortOrder === "asc" ? "Eskiden Yeniye" : "Yeniden Eskiye")
               }
@@ -767,12 +637,6 @@ const BoardDetailPage = () => {
         <CalendarView board={board} onTaskClick={setEditingTask} />
       ) : (
       /* Board Content - Grid Layout (max 4 columns) */
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
       <div className="board-grid" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         {sortedTaskLists.map((list) => (
           <div
@@ -781,12 +645,12 @@ const BoardDetailPage = () => {
             style={{
               flex: 1,
               minWidth: 0,
-              background: list.isCompleted ? "rgba(81, 207, 102, 0.03)" : "rgba(20, 21, 24, 0.6)",
+              background: list.isCompleted ? colors.listCompletedBg : colors.listBg,
               borderRadius: "20px",
               padding: "14px",
               maxHeight: "calc(100vh - 160px)",
-              border: list.isCompleted ? "1px solid rgba(81, 207, 102, 0.1)" : "1px solid rgba(255, 255, 255, 0.05)",
-              boxShadow: "0 8px 32px -8px rgba(0,0,0,0.4)",
+              border: `1px solid ${list.isCompleted ? colors.listCompletedBorder : colors.listBorder}`,
+              boxShadow: "var(--shadow-lg)",
               transition: "all 0.3s ease",
               position: "relative",
               display: "flex",
@@ -794,17 +658,17 @@ const BoardDetailPage = () => {
             }}
           >
             {/* List Header */}
-            <div 
+            <div
               className="group/header"
-              style={{ 
-                display: "flex", 
+              style={{
+                display: "flex",
                 alignItems: "center",
                 gap: "10px",
-                marginBottom: "14px", 
-                background: "rgba(0, 0, 0, 0.25)",
+                marginBottom: "14px",
+                background: colors.bgListHeader,
                 padding: "12px 14px",
                 borderRadius: "14px",
-                border: "1px solid rgba(255, 255, 255, 0.03)"
+                border: `1px solid ${colors.borderSubtle}`
               }}
             >
               {/* Action Menu */}
@@ -898,46 +762,41 @@ const BoardDetailPage = () => {
             </div>
 
             {/* Tasks Container - Fixed height with scroll */}
-            <SortableContext
-              items={list.tasks.map(t => t.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div
-                className="list-tasks-container"
-                style={{ position: "relative" }}
-                onScroll={(e) => {
-                  const target = e.currentTarget;
-                  const indicator = target.querySelector('.list-scroll-indicator');
-                  if (indicator) {
-                    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
-                    if (isAtBottom) {
-                      indicator.classList.add('at-bottom');
-                    } else {
-                      indicator.classList.remove('at-bottom');
-                    }
+            <div
+              className="list-tasks-container"
+              style={{ position: "relative" }}
+              onScroll={(e) => {
+                const target = e.currentTarget;
+                const indicator = target.querySelector('.list-scroll-indicator');
+                if (indicator) {
+                  const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+                  if (isAtBottom) {
+                    indicator.classList.add('at-bottom');
+                  } else {
+                    indicator.classList.remove('at-bottom');
                   }
-                }}
-              >
-                {/* Tasks already sorted by position in useMemo */}
-                {list.tasks.map((task: Task, index: number) => (
-                  <SortableTask
-                    key={task.id}
-                    task={task}
-                    list={list}
-                    index={index}
-                    onEdit={setEditingTask}
-                    onDelete={handleDeleteTask}
-                    onToggleComplete={handleTaskCompletionToggle}
-                  />
-                ))}
-                {/* Scroll indicator at the end */}
-                {list.tasks.length > 3 && (
-                  <div className="list-scroll-indicator">
-                    <ChevronDown size={18} />
-                  </div>
-                )}
-              </div>
-            </SortableContext>
+                }
+              }}
+            >
+              {/* Tasks already sorted by position in useMemo */}
+              {list.tasks.map((task: Task, index: number) => (
+                <SortableTask
+                  key={task.id}
+                  task={task}
+                  list={list}
+                  index={index}
+                  onEdit={setEditingTask}
+                  onDelete={handleDeleteTask}
+                  onToggleComplete={handleTaskCompletionToggle}
+                />
+              ))}
+              {/* Scroll indicator at the end */}
+              {list.tasks.length > 3 && (
+                <div className="list-scroll-indicator">
+                  <ChevronDown size={18} />
+                </div>
+              )}
+            </div>
 
             {/* Add Task UI */}
             {activeListId === list.id ? (
@@ -1260,36 +1119,6 @@ const BoardDetailPage = () => {
           )}
         </div>
       </div>
-
-      {/* Drag Overlay - Sürükleme sırasında görünen önizleme */}
-      <DragOverlay>
-        {activeTask ? (
-          <div
-            style={{
-              background: "rgba(77, 171, 247, 0.2)",
-              padding: "12px 14px",
-              borderRadius: "14px",
-              border: "1px solid rgba(77, 171, 247, 0.4)",
-              boxShadow: "0 8px 32px rgba(77, 171, 247, 0.3)",
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              minWidth: '200px',
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: "13px",
-                fontWeight: "500",
-                color: "white"
-              }}>
-                {activeTask.title}
-              </div>
-            </div>
-          </div>
-        ) : null}
-      </DragOverlay>
-      </DndContext>
       )}
     </div>
   );

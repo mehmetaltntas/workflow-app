@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { CheckCircle2, Clock, AlertTriangle, ListTodo, TrendingUp, Calendar } from "lucide-react";
 import type { Board } from "../types";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
 
 interface StatsBarProps {
   board: Board;
@@ -75,6 +77,8 @@ const calculateStats = (board: Board): BoardStats => {
 };
 
 export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
+  const { theme } = useTheme();
+  const colors = getThemeColors(theme);
   const stats = useMemo(() => calculateStats(board), [board]);
 
   if (stats.totalTasks === 0) {
@@ -88,8 +92,8 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
         alignItems: "center",
         gap: "16px",
         padding: "14px 24px",
-        background: "rgba(0, 0, 0, 0.25)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: colors.bgListHeader,
+        borderBottom: `1px solid ${colors.borderDefault}`,
       }}
     >
       {/* Progress Bar */}
@@ -104,7 +108,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
           <div
             style={{
               height: "8px",
-              background: "rgba(255,255,255,0.1)",
+              background: colors.bgActive,
               borderRadius: "4px",
               overflow: "hidden",
               minWidth: "100px",
@@ -137,7 +141,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
       </div>
 
       {/* Divider */}
-      <div style={{ width: "1px", height: "24px", background: "rgba(255,255,255,0.1)" }} />
+      <div style={{ width: "1px", height: "24px", background: colors.divider }} />
 
       {/* Stats Cards */}
       <div style={{ display: "flex", alignItems: "center", gap: "20px", flex: 1 }}>
@@ -146,7 +150,8 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
           icon={<ListTodo size={15} />}
           label="Toplam"
           value={stats.totalTasks}
-          color="rgba(255,255,255,0.7)"
+          color={colors.textSecondary}
+          labelColor={colors.textMuted}
         />
 
         {/* Completed Tasks */}
@@ -155,6 +160,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
           label="Tamamlanan"
           value={stats.completedTasks}
           color="var(--success)"
+          labelColor={colors.textMuted}
         />
 
         {/* Pending Tasks */}
@@ -163,6 +169,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
           label="Devam Eden"
           value={stats.pendingTasks}
           color="var(--primary)"
+          labelColor={colors.textMuted}
         />
 
         {/* Overdue Tasks */}
@@ -172,6 +179,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
             label="Gecikmiş"
             value={stats.overdueTasks}
             color="var(--danger)"
+            labelColor={colors.textMuted}
             highlight
           />
         )}
@@ -183,17 +191,18 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
             label="Bugün"
             value={stats.todayTasks}
             color="#f59e0b"
+            labelColor={colors.textMuted}
           />
         )}
 
         {/* Subtasks Progress */}
         {stats.totalSubtasks > 0 && (
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>Alt Görevler:</span>
+            <span style={{ fontSize: "11px", color: colors.textMuted }}>Alt Görevler:</span>
             <span style={{
               fontSize: "12px",
               fontWeight: "600",
-              color: stats.completedSubtasks === stats.totalSubtasks ? "var(--success)" : "rgba(255,255,255,0.6)",
+              color: stats.completedSubtasks === stats.totalSubtasks ? "var(--success)" : colors.textSecondary,
             }}>
               {stats.completedSubtasks}/{stats.totalSubtasks}
             </span>
@@ -209,10 +218,11 @@ interface StatItemProps {
   label: string;
   value: number;
   color: string;
+  labelColor?: string;
   highlight?: boolean;
 }
 
-const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, highlight }) => (
+const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, labelColor, highlight }) => (
   <div
     style={{
       display: "flex",
@@ -226,7 +236,7 @@ const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, highligh
   >
     <div style={{ color, display: "flex", alignItems: "center" }}>{icon}</div>
     <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+      <span style={{ fontSize: "10px", color: labelColor || "var(--text-muted)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.03em" }}>
         {label}
       </span>
       <span style={{ fontSize: "15px", fontWeight: "700", color }}>{value}</span>
@@ -236,11 +246,13 @@ const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, highligh
 
 // Mini stats for board cards (BoardsPage)
 export const MiniStats: React.FC<{ board: Board }> = ({ board }) => {
+  const { theme } = useTheme();
+  const colors = getThemeColors(theme);
   const stats = useMemo(() => calculateStats(board), [board]);
 
   if (stats.totalTasks === 0) {
     return (
-      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+      <span style={{ fontSize: "11px", color: colors.textFaint }}>
         Henüz görev yok
       </span>
     );
@@ -254,7 +266,7 @@ export const MiniStats: React.FC<{ board: Board }> = ({ board }) => {
           style={{
             flex: 1,
             height: "4px",
-            background: "rgba(255,255,255,0.1)",
+            background: colors.bgActive,
             borderRadius: "2px",
             overflow: "hidden",
             maxWidth: "60px",
@@ -269,13 +281,13 @@ export const MiniStats: React.FC<{ board: Board }> = ({ board }) => {
             }}
           />
         </div>
-        <span style={{ fontSize: "11px", fontWeight: "600", color: "rgba(255,255,255,0.5)" }}>
+        <span style={{ fontSize: "11px", fontWeight: "600", color: colors.textTertiary }}>
           %{stats.progressPercent}
         </span>
       </div>
 
       {/* Task Count */}
-      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
+      <span style={{ fontSize: "11px", color: colors.textMuted }}>
         {stats.completedTasks}/{stats.totalTasks} görev
       </span>
 

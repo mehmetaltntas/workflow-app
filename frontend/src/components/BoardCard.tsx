@@ -4,6 +4,8 @@ import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { ExternalLink, Calendar } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import { MiniStats } from "./StatsBar";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
 
 interface BoardCardProps {
   board: Board;
@@ -14,6 +16,9 @@ interface BoardCardProps {
 }
 
 const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, onEdit, onDelete }) => {
+  const { theme } = useTheme();
+  const colors = getThemeColors(theme);
+  const isLight = theme === 'light';
   const statusColor = STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -25,9 +30,9 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
   return (
     <div
       onClick={onClick}
-      className="group relative"
+      className="group relative board-card"
       style={{
-        background: "rgba(255, 255, 255, 0.03)",
+        background: isLight ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.03)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         height: "190px",
@@ -36,23 +41,11 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
+        border: `1px solid ${colors.borderDefault}`,
         cursor: "pointer",
         transition: "all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)",
         overflow: "hidden",
-        boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-6px) scale(1.02)";
-        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)";
-        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
-        e.currentTarget.style.boxShadow = "0 22px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0) scale(1)";
-        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.03)";
-        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
-        e.currentTarget.style.boxShadow = "0 8px 32px 0 rgba(0, 0, 0, 0.3)";
+        boxShadow: isLight ? "0 4px 20px rgba(0, 0, 0, 0.08)" : "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
       }}
     >
       {/* Visual Accent */}
@@ -83,21 +76,21 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
           style={{
             fontSize: "20px",
             fontWeight: "700",
-            color: "white",
+            color: "var(--text-main)",
             margin: "0 0 6px 0",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             letterSpacing: '-0.02em',
-            textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+            textShadow: isLight ? 'none' : '0 2px 10px rgba(0,0,0,0.3)'
           }}
         >
           {board.name}
         </h3>
-        
+
         {board.description && (
           <div style={{
-            color: 'rgba(255, 255, 255, 0.5)',
+            color: colors.textTertiary,
             fontSize: '12px',
             fontWeight: '400',
             overflow: 'hidden',
@@ -129,45 +122,37 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {board.link && (
-            <a 
-              href={board.link} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href={board.link}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               style={{
-                display: "flex", 
-                alignItems: "center", 
+                display: "flex",
+                alignItems: "center",
                 justifyContent: "center",
                 width: "32px",
                 height: "32px",
                 borderRadius: "10px",
-                background: "rgba(255, 255, 255, 0.05)",
-                color: "#4dabf7",
-                border: "1px solid rgba(255, 255, 255, 0.05)",
+                background: colors.bgHover,
+                color: "var(--primary)",
+                border: `1px solid ${colors.borderDefault}`,
                 transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(77, 171, 247, 0.15)";
-                e.currentTarget.style.borderColor = "rgba(77, 171, 247, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
               }}
               title="Bağlantıya Git"
             >
               <ExternalLink size={16} strokeWidth={2.5} />
             </a>
           )}
-          
+
           {board.deadline && (
             <div style={{
-              display: "flex", 
-              alignItems: "center", 
-              gap: "6px", 
-              fontSize: "12px", 
-              color: "rgba(255, 255, 255, 0.4)",
-              background: "rgba(255, 255, 255, 0.03)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "12px",
+              color: colors.textMuted,
+              background: colors.bgTertiary,
               padding: "6px 10px",
               borderRadius: "8px",
               fontWeight: "600"
@@ -207,7 +192,7 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
             }}
           >
             {Object.keys(STATUS_LABELS).map((key) => (
-              <option key={key} value={key} style={{ background: '#1a1b1e', color: 'white' }}>
+              <option key={key} value={key} style={{ background: isLight ? '#ffffff' : '#1a1b1e', color: isLight ? '#1a1b1e' : 'white' }}>
                 {STATUS_LABELS[key]}
               </option>
             ))}

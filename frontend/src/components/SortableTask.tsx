@@ -1,11 +1,11 @@
 import { memo, useMemo } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { CheckSquare, Square, Link as LinkIcon, MessageSquare, GripVertical, Calendar, Flag, ListChecks } from "lucide-react";
+import { CheckSquare, Square, Link as LinkIcon, MessageSquare, Calendar, Flag, ListChecks } from "lucide-react";
 import type { Task, TaskList, Priority } from "../types";
 import { ActionMenu } from "./ActionMenu";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
 
-interface SortableTaskProps {
+interface TaskCardProps {
   task: Task;
   list: TaskList;
   index: number;
@@ -56,22 +56,9 @@ const getDueDateStatus = (dueDate: string | null | undefined): { status: 'overdu
   }
 };
 
-export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggleComplete }: SortableTaskProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 1,
-  };
+export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggleComplete }: TaskCardProps) => {
+  const { theme } = useTheme();
+  const colors = getThemeColors(theme);
 
   // Due date status hesapla (memoized)
   const dueDateInfo = useMemo(() => getDueDateStatus(task.dueDate), [task.dueDate]);
@@ -89,47 +76,17 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
 
   return (
     <div
-      ref={setNodeRef}
       style={{
-        ...style,
-        background: isDragging
-          ? "rgba(77, 171, 247, 0.15)"
-          : task.isCompleted
-            ? "rgba(81, 207, 102, 0.03)"
-            : "rgba(255, 255, 255, 0.04)",
+        background: task.isCompleted ? colors.taskCompletedBg : colors.taskBg,
         padding: "12px 14px",
         borderRadius: "14px",
-        border: isDragging
-          ? "1px solid rgba(77, 171, 247, 0.3)"
-          : task.isCompleted
-            ? "1px solid rgba(81, 207, 102, 0.08)"
-            : "1px solid rgba(255, 255, 255, 0.06)",
+        border: `1px solid ${task.isCompleted ? colors.taskCompletedBorder : colors.taskBorder}`,
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        cursor: isDragging ? 'grabbing' : 'default',
       }}
       className="group/task"
     >
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        style={{
-          cursor: 'grab',
-          padding: '4px',
-          borderRadius: '6px',
-          color: 'rgba(255,255,255,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          transition: 'color 0.2s, background 0.2s',
-          touchAction: 'none',
-        }}
-        className="drag-handle opacity-0 group-hover/task:opacity-60 hover:!opacity-100 hover:!text-[var(--primary)] hover:!bg-[rgba(77,171,247,0.1)]"
-      >
-        <GripVertical size={14} />
-      </div>
-
       {/* Action Menu */}
       <ActionMenu
         triggerClassName="opacity-0 group-hover/task:opacity-60 hover:!opacity-100"
@@ -167,7 +124,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           fontSize: "13px",
           fontWeight: "500",
           lineHeight: "1.5",
-          color: task.isCompleted ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.9)"
+          color: task.isCompleted ? colors.textMuted : colors.textPrimary
         }}>
           {task.title}
         </div>
@@ -175,7 +132,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           {task.description && (
             <div style={{
               fontSize: "11px",
-              color: "rgba(255,255,255,0.35)",
+              color: colors.textSubtle,
               display: 'flex',
               alignItems: 'center',
               gap: '4px'
@@ -191,7 +148,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
               fontWeight: "600",
               color: subtaskProgress.completed === subtaskProgress.total
                 ? 'var(--success)'
-                : 'rgba(255,255,255,0.5)',
+                : colors.textTertiary,
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
@@ -199,7 +156,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
               borderRadius: '6px',
               background: subtaskProgress.completed === subtaskProgress.total
                 ? 'rgba(81, 207, 102, 0.15)'
-                : 'rgba(255,255,255,0.05)',
+                : colors.bgHover,
             }}>
               <ListChecks size={10} />
               <span>{subtaskProgress.completed}/{subtaskProgress.total}</span>
@@ -227,7 +184,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
             <div style={{
               fontSize: "10px",
               fontWeight: "600",
-              color: dueDateInfo.color,
+              color: dueDateInfo.status === 'upcoming' && !dueDateInfo.color.startsWith('var') ? colors.textMuted : dueDateInfo.color,
               display: 'flex',
               alignItems: 'center',
               gap: '3px',
@@ -237,7 +194,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
                 ? 'rgba(239, 68, 68, 0.15)'
                 : dueDateInfo.status === 'today' || dueDateInfo.status === 'tomorrow'
                   ? 'rgba(245, 158, 11, 0.15)'
-                  : 'rgba(255,255,255,0.05)',
+                  : colors.bgHover,
             }}>
               <Calendar size={9} />
               <span>{dueDateInfo.label}</span>
@@ -279,7 +236,7 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           padding: '4px',
           borderRadius: '6px',
           transition: 'all 0.2s',
-          color: task.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.5)',
+          color: task.isCompleted ? 'var(--success)' : colors.textTertiary,
         }}
       >
         {task.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}
