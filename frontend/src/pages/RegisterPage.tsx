@@ -279,6 +279,7 @@ const RegisterPage = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 style={{
                   width: "100%",
+                  boxSizing: "border-box",
                   padding: "14px 16px",
                   borderRadius: "10px",
                   border: "1px solid rgba(255,255,255,0.1)",
@@ -318,6 +319,7 @@ const RegisterPage = () => {
                 onChange={(e) => handleEmailChange(e.target.value)}
                 style={{
                   width: "100%",
+                  boxSizing: "border-box",
                   padding: "14px 16px",
                   borderRadius: "10px",
                   border: `1px solid ${emailError ? "#ef4444" : "rgba(255,255,255,0.1)"}`,
@@ -367,6 +369,7 @@ const RegisterPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
                     width: "100%",
+                    boxSizing: "border-box",
                     padding: "14px 48px 14px 16px",
                     borderRadius: "10px",
                     border: "1px solid rgba(255,255,255,0.1)",

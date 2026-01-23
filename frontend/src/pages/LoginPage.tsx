@@ -252,6 +252,7 @@ const LoginPage = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 style={{
                   width: "100%",
+                  boxSizing: "border-box",
                   padding: "14px 16px",
                   borderRadius: "10px",
                   border: "1px solid rgba(255,255,255,0.1)",
@@ -292,6 +293,7 @@ const LoginPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
                     width: "100%",
+                    boxSizing: "border-box",
                     padding: "14px 48px 14px 16px",
                     borderRadius: "10px",
                     border: "1px solid rgba(255,255,255,0.1)",
