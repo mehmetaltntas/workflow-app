@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -8,11 +8,16 @@ import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import BoardsPage from "./pages/BoardsPage";
 import BoardDetailPage from "./pages/BoardDetailPage";
-import BoardMillerView from "./pages/BoardMillerView";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
+
+// Miller route redirect helper
+const MillerRedirect = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/boards/${slug}`} replace />;
+};
 
 // Kimlik doğrulama ve yönlendirme kontrolcüsü
 const AuthCheck = () => {
@@ -69,7 +74,8 @@ function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/boards" element={<BoardsPage />} />
           <Route path="/boards/:slug" element={<BoardDetailPage />} />
-          <Route path="/boards/:slug/miller" element={<BoardMillerView />} />
+          {/* Redirect old Miller route to main board page */}
+          <Route path="/boards/:slug/miller" element={<MillerRedirect />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

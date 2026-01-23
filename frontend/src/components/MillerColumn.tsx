@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { ChevronRight, Folder, FileText, CheckSquare, Loader2 } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { ChevronRight, Folder, FileText, CheckSquare, Loader2, Plus, MoreHorizontal, Edit2, Trash2, Check } from 'lucide-react';
 import { colors, cssVars } from '../styles/tokens';
 
 // Miller Column item tipi
@@ -28,6 +28,10 @@ interface MillerColumnProps {
   isLoading?: boolean;
   emptyMessage?: string;
   columnIndex: number;
+  onAddItem?: () => void;
+  onItemEdit?: (item: MillerColumnItem) => void;
+  onItemDelete?: (item: MillerColumnItem) => void;
+  onItemToggle?: (item: MillerColumnItem) => void;
 }
 
 const getIconComponent = (icon?: string, isCompleted?: boolean) => {
@@ -63,9 +67,14 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
   isLoading = false,
   emptyMessage = 'Bu sütunda öğe yok',
   columnIndex,
+  onAddItem,
+  onItemEdit,
+  onItemDelete,
+  onItemToggle,
 }) => {
   const columnRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLButtonElement>(null);
+  const [actionMenuId, setActionMenuId] = useState<number | null>(null);
 
   // Seçili öğeyi görünür yap
   useEffect(() => {
@@ -98,13 +107,16 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
       {/* Sütun Başlığı */}
       <div
         style={{
-          padding: '16px 20px',
+          padding: '12px 16px',
           borderBottom: '1px solid var(--border)',
           background: colors.dark.bg.overlay,
           backdropFilter: 'blur(8px)',
           position: 'sticky',
           top: 0,
           zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
         <h3
@@ -134,6 +146,27 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
             {items.length}
           </span>
         </h3>
+        {onAddItem && (
+          <button
+            onClick={onAddItem}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              border: 'none',
+              background: colors.brand.primaryLight,
+              color: 'var(--primary)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            title="Ekle"
+          >
+            <Plus size={16} />
+          </button>
+        )}
       </div>
 
       {/* Sütun İçeriği */}
@@ -329,6 +362,148 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       )}
                     </div>
                   </div>
+
+                  {/* Action Menu Button */}
+                  {(onItemEdit || onItemDelete || onItemToggle) && (
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActionMenuId(actionMenuId === item.id ? null : item.id);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: 'transparent',
+                          color: isSelected ? colors.dark.text.secondary : 'var(--text-muted)',
+                          cursor: 'pointer',
+                          opacity: isHovered || isSelected || actionMenuId === item.id ? 1 : 0,
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+
+                      {/* Action Menu Dropdown */}
+                      {actionMenuId === item.id && (
+                        <>
+                          <div
+                            style={{
+                              position: 'fixed',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              zIndex: 99,
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActionMenuId(null);
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '100%',
+                              right: 0,
+                              marginTop: '4px',
+                              background: colors.dark.bg.card,
+                              border: `1px solid ${colors.dark.border.default}`,
+                              borderRadius: '10px',
+                              padding: '6px',
+                              minWidth: '140px',
+                              zIndex: 100,
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                            }}
+                          >
+                            {onItemToggle && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onItemToggle(item);
+                                  setActionMenuId(null);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  width: '100%',
+                                  padding: '8px 10px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: item.isCompleted ? 'var(--warning)' : 'var(--success)',
+                                  fontSize: '13px',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                }}
+                              >
+                                <Check size={14} />
+                                {item.isCompleted ? 'Geri Al' : 'Tamamla'}
+                              </button>
+                            )}
+                            {onItemEdit && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onItemEdit(item);
+                                  setActionMenuId(null);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  width: '100%',
+                                  padding: '8px 10px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: 'var(--text-main)',
+                                  fontSize: '13px',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                }}
+                              >
+                                <Edit2 size={14} />
+                                Düzenle
+                              </button>
+                            )}
+                            {onItemDelete && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onItemDelete(item);
+                                  setActionMenuId(null);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  width: '100%',
+                                  padding: '8px 10px',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: 'var(--danger)',
+                                  fontSize: '13px',
+                                  cursor: 'pointer',
+                                  textAlign: 'left',
+                                }}
+                              >
+                                <Trash2 size={14} />
+                                Sil
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {/* Chevron Arrow */}
                   {item.hasChildren !== false && (

@@ -1,20 +1,20 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AxiosError } from "axios";
 import { boardService, taskService, labelService } from "../services/api";
-import type { Board, Task, TaskList, Priority } from "../types";
+import type { Board, Task, TaskList, Subtask } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag, Flag, LayoutGrid, CalendarDays, Columns3 } from "lucide-react";
-import { ActionMenu } from "../components/ActionMenu";
+import { ArrowLeft, X, ArrowUp, ArrowDown, Tag, Home, ChevronRight } from "lucide-react";
+import { MillerColumn, type MillerColumnItem } from "../components/MillerColumn";
+import { MillerPreviewPanel } from "../components/MillerPreviewPanel";
+import { subtaskService } from "../services/api";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
 import { ListEditModal } from "../components/ListEditModal";
-import { SortableTask } from "../components/SortableTask";
 import { LabelManager } from "../components/LabelManager";
 import { FilterBar, getDefaultFilters } from "../components/FilterBar";
 import { StatsBar } from "../components/StatsBar";
-import { CalendarView } from "../components/CalendarView";
 import type { FilterState } from "../components/FilterBar";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -23,6 +23,7 @@ import { colors as tokenColors } from "../styles/tokens";
 const BoardDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
 
@@ -33,22 +34,21 @@ const BoardDetailPage = () => {
   // UI States
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListName, setNewListName] = useState("");
-  const [newListLink, setNewListLink] = useState("");
-  const [showListLinkInput, setShowListLinkInput] = useState(false);
   const [activeListId, setActiveListId] = useState<number | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskLink, setNewTaskLink] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState("");
-  const [newTaskPriority, setNewTaskPriority] = useState<Priority>("NONE");
-  const [showTaskLinkInput, setShowTaskLinkInput] = useState(false);
-  const [showTaskDueDateInput, setShowTaskDueDateInput] = useState(false);
-  const [showTaskPriorityInput, setShowTaskPriorityInput] = useState(false);
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
   const [showLabelManager, setShowLabelManager] = useState(false);
   const [filters, setFilters] = useState<FilterState>(getDefaultFilters());
-  const [viewMode, setViewMode] = useState<"board" | "calendar">("board");
+
+  // Miller Navigation State
+  const [selectedListId, setSelectedListId] = useState<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [hoveredList, setHoveredList] = useState<TaskList | null>(null);
+  const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
+  const [subtaskCache, setSubtaskCache] = useState<Map<number, Subtask[]>>(new Map());
+  const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false);
 
   // Sorting
   // Default: Date (oldest to newest), down arrow
@@ -89,17 +89,37 @@ const BoardDetailPage = () => {
     if (slug) loadBoardData(slug);
   }, [slug, loadBoardData]);
 
+  // URL sync for Miller navigation
+  useEffect(() => {
+    const listId = searchParams.get('list');
+    const taskId = searchParams.get('task');
+    setSelectedListId(listId ? parseInt(listId) : null);
+    setSelectedTaskId(taskId ? parseInt(taskId) : null);
+  }, [searchParams]);
+
+  // Subtasks lazy loading
+  const loadSubtasks = useCallback(async (taskId: number) => {
+    if (subtaskCache.has(taskId)) return;
+
+    try {
+      setIsLoadingSubtasks(true);
+      const subtasks = await subtaskService.getSubtasksByTask(taskId);
+      setSubtaskCache(prev => new Map(prev).set(taskId, subtasks));
+    } catch (error) {
+      console.error('Alt görevler yüklenemedi:', error);
+    } finally {
+      setIsLoadingSubtasks(false);
+    }
+  }, [subtaskCache]);
+
   const handleCreateList = useCallback(async () => {
     if (!newListName) return;
     try {
       await taskService.createTaskList({
         name: newListName,
-        link: newListLink || undefined,
         boardId: board!.id,
       });
       setNewListName("");
-      setNewListLink("");
-      setShowListLinkInput(false);
       setIsAddingList(false);
       loadBoardData(slug!);
       toast.success("Liste eklendi");
@@ -107,7 +127,7 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [newListName, newListLink, board, loadBoardData, slug]);
+  }, [newListName, board, loadBoardData, slug]);
 
   const handleDeleteList = useCallback(async () => {
     if (deleteListId) {
@@ -145,18 +165,9 @@ const BoardDetailPage = () => {
       await taskService.createTask({
         title: newTaskTitle,
         description: "",
-        link: newTaskLink || undefined,
-        dueDate: newTaskDueDate || undefined,
-        priority: newTaskPriority !== "NONE" ? newTaskPriority : undefined,
         taskListId: listId,
       });
       setNewTaskTitle("");
-      setNewTaskLink("");
-      setNewTaskDueDate("");
-      setNewTaskPriority("NONE");
-      setShowTaskLinkInput(false);
-      setShowTaskDueDateInput(false);
-      setShowTaskPriorityInput(false);
       setActiveListId(null);
       loadBoardData(slug!);
       toast.success("Eklendi");
@@ -164,7 +175,7 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Eklenemedi");
     }
-  }, [newTaskTitle, newTaskLink, newTaskDueDate, newTaskPriority, loadBoardData, slug]);
+  }, [newTaskTitle, loadBoardData, slug]);
 
   const handleTaskCompletionToggle = useCallback(async (task: Task, list: TaskList) => {
     try {
@@ -368,6 +379,141 @@ const BoardDetailPage = () => {
     }));
   }, [board?.taskLists, sortBy, sortOrder, filterTask]);
 
+  // Miller column items
+  const listItems: MillerColumnItem[] = useMemo(() => {
+    if (!board?.taskLists) return [];
+    return sortedTaskLists.map(list => ({
+      id: list.id,
+      title: list.name,
+      icon: 'folder' as const,
+      isCompleted: list.isCompleted,
+      hasChildren: true,
+      metadata: {
+        count: list.tasks.length, // Already filtered in sortedTaskLists
+      },
+    }));
+  }, [board?.taskLists, sortedTaskLists]);
+
+  const selectedList = useMemo(() => {
+    if (!board || !selectedListId) return null;
+    return sortedTaskLists.find(l => l.id === selectedListId) || null;
+  }, [board, selectedListId, sortedTaskLists]);
+
+  const taskItems: MillerColumnItem[] = useMemo(() => {
+    if (!selectedList) return [];
+    return selectedList.tasks.map(task => ({
+      id: task.id,
+      title: task.title,
+      icon: 'task' as const,
+      isCompleted: task.isCompleted,
+      hasChildren: (task.subtasks?.length || 0) > 0,
+      metadata: {
+        labels: task.labels?.map(l => ({ id: l.id, color: l.color })),
+        priority: task.priority,
+        dueDate: task.dueDate || undefined,
+      },
+    }));
+  }, [selectedList]);
+
+  const selectedTask = useMemo(() => {
+    if (!selectedList || !selectedTaskId) return null;
+    return selectedList.tasks.find(t => t.id === selectedTaskId) || null;
+  }, [selectedList, selectedTaskId]);
+
+  const subtaskItems: MillerColumnItem[] = useMemo(() => {
+    if (!selectedTask) return [];
+    const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
+    return subtasks
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+      .map(subtask => ({
+        id: subtask.id,
+        title: subtask.title,
+        icon: 'task' as const,
+        isCompleted: subtask.isCompleted,
+        hasChildren: false,
+      }));
+  }, [selectedTask, subtaskCache]);
+
+  // Preview state
+  const previewType = useMemo(() => {
+    if (hoveredTask || selectedTask) return 'task';
+    if (hoveredList || selectedList) return 'list';
+    return null;
+  }, [hoveredTask, selectedTask, hoveredList, selectedList]);
+
+  const previewData = useMemo(() => {
+    if (hoveredTask) return hoveredTask;
+    if (selectedTask) return selectedTask;
+    if (hoveredList) return hoveredList;
+    if (selectedList) return selectedList;
+    return null;
+  }, [hoveredTask, selectedTask, hoveredList, selectedList]);
+
+  const previewTasks = useMemo(() => {
+    if (hoveredList) return hoveredList.tasks;
+    if (selectedList && !selectedTask && !hoveredTask) return selectedList.tasks;
+    return undefined;
+  }, [hoveredList, selectedList, selectedTask, hoveredTask]);
+
+  const previewSubtasks = useMemo(() => {
+    const task = hoveredTask || selectedTask;
+    if (!task) return undefined;
+    return subtaskCache.get(task.id) || task.subtasks;
+  }, [hoveredTask, selectedTask, subtaskCache]);
+
+  // Miller navigation handlers
+  const handleListSelect = useCallback((item: MillerColumnItem) => {
+    const newParams = new URLSearchParams();
+    newParams.set('list', item.id.toString());
+    setSearchParams(newParams);
+    setHoveredTask(null);
+  }, [setSearchParams]);
+
+  const handleTaskSelect = useCallback((item: MillerColumnItem) => {
+    if (!selectedListId) return;
+    const newParams = new URLSearchParams();
+    newParams.set('list', selectedListId.toString());
+    newParams.set('task', item.id.toString());
+    setSearchParams(newParams);
+    loadSubtasks(item.id);
+  }, [selectedListId, setSearchParams, loadSubtasks]);
+
+  const handleListHover = useCallback((item: MillerColumnItem | null) => {
+    if (item) {
+      const list = sortedTaskLists.find(l => l.id === item.id);
+      setHoveredList(list || null);
+    } else {
+      setHoveredList(null);
+    }
+  }, [sortedTaskLists]);
+
+  const handleTaskHover = useCallback((item: MillerColumnItem | null) => {
+    if (item && selectedListId) {
+      const list = sortedTaskLists.find(l => l.id === selectedListId);
+      const task = list?.tasks.find(t => t.id === item.id);
+      setHoveredTask(task || null);
+    } else {
+      setHoveredTask(null);
+    }
+  }, [sortedTaskLists, selectedListId]);
+
+  const handleBreadcrumbClick = useCallback((level: 'board' | 'list' | 'task') => {
+    switch (level) {
+      case 'board':
+        setSearchParams(new URLSearchParams());
+        break;
+      case 'list':
+        if (selectedListId) {
+          const newParams = new URLSearchParams();
+          newParams.set('list', selectedListId.toString());
+          setSearchParams(newParams);
+        }
+        break;
+      default:
+        break;
+    }
+  }, [selectedListId, setSearchParams]);
+
   if (loading)
     return (
       <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-body)", color: "var(--text-muted)" }}>
@@ -427,93 +573,89 @@ const BoardDetailPage = () => {
         />
       )}
 
-      {/* Modern Header */}
+      {/* Modern Header with Breadcrumb */}
       <div style={{ padding: "16px 24px", background: colors.bgHeader, borderBottom: `1px solid ${colors.borderDefault}`, display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)", zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button onClick={() => navigate("/boards")} className="btn btn-ghost" style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", borderRadius: '12px', color: 'var(--text-muted)' }}>
             <ArrowLeft size={16} />
-            <span style={{ fontWeight: '600', fontSize: '14px' }}>Panolar</span>
           </button>
-          <div style={{ height: "24px", width: "1px", background: colors.divider }}></div>
-          <h2 style={{ margin: 0, fontSize: "18px", fontVariantNumeric: 'tabular-nums', fontWeight: "700", color: "var(--text-main)", letterSpacing: "-0.03em" }}>
-            {board.name}
-          </h2>
+
+          {/* Breadcrumb Navigation */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={() => handleBreadcrumbClick('board')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: !selectedListId ? 'var(--primary)' : 'transparent',
+                color: !selectedListId ? tokenColors.dark.text.primary : 'var(--text-main)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Home size={14} />
+              {board.name}
+            </button>
+
+            {selectedList && (
+              <>
+                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+                <button
+                  onClick={() => handleBreadcrumbClick('list')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: selectedList && !selectedTaskId ? 'var(--primary)' : 'transparent',
+                    color: selectedList && !selectedTaskId ? tokenColors.dark.text.primary : 'var(--text-main)',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {selectedList.name}
+                </button>
+              </>
+            )}
+
+            {selectedTask && (
+              <>
+                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    background: 'var(--primary)',
+                    color: tokenColors.dark.text.primary,
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    maxWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {selectedTask.title}
+                </span>
+              </>
+            )}
+          </nav>
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          {/* View Toggle */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: colors.bgElevated,
-            padding: '4px',
-            borderRadius: '12px',
-            border: `1px solid ${colors.borderDefault}`,
-            backdropFilter: 'blur(10px)',
-          }}>
-            <button
-              onClick={() => setViewMode("board")}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: viewMode === "board" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
-                color: viewMode === "board" ? 'var(--primary)' : colors.textTertiary,
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              <LayoutGrid size={14} />
-              Pano
-            </button>
-            <button
-              onClick={() => setViewMode("calendar")}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: viewMode === "calendar" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
-                color: viewMode === "calendar" ? 'var(--primary)' : colors.textTertiary,
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              <CalendarDays size={14} />
-              Takvim
-            </button>
-            <button
-              onClick={() => navigate(`/boards/${slug}/miller`)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'transparent',
-                color: colors.textTertiary,
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              title="Miller Columns görünümü"
-            >
-              <Columns3 size={14} />
-              Miller
-            </button>
-          </div>
-
           {/* Labels Button */}
           <button
             onClick={() => setShowLabelManager(true)}
@@ -654,500 +796,237 @@ const BoardDetailPage = () => {
         onFilterChange={setFilters}
       />
 
-      {/* Content Area */}
-      {viewMode === "calendar" ? (
-        <CalendarView board={board} onTaskClick={setEditingTask} />
-      ) : (
-      /* Board Content - Grid Layout (max 4 columns) */
-      <div className="board-grid" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-        {sortedTaskLists.map((list) => (
-          <div
-            key={list.id}
-            className="flex flex-col group/list"
-            style={{
-              flex: 1,
-              minWidth: 0,
-              background: list.isCompleted ? colors.listCompletedBg : colors.listBg,
-              borderRadius: "20px",
-              padding: "14px",
-              maxHeight: "calc(100vh - 160px)",
-              border: `1px solid ${list.isCompleted ? colors.listCompletedBorder : colors.listBorder}`,
-              boxShadow: "var(--shadow-lg)",
-              transition: "all 0.3s ease",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
+      {/* Miller Columns Content */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Miller Columns Container */}
+        <div style={{ display: 'flex', flex: 1, overflowX: 'auto', overflowY: 'hidden' }}>
+          {/* Column 1: Lists */}
+          <MillerColumn
+            title="Listeler"
+            items={listItems}
+            selectedId={selectedListId}
+            hoveredId={hoveredList?.id ?? null}
+            onSelect={handleListSelect}
+            onHover={handleListHover}
+            columnIndex={0}
+            emptyMessage="Bu panoda liste yok"
+            onAddItem={() => setIsAddingList(true)}
+            onItemEdit={(item) => {
+              const list = sortedTaskLists.find(l => l.id === item.id);
+              if (list) setEditingList(list);
             }}
-          >
-            {/* List Header */}
-            <div
-              className="group/header"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                marginBottom: "14px",
-                background: colors.bgListHeader,
-                padding: "12px 14px",
-                borderRadius: "14px",
-                border: `1px solid ${colors.borderSubtle}`
+            onItemDelete={(item) => setDeleteListId(item.id)}
+            onItemToggle={(item) => {
+              const list = sortedTaskLists.find(l => l.id === item.id);
+              if (list) handleListCompletionToggle(list);
+            }}
+          />
+
+          {/* Column 2: Tasks (when list selected) */}
+          {selectedListId && selectedList && (
+            <MillerColumn
+              title={`${selectedList.name} - Görevler`}
+              items={taskItems}
+              selectedId={selectedTaskId}
+              hoveredId={hoveredTask?.id ?? null}
+              onSelect={handleTaskSelect}
+              onHover={handleTaskHover}
+              columnIndex={1}
+              emptyMessage="Bu listede görev yok"
+              onAddItem={() => setActiveListId(selectedListId)}
+              onItemEdit={(item) => {
+                const task = selectedList.tasks.find(t => t.id === item.id);
+                if (task) setEditingTask(task);
               }}
-            >
-              {/* Action Menu */}
-              <ActionMenu 
-                triggerClassName="opacity-60 group-hover/header:opacity-100"
-                dropdownPosition="left"
-                onEdit={() => setEditingList(list)}
-                onDelete={() => setDeleteListId(list.id)}
-              />
-
-              {/* List Name - Double-click disabled, edit only via menu */}
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                <span
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    padding: '4px 10px',
-                    borderRadius: '10px',
-                    display: 'inline-block',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '100%',
-                    color: 'var(--text-main)',
-                  }}
-                >
-                  {list.name}
-                </span>
-              </div>
-
-              {/* Add Task Button - In Header */}
-              <button
-                onClick={() => setActiveListId(list.id)}
-                className="list-header-add-btn"
-                title="Görev Ekle"
-              >
-                <Plus size={16} />
-              </button>
-
-              {/* Link Icon */}
-              {list.link && (
-                <a 
-                  href={list.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ 
-                    color: "var(--primary)", 
-                    opacity: 0.6,
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '4px',
-                    borderRadius: '6px',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                    e.currentTarget.style.background = tokenColors.brand.primaryLight;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '0.6';
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <ExternalLink size={14} />
-                </a>
-              )}
-
-              {/* List Completion Checkbox */}
-              <button
-                onClick={(e) => { e.stopPropagation(); handleListCompletionToggle(list); }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  display: 'flex',
-                  padding: '4px',
-                  borderRadius: '6px',
-                  transition: 'all 0.2s',
-                  color: list.isCompleted ? 'var(--success)' : tokenColors.dark.text.subtle,
-                }}
-                onMouseEnter={(e) => {
-                  if (!list.isCompleted) e.currentTarget.style.color = 'var(--success)';
-                }}
-                onMouseLeave={(e) => {
-                  if (!list.isCompleted) e.currentTarget.style.color = tokenColors.dark.text.subtle;
-                }}
-              >
-                {list.isCompleted ? <CheckSquare size={18} /> : <Square size={18} />}
-              </button>
-            </div>
-
-            {/* Tasks Container - Fixed height with scroll */}
-            <div
-              className="list-tasks-container"
-              style={{ position: "relative" }}
-              onScroll={(e) => {
-                const target = e.currentTarget;
-                const indicator = target.querySelector('.list-scroll-indicator');
-                if (indicator) {
-                  const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
-                  if (isAtBottom) {
-                    indicator.classList.add('at-bottom');
-                  } else {
-                    indicator.classList.remove('at-bottom');
-                  }
-                }
+              onItemDelete={(item) => handleDeleteTask(item.id)}
+              onItemToggle={(item) => {
+                const task = selectedList.tasks.find(t => t.id === item.id);
+                if (task) handleTaskCompletionToggle(task, selectedList);
               }}
-            >
-              {/* Tasks already sorted by position in useMemo */}
-              {list.tasks.map((task: Task, index: number) => (
-                <SortableTask
-                  key={task.id}
-                  task={task}
-                  list={list}
-                  index={index}
-                  onEdit={setEditingTask}
-                  onDelete={handleDeleteTask}
-                  onToggleComplete={handleTaskCompletionToggle}
-                />
-              ))}
-              {/* Scroll indicator at the end */}
-              {list.tasks.length > 3 && (
-                <div className="list-scroll-indicator">
-                  <ChevronDown size={18} />
-                </div>
-              )}
-            </div>
+            />
+          )}
 
-            {/* Add Task UI */}
-            {activeListId === list.id ? (
-              <div style={{ marginTop: "12px", padding: "14px", borderRadius: "14px", background: tokenColors.dark.bg.overlay, border: `1px solid ${tokenColors.dark.border.subtle}` }}>
-                <textarea
-                  autoFocus
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="Yeni görev başlığı..."
-                  style={{
-                    width: "100%",
-                    minHeight: "40px",
-                    marginBottom: "10px",
-                    background: "transparent",
-                    border: "none",
-                    padding: 0,
-                    fontSize: "13px",
-                    color: tokenColors.dark.text.primary,
-                    resize: 'none',
-                    outline: 'none',
-                    fontWeight: '500'
-                  }}
-                  onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCreateTask(list.id); } }}
-                />
-                
-                {/* Link Input Toggle */}
-                {showTaskLinkInput ? (
-                  <div style={{ marginBottom: '10px' }}>
-                    <input
-                      value={newTaskLink}
-                      onChange={(e) => setNewTaskLink(e.target.value)}
-                      placeholder="https://..."
-                      style={{
-                        width: "100%",
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: tokenColors.dark.glass.bg,
-                        border: `1px solid ${tokenColors.dark.border.default}`,
-                        fontSize: '12px',
-                        color: tokenColors.dark.text.primary,
-                      }}
-                    />
-                  </div>
-                ) : null}
-
-                {/* Due Date Input Toggle */}
-                {showTaskDueDateInput ? (
-                  <div style={{ marginBottom: '10px' }}>
-                    <input
-                      type="date"
-                      value={newTaskDueDate}
-                      onChange={(e) => setNewTaskDueDate(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: tokenColors.dark.glass.bg,
-                        border: `1px solid ${tokenColors.dark.border.default}`,
-                        fontSize: '12px',
-                        color: tokenColors.dark.text.primary,
-                        colorScheme: 'dark'
-                      }}
-                    />
-                  </div>
-                ) : null}
-
-                {/* Priority Input */}
-                {showTaskPriorityInput ? (
-                  <div style={{ marginBottom: '10px', display: 'flex', gap: '4px' }}>
-                    {(['NONE', 'LOW', 'MEDIUM', 'HIGH'] as Priority[]).map(p => {
-                      const priorityColors: Record<Priority, string> = {
-                        NONE: tokenColors.dark.text.tertiary,
-                        LOW: tokenColors.priority.low,
-                        MEDIUM: tokenColors.priority.medium,
-                        HIGH: tokenColors.priority.high
-                      };
-                      const priorityBgs: Record<Priority, string> = {
-                        NONE: tokenColors.dark.glass.bg,
-                        LOW: tokenColors.priority.lowBg,
-                        MEDIUM: tokenColors.priority.mediumBg,
-                        HIGH: tokenColors.priority.highBg
-                      };
-                      const labels: Record<Priority, string> = {
-                        NONE: 'Yok',
-                        LOW: 'Düşük',
-                        MEDIUM: 'Orta',
-                        HIGH: 'Yüksek'
-                      };
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setNewTaskPriority(p)}
-                          style={{
-                            flex: 1,
-                            padding: '6px 8px',
-                            borderRadius: '8px',
-                            border: newTaskPriority === p
-                              ? `1px solid ${priorityColors[p]}`
-                              : `1px solid ${tokenColors.dark.border.default}`,
-                            background: newTaskPriority === p
-                              ? priorityBgs[p]
-                              : tokenColors.dark.glass.bg,
-                            color: newTaskPriority === p ? priorityColors[p] : tokenColors.dark.text.tertiary,
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '3px'
-                          }}
-                        >
-                          {p !== 'NONE' && <Flag size={9} />}
-                          {labels[p]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {/* Quick action buttons */}
-                <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>
-                  {!showTaskLinkInput && (
-                    <button
-                      onClick={() => setShowTaskLinkInput(true)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '6px 10px',
-                        background: 'transparent',
-                        border: `1px dashed ${tokenColors.dark.border.strong}`,
-                        borderRadius: '8px',
-                        color: tokenColors.dark.text.tertiary,
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = tokenColors.brand.primaryLight;
-                        e.currentTarget.style.color = 'var(--primary)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
-                        e.currentTarget.style.color = tokenColors.dark.text.tertiary;
-                      }}
-                    >
-                      <LinkIcon size={11} /> Link
-                    </button>
-                  )}
-                  {!showTaskDueDateInput && (
-                    <button
-                      onClick={() => setShowTaskDueDateInput(true)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '6px 10px',
-                        background: 'transparent',
-                        border: `1px dashed ${tokenColors.dark.border.strong}`,
-                        borderRadius: '8px',
-                        color: tokenColors.dark.text.tertiary,
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = tokenColors.priority.mediumBg;
-                        e.currentTarget.style.color = tokenColors.priority.medium;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
-                        e.currentTarget.style.color = tokenColors.dark.text.tertiary;
-                      }}
-                    >
-                      <Calendar size={11} /> Tarih
-                    </button>
-                  )}
-                  {!showTaskPriorityInput && (
-                    <button
-                      onClick={() => setShowTaskPriorityInput(true)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '6px 10px',
-                        background: 'transparent',
-                        border: `1px dashed ${tokenColors.dark.border.strong}`,
-                        borderRadius: '8px',
-                        color: tokenColors.dark.text.tertiary,
-                        fontSize: '11px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = tokenColors.priority.highBg;
-                        e.currentTarget.style.color = tokenColors.priority.high;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
-                        e.currentTarget.style.color = tokenColors.dark.text.tertiary;
-                      }}
-                    >
-                      <Flag size={11} /> Öncelik
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button 
-                    onClick={() => handleCreateTask(list.id)} 
-                    className="btn btn-primary" 
-                    style={{ flex: 1, fontWeight: '600', borderRadius: '10px', height: '36px', fontSize: '12px' }}
-                  >
-                    Ekle
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveListId(null);
-                      setShowTaskLinkInput(false);
-                      setShowTaskDueDateInput(false);
-                      setShowTaskPriorityInput(false);
-                      setNewTaskLink('');
-                      setNewTaskDueDate('');
-                      setNewTaskPriority('NONE');
-                    }}
-                    className="btn btn-ghost"
-                    style={{ padding: "8px", borderRadius: '10px', height: '36px' }}
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ))}
-
-        {/* New List Column */}
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-            background: tokenColors.dark.glass.bg,
-            borderRadius: "20px",
-            padding: "14px",
-            border: `1px dashed ${tokenColors.dark.border.default}`,
-            transition: "all 0.3s ease",
-          }}
-        >
-          {isAddingList ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div className="flex justify-between items-center">
-                <span style={{ fontSize: "11px", fontWeight: "700", color: tokenColors.dark.text.tertiary, textTransform: "uppercase", letterSpacing: '0.08em' }}>Yeni Liste</span>
-                <button onClick={() => { setIsAddingList(false); setShowListLinkInput(false); setNewListLink(''); }} className="text-gray-600 hover:text-white"><X size={16} /></button>
-              </div>
-              <input
-                autoFocus
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-                placeholder="Liste adı..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '13px',
-                }}
-                onKeyDown={(e) => { if(e.key === 'Enter') handleCreateList(); }}
-              />
-
-              {/* Link Input Toggle */}
-              {showListLinkInput ? (
-                <input
-                  value={newListLink}
-                  onChange={(e) => setNewListLink(e.target.value)}
-                  placeholder="https://..."
-                  style={{
-                    width: "100%",
-                    borderRadius: '10px',
-                    background: tokenColors.dark.bg.hover,
-                    border: `1px solid ${tokenColors.dark.border.subtle}`,
-                    padding: '12px',
-                    fontSize: '13px',
-                  }}
-                />
-              ) : (
-                <button
-                  onClick={() => setShowListLinkInput(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '10px 12px',
-                    background: 'transparent',
-                    border: `1px dashed ${tokenColors.dark.border.strong}`,
-                    borderRadius: '10px',
-                    color: tokenColors.dark.text.tertiary,
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = tokenColors.brand.primaryLight;
-                    e.currentTarget.style.color = 'var(--primary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
-                    e.currentTarget.style.color = tokenColors.dark.text.tertiary;
-                  }}
-                >
-                  <LinkIcon size={14} /> Link Ekle
-                </button>
-              )}
-
-              <button onClick={handleCreateList} className="btn btn-primary font-semibold" style={{ width: '100%', borderRadius: '10px', height: '42px' }}>Oluştur</button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsAddingList(true)}
-              className="btn btn-ghost hover:bg-white/5"
-              style={{ width: "100%", justifyContent: "center", height: "48px", gap: "10px", color: tokenColors.dark.text.tertiary, fontWeight: "600", borderRadius: '12px', fontSize: '13px' }}
-            >
-              <Plus size={18} /> Yeni Liste
-            </button>
+          {/* Column 3: Subtasks (when task selected and has subtasks) */}
+          {selectedTaskId && selectedTask && subtaskItems.length > 0 && (
+            <MillerColumn
+              title={`${selectedTask.title} - Alt Görevler`}
+              items={subtaskItems}
+              selectedId={null}
+              hoveredId={null}
+              onSelect={() => {}}
+              onHover={() => {}}
+              columnIndex={2}
+              isLoading={isLoadingSubtasks}
+              emptyMessage="Alt görev yok"
+            />
           )}
         </div>
+
+        {/* Preview Panel */}
+        <div
+          style={{
+            width: '400px',
+            minWidth: '400px',
+            borderLeft: '1px solid var(--border)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <MillerPreviewPanel
+            type={previewType}
+            data={previewData}
+            tasks={previewTasks}
+            subtasks={previewSubtasks}
+            isLoading={isLoadingSubtasks && previewType === 'task'}
+            onEditTask={(task) => setEditingTask(task)}
+            onEditList={(list) => setEditingList(list)}
+            onToggleTask={(task) => {
+              if (selectedList) handleTaskCompletionToggle(task, selectedList);
+            }}
+            onToggleList={(list) => handleListCompletionToggle(list)}
+          />
+        </div>
       </div>
+
+      {/* Add List Modal/Inline UI */}
+      {isAddingList && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setIsAddingList(false)}
+        >
+          <div
+            style={{
+              background: tokenColors.dark.bg.card,
+              borderRadius: '16px',
+              padding: '24px',
+              width: '400px',
+              border: `1px solid ${tokenColors.dark.border.default}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
+              <span style={{ fontSize: "14px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Liste</span>
+              <button onClick={() => setIsAddingList(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+            </div>
+            <input
+              autoFocus
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              placeholder="Liste adı..."
+              style={{
+                width: "100%",
+                borderRadius: '10px',
+                background: tokenColors.dark.bg.hover,
+                border: `1px solid ${tokenColors.dark.border.subtle}`,
+                padding: '12px',
+                fontSize: '14px',
+                marginBottom: '12px',
+                color: 'var(--text-main)',
+              }}
+              onKeyDown={(e) => { if(e.key === 'Enter') handleCreateList(); }}
+            />
+            <button onClick={handleCreateList} className="btn btn-primary font-semibold" style={{ width: '100%', borderRadius: '10px', height: '42px' }}>Oluştur</button>
+          </div>
+        </div>
       )}
+
+      {/* Add Task Modal/Inline UI */}
+      {activeListId && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setActiveListId(null)}
+        >
+          <div
+            style={{
+              background: tokenColors.dark.bg.card,
+              borderRadius: '16px',
+              padding: '24px',
+              width: '450px',
+              border: `1px solid ${tokenColors.dark.border.default}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
+              <span style={{ fontSize: "14px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Görev</span>
+              <button onClick={() => setActiveListId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+            </div>
+            <textarea
+              autoFocus
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Görev başlığı..."
+              style={{
+                width: "100%",
+                minHeight: "60px",
+                marginBottom: "12px",
+                background: tokenColors.dark.bg.hover,
+                border: `1px solid ${tokenColors.dark.border.subtle}`,
+                padding: '12px',
+                fontSize: "14px",
+                color: 'var(--text-main)',
+                resize: 'none',
+                borderRadius: '10px',
+              }}
+              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCreateTask(activeListId); } }}
+            />
+            <button onClick={() => handleCreateTask(activeListId)} className="btn btn-primary font-semibold" style={{ width: '100%', borderRadius: '10px', height: '42px' }}>Ekle</button>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes millerSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 };

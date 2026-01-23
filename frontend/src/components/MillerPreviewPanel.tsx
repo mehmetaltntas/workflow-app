@@ -8,7 +8,10 @@ import {
   Link as LinkIcon,
   Clock,
   ListTodo,
-  Folder
+  Folder,
+  Edit2,
+  Check,
+  Square
 } from 'lucide-react';
 import type { Task, TaskList, Subtask } from '../types';
 import { colors, cssVars } from '../styles/tokens';
@@ -21,6 +24,10 @@ interface MillerPreviewPanelProps {
   tasks?: Task[]; // Liste için görevler
   subtasks?: Subtask[]; // Task için alt görevler
   isLoading?: boolean;
+  onEditTask?: (task: Task) => void;
+  onEditList?: (list: TaskList) => void;
+  onToggleTask?: (task: Task) => void;
+  onToggleList?: (list: TaskList) => void;
 }
 
 const getPriorityLabel = (priority?: string) => {
@@ -63,6 +70,10 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   tasks,
   subtasks,
   isLoading = false,
+  onEditTask,
+  onEditList,
+  onToggleTask,
+  onToggleList,
 }) => {
   if (!type || !data) {
     return (
@@ -159,7 +170,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
             >
               <Folder size={20} color={cssVars.textInverse} />
             </div>
-            <div>
+            <div style={{ flex: 1 }}>
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>
                 {list.name}
               </h2>
@@ -176,6 +187,50 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 >
                   Tamamlandı
                 </span>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {onToggleList && (
+                <button
+                  onClick={() => onToggleList(list)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: list.isCompleted ? colors.semantic.warningLight : colors.semantic.successLight,
+                    color: list.isCompleted ? colors.semantic.warning : colors.semantic.success,
+                    cursor: 'pointer',
+                  }}
+                  title={list.isCompleted ? 'Geri Al' : 'Tamamla'}
+                >
+                  {list.isCompleted ? <Square size={16} /> : <CheckSquare size={16} />}
+                </button>
+              )}
+              {onEditList && (
+                <button
+                  onClick={() => onEditList(list)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: colors.brand.primaryLight,
+                    color: 'var(--primary)',
+                    cursor: 'pointer',
+                  }}
+                  title="Düzenle"
+                >
+                  <Edit2 size={16} />
+                </button>
               )}
             </div>
           </div>
@@ -420,6 +475,50 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   </span>
                 )}
               </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              {onToggleTask && (
+                <button
+                  onClick={() => onToggleTask(task)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: task.isCompleted ? colors.semantic.warningLight : colors.semantic.successLight,
+                    color: task.isCompleted ? colors.semantic.warning : colors.semantic.success,
+                    cursor: 'pointer',
+                  }}
+                  title={task.isCompleted ? 'Geri Al' : 'Tamamla'}
+                >
+                  {task.isCompleted ? <Square size={16} /> : <Check size={16} />}
+                </button>
+              )}
+              {onEditTask && (
+                <button
+                  onClick={() => onEditTask(task)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: colors.brand.primaryLight,
+                    color: 'var(--primary)',
+                    cursor: 'pointer',
+                  }}
+                  title="Düzenle"
+                >
+                  <Edit2 size={16} />
+                </button>
+              )}
             </div>
           </div>
 
