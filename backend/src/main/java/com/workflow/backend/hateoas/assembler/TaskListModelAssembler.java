@@ -2,6 +2,8 @@ package com.workflow.backend.hateoas.assembler;
 
 import com.workflow.backend.controller.TaskController;
 import com.workflow.backend.dto.TaskListDto;
+import com.workflow.backend.entity.Priority;
+import com.workflow.backend.hateoas.model.LabelModel;
 import com.workflow.backend.hateoas.model.TaskListModel;
 import com.workflow.backend.hateoas.model.TaskModel;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
@@ -17,10 +19,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 public class TaskListModelAssembler extends RepresentationModelAssemblerSupport<TaskListDto, TaskListModel> {
 
     private final TaskModelAssembler taskAssembler;
+    private final LabelModelAssembler labelAssembler;
 
-    public TaskListModelAssembler(TaskModelAssembler taskAssembler) {
+    public TaskListModelAssembler(TaskModelAssembler taskAssembler, LabelModelAssembler labelAssembler) {
         super(TaskController.class, TaskListModel.class);
         this.taskAssembler = taskAssembler;
+        this.labelAssembler = labelAssembler;
     }
 
     @Override
@@ -30,6 +34,30 @@ public class TaskListModelAssembler extends RepresentationModelAssemblerSupport<
         model.setName(dto.getName());
         model.setLink(dto.getLink());
         model.setIsCompleted(dto.getIsCompleted());
+
+        // Extended fields
+        model.setDescription(dto.getDescription());
+        model.setDueDate(dto.getDueDate());
+        model.setCreatedAt(dto.getCreatedAt());
+
+        // Priority conversion (String -> enum)
+        if (dto.getPriority() != null && !dto.getPriority().isEmpty()) {
+            try {
+                model.setPriority(Priority.valueOf(dto.getPriority()));
+            } catch (IllegalArgumentException e) {
+                // Invalid priority value, leave as null
+            }
+        }
+
+        // Labels conversion
+        if (dto.getLabels() != null && !dto.getLabels().isEmpty()) {
+            List<LabelModel> labelModels = dto.getLabels().stream()
+                    .map(labelAssembler::toModel)
+                    .collect(Collectors.toList());
+            model.setLabels(labelModels);
+        } else {
+            model.setLabels(Collections.emptyList());
+        }
 
         // Convert nested tasks
         if (dto.getTasks() != null) {

@@ -156,8 +156,17 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
           </button>
         </div>
 
-        {/* List Name and Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing[4] }}>
+        {/* Scrollable Content Area */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing[6],
+          paddingRight: spacing[2],
+        }}>
+          {/* List Name and Fields */}
+          <div style={{ display: "flex", flexDirection: "column", gap: spacing[4] }}>
           <div className="form-group">
             <label style={{ display: "block", fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>Liste Adı</label>
             <input
@@ -445,12 +454,9 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
 
           {/* Task List */}
           <div style={{
-            maxHeight: '250px',
-            overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             gap: spacing[2],
-            paddingRight: spacing[1],
           }}>
             {visibleTasks.length === 0 ? (
               <div style={{
@@ -513,9 +519,17 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
             )}
           </div>
         </div>
+        </div>
 
         {/* Footer Actions */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: spacing[4], marginTop: spacing[3] }}>
+        <div style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: spacing[4],
+          paddingTop: spacing[4],
+          borderTop: '1px solid var(--border)',
+          flexShrink: 0,
+        }}>
           <button
             onClick={onClose}
             className="btn btn-ghost"
