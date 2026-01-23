@@ -24,6 +24,14 @@ public class User {
     @Column(columnDefinition = "TEXT") // Base64 encoded image (PostgreSQL için TEXT)
     private String profilePicture;
 
+    // Google OAuth icin eklenen alanlar
+    @Column(unique = true)
+    private String googleId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
     // İLİŞKİ: Bir kullanıcının birden fazla panosu olabilir.
     // "mappedBy": Board tablosundaki 'user' değişkeni bu ilişkiyi yönetiyor demek.
     // cascade = CascadeType.ALL: Kullanıcıyı silersem, ona ait panoları da sil.

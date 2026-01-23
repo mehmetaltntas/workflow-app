@@ -65,6 +65,22 @@ export const authService = {
   logout: () => {
     return apiClient.post("/auth/logout");
   },
+  // Sifremi Unuttum - Email'e kod gonder
+  forgotPassword: (email: string) => {
+    return apiClient.post("/auth/forgot-password", { email });
+  },
+  // Dogrulama kodunu kontrol et
+  verifyCode: (email: string, code: string) => {
+    return apiClient.post("/auth/verify-code", { email, code });
+  },
+  // Yeni sifre belirle
+  resetPassword: (email: string, code: string, newPassword: string) => {
+    return apiClient.post("/auth/reset-password", { email, code, newPassword });
+  },
+  // Google ile giris/kayit
+  googleAuth: (idToken: string) => {
+    return apiClient.post("/auth/google", { idToken });
+  },
 };
 
 // 4. Board (Pano) İşlemleri

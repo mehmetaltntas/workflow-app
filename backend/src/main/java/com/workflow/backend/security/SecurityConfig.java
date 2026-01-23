@@ -36,10 +36,11 @@ public class SecurityConfig {
                                                 .frameOptions(frame -> frame.deny())
                                                 .contentSecurityPolicy(csp -> csp
                                                                 .policyDirectives("default-src 'self'; " +
-                                                                                "connect-src 'self' " + getAllowedOriginsForCSP() + "; " +
-                                                                                "script-src 'self'; " +
-                                                                                "style-src 'self' 'unsafe-inline'; " +
-                                                                                "img-src 'self' data:; " +
+                                                                                "connect-src 'self' " + getAllowedOriginsForCSP() + " https://accounts.google.com https://oauth2.googleapis.com; " +
+                                                                                "script-src 'self' https://accounts.google.com https://apis.google.com; " +
+                                                                                "style-src 'self' 'unsafe-inline' https://accounts.google.com; " +
+                                                                                "img-src 'self' data: https://*.googleusercontent.com; " +
+                                                                                "frame-src https://accounts.google.com; " +
                                                                                 "font-src 'self' data:;"))
                                                 .xssProtection(xss -> xss.disable())
                                                 .contentTypeOptions(contentType -> {}))

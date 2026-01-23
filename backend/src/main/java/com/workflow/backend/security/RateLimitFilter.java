@@ -25,10 +25,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Map<String, Map<String, Bucket>> buckets = new ConcurrentHashMap<>();
 
     // Rate limit konfigürasyonları
-    private static final Map<String, RateLimitConfig> RATE_LIMITS = Map.of(
-            "/auth/login", new RateLimitConfig(5, Duration.ofMinutes(5)),
-            "/auth/register", new RateLimitConfig(3, Duration.ofMinutes(15)),
-            "/auth/refresh", new RateLimitConfig(10, Duration.ofMinutes(5))
+    private static final Map<String, RateLimitConfig> RATE_LIMITS = Map.ofEntries(
+            Map.entry("/auth/login", new RateLimitConfig(5, Duration.ofMinutes(5))),
+            Map.entry("/auth/register", new RateLimitConfig(3, Duration.ofMinutes(15))),
+            Map.entry("/auth/refresh", new RateLimitConfig(10, Duration.ofMinutes(5))),
+            Map.entry("/auth/forgot-password", new RateLimitConfig(3, Duration.ofMinutes(15))),
+            Map.entry("/auth/verify-code", new RateLimitConfig(5, Duration.ofMinutes(5))),
+            Map.entry("/auth/reset-password", new RateLimitConfig(3, Duration.ofMinutes(15))),
+            Map.entry("/auth/google", new RateLimitConfig(10, Duration.ofMinutes(5)))
     );
 
     @Override

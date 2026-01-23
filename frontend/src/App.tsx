@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-ro
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import BoardsPage from "./pages/BoardsPage";
 import BoardDetailPage from "./pages/BoardDetailPage";
 import BoardMillerView from "./pages/BoardMillerView";
@@ -21,19 +23,17 @@ const AuthCheck = () => {
     const token = localStorage.getItem("token");
     const path = location.pathname;
 
+    // Public sayfalar - giris gerektirmeyen
+    const publicPaths = ["/", "/login", "/register", "/forgot-password"];
+
     if (token) {
-      // Eğer kullanıcı giriş yapmışsa ve Login sayfasına gidiyorsa -> Ana sayfaya at
-      if (path === "/login") {
-        navigate("/", { replace: true });
+      // Eger kullanici giris yapmissa ve public sayfaya gidiyorsa -> home'a yonlendir
+      if (publicPaths.includes(path)) {
+        navigate("/home", { replace: true });
       }
-    } else {
-      // Token yoksa ve Root'a gidiyorsa -> Login'e at
-      if (path === "/") {
-        navigate("/login", { replace: true });
-      }
-      // Not: Diğer korumalı rotalar (boards/*) api.ts interceptor'ı veya 
-      // sayfa içi kontrollerle (BoardsPage'deki useEffect gibi) yönetiliyor.
     }
+    // Token yoksa ve korunmali sayfalara erismeye calisiyorsa
+    // api.ts interceptor'i veya sayfa ici kontroller yonetecek
   }, [navigate, location]);
 
   return null;
@@ -58,12 +58,15 @@ function App() {
         />
 
         <Routes>
+        {/* Public rotalar */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        
-        {/* Layout ile sarmalanmış rotalar */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+        {/* Layout ile sarmalanmis korunmali rotalar */}
         <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/boards" element={<BoardsPage />} />
           <Route path="/boards/:slug" element={<BoardDetailPage />} />
           <Route path="/boards/:slug/miller" element={<BoardMillerView />} />
