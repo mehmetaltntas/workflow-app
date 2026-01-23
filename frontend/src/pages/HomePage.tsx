@@ -6,6 +6,7 @@ import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
 import { ConfirmationModal } from "../components/ConfirmationModal";
+import { typography, spacing, radius, cssVars } from '../styles/tokens';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const HomePage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          color: "var(--text-muted)",
+          color: cssVars.textMuted,
         }}
       >
         <h2>Yükleniyor...</h2>
@@ -65,12 +66,12 @@ const HomePage = () => {
   }
 
   return (
-    <div style={{ padding: "40px", maxWidth: "1200px", margin: "0 auto" }}>
-      <header style={{ marginBottom: "40px" }}>
-        <h1 style={{ fontSize: "32px", color: "var(--text-main)", marginBottom: "10px" }}>
-          Hoş Geldin! 👋
+    <div style={{ padding: spacing[10], maxWidth: "1200px", margin: "0 auto" }}>
+      <header style={{ marginBottom: spacing[10] }}>
+        <h1 style={{ fontSize: typography.fontSize["5xl"], color: cssVars.textMain, marginBottom: spacing[2.5] }}>
+          Hoş Geldin!
         </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "18px" }}>
+        <p style={{ color: cssVars.textMuted, fontSize: typography.fontSize["2xl"] }}>
           İşte üzerinde çalıştığın aktif projeler.
         </p>
       </header>
@@ -80,7 +81,7 @@ const HomePage = () => {
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: "24px",
+            gap: spacing[6],
           }}
         >
           {activeBoards.map((board) => (
@@ -97,48 +98,48 @@ const HomePage = () => {
       ) : (
         <div
             style={{
-                background: "var(--bg-card)",
-                borderRadius: "24px",
+                background: cssVars.bgCard,
+                borderRadius: radius["2xl"],
                 padding: "60px",
                 textAlign: "center",
-                border: "1px dashed var(--border)",
+                border: `1px dashed ${cssVars.border}`,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "20px"
+                gap: spacing[5]
             }}
         >
-            <div 
-                style={{ 
-                    width: "80px", 
-                    height: "80px", 
-                    borderRadius: "50%", 
-                    background: "var(--bg-body)", 
-                    display: "flex", 
-                    alignItems: "center", 
+            <div
+                style={{
+                    width: spacing[20],
+                    height: spacing[20],
+                    borderRadius: radius.full,
+                    background: cssVars.bgBody,
+                    display: "flex",
+                    alignItems: "center",
                     justifyContent: "center",
-                    marginBottom: "10px"
+                    marginBottom: spacing[2.5]
                 }}
             >
-                <Layout size={40} color="var(--text-muted)" />
+                <Layout size={40} color={cssVars.textMuted} />
             </div>
-            <h3 style={{ fontSize: "24px", color: "var(--text-main)" }}>
+            <h3 style={{ fontSize: typography.fontSize["4xl"], color: cssVars.textMain }}>
                 Şu an aktif bir projen yok
             </h3>
-            <p style={{ color: "var(--text-muted)", maxWidth: "400px", lineHeight: "1.6" }}>
-                Görünüşe göre şu anda "Devam Ediyor" statüsünde bir panon bulunmuyor. 
+            <p style={{ color: cssVars.textMuted, maxWidth: "400px", lineHeight: typography.lineHeight.relaxed }}>
+                Görünüşe göre şu anda "Devam Ediyor" statüsünde bir panon bulunmuyor.
                 Yeni bir işe başlamak için panolarım sayfasına göz atabilirsin.
             </p>
             <button
                 onClick={() => navigate("/boards")}
                 className="btn btn-primary"
-                style={{ 
-                    padding: "12px 24px", 
-                    fontSize: "16px", 
-                    display: "flex", 
-                    alignItems: "center", 
-                    gap: "10px",
-                    marginTop: "10px" 
+                style={{
+                    padding: `${spacing[3]} ${spacing[6]}`,
+                    fontSize: typography.fontSize.xl,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing[2.5],
+                    marginTop: spacing[2.5]
                 }}
             >
                 <Plus size={20} /> Panolarım'a Git

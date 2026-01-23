@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Tag, Plus, Edit2, Trash2, Check } from "lucide-react";
 import type { Label } from "../types";
+import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 
 interface LabelManagerProps {
   boardId: number;
@@ -90,12 +91,12 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        backgroundColor: colors.dark.bg.overlay,
         backdropFilter: "blur(8px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: zIndex.modal,
       }}
     >
       <div
@@ -103,26 +104,26 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
         style={{
           width: "450px",
           maxHeight: "80vh",
-          borderRadius: "20px",
-          padding: "28px",
+          borderRadius: radius['2xl'],
+          padding: spacing[7],
           display: "flex",
           flexDirection: "column",
-          gap: "20px",
+          gap: spacing[5],
           position: "relative",
           background: "var(--bg-card)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          boxShadow: shadows.modal,
           border: "1px solid var(--border)",
-          animation: "modalFadeIn 0.3s ease-out",
+          animation: `modalFadeIn ${animation.duration.slow} ${animation.easing.smooth}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "var(--text-main)" }}>
-            <div style={{ padding: "10px", backgroundColor: "rgba(var(--primary-rgb), 0.1)", borderRadius: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[3], color: "var(--text-main)" }}>
+            <div style={{ padding: spacing[2.5], backgroundColor: "rgba(var(--primary-rgb), 0.1)", borderRadius: radius.lg }}>
               <Tag size={20} className="text-primary" />
             </div>
-            <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "700", letterSpacing: "-0.02em" }}>Etiketler</h3>
+            <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Etiketler</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={22} />
@@ -130,11 +131,11 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
         </div>
 
         {/* Labels List */}
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: spacing[2] }}>
           {labels.length === 0 && !isCreating && (
-            <div style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>
-              <Tag size={32} style={{ opacity: 0.3, marginBottom: "12px" }} />
-              <p style={{ fontSize: "13px" }}>Henüz etiket eklenmemiş.</p>
+            <div style={{ textAlign: "center", padding: spacing[6], color: "var(--text-muted)" }}>
+              <Tag size={32} style={{ opacity: 0.3, marginBottom: spacing[3] }} />
+              <p style={{ fontSize: typography.fontSize.base }}>Henüz etiket eklenmemiş.</p>
             </div>
           )}
 
@@ -146,11 +147,11 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: "12px",
-                  padding: "14px",
-                  borderRadius: "12px",
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  gap: spacing[3],
+                  padding: spacing[3.5],
+                  borderRadius: radius.lg,
+                  background: colors.dark.bg.hover,
+                  border: `1px solid ${cssVars.borderStrong}`,
                 }}
               >
                 <input
@@ -160,12 +161,12 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   placeholder="Etiket adı"
                   style={{
                     width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: "8px",
+                    padding: `${spacing[2.5]} ${spacing[3]}`,
+                    borderRadius: radius.md,
                     border: "1px solid var(--border)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: "white",
-                    fontSize: "13px",
+                    background: colors.dark.glass.bg,
+                    color: cssVars.textMain,
+                    fontSize: typography.fontSize.base,
                     outline: "none",
                   }}
                   onKeyDown={(e) => {
@@ -173,37 +174,37 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                     if (e.key === "Escape") setEditingLabelId(null);
                   }}
                 />
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: spacing[1.5] }}>
                   {PRESET_COLORS.map((color) => (
                     <button
                       key={color}
                       type="button"
                       onClick={() => setEditLabelColor(color)}
                       style={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "6px",
+                        width: spacing[6],
+                        height: spacing[6],
+                        borderRadius: radius.sm,
                         background: color,
-                        border: editLabelColor === color ? "2px solid white" : "2px solid transparent",
+                        border: editLabelColor === color ? `2px solid ${cssVars.textMain}` : "2px solid transparent",
                         cursor: "pointer",
-                        transition: "all 0.15s",
+                        transition: `all ${animation.duration.fast}`,
                       }}
                     />
                   ))}
                 </div>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", gap: spacing[2] }}>
                   <button
                     onClick={() => handleUpdate(label.id)}
                     disabled={isSaving || !editLabelName.trim()}
                     className="btn btn-primary"
-                    style={{ flex: 1, height: "36px", fontSize: "12px", fontWeight: "600" }}
+                    style={{ flex: 1, height: spacing[9], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semibold }}
                   >
                     <Check size={14} /> Kaydet
                   </button>
                   <button
                     onClick={() => setEditingLabelId(null)}
                     className="btn btn-ghost"
-                    style={{ padding: "8px 12px", height: "36px" }}
+                    style={{ padding: `${spacing[2]} ${spacing[3]}`, height: spacing[9] }}
                   >
                     İptal
                   </button>
@@ -216,20 +217,20 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "12px",
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  transition: "all 0.2s",
+                  gap: spacing[3],
+                  padding: `${spacing[3]} ${spacing[3.5]}`,
+                  borderRadius: radius.lg,
+                  background: colors.dark.glass.bg,
+                  border: `1px solid ${colors.dark.border.subtle}`,
+                  transition: `all ${animation.duration.normal}`,
                 }}
                 className="group/label"
               >
                 <div
                   style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "8px",
+                    width: spacing[8],
+                    height: spacing[8],
+                    borderRadius: radius.md,
                     background: `${label.color}30`,
                     border: `2px solid ${label.color}`,
                     display: "flex",
@@ -239,23 +240,23 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                 >
                   <Tag size={14} style={{ color: label.color }} />
                 </div>
-                <span style={{ flex: 1, fontSize: "13px", fontWeight: "600", color: "var(--text-main)" }}>
+                <span style={{ flex: 1, fontSize: typography.fontSize.base, fontWeight: typography.fontWeight.semibold, color: "var(--text-main)" }}>
                   {label.name}
                 </span>
-                <div style={{ display: "flex", gap: "4px", opacity: 0, transition: "opacity 0.2s" }} className="group-hover/label:!opacity-100">
+                <div style={{ display: "flex", gap: spacing[1], opacity: 0, transition: `opacity ${animation.duration.normal}` }} className="group-hover/label:!opacity-100">
                   <button
                     onClick={() => startEditing(label)}
                     style={{
-                      padding: "6px",
-                      borderRadius: "6px",
+                      padding: spacing[1.5],
+                      borderRadius: radius.sm,
                       background: "transparent",
                       border: "none",
                       cursor: "pointer",
                       color: "var(--text-muted)",
-                      transition: "all 0.2s",
+                      transition: `all ${animation.duration.normal}`,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(77, 171, 247, 0.15)";
+                      e.currentTarget.style.background = colors.brand.primaryLight;
                       e.currentTarget.style.color = "var(--primary)";
                     }}
                     onMouseLeave={(e) => {
@@ -268,16 +269,16 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   <button
                     onClick={() => onDeleteLabel(label.id)}
                     style={{
-                      padding: "6px",
-                      borderRadius: "6px",
+                      padding: spacing[1.5],
+                      borderRadius: radius.sm,
                       background: "transparent",
                       border: "none",
                       cursor: "pointer",
                       color: "var(--text-muted)",
-                      transition: "all 0.2s",
+                      transition: `all ${animation.duration.normal}`,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                      e.currentTarget.style.background = colors.semantic.dangerLight;
                       e.currentTarget.style.color = "var(--danger)";
                     }}
                     onMouseLeave={(e) => {
@@ -298,11 +299,11 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "12px",
-                padding: "14px",
-                borderRadius: "12px",
-                background: "rgba(77, 171, 247, 0.08)",
-                border: "1px solid rgba(77, 171, 247, 0.2)",
+                gap: spacing[3],
+                padding: spacing[3.5],
+                borderRadius: radius.lg,
+                background: colors.brand.primaryLight,
+                border: `1px solid ${colors.brand.primary}33`,
               }}
             >
               <input
@@ -312,12 +313,12 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                 placeholder="Yeni etiket adı"
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
+                  padding: `${spacing[2.5]} ${spacing[3]}`,
+                  borderRadius: radius.md,
                   border: "1px solid var(--border)",
-                  background: "rgba(255,255,255,0.03)",
-                  color: "white",
-                  fontSize: "13px",
+                  background: colors.dark.glass.bg,
+                  color: cssVars.textMain,
+                  fontSize: typography.fontSize.base,
                   outline: "none",
                 }}
                 onKeyDown={(e) => {
@@ -325,37 +326,37 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   if (e.key === "Escape") setIsCreating(false);
                 }}
               />
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: spacing[1.5] }}>
                 {PRESET_COLORS.map((color) => (
                   <button
                     key={color}
                     type="button"
                     onClick={() => setNewLabelColor(color)}
                     style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "6px",
+                      width: spacing[6],
+                      height: spacing[6],
+                      borderRadius: radius.sm,
                       background: color,
-                      border: newLabelColor === color ? "2px solid white" : "2px solid transparent",
+                      border: newLabelColor === color ? `2px solid ${cssVars.textMain}` : "2px solid transparent",
                       cursor: "pointer",
-                      transition: "all 0.15s",
+                      transition: `all ${animation.duration.fast}`,
                     }}
                   />
                 ))}
               </div>
-              <div style={{ display: "flex", gap: "8px" }}>
+              <div style={{ display: "flex", gap: spacing[2] }}>
                 <button
                   onClick={handleCreate}
                   disabled={isSaving || !newLabelName.trim()}
                   className="btn btn-primary"
-                  style={{ flex: 1, height: "36px", fontSize: "12px", fontWeight: "600" }}
+                  style={{ flex: 1, height: spacing[9], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semibold }}
                 >
                   <Plus size={14} /> Oluştur
                 </button>
                 <button
                   onClick={() => setIsCreating(false)}
                   className="btn btn-ghost"
-                  style={{ padding: "8px 12px", height: "36px" }}
+                  style={{ padding: `${spacing[2]} ${spacing[3]}`, height: spacing[9] }}
                 >
                   İptal
                 </button>
@@ -373,13 +374,13 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
               width: "100%",
               justifyContent: "center",
               height: "44px",
-              gap: "8px",
+              gap: spacing[2],
               color: "var(--primary)",
-              fontWeight: "600",
-              borderRadius: "12px",
-              fontSize: "13px",
-              border: "1px dashed rgba(77, 171, 247, 0.3)",
-              background: "rgba(77, 171, 247, 0.05)",
+              fontWeight: typography.fontWeight.semibold,
+              borderRadius: radius.lg,
+              fontSize: typography.fontSize.base,
+              border: `1px dashed ${colors.brand.primary}4D`,
+              background: colors.brand.primaryLight,
             }}
           >
             <Plus size={18} /> Yeni Etiket Ekle

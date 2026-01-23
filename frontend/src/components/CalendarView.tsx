@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Calendar, Flag, CheckCircle2 } from "lucide-react";
 import type { Board, Task, Priority } from "../types";
+import { colors, cssVars } from "../styles/tokens";
 
 interface CalendarViewProps {
   board: Board;
@@ -15,10 +16,10 @@ interface DayTasks {
 // Priority renkleri
 const getPriorityColor = (priority: Priority | undefined): string => {
   switch (priority) {
-    case 'HIGH': return '#ef4444';
-    case 'MEDIUM': return '#f59e0b';
-    case 'LOW': return '#22c55e';
-    default: return 'var(--primary)';
+    case 'HIGH': return colors.priority.high;
+    case 'MEDIUM': return colors.priority.medium;
+    case 'LOW': return colors.priority.low;
+    default: return colors.brand.primary;
   }
 };
 
@@ -126,7 +127,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
 
   return (
     <div style={{
-      background: "rgba(0, 0, 0, 0.2)",
+      background: colors.dark.bg.overlay,
       borderRadius: "16px",
       padding: "20px",
       margin: "20px",
@@ -142,18 +143,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
           <button
             onClick={goToPrevMonth}
             style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: colors.dark.bg.hover,
+              border: `1px solid ${cssVars.border}`,
               borderRadius: "8px",
               padding: "8px",
               cursor: "pointer",
-              color: "rgba(255,255,255,0.7)",
+              color: colors.dark.text.secondary,
               display: "flex",
               alignItems: "center",
               transition: "all 0.2s",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+            onMouseEnter={e => e.currentTarget.style.background = colors.dark.bg.active}
+            onMouseLeave={e => e.currentTarget.style.background = colors.dark.bg.hover}
           >
             <ChevronLeft size={20} />
           </button>
@@ -171,18 +172,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
           <button
             onClick={goToNextMonth}
             style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: colors.dark.bg.hover,
+              border: `1px solid ${cssVars.border}`,
               borderRadius: "8px",
               padding: "8px",
               cursor: "pointer",
-              color: "rgba(255,255,255,0.7)",
+              color: colors.dark.text.secondary,
               display: "flex",
               alignItems: "center",
               transition: "all 0.2s",
             }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+            onMouseEnter={e => e.currentTarget.style.background = colors.dark.bg.active}
+            onMouseLeave={e => e.currentTarget.style.background = colors.dark.bg.hover}
           >
             <ChevronRight size={20} />
           </button>
@@ -191,12 +192,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
         <button
           onClick={goToToday}
           style={{
-            background: "var(--primary)",
+            background: colors.brand.primary,
             border: "none",
             borderRadius: "8px",
             padding: "8px 16px",
             cursor: "pointer",
-            color: "white",
+            color: cssVars.textInverse,
             fontSize: "13px",
             fontWeight: "600",
             display: "flex",
@@ -226,7 +227,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
               textAlign: "center",
               fontSize: "12px",
               fontWeight: "600",
-              color: "rgba(255,255,255,0.5)",
+              color: colors.dark.text.tertiary,
               padding: "8px",
               textTransform: "uppercase",
               letterSpacing: "0.05em",
@@ -249,15 +250,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
             style={{
               minHeight: "100px",
               background: isToday(day.date)
-                ? "rgba(77, 171, 247, 0.15)"
+                ? colors.brand.primaryLight
                 : isCurrentMonth(day.date)
-                  ? "rgba(255,255,255,0.03)"
-                  : "rgba(255,255,255,0.01)",
+                  ? colors.dark.glass.bg
+                  : colors.dark.bg.hover,
               borderRadius: "8px",
               padding: "8px",
               border: isToday(day.date)
-                ? "1px solid rgba(77, 171, 247, 0.3)"
-                : "1px solid rgba(255,255,255,0.05)",
+                ? `1px solid ${colors.dark.border.focus}`
+                : `1px solid ${colors.dark.border.subtle}`,
               opacity: isCurrentMonth(day.date) ? 1 : 0.4,
             }}
           >
@@ -265,7 +266,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
             <div style={{
               fontSize: "13px",
               fontWeight: isToday(day.date) ? "700" : "500",
-              color: isToday(day.date) ? "var(--primary)" : "rgba(255,255,255,0.7)",
+              color: isToday(day.date) ? colors.brand.primary : colors.dark.text.secondary,
               marginBottom: "6px",
             }}>
               {day.date.getDate()}
@@ -282,11 +283,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
                     padding: "4px 6px",
                     borderRadius: "4px",
                     background: task.isCompleted
-                      ? "rgba(81, 207, 102, 0.15)"
+                      ? colors.semantic.successLight
                       : `${getPriorityColor(task.priority)}20`,
                     color: task.isCompleted
-                      ? "var(--success)"
-                      : "rgba(255,255,255,0.8)",
+                      ? colors.semantic.success
+                      : colors.dark.text.secondary,
                     cursor: "pointer",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -294,18 +295,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
                     display: "flex",
                     alignItems: "center",
                     gap: "4px",
-                    borderLeft: `2px solid ${task.isCompleted ? "var(--success)" : getPriorityColor(task.priority)}`,
+                    borderLeft: `2px solid ${task.isCompleted ? colors.semantic.success : getPriorityColor(task.priority)}`,
                     transition: "all 0.2s",
                     textDecoration: task.isCompleted ? "line-through" : "none",
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = task.isCompleted
-                      ? "rgba(81, 207, 102, 0.25)"
+                      ? `${colors.semantic.success}40`
                       : `${getPriorityColor(task.priority)}35`;
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.background = task.isCompleted
-                      ? "rgba(81, 207, 102, 0.15)"
+                      ? colors.semantic.successLight
                       : `${getPriorityColor(task.priority)}20`;
                   }}
                 >
@@ -323,7 +324,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
               {day.tasks.length > 3 && (
                 <div style={{
                   fontSize: "10px",
-                  color: "rgba(255,255,255,0.5)",
+                  color: colors.dark.text.tertiary,
                   textAlign: "center",
                   padding: "2px",
                 }}>
@@ -342,18 +343,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
         gap: "20px",
         marginTop: "16px",
         paddingTop: "16px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: `1px solid ${colors.dark.border.subtle}`,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "#ef4444" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: colors.dark.text.tertiary }}>
+          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: colors.priority.high }} />
           Yüksek Öncelik
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "#f59e0b" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: colors.dark.text.tertiary }}>
+          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: colors.priority.medium }} />
           Orta Öncelik
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
-          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "#22c55e" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: colors.dark.text.tertiary }}>
+          <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: colors.priority.low }} />
           Düşük / Tamamlandı
         </div>
       </div>

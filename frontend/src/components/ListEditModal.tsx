@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Save, Link as LinkIcon, Trash2, CheckSquare, Square, Settings } from "lucide-react";
 import type { Task, TaskList } from "../types";
+import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 
 interface ListEditModalProps {
   list: TaskList;
@@ -87,39 +88,39 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: colors.dark.bg.overlay,
       backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: zIndex.modal,
     }}>
-      <div 
+      <div
         className="modal-content glass"
         style={{
           width: "650px",
           maxHeight: "80vh",
-          borderRadius: "20px",
-          padding: "32px",
+          borderRadius: radius['2xl'],
+          padding: spacing[8],
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          gap: spacing[6],
           position: "relative",
           background: "var(--bg-card)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          boxShadow: shadows.modal,
           border: '1px solid var(--border)',
-          animation: 'modalFadeIn 0.3s ease-out',
+          animation: `modalFadeIn ${animation.duration.slow} ${animation.easing.smooth}`,
           overflow: 'hidden',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "var(--text-main)" }}>
-            <div style={{ padding: '10px', backgroundColor: 'rgba(77, 171, 247, 0.1)', borderRadius: '12px' }}>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[3], color: "var(--text-main)" }}>
+            <div style={{ padding: spacing[2.5], backgroundColor: colors.brand.primaryLight, borderRadius: radius.lg }}>
               <Settings size={20} style={{ color: 'var(--primary)' }} />
             </div>
-            <h3 style={{ margin: 0, fontSize: "22px", fontWeight: "700", letterSpacing: '-0.02em' }}>Listeyi Düzenle</h3>
+            <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Listeyi Düzenle</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={24} />
@@ -127,24 +128,24 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
         </div>
 
         {/* List Name and Link */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: spacing[4] }}>
           <div className="form-group">
-            <label style={{ display: "block", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Liste Adı</label>
-            <input 
+            <label style={{ display: "block", fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>Liste Adı</label>
+            <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Liste adı..."
               autoFocus
-              style={{ 
+              style={{
                 width: "100%",
-                padding: '12px 16px',
-                borderRadius: '12px',
+                padding: `${spacing[3]} ${spacing[4]}`,
+                borderRadius: radius.lg,
                 border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.03)',
-                color: 'white',
-                fontSize: '15px',
+                background: colors.dark.glass.bg,
+                color: cssVars.textMain,
+                fontSize: typography.fontSize.xl,
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: `border-color ${animation.duration.normal}`
               }}
               onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
               onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
@@ -152,24 +153,24 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
           </div>
 
           <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
               <LinkIcon size={14} /> Link
             </label>
-            <input 
+            <input
               type="url"
               value={link}
               onChange={(e) => setLink(e.target.value)}
               placeholder="https://..."
-              style={{ 
+              style={{
                 width: "100%",
-                padding: '12px 16px',
-                borderRadius: '12px',
+                padding: `${spacing[3]} ${spacing[4]}`,
+                borderRadius: radius.lg,
                 border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.03)',
+                background: colors.dark.glass.bg,
                 color: 'var(--primary)',
-                fontSize: '14px',
+                fontSize: typography.fontSize.lg,
                 outline: 'none',
-                fontWeight: '500'
+                fontWeight: typography.fontWeight.medium
               }}
               onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
               onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
@@ -178,31 +179,31 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
         </div>
 
         {/* Tasks Section */}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: spacing[5] }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] }}>
+            <span style={{ fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
               Görevler ({visibleTasks.length})
             </span>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: spacing[3], alignItems: 'center' }}>
               {selectedTasks.length > 0 && (
                 <button
                   onClick={handleBulkDelete}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    borderRadius: '10px',
+                    gap: spacing[1.5],
+                    padding: `${spacing[2]} ${spacing[3.5]}`,
+                    borderRadius: radius.md,
                     border: 'none',
-                    background: 'rgba(255, 107, 107, 0.15)',
+                    background: colors.semantic.dangerLight,
                     color: 'var(--danger)',
-                    fontSize: '12px',
-                    fontWeight: '600',
+                    fontSize: typography.fontSize.md,
+                    fontWeight: typography.fontWeight.semibold,
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    transition: `all ${animation.duration.normal}`,
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 107, 107, 0.25)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 107, 107, 0.15)'}
+                  onMouseEnter={(e) => e.currentTarget.style.background = colors.semantic.dangerLight}
+                  onMouseLeave={(e) => e.currentTarget.style.background = colors.semantic.dangerLight}
                 >
                   <Trash2 size={14} /> {selectedTasks.length} Sil
                 </button>
@@ -212,18 +213,18 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  borderRadius: '10px',
+                  gap: spacing[1.5],
+                  padding: `${spacing[2]} ${spacing[3.5]}`,
+                  borderRadius: radius.md,
                   border: '1px solid var(--border)',
                   background: 'transparent',
                   color: 'var(--text-muted)',
-                  fontSize: '12px',
-                  fontWeight: '500',
+                  fontSize: typography.fontSize.md,
+                  fontWeight: typography.fontWeight.medium,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: `all ${animation.duration.normal}`,
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = colors.dark.bg.hover}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 {selectedTasks.length === list.tasks.length ? <CheckSquare size={14} /> : <Square size={14} />}
@@ -233,20 +234,20 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
           </div>
 
           {/* Task List */}
-          <div style={{ 
-            maxHeight: '250px', 
-            overflowY: 'auto', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '8px',
-            paddingRight: '4px',
+          <div style={{
+            maxHeight: '250px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing[2],
+            paddingRight: spacing[1],
           }}>
             {visibleTasks.length === 0 ? (
-              <div style={{ 
-                padding: '24px', 
-                textAlign: 'center', 
+              <div style={{
+                padding: spacing[6],
+                textAlign: 'center',
                 color: 'var(--text-muted)',
-                fontSize: '14px',
+                fontSize: typography.fontSize.lg,
               }}>
                 Bu listede görev yok
               </div>
@@ -258,41 +259,41 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    background: selectedTasks.includes(task.id) 
-                      ? 'rgba(77, 171, 247, 0.1)' 
-                      : 'rgba(255, 255, 255, 0.03)',
+                    gap: spacing[3],
+                    padding: `${spacing[3]} ${spacing[3.5]}`,
+                    borderRadius: radius.lg,
+                    background: selectedTasks.includes(task.id)
+                      ? colors.brand.primaryLight
+                      : colors.dark.glass.bg,
                     border: selectedTasks.includes(task.id)
-                      ? '1px solid rgba(77, 171, 247, 0.3)'
+                      ? `1px solid ${colors.brand.primary}50`
                       : '1px solid var(--border)',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                    transition: `all ${animation.duration.fast} ease`,
                   }}
                 >
                   <div style={{
                     color: selectedTasks.includes(task.id) ? 'var(--primary)' : 'var(--text-muted)',
-                    transition: 'color 0.15s',
+                    transition: `color ${animation.duration.fast}`,
                   }}>
                     {selectedTasks.includes(task.id) ? <CheckSquare size={18} /> : <Square size={18} />}
                   </div>
-                  <span style={{ 
-                    flex: 1, 
-                    fontSize: '14px', 
+                  <span style={{
+                    flex: 1,
+                    fontSize: typography.fontSize.lg,
                     color: task.isCompleted ? 'var(--text-muted)' : 'var(--text-main)',
-                    fontWeight: 500,
+                    fontWeight: typography.fontWeight.medium,
                   }}>
                     {task.title}
                   </span>
                   {task.isCompleted && (
                     <span style={{
-                      fontSize: '10px',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      background: 'rgba(81, 207, 102, 0.1)',
+                      fontSize: typography.fontSize.xs,
+                      padding: `${spacing[1]} ${spacing[2]}`,
+                      borderRadius: radius.sm,
+                      background: colors.semantic.successLight,
                       color: 'var(--success)',
-                      fontWeight: 600,
+                      fontWeight: typography.fontWeight.semibold,
                     }}>
                       Tamamlandı
                     </span>
@@ -304,25 +305,25 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
         </div>
 
         {/* Footer Actions */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "12px" }}>
-          <button 
-            onClick={onClose} 
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: spacing[4], marginTop: spacing[3] }}>
+          <button
+            onClick={onClose}
             className="btn btn-ghost"
-            style={{ padding: '12px 24px', fontWeight: '600' }}
+            style={{ padding: `${spacing[3]} ${spacing[6]}`, fontWeight: typography.fontWeight.semibold }}
           >
             İptal
           </button>
-          <button 
-            onClick={handleSave} 
+          <button
+            onClick={handleSave}
             className="btn btn-primary"
             disabled={isSaving || !name.trim()}
-            style={{ 
-              padding: '12px 28px', 
-              fontWeight: '700',
+            style={{
+              padding: `${spacing[3]} ${spacing[7]}`,
+              fontWeight: typography.fontWeight.bold,
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 4px 14px 0 rgba(77, 171, 247, 0.39)'
+              gap: spacing[2.5],
+              boxShadow: shadows.focusPrimary
             }}
           >
             {isSaving ? (
@@ -338,32 +339,32 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, onClose, onS
         {showUndoBar && (
           <div style={{
             position: 'absolute',
-            bottom: '24px',
+            bottom: spacing[6],
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
             alignItems: 'center',
-            gap: '16px',
-            padding: '12px 20px',
-            borderRadius: '14px',
-            background: 'rgba(20, 21, 24, 0.98)',
+            gap: spacing[4],
+            padding: `${spacing[3]} ${spacing[5]}`,
+            borderRadius: radius.lg,
+            background: colors.dark.bg.elevated,
             border: '1px solid var(--border)',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
-            animation: 'slideUp 0.3s ease-out',
+            boxShadow: shadows.dropdown,
+            animation: `slideUp ${animation.duration.slow} ${animation.easing.smooth}`,
           }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-main)' }}>
+            <span style={{ fontSize: typography.fontSize.lg, color: 'var(--text-main)' }}>
               {deletedTaskIds.length} görev siliniyor...
             </span>
             <button
               onClick={handleUndo}
               style={{
-                padding: '8px 16px',
-                borderRadius: '8px',
+                padding: `${spacing[2]} ${spacing[4]}`,
+                borderRadius: radius.md,
                 border: 'none',
                 background: 'var(--primary)',
-                color: '#000',
-                fontSize: '13px',
-                fontWeight: '700',
+                color: cssVars.textInverse,
+                fontSize: typography.fontSize.base,
+                fontWeight: typography.fontWeight.bold,
                 cursor: 'pointer',
               }}
             >

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "../services/api";
 import { isValidEmail, getPasswordStrength } from "../utils/validation";
 import toast from "react-hot-toast";
+import { typography, spacing, radius, colors, cssVars } from '../styles/tokens';
 
 type Step = "email" | "code" | "password";
 
@@ -130,7 +131,7 @@ const ForgotPasswordPage = () => {
       style={{
         minHeight: "100vh",
         display: "flex",
-        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        background: `linear-gradient(135deg, ${cssVars.bgBody} 0%, #16213e 50%, #0f3460 100%)`,
       }}
     >
       {/* Sol Panel - Branding */}
@@ -141,40 +142,40 @@ const ForgotPasswordPage = () => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "40px",
-          background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+          padding: spacing[10],
+          background: `linear-gradient(135deg, ${colors.brand.primaryLight} 0%, rgba(118, 75, 162, 0.1) 100%)`,
         }}
       >
         <div
           style={{
-            width: "80px",
-            height: "80px",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            borderRadius: "20px",
+            width: spacing[20],
+            height: spacing[20],
+            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+            borderRadius: radius["2xl"],
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: "24px",
+            marginBottom: spacing[6],
           }}
         >
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill={cssVars.textInverse}>
             <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
           </svg>
         </div>
         <h1
           style={{
-            fontSize: "36px",
-            fontWeight: "800",
-            color: "#fff",
-            marginBottom: "16px",
+            fontSize: typography.fontSize["5xl"],
+            fontWeight: typography.fontWeight.extrabold,
+            color: cssVars.textMain,
+            marginBottom: spacing[4],
           }}
         >
           WorkFlow
         </h1>
         <p
           style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
+            fontSize: typography.fontSize.xl,
+            color: colors.dark.text.secondary,
             textAlign: "center",
             maxWidth: "300px",
           }}
@@ -190,18 +191,18 @@ const ForgotPasswordPage = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "40px",
+          padding: spacing[10],
         }}
       >
         <div
           style={{
             width: "100%",
             maxWidth: "400px",
-            background: "rgba(255,255,255,0.03)",
+            background: colors.dark.glass.bg,
             backdropFilter: "blur(20px)",
-            borderRadius: "20px",
-            padding: "40px",
-            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: radius["2xl"],
+            padding: spacing[10],
+            border: `1px solid ${cssVars.border}`,
           }}
         >
           {/* Adim Gostergesi */}
@@ -209,23 +210,23 @@ const ForgotPasswordPage = () => {
             style={{
               display: "flex",
               justifyContent: "center",
-              gap: "12px",
-              marginBottom: "32px",
+              gap: spacing[3],
+              marginBottom: spacing[8],
             }}
           >
             {["email", "code", "password"].map((s) => (
               <div
                 key={s}
                 style={{
-                  width: "40px",
-                  height: "4px",
-                  borderRadius: "2px",
+                  width: spacing[10],
+                  height: spacing[1],
+                  borderRadius: radius.sm,
                   background:
                     (s === "email" && step !== "email") ||
                     (s === "code" && step === "password") ||
                     s === step
-                      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                      : "rgba(255,255,255,0.2)",
+                      ? `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`
+                      : cssVars.borderStrong,
                   transition: "all 0.3s",
                 }}
               />
@@ -234,10 +235,10 @@ const ForgotPasswordPage = () => {
 
           <h2
             style={{
-              fontSize: "24px",
-              fontWeight: "700",
-              color: "#fff",
-              marginBottom: "8px",
+              fontSize: typography.fontSize["4xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
+              marginBottom: spacing[2],
               textAlign: "center",
             }}
           >
@@ -248,9 +249,9 @@ const ForgotPasswordPage = () => {
 
           <p
             style={{
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "32px",
+              fontSize: typography.fontSize.lg,
+              color: colors.dark.text.tertiary,
+              marginBottom: spacing[8],
               textAlign: "center",
             }}
           >
@@ -261,15 +262,15 @@ const ForgotPasswordPage = () => {
 
           {/* Email Adimi */}
           {step === "email" && (
-            <form onSubmit={handleSendCode} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <form onSubmit={handleSendCode} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
               <div>
                 <label
                   style={{
                     display: "block",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    color: "rgba(255,255,255,0.7)",
-                    marginBottom: "8px",
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.dark.text.secondary,
+                    marginBottom: spacing[2],
                   }}
                 >
                   Email Adresi
@@ -282,12 +283,12 @@ const ForgotPasswordPage = () => {
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
-                    padding: "14px 16px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "#fff",
-                    fontSize: "15px",
+                    padding: `${spacing[3.5]} ${spacing[4]}`,
+                    borderRadius: radius.md,
+                    border: `1px solid ${cssVars.border}`,
+                    background: colors.dark.bg.hover,
+                    color: cssVars.textMain,
+                    fontSize: typography.fontSize.xl,
                     outline: "none",
                     transition: "all 0.2s",
                   }}
@@ -299,13 +300,13 @@ const ForgotPasswordPage = () => {
                 disabled={isLoading}
                 style={{
                   width: "100%",
-                  padding: "14px",
-                  borderRadius: "10px",
+                  padding: spacing[3.5],
+                  borderRadius: radius.md,
                   border: "none",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  color: "#fff",
-                  fontSize: "16px",
-                  fontWeight: "600",
+                  background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+                  color: cssVars.textMain,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
                   cursor: isLoading ? "not-allowed" : "pointer",
                   opacity: isLoading ? 0.7 : 1,
                   transition: "all 0.2s",
@@ -318,8 +319,8 @@ const ForgotPasswordPage = () => {
 
           {/* Kod Dogrulama Adimi */}
           {step === "code" && (
-            <form onSubmit={handleVerifyCode} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+            <form onSubmit={handleVerifyCode} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
+              <div style={{ display: "flex", gap: spacing[2], justifyContent: "center" }}>
                 {code.map((digit, index) => (
                   <input
                     key={index}
@@ -331,15 +332,15 @@ const ForgotPasswordPage = () => {
                     onChange={(e) => handleCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleCodeKeyDown(index, e)}
                     style={{
-                      width: "48px",
-                      height: "56px",
+                      width: spacing[12],
+                      height: spacing[14],
                       textAlign: "center",
-                      fontSize: "24px",
-                      fontWeight: "600",
-                      borderRadius: "10px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(255,255,255,0.05)",
-                      color: "#fff",
+                      fontSize: typography.fontSize["4xl"],
+                      fontWeight: typography.fontWeight.semibold,
+                      borderRadius: radius.md,
+                      border: `1px solid ${cssVars.border}`,
+                      background: colors.dark.bg.hover,
+                      color: cssVars.textMain,
                       outline: "none",
                       transition: "all 0.2s",
                     }}
@@ -352,13 +353,13 @@ const ForgotPasswordPage = () => {
                 disabled={isLoading}
                 style={{
                   width: "100%",
-                  padding: "14px",
-                  borderRadius: "10px",
+                  padding: spacing[3.5],
+                  borderRadius: radius.md,
                   border: "none",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  color: "#fff",
-                  fontSize: "16px",
-                  fontWeight: "600",
+                  background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+                  color: cssVars.textMain,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
                   cursor: isLoading ? "not-allowed" : "pointer",
                   opacity: isLoading ? 0.7 : 1,
                   transition: "all 0.2s",
@@ -373,8 +374,8 @@ const ForgotPasswordPage = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  color: "rgba(255,255,255,0.5)",
-                  fontSize: "14px",
+                  color: colors.dark.text.tertiary,
+                  fontSize: typography.fontSize.lg,
                   cursor: "pointer",
                 }}
               >
@@ -385,15 +386,15 @@ const ForgotPasswordPage = () => {
 
           {/* Yeni Sifre Adimi */}
           {step === "password" && (
-            <form onSubmit={handleResetPassword} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <form onSubmit={handleResetPassword} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
               <div>
                 <label
                   style={{
                     display: "block",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    color: "rgba(255,255,255,0.7)",
-                    marginBottom: "8px",
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.dark.text.secondary,
+                    marginBottom: spacing[2],
                   }}
                 >
                   Yeni Sifre
@@ -407,12 +408,12 @@ const ForgotPasswordPage = () => {
                     style={{
                       width: "100%",
                       boxSizing: "border-box",
-                      padding: "14px 48px 14px 16px",
-                      borderRadius: "10px",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      background: "rgba(255,255,255,0.05)",
-                      color: "#fff",
-                      fontSize: "15px",
+                      padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
+                      borderRadius: radius.md,
+                      border: `1px solid ${cssVars.border}`,
+                      background: colors.dark.bg.hover,
+                      color: cssVars.textMain,
+                      fontSize: typography.fontSize.xl,
                       outline: "none",
                     }}
                   />
@@ -421,14 +422,14 @@ const ForgotPasswordPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     style={{
                       position: "absolute",
-                      right: "12px",
+                      right: spacing[3],
                       top: "50%",
                       transform: "translateY(-50%)",
                       background: "none",
                       border: "none",
-                      color: "rgba(255,255,255,0.5)",
+                      color: colors.dark.text.tertiary,
                       cursor: "pointer",
-                      padding: "4px",
+                      padding: spacing[1],
                     }}
                   >
                     {showPassword ? (
@@ -445,12 +446,12 @@ const ForgotPasswordPage = () => {
                   </button>
                 </div>
                 {newPassword && (
-                  <div style={{ marginTop: "8px" }}>
+                  <div style={{ marginTop: spacing[2] }}>
                     <div
                       style={{
-                        height: "4px",
-                        borderRadius: "2px",
-                        background: "rgba(255,255,255,0.1)",
+                        height: spacing[1],
+                        borderRadius: radius.sm,
+                        background: cssVars.border,
                         overflow: "hidden",
                       }}
                     >
@@ -463,7 +464,7 @@ const ForgotPasswordPage = () => {
                         }}
                       />
                     </div>
-                    <span style={{ fontSize: "12px", color: passwordStrength.color }}>
+                    <span style={{ fontSize: typography.fontSize.md, color: passwordStrength.color }}>
                       {passwordStrength.label}
                     </span>
                   </div>
@@ -474,10 +475,10 @@ const ForgotPasswordPage = () => {
                 <label
                   style={{
                     display: "block",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    color: "rgba(255,255,255,0.7)",
-                    marginBottom: "8px",
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.dark.text.secondary,
+                    marginBottom: spacing[2],
                   }}
                 >
                   Sifre Tekrar
@@ -490,12 +491,12 @@ const ForgotPasswordPage = () => {
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
-                    padding: "14px 16px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "#fff",
-                    fontSize: "15px",
+                    padding: `${spacing[3.5]} ${spacing[4]}`,
+                    borderRadius: radius.md,
+                    border: `1px solid ${cssVars.border}`,
+                    background: colors.dark.bg.hover,
+                    color: cssVars.textMain,
+                    fontSize: typography.fontSize.xl,
                     outline: "none",
                   }}
                 />
@@ -506,13 +507,13 @@ const ForgotPasswordPage = () => {
                 disabled={isLoading}
                 style={{
                   width: "100%",
-                  padding: "14px",
-                  borderRadius: "10px",
+                  padding: spacing[3.5],
+                  borderRadius: radius.md,
                   border: "none",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  color: "#fff",
-                  fontSize: "16px",
-                  fontWeight: "600",
+                  background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+                  color: cssVars.textMain,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
                   cursor: isLoading ? "not-allowed" : "pointer",
                   opacity: isLoading ? 0.7 : 1,
                   transition: "all 0.2s",
@@ -526,19 +527,19 @@ const ForgotPasswordPage = () => {
           {/* Giris Yap Linki */}
           <p
             style={{
-              marginTop: "24px",
+              marginTop: spacing[6],
               textAlign: "center",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.5)",
+              fontSize: typography.fontSize.lg,
+              color: colors.dark.text.tertiary,
             }}
           >
             Sifrenizi hatirladin mi?{" "}
             <span
               onClick={() => navigate("/login")}
               style={{
-                color: "#667eea",
+                color: colors.brand.primary,
                 cursor: "pointer",
-                fontWeight: "600",
+                fontWeight: typography.fontWeight.semibold,
               }}
             >
               Giris Yap

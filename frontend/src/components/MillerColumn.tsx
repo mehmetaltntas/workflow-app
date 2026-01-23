@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { ChevronRight, Folder, FileText, CheckSquare, Loader2 } from 'lucide-react';
+import { colors, cssVars } from '../styles/tokens';
 
 // Miller Column item tipi
 export interface MillerColumnItem {
@@ -45,9 +46,9 @@ const getIconComponent = (icon?: string, isCompleted?: boolean) => {
 
 const getPriorityColor = (priority?: string) => {
   switch (priority) {
-    case 'HIGH': return '#ef4444';
-    case 'MEDIUM': return '#f59e0b';
-    case 'LOW': return '#22c55e';
+    case 'HIGH': return colors.priority.high;
+    case 'MEDIUM': return colors.priority.medium;
+    case 'LOW': return colors.priority.low;
     default: return 'transparent';
   }
 };
@@ -87,10 +88,10 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
         flexDirection: 'column',
         borderRight: '1px solid var(--border)',
         background: columnIndex === 0
-          ? 'rgba(0, 0, 0, 0.2)'
+          ? colors.dark.bg.overlay
           : columnIndex === 1
-            ? 'rgba(0, 0, 0, 0.15)'
-            : 'rgba(0, 0, 0, 0.1)',
+            ? cssVars.borderStrong
+            : colors.dark.bg.active,
         animation: 'millerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
@@ -99,7 +100,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
         style={{
           padding: '16px 20px',
           borderBottom: '1px solid var(--border)',
-          background: 'rgba(0, 0, 0, 0.2)',
+          background: colors.dark.bg.overlay,
           backdropFilter: 'blur(8px)',
           position: 'sticky',
           top: 0,
@@ -125,7 +126,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
               fontSize: '11px',
               fontWeight: 600,
               color: 'var(--primary)',
-              background: 'rgba(77, 171, 247, 0.15)',
+              background: colors.brand.primaryLight,
               padding: '2px 8px',
               borderRadius: '10px',
             }}
@@ -231,8 +232,8 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       height: '28px',
                       borderRadius: '8px',
                       background: isSelected
-                        ? 'rgba(255, 255, 255, 0.2)'
-                        : 'rgba(255, 255, 255, 0.05)',
+                        ? colors.dark.text.disabled
+                        : colors.dark.bg.hover,
                       flexShrink: 0,
                     }}
                   >
@@ -245,7 +246,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       style={{
                         fontSize: '14px',
                         fontWeight: 500,
-                        color: isSelected ? 'white' : 'var(--text-main)',
+                        color: isSelected ? cssVars.textInverse : 'var(--text-main)',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -270,7 +271,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                           style={{
                             fontSize: '12px',
                             color: isSelected
-                              ? 'rgba(255, 255, 255, 0.7)'
+                              ? colors.dark.text.secondary
                               : 'var(--text-muted)',
                           }}
                         >
@@ -297,7 +298,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                               style={{
                                 fontSize: '10px',
                                 color: isSelected
-                                  ? 'rgba(255, 255, 255, 0.6)'
+                                  ? colors.dark.text.tertiary
                                   : 'var(--text-muted)',
                               }}
                             >
@@ -314,11 +315,11 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                             fontSize: '11px',
                             fontWeight: 600,
                             color: isSelected
-                              ? 'rgba(255, 255, 255, 0.8)'
+                              ? colors.dark.text.secondary
                               : 'var(--text-muted)',
                             background: isSelected
-                              ? 'rgba(255, 255, 255, 0.15)'
-                              : 'rgba(255, 255, 255, 0.05)',
+                              ? cssVars.borderStrong
+                              : colors.dark.bg.hover,
                             padding: '2px 6px',
                             borderRadius: '6px',
                           }}
@@ -335,7 +336,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       size={18}
                       style={{
                         color: isSelected
-                          ? 'rgba(255, 255, 255, 0.8)'
+                          ? colors.dark.text.secondary
                           : 'var(--text-muted)',
                         flexShrink: 0,
                         opacity: isHovered || isSelected ? 1 : 0.5,

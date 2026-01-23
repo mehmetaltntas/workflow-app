@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { User, Camera, Mail, Save, Check } from "lucide-react";
 import { userService } from "../services/api";
 import toast from "react-hot-toast";
+import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
 
 const ProfilePage = () => {
   const [username, setUsername] = useState("");
@@ -19,11 +20,11 @@ const ProfilePage = () => {
     const fetchUser = async () => {
       if (!userId) return;
       try {
-        const response = await userService.getUser(Number(userId));
-        setUsername(response.data.username);
-        setOriginalUsername(response.data.username);
-        setEmail(response.data.email);
-        setProfilePicture(response.data.profilePicture || null);
+        const user = await userService.getUser(Number(userId));
+        setUsername(user.username);
+        setOriginalUsername(user.username);
+        setEmail(user.email);
+        setProfilePicture((user as { profilePicture?: string }).profilePicture || null);
       } catch (error) {
         console.error("Kullanıcı bilgileri alınamadı:", error);
         toast.error("Kullanıcı bilgileri alınamadı");
@@ -71,12 +72,12 @@ const ProfilePage = () => {
         data.profilePicture = profilePicture;
       }
 
-      const response = await userService.updateProfile(Number(userId), data);
-      
+      const updatedUser = await userService.updateProfile(Number(userId), data);
+
       // LocalStorage'ı güncelle
-      if (response.data.username) {
-        localStorage.setItem("username", response.data.username);
-        setOriginalUsername(response.data.username);
+      if (updatedUser.username) {
+        localStorage.setItem("username", updatedUser.username);
+        setOriginalUsername(updatedUser.username);
       }
       
       setHasChanges(false);
@@ -99,11 +100,11 @@ const ProfilePage = () => {
         minHeight: "60vh",
       }}>
         <div style={{
-          width: "40px",
-          height: "40px",
-          border: "3px solid rgba(77, 171, 247, 0.2)",
-          borderTopColor: "var(--primary)",
-          borderRadius: "50%",
+          width: spacing[10],
+          height: spacing[10],
+          border: `3px solid ${colors.brand.primaryLight}`,
+          borderTopColor: colors.brand.primary,
+          borderRadius: radius.full,
           animation: "spin 1s linear infinite",
         }} />
       </div>
@@ -116,21 +117,21 @@ const ProfilePage = () => {
     <div style={{
       maxWidth: "600px",
       margin: "0 auto",
-      padding: "40px 24px",
+      padding: `${spacing[10]} ${spacing[6]}`,
     }}>
       {/* Header */}
-      <div style={{ marginBottom: "40px" }}>
+      <div style={{ marginBottom: spacing[10] }}>
         <h1 style={{
-          fontSize: "28px",
-          fontWeight: "700",
-          color: "var(--text-main)",
-          marginBottom: "8px",
+          fontSize: typography.fontSize["4xl"],
+          fontWeight: typography.fontWeight.bold,
+          color: cssVars.textMain,
+          marginBottom: spacing[2],
         }}>
           Profil Ayarları
         </h1>
         <p style={{
-          fontSize: "14px",
-          color: "var(--text-muted)",
+          fontSize: typography.fontSize.lg,
+          color: cssVars.textMuted,
         }}>
           Profil bilgilerinizi görüntüleyin ve düzenleyin
         </p>
@@ -138,40 +139,40 @@ const ProfilePage = () => {
 
       {/* Profile Card */}
       <div style={{
-        background: "var(--bg-card)",
-        borderRadius: "var(--radius-lg)",
-        border: "1px solid var(--border)",
-        padding: "32px",
+        background: cssVars.bgCard,
+        borderRadius: radius.lg,
+        border: `1px solid ${cssVars.border}`,
+        padding: spacing[8],
       }}>
         {/* Profile Picture Section */}
         <div style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          marginBottom: "32px",
-          paddingBottom: "32px",
-          borderBottom: "1px solid var(--border)",
+          marginBottom: spacing[8],
+          paddingBottom: spacing[8],
+          borderBottom: `1px solid ${cssVars.border}`,
         }}>
           <div style={{
             position: "relative",
-            marginBottom: "16px",
+            marginBottom: spacing[4],
           }}>
             {/* Avatar */}
             <div style={{
               width: "120px",
               height: "120px",
-              borderRadius: "50%",
-              background: profilePicture 
+              borderRadius: radius.full,
+              background: profilePicture
                 ? `url(${profilePicture}) center/cover no-repeat`
-                : "linear-gradient(135deg, var(--primary), #7950f2)",
+                : `linear-gradient(135deg, ${colors.brand.primary}, #7950f2)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "36px",
-              fontWeight: "700",
-              color: "white",
-              border: "4px solid var(--bg-body)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+              fontSize: typography.fontSize["5xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textInverse,
+              border: `4px solid ${cssVars.bgBody}`,
+              boxShadow: shadows.lg,
             }}>
               {!profilePicture && initials}
             </div>
@@ -183,11 +184,11 @@ const ProfilePage = () => {
                 position: "absolute",
                 bottom: "0",
                 right: "0",
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                background: "var(--primary)",
-                border: "3px solid var(--bg-card)",
+                width: spacing[10],
+                height: spacing[10],
+                borderRadius: radius.full,
+                background: colors.brand.primary,
+                border: `3px solid ${cssVars.bgCard}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -196,14 +197,14 @@ const ProfilePage = () => {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.1)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(77, 171, 247, 0.4)";
+                e.currentTarget.style.boxShadow = shadows.focusPrimary;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              <Camera size={18} color="#000" strokeWidth={2.5} />
+              <Camera size={18} color={cssVars.textInverse} strokeWidth={2.5} />
             </button>
 
             <input
@@ -216,27 +217,27 @@ const ProfilePage = () => {
           </div>
 
           <p style={{
-            fontSize: "13px",
-            color: "var(--text-muted)",
+            fontSize: typography.fontSize.base,
+            color: cssVars.textMuted,
           }}>
             Profil resminizi değiştirmek için tıklayın (max 2MB)
           </p>
         </div>
 
         {/* Form Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: spacing[6] }}>
           {/* Username Field */}
           <div>
             <label style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
+              gap: spacing[2],
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: cssVars.textMuted,
+              marginBottom: spacing[2],
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              letterSpacing: typography.letterSpacing.wide,
             }}>
               <User size={14} />
               Kullanıcı Adı
@@ -247,8 +248,8 @@ const ProfilePage = () => {
               onChange={(e) => setUsername(e.target.value)}
               style={{
                 width: "100%",
-                padding: "14px 16px",
-                fontSize: "15px",
+                padding: `${spacing[3.5]} ${spacing[4]}`,
+                fontSize: typography.fontSize.xl,
                 boxSizing: "border-box",
               }}
             />
@@ -259,13 +260,13 @@ const ProfilePage = () => {
             <label style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
+              gap: spacing[2],
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: cssVars.textMuted,
+              marginBottom: spacing[2],
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              letterSpacing: typography.letterSpacing.wide,
             }}>
               <Mail size={14} />
               E-posta Adresi
@@ -279,8 +280,8 @@ const ProfilePage = () => {
                 disabled
                 style={{
                   width: "100%",
-                  padding: "14px 16px",
-                  fontSize: "15px",
+                  padding: `${spacing[3.5]} ${spacing[4]}`,
+                  fontSize: typography.fontSize.xl,
                   boxSizing: "border-box",
                   opacity: 0.6,
                   cursor: "not-allowed",
@@ -288,14 +289,14 @@ const ProfilePage = () => {
               />
               <span style={{
                 position: "absolute",
-                right: "12px",
+                right: spacing[3],
                 top: "50%",
                 transform: "translateY(-50%)",
-                fontSize: "11px",
-                color: "var(--text-muted)",
-                background: "rgba(255, 255, 255, 0.05)",
-                padding: "4px 8px",
-                borderRadius: "4px",
+                fontSize: typography.fontSize.sm,
+                color: cssVars.textMuted,
+                background: colors.dark.bg.hover,
+                padding: `${spacing[1]} ${spacing[2]}`,
+                borderRadius: radius.sm,
               }}>
                 Değiştirilemez
               </span>
@@ -305,9 +306,9 @@ const ProfilePage = () => {
 
         {/* Save Button */}
         <div style={{
-          marginTop: "32px",
-          paddingTop: "24px",
-          borderTop: "1px solid var(--border)",
+          marginTop: spacing[8],
+          paddingTop: spacing[6],
+          borderTop: `1px solid ${cssVars.border}`,
         }}>
           <button
             onClick={handleSave}
@@ -315,9 +316,9 @@ const ProfilePage = () => {
             className="btn btn-primary"
             style={{
               width: "100%",
-              padding: "14px",
-              fontSize: "15px",
-              fontWeight: "600",
+              padding: spacing[3.5],
+              fontSize: typography.fontSize.xl,
+              fontWeight: typography.fontWeight.semibold,
               opacity: !hasChanges ? 0.5 : 1,
               cursor: !hasChanges ? "not-allowed" : "pointer",
             }}
@@ -327,9 +328,9 @@ const ProfilePage = () => {
                 <div style={{
                   width: "18px",
                   height: "18px",
-                  border: "2px solid rgba(0, 0, 0, 0.2)",
-                  borderTopColor: "#000",
-                  borderRadius: "50%",
+                  border: `2px solid ${colors.dark.border.subtle}`,
+                  borderTopColor: cssVars.textInverse,
+                  borderRadius: radius.full,
                   animation: "spin 1s linear infinite",
                 }} />
                 Kaydediliyor...

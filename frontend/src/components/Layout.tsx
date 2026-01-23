@@ -4,6 +4,7 @@ import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown, Sun, Moon }
 import toast from "react-hot-toast";
 import { authService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
+import { typography, spacing, radius, sizes, zIndex, animation, cssVars, colors } from "../styles/tokens";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -62,47 +63,47 @@ const Layout = () => {
       {/* Modern Navbar */}
       <nav
         style={{
-          height: "64px",
-          background: "var(--navbar-bg)",
+          height: sizes.navbarHeight,
+          background: cssVars.bgBody,
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid var(--border)",
+          borderBottom: `1px solid ${cssVars.border}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 24px",
+          padding: `0 ${spacing[6]}`,
           position: "sticky",
           top: 0,
-          zIndex: 100,
+          zIndex: zIndex.dropdown,
         }}
       >
         {/* Sol Taraf: Logo ve Navigasyon */}
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[8] }}>
           {/* Logo */}
           <Link
             to="/"
             style={{
-              fontSize: "20px",
-              fontWeight: "700",
-              color: "var(--text-main)",
+              fontSize: typography.fontSize["3xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
               textDecoration: "none",
               display: "flex",
               alignItems: "center",
-              gap: "10px",
-              letterSpacing: "-0.02em",
+              gap: spacing[2.5],
+              letterSpacing: typography.letterSpacing.tighter,
             }}
           >
             <div style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, var(--primary), #7950f2)",
+              width: spacing[8],
+              height: spacing[8],
+              borderRadius: radius.lg,
+              background: `linear-gradient(135deg, ${cssVars.primary}, ${colors.brand.primaryDark})`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "16px",
-              fontWeight: "800",
-              color: "white",
+              fontSize: typography.fontSize["4xl"],
+              fontWeight: typography.fontWeight.extrabold,
+              color: cssVars.textInverse,
             }}>
               W
             </div>
@@ -111,13 +112,13 @@ const Layout = () => {
 
           {/* Divider */}
           <div style={{
-            height: "24px",
+            height: spacing[6],
             width: "1px",
-            background: "var(--border)"
+            background: cssVars.border
           }} />
 
           {/* Navigation Pills */}
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={{ display: "flex", gap: spacing[2] }}>
             <Link
               to="/"
               className={`nav-pill ${isActive("/") ? "active" : ""}`}
@@ -136,7 +137,7 @@ const Layout = () => {
         </div>
 
         {/* Sağ Taraf: Theme Toggle ve Kullanıcı Profili */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[3], marginLeft: "auto" }}>
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
@@ -144,28 +145,28 @@ const Layout = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: "40px",
-              height: "40px",
-              borderRadius: "12px",
-              border: "1px solid var(--border)",
-              background: "var(--card-bg)",
-              color: "var(--text-muted)",
+              width: sizes.inputMd,
+              height: sizes.inputMd,
+              borderRadius: radius.lg,
+              border: `1px solid ${cssVars.border}`,
+              background: cssVars.bgCard,
+              color: cssVars.textMuted,
               cursor: "pointer",
-              transition: "all 0.2s ease",
+              transition: `all ${animation.duration.normal} ${animation.easing.ease}`,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--primary)";
-              e.currentTarget.style.color = "var(--primary)";
-              e.currentTarget.style.background = "var(--menu-active)";
+              e.currentTarget.style.borderColor = cssVars.primary;
+              e.currentTarget.style.color = cssVars.primary;
+              e.currentTarget.style.background = cssVars.bgSecondary;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--border)";
-              e.currentTarget.style.color = "var(--text-muted)";
-              e.currentTarget.style.background = "var(--card-bg)";
+              e.currentTarget.style.borderColor = cssVars.border;
+              e.currentTarget.style.color = cssVars.textMuted;
+              e.currentTarget.style.background = cssVars.bgCard;
             }}
             title={theme === "dark" ? "Açık Tema" : "Koyu Tema"}
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? <Sun size={parseInt(sizes.iconMd)} /> : <Moon size={parseInt(sizes.iconMd)} />}
           </button>
 
           {/* User Profile Dropdown */}
@@ -175,61 +176,61 @@ const Layout = () => {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "12px",
+              gap: spacing[3],
               cursor: "pointer",
-              padding: "6px 12px",
-              borderRadius: "12px",
-              background: isDropdownOpen ? "var(--menu-hover)" : "transparent",
+              padding: `${spacing[1.5]} ${spacing[3]}`,
+              borderRadius: radius.lg,
+              background: isDropdownOpen ? cssVars.bgSecondary : "transparent",
               border: "1px solid",
-              borderColor: isDropdownOpen ? "var(--border)" : "transparent",
-              transition: "all 0.2s ease",
+              borderColor: isDropdownOpen ? cssVars.border : "transparent",
+              transition: `all ${animation.duration.normal} ${animation.easing.ease}`,
             }}
           >
             {/* Modern Avatar */}
             <div className="user-avatar">
               {initials}
             </div>
-            <span style={{ 
-              color: "var(--text-main)", 
-              fontWeight: "500",
-              fontSize: "14px",
+            <span style={{
+              color: cssVars.textMain,
+              fontWeight: typography.fontWeight.medium,
+              fontSize: typography.fontSize.lg,
             }}>
               {username}
             </span>
-            <ChevronDown 
-              size={14} 
-              style={{ 
-                color: "var(--text-muted)",
+            <ChevronDown
+              size={parseInt(sizes.iconSm)}
+              style={{
+                color: cssVars.textMuted,
                 transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease",
-              }} 
+                transition: `transform ${animation.duration.normal} ${animation.easing.ease}`,
+              }}
             />
           </button>
 
           {/* Modern User Dropdown */}
           {isDropdownOpen && (
-            <div className="menu-dropdown" style={{ 
-              right: 0, 
+            <div className="menu-dropdown" style={{
+              right: 0,
               top: "120%",
               minWidth: "200px",
             }}>
               {/* User Info Header */}
               <div style={{
-                padding: "12px",
-                borderBottom: "1px solid var(--border)",
-                marginBottom: "6px",
+                padding: spacing[3],
+                borderBottom: `1px solid ${cssVars.border}`,
+                marginBottom: spacing[1.5],
               }}>
-                <div style={{ 
-                  fontSize: "14px", 
-                  fontWeight: "600", 
-                  color: "var(--text-main)",
-                  marginBottom: "2px",
+                <div style={{
+                  fontSize: typography.fontSize.lg,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMain,
+                  marginBottom: spacing[0.5],
                 }}>
                   {username}
                 </div>
-                <div style={{ 
-                  fontSize: "12px", 
-                  color: "var(--text-muted)" 
+                <div style={{
+                  fontSize: typography.fontSize.md,
+                  color: cssVars.textMuted
                 }}>
                   Hesabınızı yönetin
                 </div>
@@ -237,14 +238,14 @@ const Layout = () => {
 
               <Link to="/profile" className="menu-item">
                 <span className="menu-item-icon">
-                  <User size={14} strokeWidth={2} />
+                  <User size={parseInt(sizes.iconSm)} strokeWidth={2} />
                 </span>
                 <span>Profil</span>
               </Link>
-              
+
               <Link to="/settings" className="menu-item">
                 <span className="menu-item-icon">
-                  <Settings size={14} strokeWidth={2} />
+                  <Settings size={parseInt(sizes.iconSm)} strokeWidth={2} />
                 </span>
                 <span>Ayarlar</span>
               </Link>
@@ -256,7 +257,7 @@ const Layout = () => {
                 className="menu-item menu-item--danger"
               >
                 <span className="menu-item-icon">
-                  <LogOut size={14} strokeWidth={2} />
+                  <LogOut size={parseInt(sizes.iconSm)} strokeWidth={2} />
                 </span>
                 <span>Çıkış Yap</span>
               </button>

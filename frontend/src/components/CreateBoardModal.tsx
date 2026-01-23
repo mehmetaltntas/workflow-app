@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { colors, typography, spacing, radius, shadows, zIndex } from "../styles/tokens";
 
 interface CreateBoardModalProps {
   isOpen: boolean;
@@ -45,11 +46,11 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
         left: 0,
         width: "100%",
         height: "100%",
-        background: "rgba(0,0,0,0.5)",
+        background: colors.dark.bg.overlay,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: zIndex.modal,
         backdropFilter: "blur(4px)"
       }}
       onClick={onClose}
@@ -57,16 +58,16 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
       <div
         style={{
           background: "var(--bg-card)",
-          padding: "30px",
-          borderRadius: "16px",
+          padding: spacing[7],
+          borderRadius: radius.xl,
           width: "400px",
           border: "1px solid var(--border)",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+          boxShadow: shadows.modal
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "20px", fontWeight: "600", color: "var(--text-main)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: spacing[5] }}>
+          <h2 style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.semibold, color: "var(--text-main)" }}>
             {initialData ? "Panoyu Düzenle" : "Yeni Pano Oluştur"}
           </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
@@ -74,9 +75,9 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
           <div>
-            <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "14px" }}>
+            <label style={{ display: "block", marginBottom: spacing[2], color: "var(--text-muted)", fontSize: typography.fontSize.lg }}>
               Pano Adı
             </label>
             <input
@@ -86,18 +87,18 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               placeholder="Örn: Yeni Web Sitesi"
               style={{
                 width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
+                padding: spacing[2.5],
+                borderRadius: radius.md,
                 border: "1px solid var(--border)",
                 background: "var(--bg-input)",
                 color: "var(--text-main)",
-                fontSize: "16px"
+                fontSize: typography.fontSize['2xl']
               }}
             />
           </div>
 
           <div>
-             <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "14px" }}>
+             <label style={{ display: "block", marginBottom: spacing[2], color: "var(--text-muted)", fontSize: typography.fontSize.lg }}>
               Başlangıç Durumu
             </label>
             <select
@@ -105,12 +106,12 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               onChange={(e) => setStatus(e.target.value)}
               style={{
                 width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
+                padding: spacing[2.5],
+                borderRadius: radius.md,
                 border: "1px solid var(--border)",
                 background: "var(--bg-input)",
                 color: "var(--text-main)",
-                 fontSize: "16px"
+                fontSize: typography.fontSize['2xl']
               }}
             >
               <option value="PLANLANDI">Planlandı</option>
@@ -122,7 +123,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
           </div>
 
           <div>
-             <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "14px" }}>
+             <label style={{ display: "block", marginBottom: spacing[2], color: "var(--text-muted)", fontSize: typography.fontSize.lg }}>
               Link (Opsiyonel)
             </label>
             <input
@@ -132,18 +133,18 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               placeholder="https://..."
               style={{
                 width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
+                padding: spacing[2.5],
+                borderRadius: radius.md,
                 border: "1px solid var(--border)",
                 background: "var(--bg-input)",
                 color: "var(--text-main)",
-                 fontSize: "16px"
+                fontSize: typography.fontSize['2xl']
               }}
             />
           </div>
 
           <div>
-             <label style={{ display: "block", marginBottom: "8px", color: "var(--text-muted)", fontSize: "14px" }}>
+             <label style={{ display: "block", marginBottom: spacing[2], color: "var(--text-muted)", fontSize: typography.fontSize.lg }}>
               Açıklama (Opsiyonel - Max {MAX_DESCRIPTION_LENGTH} karakter)
             </label>
             <div style={{ position: "relative" }}>
@@ -159,12 +160,12 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
                 rows={3}
                 style={{
                   width: "100%",
-                  padding: "10px",
-                  borderRadius: "8px",
+                  padding: spacing[2.5],
+                  borderRadius: radius.md,
                   border: "1px solid var(--border)",
                   background: "var(--bg-input)",
                   color: "var(--text-main)",
-                  fontSize: "14px",
+                  fontSize: typography.fontSize.lg,
                   resize: "none",
                   boxSizing: "border-box",
                   fontFamily: "inherit"
@@ -172,32 +173,32 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               />
               <span style={{
                 position: "absolute",
-                right: "10px",
-                bottom: "10px",
-                fontSize: "12px",
-                color: description.length >= MAX_DESCRIPTION_LENGTH ? "#ff6b6b" : "var(--text-muted)",
-                fontWeight: "500",
+                right: spacing[2.5],
+                bottom: spacing[2.5],
+                fontSize: typography.fontSize.md,
+                color: description.length >= MAX_DESCRIPTION_LENGTH ? colors.semantic.danger : "var(--text-muted)",
+                fontWeight: typography.fontWeight.medium,
                 background: "var(--bg-input)",
-                padding: "2px 6px",
-                borderRadius: "4px"
+                padding: `${spacing[0.5]} ${spacing[1.5]}`,
+                borderRadius: radius.sm
               }}>
                 {description.length}/{MAX_DESCRIPTION_LENGTH}
               </span>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: spacing[2.5], marginTop: spacing[2.5] }}>
             <button
               type="button"
               onClick={onClose}
               className="btn btn-ghost"
-              style={{ padding: "10px 20px" }}
+              style={{ padding: `${spacing[2.5]} ${spacing[5]}` }}
             >
               İptal
             </button>
              <button
               type="submit"
               className="btn btn-primary"
-              style={{ padding: "10px 20px" }}
+              style={{ padding: `${spacing[2.5]} ${spacing[5]}` }}
             >
               {initialData ? "Güncelle" : "Oluştur"}
             </button>

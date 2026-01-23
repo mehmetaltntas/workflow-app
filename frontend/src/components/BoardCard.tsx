@@ -5,7 +5,8 @@ import { ExternalLink, Calendar } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import { MiniStats } from "./StatsBar";
 import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors } from "../utils/themeColors";
+import { getThemeColors, cssVars } from "../utils/themeColors";
+import { typography, spacing, radius, shadows, animation, colors as tokenColors } from "../styles/tokens";
 
 interface BoardCardProps {
   board: Board;
@@ -32,29 +33,29 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
       onClick={onClick}
       className="group relative board-card"
       style={{
-        background: isLight ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.03)",
+        background: isLight ? tokenColors.light.bg.card : tokenColors.dark.glass.bg,
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         height: "190px",
-        borderRadius: "28px",
-        padding: "24px",
+        borderRadius: radius['2xl'],
+        padding: spacing[6],
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         border: `1px solid ${colors.borderDefault}`,
         cursor: "pointer",
-        transition: "all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
         overflow: "hidden",
-        boxShadow: isLight ? "0 4px 20px rgba(0, 0, 0, 0.08)" : "0 8px 32px 0 rgba(0, 0, 0, 0.3)",
+        boxShadow: isLight ? shadows.card : shadows.lg,
       }}
     >
       {/* Visual Accent */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        width: '4px',
-        bottom: 0,
+      <div style={{
+        position: 'absolute',
+        top: spacing[0],
+        left: spacing[0],
+        width: spacing[1],
+        bottom: spacing[0],
         background: `linear-gradient(to bottom, ${statusColor}, transparent)`,
         opacity: 0.6
       }} />
@@ -71,17 +72,17 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
       </div>
 
       {/* Middle Section: Title & Content */}
-      <div style={{ marginTop: "12px" }}>
+      <div style={{ marginTop: spacing[3] }}>
         <h3
           style={{
-            fontSize: "20px",
-            fontWeight: "700",
-            color: "var(--text-main)",
-            margin: "0 0 6px 0",
+            fontSize: typography.fontSize['3xl'],
+            fontWeight: typography.fontWeight.bold,
+            color: cssVars.textMain,
+            margin: `${spacing[0]} ${spacing[0]} ${spacing[1.5]} ${spacing[0]}`,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            letterSpacing: '-0.02em',
+            letterSpacing: typography.letterSpacing.tighter,
             textShadow: isLight ? 'none' : '0 2px 10px rgba(0,0,0,0.3)'
           }}
         >
@@ -91,13 +92,13 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
         {board.description && (
           <div style={{
             color: colors.textTertiary,
-            fontSize: '12px',
-            fontWeight: '400',
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.normal,
             overflow: 'hidden',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            lineHeight: '1.5',
+            lineHeight: typography.lineHeight.normal,
             fontStyle: 'italic',
             wordBreak: 'break-word',
             maxWidth: '100%'
@@ -107,20 +108,20 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
         )}
 
         {/* Mini Stats */}
-        <div style={{ marginTop: '10px' }}>
+        <div style={{ marginTop: spacing[2.5] }}>
           <MiniStats board={board} />
         </div>
       </div>
 
       {/* Bottom Section: Deadline, Link & Status */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
         alignItems: "center",
         marginTop: "auto",
-        gap: "12px"
+        gap: spacing[3]
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[2.5] }}>
           {board.link && (
             <a
               href={board.link}
@@ -131,13 +132,13 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: "32px",
-                height: "32px",
-                borderRadius: "10px",
+                width: spacing[8],
+                height: spacing[8],
+                borderRadius: spacing[2.5],
                 background: colors.bgHover,
-                color: "var(--primary)",
+                color: cssVars.primary,
                 border: `1px solid ${colors.borderDefault}`,
-                transition: "all 0.3s ease",
+                transition: `all ${animation.duration.slow} ${animation.easing.ease}`,
               }}
               title="Bağlantıya Git"
             >
@@ -149,13 +150,13 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
             <div style={{
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              fontSize: "12px",
+              gap: spacing[1.5],
+              fontSize: typography.fontSize.md,
               color: colors.textMuted,
               background: colors.bgTertiary,
-              padding: "6px 10px",
-              borderRadius: "8px",
-              fontWeight: "600"
+              padding: `${spacing[1.5]} ${spacing[2.5]}`,
+              borderRadius: radius.md,
+              fontWeight: typography.fontWeight.semibold
             }}>
               <Calendar size={13} />
               {new Date(board.deadline).toLocaleDateString()}
@@ -168,18 +169,18 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
             value={board.status || "PLANLANDI"}
             onChange={handleStatusChange}
             style={{
-              fontSize: "11px",
-              padding: "8px 14px",
-              borderRadius: "14px",
+              fontSize: typography.fontSize.sm,
+              padding: `${spacing[2]} ${spacing[3.5]}`,
+              borderRadius: radius.lg,
               border: `1px solid ${statusColor}44`,
               background: `${statusColor}15`,
               color: statusColor,
-              fontWeight: "700",
+              fontWeight: typography.fontWeight.bold,
               cursor: "pointer",
               outline: "none",
-              transition: 'all 0.2s',
+              transition: `all ${animation.duration.normal}`,
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              letterSpacing: typography.letterSpacing.wider,
               backdropFilter: 'blur(10px)',
             }}
             onMouseEnter={(e) => {
@@ -192,7 +193,7 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
             }}
           >
             {Object.keys(STATUS_LABELS).map((key) => (
-              <option key={key} value={key} style={{ background: isLight ? '#ffffff' : '#1a1b1e', color: isLight ? '#1a1b1e' : 'white' }}>
+              <option key={key} value={key} style={{ background: isLight ? tokenColors.light.bg.elevated : tokenColors.dark.bg.secondary, color: isLight ? tokenColors.light.text.primary : tokenColors.dark.text.primary }}>
                 {STATUS_LABELS[key]}
               </option>
             ))}

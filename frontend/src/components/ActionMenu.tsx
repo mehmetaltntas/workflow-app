@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { MoreVertical, MoreHorizontal, Edit2, Trash2, CheckCircle } from "lucide-react";
 import { useClickOutside } from "../hooks/useClickOutside";
+import { colors, cssVars, shadows } from "../styles/tokens";
 
 export interface ActionMenuItem {
   label: string;
@@ -64,25 +65,25 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
   const getVariantStyles = (item: ActionMenuItem) => {
     const isDanger = item.variant === "danger" || item.label === "Sil";
     const isSuccess = item.variant === "success" || item.label === "Tamamla";
-    
+
     if (isDanger) {
       return {
-        color: "var(--danger)",
-        iconBg: "rgba(255, 107, 107, 0.15)",
-        hoverBg: "rgba(255, 107, 107, 0.1)",
+        color: colors.semantic.danger,
+        iconBg: colors.semantic.dangerLight,
+        hoverBg: `${colors.semantic.danger}1a`,
       };
     }
     if (isSuccess) {
       return {
-        color: "var(--success)",
-        iconBg: "rgba(81, 207, 102, 0.15)",
-        hoverBg: "rgba(81, 207, 102, 0.1)",
+        color: colors.semantic.success,
+        iconBg: colors.semantic.successLight,
+        hoverBg: `${colors.semantic.success}1a`,
       };
     }
     return {
-      color: "var(--text-main)",
-      iconBg: "rgba(77, 171, 247, 0.15)",
-      hoverBg: "rgba(255, 255, 255, 0.06)",
+      color: cssVars.textMain,
+      iconBg: colors.brand.primaryLight,
+      hoverBg: colors.dark.bg.hover,
     };
   };
 
@@ -107,22 +108,22 @@ export const ActionMenu: React.FC<ActionMenuProps> = ({
 
       {/* Modern Dropdown */}
       {isOpen && (
-        <div 
+        <div
           style={{
             position: 'absolute',
             ...(dropdownPosition === 'left' ? { left: 0 } : { right: 0 }),
-            ...(dropdownDirection === 'up' 
-              ? { bottom: '100%', marginBottom: '8px' } 
+            ...(dropdownDirection === 'up'
+              ? { bottom: '100%', marginBottom: '8px' }
               : { top: '100%', marginTop: '8px' }),
             zIndex: 9999,
             minWidth: '180px',
             padding: '6px',
-            background: 'rgba(20, 21, 24, 0.98)',
+            background: colors.dark.bg.elevated,
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: `1px solid ${cssVars.border}`,
             borderRadius: '14px',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04)',
+            boxShadow: `${shadows.dropdown}, 0 0 0 1px ${colors.dark.border.subtle}`,
             animation: dropdownDirection === 'up' ? 'menuSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'menuSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             isolation: 'isolate',
           }}

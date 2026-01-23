@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Trash2, X, AlertTriangle } from "lucide-react";
+import { colors, cssVars, shadows } from "../styles/tokens";
 
 interface DeleteConfirmationProps {
   isOpen: boolean;
@@ -95,15 +96,15 @@ const DeleteConfirmationContent: React.FC<
       {/* Main Card */}
       <div
         style={{
-          background: "rgba(22, 22, 26, 0.98)",
+          background: cssVars.bgCard,
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
           borderRadius: "20px",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          border: `1px solid ${cssVars.border}`,
           boxShadow: `
-            0 24px 48px -12px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(255, 255, 255, 0.05),
-            ${isDanger ? "0 0 80px -20px rgba(239, 68, 68, 0.15)" : "0 0 80px -20px rgba(245, 158, 11, 0.15)"}
+            ${shadows.xl},
+            0 0 0 1px ${colors.dark.border.subtle},
+            ${isDanger ? `0 0 80px -20px ${colors.semantic.dangerLight}` : `0 0 80px -20px ${colors.semantic.warningLight}`}
           `,
           overflow: "hidden",
         }}
@@ -116,7 +117,7 @@ const DeleteConfirmationContent: React.FC<
             left: 0,
             right: 0,
             height: "3px",
-            background: "rgba(255, 255, 255, 0.05)",
+            background: colors.dark.border.subtle,
             borderRadius: "20px 20px 0 0",
             overflow: "hidden",
           }}
@@ -125,9 +126,9 @@ const DeleteConfirmationContent: React.FC<
             style={{
               width: `${progress}%`,
               height: "100%",
-              background: isDanger 
-                ? "linear-gradient(90deg, #ef4444, #f87171)" 
-                : "linear-gradient(90deg, #f59e0b, #fbbf24)",
+              background: isDanger
+                ? `linear-gradient(90deg, ${colors.semantic.danger}, ${colors.semantic.dangerDark})`
+                : `linear-gradient(90deg, ${colors.semantic.warning}, ${colors.semantic.warningDark})`,
               transition: "width 0.05s linear",
             }}
           />
@@ -145,16 +146,16 @@ const DeleteConfirmationContent: React.FC<
                 width: "44px",
                 height: "44px",
                 borderRadius: "14px",
-                background: isDanger 
-                  ? "rgba(239, 68, 68, 0.12)" 
-                  : "rgba(245, 158, 11, 0.12)",
+                background: isDanger
+                  ? colors.semantic.dangerLight
+                  : colors.semantic.warningLight,
                 flexShrink: 0,
               }}
             >
               {isDanger ? (
-                <Trash2 size={20} color="#ef4444" strokeWidth={2} />
+                <Trash2 size={20} color={colors.semantic.danger} strokeWidth={2} />
               ) : (
-                <AlertTriangle size={20} color="#f59e0b" strokeWidth={2} />
+                <AlertTriangle size={20} color={colors.semantic.warning} strokeWidth={2} />
               )}
             </div>
 
@@ -165,7 +166,7 @@ const DeleteConfirmationContent: React.FC<
                   margin: 0,
                   fontSize: "15px",
                   fontWeight: 600,
-                  color: "#fff",
+                  color: cssVars.textMain,
                   letterSpacing: "-0.02em",
                   lineHeight: 1.3,
                 }}
@@ -177,7 +178,7 @@ const DeleteConfirmationContent: React.FC<
                   style={{
                     margin: "6px 0 0",
                     fontSize: "13px",
-                    color: "rgba(255, 255, 255, 0.5)",
+                    color: colors.dark.text.tertiary,
                     lineHeight: 1.5,
                   }}
                 >
@@ -197,19 +198,19 @@ const DeleteConfirmationContent: React.FC<
                 height: "32px",
                 borderRadius: "10px",
                 border: "none",
-                background: "rgba(255, 255, 255, 0.05)",
-                color: "rgba(255, 255, 255, 0.4)",
+                background: colors.dark.bg.hover,
+                color: colors.dark.text.subtle,
                 cursor: "pointer",
                 transition: "all 0.15s ease",
                 flexShrink: 0,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-                e.currentTarget.style.color = "#fff";
+                e.currentTarget.style.background = colors.dark.bg.active;
+                e.currentTarget.style.color = cssVars.textMain;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-                e.currentTarget.style.color = "rgba(255, 255, 255, 0.4)";
+                e.currentTarget.style.background = colors.dark.bg.hover;
+                e.currentTarget.style.color = colors.dark.text.subtle;
               }}
             >
               <X size={16} strokeWidth={2} />
@@ -231,23 +232,23 @@ const DeleteConfirmationContent: React.FC<
               flex: 1,
               padding: "12px 16px",
               borderRadius: "12px",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              background: "rgba(255, 255, 255, 0.04)",
-              color: "rgba(255, 255, 255, 0.7)",
+              border: `1px solid ${cssVars.border}`,
+              background: colors.dark.glass.bg,
+              color: colors.dark.text.secondary,
               fontSize: "13px",
               fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.15s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
-              e.currentTarget.style.color = "#fff";
+              e.currentTarget.style.background = colors.dark.bg.active;
+              e.currentTarget.style.borderColor = cssVars.borderStrong;
+              e.currentTarget.style.color = cssVars.textMain;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)";
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
-              e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+              e.currentTarget.style.background = colors.dark.glass.bg;
+              e.currentTarget.style.borderColor = cssVars.border;
+              e.currentTarget.style.color = colors.dark.text.secondary;
             }}
           >
             İptal
@@ -260,28 +261,28 @@ const DeleteConfirmationContent: React.FC<
               borderRadius: "12px",
               border: "none",
               background: isDanger
-                ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
-                : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-              color: "#fff",
+                ? `linear-gradient(135deg, ${colors.semantic.danger} 0%, ${colors.semantic.dangerDark} 100%)`
+                : `linear-gradient(135deg, ${colors.semantic.warning} 0%, ${colors.semantic.warningDark} 100%)`,
+              color: cssVars.textMain,
               fontSize: "13px",
               fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.15s ease",
               boxShadow: isDanger
-                ? "0 4px 12px rgba(239, 68, 68, 0.3)"
-                : "0 4px 12px rgba(245, 158, 11, 0.3)",
+                ? `0 4px 12px ${colors.semantic.dangerLight}`
+                : `0 4px 12px ${colors.semantic.warningLight}`,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-1px)";
               e.currentTarget.style.boxShadow = isDanger
-                ? "0 6px 16px rgba(239, 68, 68, 0.4)"
-                : "0 6px 16px rgba(245, 158, 11, 0.4)";
+                ? `0 6px 16px ${colors.semantic.danger}66`
+                : `0 6px 16px ${colors.semantic.warning}66`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
               e.currentTarget.style.boxShadow = isDanger
-                ? "0 4px 12px rgba(239, 68, 68, 0.3)"
-                : "0 4px 12px rgba(245, 158, 11, 0.3)";
+                ? `0 4px 12px ${colors.semantic.dangerLight}`
+                : `0 4px 12px ${colors.semantic.warningLight}`;
             }}
           >
             {confirmText}

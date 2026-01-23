@@ -3,6 +3,7 @@ import { authService } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import GoogleSignInButton from "../components/GoogleSignInButton";
+import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -66,7 +67,7 @@ const LoginPage = () => {
       style={{
         minHeight: "100vh",
         display: "flex",
-        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        background: `linear-gradient(135deg, ${cssVars.bgBody} 0%, #16213e 50%, #0f3460 100%)`,
       }}
     >
       {/* Sol Panel - Branding */}
@@ -77,7 +78,7 @@ const LoginPage = () => {
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          padding: "40px",
+          padding: spacing[10],
           background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
         }}
       >
@@ -92,14 +93,14 @@ const LoginPage = () => {
         >
           <div
             style={{
-              width: "80px",
-              height: "80px",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              borderRadius: "20px",
+              width: spacing[20],
+              height: spacing[20],
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+              borderRadius: radius["2xl"],
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "24px",
+              marginBottom: spacing[6],
               transition: "transform 0.3s",
             }}
             onMouseEnter={(e) => {
@@ -109,16 +110,16 @@ const LoginPage = () => {
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill={cssVars.textInverse}>
               <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
           </div>
           <h1
             style={{
-              fontSize: "36px",
-              fontWeight: "800",
-              color: "#fff",
-              marginBottom: "16px",
+              fontSize: typography.fontSize["5xl"],
+              fontWeight: typography.fontWeight.extrabold,
+              color: cssVars.textMain,
+              marginBottom: spacing[4],
             }}
           >
             WorkFlow
@@ -126,11 +127,11 @@ const LoginPage = () => {
         </div>
         <p
           style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
+            fontSize: typography.fontSize.xl,
+            color: colors.dark.text.secondary,
             textAlign: "center",
             maxWidth: "300px",
-            lineHeight: "1.6",
+            lineHeight: typography.lineHeight.relaxed,
           }}
         >
           Gorevlerinizi kolayca yonetin, ekibinizle isbirligi yapin ve
@@ -142,7 +143,7 @@ const LoginPage = () => {
           style={{
             marginTop: "60px",
             display: "flex",
-            gap: "20px",
+            gap: spacing[5],
           }}
         >
           {[1, 2, 3].map((i) => (
@@ -151,9 +152,9 @@ const LoginPage = () => {
               style={{
                 width: "60px",
                 height: "60px",
-                borderRadius: "12px",
+                borderRadius: radius.lg,
                 background: `rgba(102, 126, 234, ${0.1 + i * 0.1})`,
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: `1px solid ${cssVars.border}`,
               }}
             />
           ))}
@@ -167,26 +168,26 @@ const LoginPage = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "40px",
+          padding: spacing[10],
         }}
       >
         <div
           style={{
             width: "100%",
             maxWidth: "400px",
-            background: "rgba(255,255,255,0.03)",
+            background: colors.dark.glass.bg,
             backdropFilter: "blur(20px)",
-            borderRadius: "20px",
-            padding: "40px",
-            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: radius["2xl"],
+            padding: spacing[10],
+            border: `1px solid ${cssVars.border}`,
           }}
         >
           <h2
             style={{
-              fontSize: "28px",
-              fontWeight: "700",
-              color: "#fff",
-              marginBottom: "8px",
+              fontSize: typography.fontSize["4xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
+              marginBottom: spacing[2],
               textAlign: "center",
             }}
           >
@@ -194,9 +195,9 @@ const LoginPage = () => {
           </h2>
           <p
             style={{
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: "32px",
+              fontSize: typography.fontSize.lg,
+              color: colors.dark.text.tertiary,
+              marginBottom: spacing[8],
               textAlign: "center",
             }}
           >
@@ -215,13 +216,13 @@ const LoginPage = () => {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "16px",
-              margin: "24px 0",
+              gap: spacing[4],
+              margin: `${spacing[6]} 0`,
             }}
           >
-            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>veya</span>
-            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ flex: 1, height: "1px", background: cssVars.border }} />
+            <span style={{ fontSize: typography.fontSize.base, color: colors.dark.text.subtle }}>veya</span>
+            <div style={{ flex: 1, height: "1px", background: cssVars.border }} />
           </div>
 
           {/* Form */}
@@ -230,17 +231,17 @@ const LoginPage = () => {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "20px",
+              gap: spacing[5],
             }}
           >
             <div>
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "rgba(255,255,255,0.7)",
-                  marginBottom: "8px",
+                  fontSize: typography.fontSize.lg,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.dark.text.secondary,
+                  marginBottom: spacing[2],
                 }}
               >
                 Kullanici Adi
@@ -253,21 +254,21 @@ const LoginPage = () => {
                 style={{
                   width: "100%",
                   boxSizing: "border-box",
-                  padding: "14px 16px",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#fff",
-                  fontSize: "15px",
+                  padding: `${spacing[3.5]} ${spacing[4]}`,
+                  borderRadius: radius.md,
+                  border: `1px solid ${cssVars.border}`,
+                  background: colors.dark.bg.hover,
+                  color: cssVars.textMain,
+                  fontSize: typography.fontSize.xl,
                   outline: "none",
                   transition: "all 0.2s",
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#667eea";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                  e.currentTarget.style.borderColor = colors.brand.primary;
+                  e.currentTarget.style.boxShadow = shadows.focusPrimary;
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                  e.currentTarget.style.borderColor = cssVars.border;
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
@@ -277,10 +278,10 @@ const LoginPage = () => {
               <label
                 style={{
                   display: "block",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  color: "rgba(255,255,255,0.7)",
-                  marginBottom: "8px",
+                  fontSize: typography.fontSize.lg,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.dark.text.secondary,
+                  marginBottom: spacing[2],
                 }}
               >
                 Sifre
@@ -294,21 +295,21 @@ const LoginPage = () => {
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
-                    padding: "14px 48px 14px 16px",
-                    borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "#fff",
-                    fontSize: "15px",
+                    padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
+                    borderRadius: radius.md,
+                    border: `1px solid ${cssVars.border}`,
+                    background: colors.dark.bg.hover,
+                    color: cssVars.textMain,
+                    fontSize: typography.fontSize.xl,
                     outline: "none",
                     transition: "all 0.2s",
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#667eea";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                    e.currentTarget.style.borderColor = colors.brand.primary;
+                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                    e.currentTarget.style.borderColor = cssVars.border;
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 />
@@ -317,14 +318,14 @@ const LoginPage = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: "absolute",
-                    right: "12px",
+                    right: spacing[3],
                     top: "50%",
                     transform: "translateY(-50%)",
                     background: "none",
                     border: "none",
-                    color: "rgba(255,255,255,0.5)",
+                    color: colors.dark.text.tertiary,
                     cursor: "pointer",
-                    padding: "4px",
+                    padding: spacing[1],
                   }}
                 >
                   {showPassword ? (
@@ -347,10 +348,10 @@ const LoginPage = () => {
               <span
                 onClick={() => navigate("/forgot-password")}
                 style={{
-                  fontSize: "13px",
-                  color: "#667eea",
+                  fontSize: typography.fontSize.base,
+                  color: colors.brand.primary,
                   cursor: "pointer",
-                  fontWeight: "500",
+                  fontWeight: typography.fontWeight.medium,
                 }}
               >
                 Sifremi Unuttum
@@ -362,20 +363,20 @@ const LoginPage = () => {
               disabled={isLoading}
               style={{
                 width: "100%",
-                padding: "14px",
-                borderRadius: "10px",
+                padding: spacing[3.5],
+                borderRadius: radius.md,
                 border: "none",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "#fff",
-                fontSize: "16px",
-                fontWeight: "600",
+                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+                color: cssVars.textMain,
+                fontSize: typography.fontSize.xl,
+                fontWeight: typography.fontWeight.semibold,
                 cursor: isLoading ? "not-allowed" : "pointer",
                 opacity: isLoading ? 0.7 : 1,
                 transition: "all 0.2s",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "8px",
+                gap: spacing[2],
               }}
             >
               {isLoading ? (
@@ -402,19 +403,19 @@ const LoginPage = () => {
           {/* Kayit Ol Link */}
           <p
             style={{
-              marginTop: "24px",
+              marginTop: spacing[6],
               textAlign: "center",
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.5)",
+              fontSize: typography.fontSize.lg,
+              color: colors.dark.text.tertiary,
             }}
           >
             Hesabiniz yok mu?{" "}
             <span
               onClick={() => navigate("/register")}
               style={{
-                color: "#667eea",
+                color: colors.brand.primary,
                 cursor: "pointer",
-                fontWeight: "600",
+                fontWeight: typography.fontWeight.semibold,
               }}
             >
               Kayit Ol

@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Layout } from "lucide-react";
 
 import { useBoards } from "../hooks/useBoards";
+import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
 // onEdit and onDelete should be optional in BoardCard props but here we pass them.
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
@@ -84,7 +85,7 @@ const BoardsPage = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          color: "var(--text-muted)",
+          color: cssVars.textMuted,
         }}
       >
         <h2>Panolar Yükleniyor...</h2>
@@ -96,8 +97,8 @@ const BoardsPage = () => {
     <div
       style={{
         minHeight: "100vh",
-        background: "var(--bg-body)",
-        padding: "40px",
+        background: cssVars.bgBody,
+        padding: spacing[10],
       }}
     >
       {/* Header */}
@@ -106,30 +107,30 @@ const BoardsPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "40px",
+          marginBottom: spacing[10],
         }}
       >
         <h1
           style={{
-            fontSize: "28px",
-            color: "var(--text-main)",
+            fontSize: typography.fontSize["4xl"],
+            color: cssVars.textMain,
             display: "flex",
             alignItems: "center",
-            gap: "10px",
+            gap: spacing[2.5],
           }}
         >
-          <Layout color="var(--primary)" /> Tüm Panolar
+          <Layout color={colors.brand.primary} /> Tüm Panolar
         </h1>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: spacing[2.5], alignItems: "center" }}>
              <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 style={{
-                    padding: "8px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border)",
-                    background: "var(--bg-input)",
-                    color: "var(--text-main)",
+                    padding: spacing[2],
+                    borderRadius: radius.sm,
+                    border: `1px solid ${cssVars.border}`,
+                    background: cssVars.bgInput,
+                    color: cssVars.textMain,
                     cursor: "pointer"
                 }}
              >
@@ -142,35 +143,35 @@ const BoardsPage = () => {
       </div>
 
       {/* Status Gruplu Liste */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
-        
+      <div style={{ display: "flex", flexDirection: "column", gap: spacing[10] }}>
+
         {/* Filtre 'ALL' ise grupla, değilse tek baslik */}
         {(statusFilter === "ALL" ? Object.keys(STATUS_LABELS) : [statusFilter]).map((statusKey) => {
            const boardsInStatus = filteredBoards.filter(b => (b.status || "PLANLANDI") === statusKey);
-           
+
            if (boardsInStatus.length === 0 && statusFilter === "ALL") return null;
 
            return (
              <div key={statusKey}>
-                <h2 style={{ 
-                    fontSize: "20px", 
-                    fontWeight: "600", 
-                    color: STATUS_COLORS[statusKey] || "var(--text-main)",
-                    marginBottom: "20px",
-                    display: "flex", 
+                <h2 style={{
+                    fontSize: typography.fontSize["3xl"],
+                    fontWeight: typography.fontWeight.semibold,
+                    color: STATUS_COLORS[statusKey] || cssVars.textMain,
+                    marginBottom: spacing[5],
+                    display: "flex",
                     alignItems: "center",
-                    gap: "10px"
+                    gap: spacing[2.5]
                 }}>
-                    <div style={{width: "12px", height: "12px", borderRadius: "50%", background: STATUS_COLORS[statusKey]}}></div>
-                    {STATUS_LABELS[statusKey]} 
-                    <span style={{fontSize: "14px", color: "var(--text-muted)", fontWeight: "normal"}}>({boardsInStatus.length})</span>
+                    <div style={{width: spacing[3], height: spacing[3], borderRadius: radius.full, background: STATUS_COLORS[statusKey]}}></div>
+                    {STATUS_LABELS[statusKey]}
+                    <span style={{fontSize: typography.fontSize.lg, color: cssVars.textMuted, fontWeight: typography.fontWeight.normal}}>({boardsInStatus.length})</span>
                 </h2>
 
                 <div
                     style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                    gap: "20px",
+                    gap: spacing[5],
                     }}
                 >
                     {boardsInStatus.map(board => (
@@ -205,19 +206,19 @@ const BoardsPage = () => {
         onClick={openCreateModal}
         style={{
             position: "fixed",
-            bottom: "40px",
-            right: "40px",
-            background: "var(--primary)",
-            color: "white",
+            bottom: spacing[10],
+            right: spacing[10],
+            background: colors.brand.primary,
+            color: cssVars.textInverse,
             border: "none",
-            borderRadius: "50%",
+            borderRadius: radius.full,
             width: "60px",
             height: "60px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "32px",
-            boxShadow: "0 4px 12px rgba(var(--primary-rgb), 0.4)",
+            fontSize: typography.fontSize["5xl"],
+            boxShadow: shadows.md,
             cursor: "pointer",
             transition: "transform 0.2s"
         }}

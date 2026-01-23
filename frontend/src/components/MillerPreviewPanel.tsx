@@ -11,6 +11,7 @@ import {
   Folder
 } from 'lucide-react';
 import type { Task, TaskList, Subtask } from '../types';
+import { colors, cssVars } from '../styles/tokens';
 
 type PreviewType = 'list' | 'task' | 'subtask' | null;
 
@@ -24,9 +25,9 @@ interface MillerPreviewPanelProps {
 
 const getPriorityLabel = (priority?: string) => {
   switch (priority) {
-    case 'HIGH': return { label: 'Yüksek', color: '#ef4444' };
-    case 'MEDIUM': return { label: 'Orta', color: '#f59e0b' };
-    case 'LOW': return { label: 'Düşük', color: '#22c55e' };
+    case 'HIGH': return { label: 'Yüksek', color: colors.priority.high };
+    case 'MEDIUM': return { label: 'Orta', color: colors.priority.medium };
+    case 'LOW': return { label: 'Düşük', color: colors.priority.low };
     default: return null;
   }
 };
@@ -42,16 +43,16 @@ const formatDate = (dateString?: string | null) => {
   taskDate.setHours(0, 0, 0, 0);
 
   if (taskDate.getTime() === today.getTime()) {
-    return { label: 'Bugün', color: '#f59e0b' };
+    return { label: 'Bugün', color: colors.priority.medium };
   } else if (taskDate.getTime() === tomorrow.getTime()) {
-    return { label: 'Yarın', color: '#f59e0b' };
+    return { label: 'Yarın', color: colors.priority.medium };
   } else if (taskDate < today) {
     const diff = Math.floor((today.getTime() - taskDate.getTime()) / (1000 * 60 * 60 * 24));
-    return { label: `${diff} gün gecikti`, color: '#ef4444' };
+    return { label: `${diff} gün gecikti`, color: colors.priority.high };
   } else {
     return {
       label: date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
-      color: 'var(--primary)'
+      color: colors.brand.primary
     };
   }
 };
@@ -75,7 +76,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           padding: '40px',
           color: 'var(--text-muted)',
           textAlign: 'center',
-          background: 'rgba(0, 0, 0, 0.05)',
+          background: colors.dark.bg.hover,
         }}
       >
         <Folder size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
@@ -131,7 +132,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          background: 'rgba(0, 0, 0, 0.05)',
+          background: colors.dark.bg.hover,
           overflow: 'hidden',
           animation: 'fadeIn 0.2s ease',
         }}
@@ -141,7 +142,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           style={{
             padding: '24px',
             borderBottom: '1px solid var(--border)',
-            background: 'rgba(0, 0, 0, 0.1)',
+            background: colors.dark.bg.active,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
@@ -156,7 +157,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 justifyContent: 'center',
               }}
             >
-              <Folder size={20} color="white" />
+              <Folder size={20} color={cssVars.textInverse} />
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>
@@ -168,7 +169,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     fontSize: '11px',
                     fontWeight: 600,
                     color: 'var(--success)',
-                    background: 'rgba(81, 207, 102, 0.15)',
+                    background: colors.semantic.successLight,
                     padding: '2px 8px',
                     borderRadius: '6px',
                   }}
@@ -192,7 +193,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 style={{
                   height: '6px',
                   borderRadius: '3px',
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: cssVars.borderStrong,
                   overflow: 'hidden',
                 }}
               >
@@ -253,7 +254,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   style={{
                     padding: '10px 12px',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: colors.dark.glass.bg,
                     border: '1px solid var(--border)',
                   }}
                 >
@@ -314,7 +315,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          background: 'rgba(0, 0, 0, 0.05)',
+          background: colors.dark.bg.hover,
           overflow: 'hidden',
           animation: 'fadeIn 0.2s ease',
         }}
@@ -324,7 +325,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           style={{
             padding: '24px',
             borderBottom: '1px solid var(--border)',
-            background: 'rgba(0, 0, 0, 0.1)',
+            background: colors.dark.bg.active,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -333,7 +334,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 width: '40px',
                 height: '40px',
                 borderRadius: '12px',
-                background: task.isCompleted ? 'var(--success)' : 'rgba(255, 255, 255, 0.1)',
+                background: task.isCompleted ? 'var(--success)' : cssVars.borderStrong,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -341,7 +342,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
               }}
             >
               {task.isCompleted ? (
-                <CheckSquare size={20} color="white" />
+                <CheckSquare size={20} color={cssVars.textInverse} />
               ) : (
                 <FileText size={20} style={{ color: 'var(--text-muted)' }} />
               )}
@@ -371,7 +372,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                       fontSize: '11px',
                       fontWeight: 600,
                       color: 'var(--success)',
-                      background: 'rgba(81, 207, 102, 0.15)',
+                      background: colors.semantic.successLight,
                       padding: '4px 10px',
                       borderRadius: '6px',
                     }}
@@ -528,7 +529,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 style={{
                   height: '4px',
                   borderRadius: '2px',
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: cssVars.borderStrong,
                   marginBottom: '12px',
                   overflow: 'hidden',
                 }}
@@ -555,8 +556,8 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                       padding: '8px 12px',
                       borderRadius: '8px',
                       background: subtask.isCompleted
-                        ? 'rgba(81, 207, 102, 0.08)'
-                        : 'rgba(255, 255, 255, 0.03)',
+                        ? colors.semantic.successLight
+                        : colors.dark.glass.bg,
                       border: '1px solid var(--border)',
                     }}
                   >
@@ -575,7 +576,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                       }}
                     >
                       {subtask.isCompleted && (
-                        <CheckSquare size={10} color="white" />
+                        <CheckSquare size={10} color={cssVars.textInverse} />
                       )}
                     </div>
                     <span

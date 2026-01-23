@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 
 interface Props {
   isOpen: boolean;
@@ -30,19 +31,19 @@ export const ConfirmationModal: React.FC<Props> = ({
         return {
           icon: <AlertTriangle className="text-red-400" size={24} />,
           buttonClass: "bg-red-500 hover:bg-red-600 text-white",
-          iconBg: "rgba(239, 68, 68, 0.08)"
+          iconBg: colors.semantic.dangerLight
         };
       case "warning":
         return {
           icon: <AlertTriangle className="text-amber-400" size={24} />,
           buttonClass: "bg-amber-500 hover:bg-amber-600 text-white",
-          iconBg: "rgba(245, 158, 11, 0.08)"
+          iconBg: colors.semantic.warningLight
         };
       default:
         return {
           icon: <AlertTriangle className="text-blue-400" size={24} />,
           buttonClass: "bg-blue-500 hover:bg-blue-600 text-white",
-          iconBg: "rgba(59, 130, 246, 0.08)"
+          iconBg: colors.semantic.infoLight
         };
     }
   };
@@ -50,57 +51,88 @@ export const ConfirmationModal: React.FC<Props> = ({
   const styles = getVariantStyles();
 
   return (
-    <div 
-      className="fixed inset-0 flex items-center justify-center z-[1000] p-4"
-      style={{ animation: 'fadeIn 0.2s ease-out' }}
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ animation: `fadeIn ${animation.duration.normal} ${animation.easing.smooth}`, zIndex: zIndex.modal }}
     >
-      <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-[8px]" 
-        onClick={onCancel} 
-      />
-      
       <div
-        className="relative w-full max-w-[400px] rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
-        style={{ 
-          background: "#161618",
-          animation: 'modalEntrance 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+        className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
+        onClick={onCancel}
+      />
+
+      <div
+        className="relative w-full max-w-[400px] border border-white/10 overflow-hidden"
+        style={{
+          background: cssVars.bgSecondary,
+          animation: `modalEntrance ${animation.duration.slow} ${animation.easing.spring}`,
+          borderRadius: radius['2xl'],
+          boxShadow: shadows.modal
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button 
-          onClick={onCancel} 
-          className="absolute top-5 right-5 p-2 rounded-xl text-gray-500 hover:bg-white/5 hover:text-white transition-all"
+        <button
+          onClick={onCancel}
+          className="absolute text-gray-500 hover:bg-white/5 hover:text-white transition-all"
+          style={{ top: spacing[5], right: spacing[5], padding: spacing[2], borderRadius: radius.lg }}
         >
           <X size={18} />
         </button>
 
-        <div className="p-10">
+        <div style={{ padding: spacing[10] }}>
           <div className="flex flex-col items-center text-center">
-            <div 
-              className="p-5 rounded-2xl mb-6"
-              style={{ backgroundColor: styles.iconBg }}
+            <div
+              style={{ backgroundColor: styles.iconBg, padding: spacing[5], borderRadius: radius.xl, marginBottom: spacing[6] }}
             >
               {styles.icon}
             </div>
-            
-            <h3 className="text-[22px] font-bold text-white mb-3 tracking-tight">
+
+            <h3 style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, color: cssVars.textMain, marginBottom: spacing[3], letterSpacing: typography.letterSpacing.tight }}>
               {title}
             </h3>
-            
-            <p className="text-gray-400 text-sm leading-relaxed mb-8 px-2">
+
+            <p style={{ color: cssVars.textMuted, fontSize: typography.fontSize.sm, lineHeight: typography.lineHeight.relaxed, marginBottom: spacing[8], paddingLeft: spacing[2], paddingRight: spacing[2] }}>
               {message}
             </p>
 
-            <div className="flex gap-3 w-full">
+            <div style={{ display: 'flex', gap: spacing[3], width: '100%' }}>
               <button
                 onClick={onCancel}
-                className="flex-1 py-3.5 px-4 rounded-2xl font-bold text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white transition-all border border-white/5 text-sm"
+                style={{
+                  flex: 1,
+                  padding: `${spacing[3.5]} ${spacing[4]}`,
+                  borderRadius: radius.xl,
+                  fontWeight: typography.fontWeight.bold,
+                  color: cssVars.textMuted,
+                  background: colors.dark.bg.hover,
+                  border: `1px solid ${colors.dark.border.subtle}`,
+                  fontSize: typography.fontSize.sm,
+                  cursor: 'pointer',
+                  transition: `all ${animation.duration.normal}`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = colors.dark.bg.active;
+                  e.currentTarget.style.color = cssVars.textMain;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = colors.dark.bg.hover;
+                  e.currentTarget.style.color = cssVars.textMuted;
+                }}
               >
                 {cancelText}
               </button>
-              <button 
-                onClick={onConfirm} 
-                className={`flex-1 py-3.5 px-4 rounded-2xl font-bold transition-all shadow-lg text-sm ${styles.buttonClass}`}
+              <button
+                onClick={onConfirm}
+                className={styles.buttonClass}
+                style={{
+                  flex: 1,
+                  padding: `${spacing[3.5]} ${spacing[4]}`,
+                  borderRadius: radius.xl,
+                  fontWeight: typography.fontWeight.bold,
+                  fontSize: typography.fontSize.sm,
+                  cursor: 'pointer',
+                  transition: `all ${animation.duration.normal}`,
+                  boxShadow: shadows.md
+                }}
               >
                 {confirmText}
               </button>
@@ -108,7 +140,7 @@ export const ConfirmationModal: React.FC<Props> = ({
           </div>
         </div>
       </div>
-      
+
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }

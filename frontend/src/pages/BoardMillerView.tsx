@@ -14,6 +14,7 @@ import { MillerColumn, type MillerColumnItem } from '../components/MillerColumn'
 import { MillerPreviewPanel } from '../components/MillerPreviewPanel';
 import type { Board, TaskList, Task, Subtask } from '../types';
 import toast from 'react-hot-toast';
+import { colors as tokenColors } from '../styles/tokens';
 
 // Navigation State Type
 interface NavigationState {
@@ -68,8 +69,8 @@ const BoardMillerView: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const response = await boardService.getBoardDetails(slug);
-      setBoard(response.data);
+      const board = await boardService.getBoardDetails(slug);
+      setBoard(board);
     } catch (error) {
       console.error('Board yüklenemedi:', error);
       toast.error('Pano yüklenirken bir hata oluştu');
@@ -89,10 +90,10 @@ const BoardMillerView: React.FC = () => {
 
     try {
       setIsLoadingSubtasks(true);
-      const response = await subtaskService.getSubtasksByTask(taskId);
+      const subtasks = await subtaskService.getSubtasksByTask(taskId);
       setCache(prev => ({
         ...prev,
-        subtasks: new Map(prev.subtasks).set(taskId, response.data),
+        subtasks: new Map(prev.subtasks).set(taskId, subtasks),
       }));
     } catch (error) {
       console.error('Alt görevler yüklenemedi:', error);
@@ -309,7 +310,7 @@ const BoardMillerView: React.FC = () => {
           justifyContent: 'space-between',
           padding: '12px 24px',
           borderBottom: '1px solid var(--border)',
-          background: 'rgba(0, 0, 0, 0.3)',
+          background: tokenColors.dark.bg.overlay,
           backdropFilter: 'blur(12px)',
           flexShrink: 0,
         }}
@@ -348,7 +349,7 @@ const BoardMillerView: React.FC = () => {
                 borderRadius: '8px',
                 border: 'none',
                 background: !navState.selectedListId ? 'var(--primary)' : 'transparent',
-                color: !navState.selectedListId ? 'white' : 'var(--text-main)',
+                color: !navState.selectedListId ? tokenColors.dark.text.primary : 'var(--text-main)',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: 600,
@@ -372,7 +373,7 @@ const BoardMillerView: React.FC = () => {
                     borderRadius: '8px',
                     border: 'none',
                     background: selectedList && !navState.selectedTaskId ? 'var(--primary)' : 'transparent',
-                    color: selectedList && !navState.selectedTaskId ? 'white' : 'var(--text-main)',
+                    color: selectedList && !navState.selectedTaskId ? tokenColors.dark.text.primary : 'var(--text-main)',
                     cursor: 'pointer',
                     fontSize: '14px',
                     fontWeight: 500,
@@ -395,7 +396,7 @@ const BoardMillerView: React.FC = () => {
                     padding: '6px 12px',
                     borderRadius: '8px',
                     background: 'var(--primary)',
-                    color: 'white',
+                    color: tokenColors.dark.text.primary,
                     fontSize: '14px',
                     fontWeight: 500,
                     maxWidth: '200px',

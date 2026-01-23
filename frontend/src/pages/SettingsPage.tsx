@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Lock, Eye, EyeOff, Shield, AlertCircle, Check } from "lucide-react";
 import { userService } from "../services/api";
 import toast from "react-hot-toast";
+import { typography, spacing, radius, colors, cssVars } from '../styles/tokens';
 
 const SettingsPage = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -52,21 +53,21 @@ const SettingsPage = () => {
     <div style={{
       maxWidth: "600px",
       margin: "0 auto",
-      padding: "40px 24px",
+      padding: `${spacing[10]} ${spacing[6]}`,
     }}>
       {/* Header */}
-      <div style={{ marginBottom: "40px" }}>
+      <div style={{ marginBottom: spacing[10] }}>
         <h1 style={{
-          fontSize: "28px",
-          fontWeight: "700",
-          color: "var(--text-main)",
-          marginBottom: "8px",
+          fontSize: typography.fontSize["4xl"],
+          fontWeight: typography.fontWeight.bold,
+          color: cssVars.textMain,
+          marginBottom: spacing[2],
         }}>
           Güvenlik Ayarları
         </h1>
         <p style={{
-          fontSize: "14px",
-          color: "var(--text-muted)",
+          fontSize: typography.fontSize.lg,
+          color: cssVars.textMuted,
         }}>
           Hesap güvenliğinizi yönetin
         </p>
@@ -74,43 +75,43 @@ const SettingsPage = () => {
 
       {/* Password Change Card */}
       <div style={{
-        background: "var(--bg-card)",
-        borderRadius: "var(--radius-lg)",
-        border: "1px solid var(--border)",
-        padding: "32px",
+        background: cssVars.bgCard,
+        borderRadius: radius.lg,
+        border: `1px solid ${cssVars.border}`,
+        padding: spacing[8],
       }}>
         {/* Section Header */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
-          marginBottom: "24px",
-          paddingBottom: "16px",
-          borderBottom: "1px solid var(--border)",
+          gap: spacing[3],
+          marginBottom: spacing[6],
+          paddingBottom: spacing[4],
+          borderBottom: `1px solid ${cssVars.border}`,
         }}>
           <div style={{
             width: "44px",
             height: "44px",
-            borderRadius: "12px",
-            background: "rgba(77, 171, 247, 0.1)",
+            borderRadius: radius.lg,
+            background: colors.brand.primaryLight,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}>
-            <Shield size={22} color="var(--primary)" />
+            <Shield size={22} color={colors.brand.primary} />
           </div>
           <div>
             <h2 style={{
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "var(--text-main)",
+              fontSize: typography.fontSize["2xl"],
+              fontWeight: typography.fontWeight.semibold,
+              color: cssVars.textMain,
               margin: 0,
             }}>
               Şifre Değiştir
             </h2>
             <p style={{
-              fontSize: "13px",
-              color: "var(--text-muted)",
+              fontSize: typography.fontSize.base,
+              color: cssVars.textMuted,
               margin: 0,
             }}>
               Hesabınız için yeni bir şifre belirleyin
@@ -122,20 +123,20 @@ const SettingsPage = () => {
         <form onSubmit={handleSubmit} style={{
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          gap: spacing[6],
         }}>
           {/* Current Password */}
           <div>
             <label style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
+              gap: spacing[2],
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: cssVars.textMuted,
+              marginBottom: spacing[2],
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              letterSpacing: typography.letterSpacing.wide,
             }}>
               <Lock size={14} />
               Mevcut Şifre
@@ -148,8 +149,8 @@ const SettingsPage = () => {
                 placeholder="Mevcut şifrenizi girin"
                 style={{
                   width: "100%",
-                  padding: "14px 48px 14px 16px",
-                  fontSize: "15px",
+                  padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
+                  fontSize: typography.fontSize.xl,
                   boxSizing: "border-box",
                 }}
               />
@@ -158,14 +159,14 @@ const SettingsPage = () => {
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: spacing[3],
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--text-muted)",
-                  padding: "4px",
+                  color: cssVars.textMuted,
+                  padding: spacing[1],
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -181,13 +182,13 @@ const SettingsPage = () => {
             <label style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
+              gap: spacing[2],
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: cssVars.textMuted,
+              marginBottom: spacing[2],
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              letterSpacing: typography.letterSpacing.wide,
             }}>
               <Lock size={14} />
               Yeni Şifre
@@ -200,10 +201,10 @@ const SettingsPage = () => {
                 placeholder="Yeni şifrenizi girin"
                 style={{
                   width: "100%",
-                  padding: "14px 48px 14px 16px",
-                  fontSize: "15px",
+                  padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
+                  fontSize: typography.fontSize.xl,
                   boxSizing: "border-box",
-                  borderColor: newPassword && !isNewPasswordValid ? "var(--danger)" : undefined,
+                  borderColor: newPassword && !isNewPasswordValid ? colors.semantic.danger : undefined,
                 }}
               />
               <button
@@ -211,14 +212,14 @@ const SettingsPage = () => {
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: spacing[3],
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--text-muted)",
-                  padding: "4px",
+                  color: cssVars.textMuted,
+                  padding: spacing[1],
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -231,10 +232,10 @@ const SettingsPage = () => {
               <p style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
-                marginTop: "8px",
-                fontSize: "12px",
-                color: "var(--danger)",
+                gap: spacing[1.5],
+                marginTop: spacing[2],
+                fontSize: typography.fontSize.md,
+                color: colors.semantic.danger,
               }}>
                 <AlertCircle size={14} />
                 Şifre en az 4 karakter olmalıdır
@@ -247,13 +248,13 @@ const SettingsPage = () => {
             <label style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "13px",
-              fontWeight: "600",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
+              gap: spacing[2],
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: cssVars.textMuted,
+              marginBottom: spacing[2],
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              letterSpacing: typography.letterSpacing.wide,
             }}>
               <Lock size={14} />
               Yeni Şifre (Tekrar)
@@ -266,11 +267,11 @@ const SettingsPage = () => {
                 placeholder="Yeni şifrenizi tekrar girin"
                 style={{
                   width: "100%",
-                  padding: "14px 48px 14px 16px",
-                  fontSize: "15px",
+                  padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
+                  fontSize: typography.fontSize.xl,
                   boxSizing: "border-box",
-                  borderColor: confirmPassword && !passwordsMatch ? "var(--danger)" : 
-                              confirmPassword && passwordsMatch ? "var(--success)" : undefined,
+                  borderColor: confirmPassword && !passwordsMatch ? colors.semantic.danger :
+                              confirmPassword && passwordsMatch ? colors.semantic.success : undefined,
                 }}
               />
               <button
@@ -278,14 +279,14 @@ const SettingsPage = () => {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={{
                   position: "absolute",
-                  right: "12px",
+                  right: spacing[3],
                   top: "50%",
                   transform: "translateY(-50%)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--text-muted)",
-                  padding: "4px",
+                  color: cssVars.textMuted,
+                  padding: spacing[1],
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -298,10 +299,10 @@ const SettingsPage = () => {
               <p style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
-                marginTop: "8px",
-                fontSize: "12px",
-                color: "var(--danger)",
+                gap: spacing[1.5],
+                marginTop: spacing[2],
+                fontSize: typography.fontSize.md,
+                color: colors.semantic.danger,
               }}>
                 <AlertCircle size={14} />
                 Şifreler eşleşmiyor
@@ -311,10 +312,10 @@ const SettingsPage = () => {
               <p style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
-                marginTop: "8px",
-                fontSize: "12px",
-                color: "var(--success)",
+                gap: spacing[1.5],
+                marginTop: spacing[2],
+                fontSize: typography.fontSize.md,
+                color: colors.semantic.success,
               }}>
                 <Check size={14} />
                 Şifreler eşleşiyor
@@ -324,9 +325,9 @@ const SettingsPage = () => {
 
           {/* Submit Button */}
           <div style={{
-            marginTop: "8px",
-            paddingTop: "24px",
-            borderTop: "1px solid var(--border)",
+            marginTop: spacing[2],
+            paddingTop: spacing[6],
+            borderTop: `1px solid ${cssVars.border}`,
           }}>
             <button
               type="submit"
@@ -334,9 +335,9 @@ const SettingsPage = () => {
               className="btn btn-primary"
               style={{
                 width: "100%",
-                padding: "14px",
-                fontSize: "15px",
-                fontWeight: "600",
+                padding: spacing[3.5],
+                fontSize: typography.fontSize.xl,
+                fontWeight: typography.fontWeight.semibold,
                 opacity: !canSubmit ? 0.5 : 1,
                 cursor: !canSubmit ? "not-allowed" : "pointer",
               }}
@@ -346,9 +347,9 @@ const SettingsPage = () => {
                   <div style={{
                     width: "18px",
                     height: "18px",
-                    border: "2px solid rgba(0, 0, 0, 0.2)",
-                    borderTopColor: "#000",
-                    borderRadius: "50%",
+                    border: `2px solid ${colors.dark.border.subtle}`,
+                    borderTopColor: cssVars.textInverse,
+                    borderRadius: radius.full,
                     animation: "spin 1s linear infinite",
                   }} />
                   Değiştiriliyor...
@@ -366,22 +367,22 @@ const SettingsPage = () => {
 
       {/* Info Note */}
       <div style={{
-        marginTop: "24px",
-        padding: "16px",
-        background: "rgba(77, 171, 247, 0.08)",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid rgba(77, 171, 247, 0.15)",
+        marginTop: spacing[6],
+        padding: spacing[4],
+        background: colors.brand.primaryLight,
+        borderRadius: radius.md,
+        border: `1px solid ${colors.dark.border.focus}`,
       }}>
         <p style={{
           display: "flex",
           alignItems: "flex-start",
-          gap: "12px",
+          gap: spacing[3],
           margin: 0,
-          fontSize: "13px",
-          color: "var(--text-muted)",
-          lineHeight: "1.5",
+          fontSize: typography.fontSize.base,
+          color: cssVars.textMuted,
+          lineHeight: typography.lineHeight.normal,
         }}>
-          <AlertCircle size={18} style={{ flexShrink: 0, marginTop: "2px", color: "var(--primary)" }} />
+          <AlertCircle size={18} style={{ flexShrink: 0, marginTop: "2px", color: colors.brand.primary }} />
           Şifrenizi değiştirdikten sonra mevcut oturumunuz devam edecektir. Güvenlik için tarayıcınızı kapatıp yeniden giriş yapmanızı öneririz.
         </p>
       </div>

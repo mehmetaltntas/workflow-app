@@ -18,6 +18,7 @@ import { CalendarView } from "../components/CalendarView";
 import type { FilterState } from "../components/FilterBar";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
+import { colors as tokenColors } from "../styles/tokens";
 
 const BoardDetailPage = () => {
   const { slug } = useParams();
@@ -64,8 +65,8 @@ const BoardDetailPage = () => {
       }
       try {
         setLoading(true);
-        const response = await boardService.getBoardDetails(boardSlug);
-        setBoard(response.data);
+        const board = await boardService.getBoardDetails(boardSlug);
+        setBoard(board);
       } catch (err) {
         const error = err as AxiosError;
         console.error(error);
@@ -538,7 +539,7 @@ const BoardDetailPage = () => {
             {board.labels && board.labels.length > 0 && (
               <span style={{
                 background: 'var(--primary)',
-                color: 'white',
+                color: tokenColors.dark.text.primary,
                 fontSize: '10px',
                 fontWeight: '700',
                 padding: '2px 6px',
@@ -747,7 +748,7 @@ const BoardDetailPage = () => {
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.opacity = '1';
-                    e.currentTarget.style.background = 'rgba(77, 171, 247, 0.1)';
+                    e.currentTarget.style.background = tokenColors.brand.primaryLight;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.opacity = '0.6';
@@ -759,23 +760,23 @@ const BoardDetailPage = () => {
               )}
 
               {/* List Completion Checkbox */}
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); handleListCompletionToggle(list); }}
-                style={{ 
-                  background: "none", 
-                  border: "none", 
-                  cursor: "pointer", 
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
                   display: 'flex',
                   padding: '4px',
                   borderRadius: '6px',
                   transition: 'all 0.2s',
-                  color: list.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.3)',
+                  color: list.isCompleted ? 'var(--success)' : tokenColors.dark.text.subtle,
                 }}
                 onMouseEnter={(e) => {
                   if (!list.isCompleted) e.currentTarget.style.color = 'var(--success)';
                 }}
                 onMouseLeave={(e) => {
-                  if (!list.isCompleted) e.currentTarget.style.color = 'rgba(255,255,255,0.3)';
+                  if (!list.isCompleted) e.currentTarget.style.color = tokenColors.dark.text.subtle;
                 }}
               >
                 {list.isCompleted ? <CheckSquare size={18} /> : <Square size={18} />}
@@ -821,24 +822,24 @@ const BoardDetailPage = () => {
 
             {/* Add Task UI */}
             {activeListId === list.id ? (
-              <div style={{ marginTop: "12px", padding: "14px", borderRadius: "14px", background: "rgba(0,0,0,0.25)", border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ marginTop: "12px", padding: "14px", borderRadius: "14px", background: tokenColors.dark.bg.overlay, border: `1px solid ${tokenColors.dark.border.subtle}` }}>
                 <textarea
                   autoFocus
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
                   placeholder="Yeni görev başlığı..."
-                  style={{ 
-                    width: "100%", 
-                    minHeight: "40px", 
-                    marginBottom: "10px", 
-                    background: "transparent", 
-                    border: "none", 
-                    padding: 0, 
-                    fontSize: "13px", 
-                    color: 'white', 
-                    resize: 'none', 
-                    outline: 'none', 
-                    fontWeight: '500' 
+                  style={{
+                    width: "100%",
+                    minHeight: "40px",
+                    marginBottom: "10px",
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    fontSize: "13px",
+                    color: tokenColors.dark.text.primary,
+                    resize: 'none',
+                    outline: 'none',
+                    fontWeight: '500'
                   }}
                   onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCreateTask(list.id); } }}
                 />
@@ -850,14 +851,14 @@ const BoardDetailPage = () => {
                       value={newTaskLink}
                       onChange={(e) => setNewTaskLink(e.target.value)}
                       placeholder="https://..."
-                      style={{ 
-                        width: "100%", 
+                      style={{
+                        width: "100%",
                         padding: '10px 12px',
-                        borderRadius: '10px', 
-                        background: 'rgba(255,255,255,0.03)', 
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '10px',
+                        background: tokenColors.dark.glass.bg,
+                        border: `1px solid ${tokenColors.dark.border.default}`,
                         fontSize: '12px',
-                        color: 'white',
+                        color: tokenColors.dark.text.primary,
                       }}
                     />
                   </div>
@@ -874,10 +875,10 @@ const BoardDetailPage = () => {
                         width: "100%",
                         padding: '10px 12px',
                         borderRadius: '10px',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: tokenColors.dark.glass.bg,
+                        border: `1px solid ${tokenColors.dark.border.default}`,
                         fontSize: '12px',
-                        color: 'white',
+                        color: tokenColors.dark.text.primary,
                         colorScheme: 'dark'
                       }}
                     />
@@ -888,11 +889,17 @@ const BoardDetailPage = () => {
                 {showTaskPriorityInput ? (
                   <div style={{ marginBottom: '10px', display: 'flex', gap: '4px' }}>
                     {(['NONE', 'LOW', 'MEDIUM', 'HIGH'] as Priority[]).map(p => {
-                      const colors: Record<Priority, string> = {
-                        NONE: 'rgba(255,255,255,0.4)',
-                        LOW: '#22c55e',
-                        MEDIUM: '#f59e0b',
-                        HIGH: '#ef4444'
+                      const priorityColors: Record<Priority, string> = {
+                        NONE: tokenColors.dark.text.tertiary,
+                        LOW: tokenColors.priority.low,
+                        MEDIUM: tokenColors.priority.medium,
+                        HIGH: tokenColors.priority.high
+                      };
+                      const priorityBgs: Record<Priority, string> = {
+                        NONE: tokenColors.dark.glass.bg,
+                        LOW: tokenColors.priority.lowBg,
+                        MEDIUM: tokenColors.priority.mediumBg,
+                        HIGH: tokenColors.priority.highBg
                       };
                       const labels: Record<Priority, string> = {
                         NONE: 'Yok',
@@ -909,12 +916,12 @@ const BoardDetailPage = () => {
                             padding: '6px 8px',
                             borderRadius: '8px',
                             border: newTaskPriority === p
-                              ? `1px solid ${colors[p]}`
-                              : '1px solid rgba(255,255,255,0.08)',
+                              ? `1px solid ${priorityColors[p]}`
+                              : `1px solid ${tokenColors.dark.border.default}`,
                             background: newTaskPriority === p
-                              ? `${colors[p]}20`
-                              : 'rgba(255,255,255,0.03)',
-                            color: newTaskPriority === p ? colors[p] : 'rgba(255,255,255,0.5)',
+                              ? priorityBgs[p]
+                              : tokenColors.dark.glass.bg,
+                            color: newTaskPriority === p ? priorityColors[p] : tokenColors.dark.text.tertiary,
                             fontSize: '10px',
                             fontWeight: '600',
                             cursor: 'pointer',
@@ -943,20 +950,20 @@ const BoardDetailPage = () => {
                         gap: '4px',
                         padding: '6px 10px',
                         background: 'transparent',
-                        border: '1px dashed rgba(255,255,255,0.1)',
+                        border: `1px dashed ${tokenColors.dark.border.strong}`,
                         borderRadius: '8px',
-                        color: 'rgba(255,255,255,0.4)',
+                        color: tokenColors.dark.text.tertiary,
                         fontSize: '11px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.3)';
+                        e.currentTarget.style.borderColor = tokenColors.brand.primaryLight;
                         e.currentTarget.style.color = 'var(--primary)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                        e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
+                        e.currentTarget.style.color = tokenColors.dark.text.tertiary;
                       }}
                     >
                       <LinkIcon size={11} /> Link
@@ -971,20 +978,20 @@ const BoardDetailPage = () => {
                         gap: '4px',
                         padding: '6px 10px',
                         background: 'transparent',
-                        border: '1px dashed rgba(255,255,255,0.1)',
+                        border: `1px dashed ${tokenColors.dark.border.strong}`,
                         borderRadius: '8px',
-                        color: 'rgba(255,255,255,0.4)',
+                        color: tokenColors.dark.text.tertiary,
                         fontSize: '11px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-                        e.currentTarget.style.color = '#f59e0b';
+                        e.currentTarget.style.borderColor = tokenColors.priority.mediumBg;
+                        e.currentTarget.style.color = tokenColors.priority.medium;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                        e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
+                        e.currentTarget.style.color = tokenColors.dark.text.tertiary;
                       }}
                     >
                       <Calendar size={11} /> Tarih
@@ -999,20 +1006,20 @@ const BoardDetailPage = () => {
                         gap: '4px',
                         padding: '6px 10px',
                         background: 'transparent',
-                        border: '1px dashed rgba(255,255,255,0.1)',
+                        border: `1px dashed ${tokenColors.dark.border.strong}`,
                         borderRadius: '8px',
-                        color: 'rgba(255,255,255,0.4)',
+                        color: tokenColors.dark.text.tertiary,
                         fontSize: '11px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-                        e.currentTarget.style.color = '#ef4444';
+                        e.currentTarget.style.borderColor = tokenColors.priority.highBg;
+                        e.currentTarget.style.color = tokenColors.priority.high;
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                        e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
+                        e.currentTarget.style.color = tokenColors.dark.text.tertiary;
                       }}
                     >
                       <Flag size={11} /> Öncelik
@@ -1054,17 +1061,17 @@ const BoardDetailPage = () => {
           style={{
             flex: 1,
             minWidth: 0,
-            background: "rgba(255,255,255,0.02)",
+            background: tokenColors.dark.glass.bg,
             borderRadius: "20px",
             padding: "14px",
-            border: "1px dashed rgba(255,255,255,0.08)",
+            border: `1px dashed ${tokenColors.dark.border.default}`,
             transition: "all 0.3s ease",
           }}
         >
           {isAddingList ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div className="flex justify-between items-center">
-                <span style={{ fontSize: "11px", fontWeight: "700", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: '0.08em' }}>Yeni Liste</span>
+                <span style={{ fontSize: "11px", fontWeight: "700", color: tokenColors.dark.text.tertiary, textTransform: "uppercase", letterSpacing: '0.08em' }}>Yeni Liste</span>
                 <button onClick={() => { setIsAddingList(false); setShowListLinkInput(false); setNewListLink(''); }} className="text-gray-600 hover:text-white"><X size={16} /></button>
               </div>
               <input
@@ -1072,28 +1079,28 @@ const BoardDetailPage = () => {
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
                 placeholder="Liste adı..."
-                style={{ 
-                  width: "100%", 
-                  borderRadius: '10px', 
-                  background: 'rgba(255,255,255,0.04)', 
-                  border: '1px solid rgba(255,255,255,0.06)', 
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
                   padding: '12px',
                   fontSize: '13px',
                 }}
                 onKeyDown={(e) => { if(e.key === 'Enter') handleCreateList(); }}
               />
-              
+
               {/* Link Input Toggle */}
               {showListLinkInput ? (
                 <input
                   value={newListLink}
                   onChange={(e) => setNewListLink(e.target.value)}
                   placeholder="https://..."
-                  style={{ 
-                    width: "100%", 
-                    borderRadius: '10px', 
-                    background: 'rgba(255,255,255,0.04)', 
-                    border: '1px solid rgba(255,255,255,0.06)', 
+                  style={{
+                    width: "100%",
+                    borderRadius: '10px',
+                    background: tokenColors.dark.bg.hover,
+                    border: `1px solid ${tokenColors.dark.border.subtle}`,
                     padding: '12px',
                     fontSize: '13px',
                   }}
@@ -1107,33 +1114,33 @@ const BoardDetailPage = () => {
                     gap: '6px',
                     padding: '10px 12px',
                     background: 'transparent',
-                    border: '1px dashed rgba(255,255,255,0.1)',
+                    border: `1px dashed ${tokenColors.dark.border.strong}`,
                     borderRadius: '10px',
-                    color: 'rgba(255,255,255,0.4)',
+                    color: tokenColors.dark.text.tertiary,
                     fontSize: '12px',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.3)';
+                    e.currentTarget.style.borderColor = tokenColors.brand.primaryLight;
                     e.currentTarget.style.color = 'var(--primary)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                    e.currentTarget.style.borderColor = tokenColors.dark.border.strong;
+                    e.currentTarget.style.color = tokenColors.dark.text.tertiary;
                   }}
                 >
                   <LinkIcon size={14} /> Link Ekle
                 </button>
               )}
-              
+
               <button onClick={handleCreateList} className="btn btn-primary font-semibold" style={{ width: '100%', borderRadius: '10px', height: '42px' }}>Oluştur</button>
             </div>
           ) : (
             <button
               onClick={() => setIsAddingList(true)}
               className="btn btn-ghost hover:bg-white/5"
-              style={{ width: "100%", justifyContent: "center", height: "48px", gap: "10px", color: "rgba(255,255,255,0.4)", fontWeight: "600", borderRadius: '12px', fontSize: '13px' }}
+              style={{ width: "100%", justifyContent: "center", height: "48px", gap: "10px", color: tokenColors.dark.text.tertiary, fontWeight: "600", borderRadius: '12px', fontSize: '13px' }}
             >
               <Plus size={18} /> Yeni Liste
             </button>

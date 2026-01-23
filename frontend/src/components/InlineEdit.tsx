@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { colors, cssVars } from "../styles/tokens";
 
 interface Props {
   text: string;
@@ -46,9 +47,9 @@ export const InlineEdit = ({
           }
         }}
         style={{
-          background: "#0d0e10",
-          color: "white",
-          border: "1px solid #4dabf7",
+          background: cssVars.bgBody,
+          color: cssVars.textMain,
+          border: `1px solid ${colors.brand.primary}`,
           padding: "4px 10px",
           borderRadius: "10px",
           fontSize: fontSize,
@@ -78,7 +79,7 @@ export const InlineEdit = ({
         maxWidth: "100%"
       }}
       onMouseEnter={(e) =>
-        (e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)")
+        (e.currentTarget.style.background = colors.dark.bg.hover)
       }
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       title="Çift tıklayarak düzenle"

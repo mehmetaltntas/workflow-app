@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check, Flag, ListChecks, Plus, Trash2, Square, CheckSquare } from "lucide-react";
 import type { Task, Label, Priority, Subtask } from "../types";
 import { subtaskService } from "../services/api";
+import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 
 interface TaskEditModalProps {
   task: Task;
@@ -11,10 +12,10 @@ interface TaskEditModalProps {
 }
 
 const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
-  { value: 'NONE', label: 'Yok', color: 'rgba(255,255,255,0.4)' },
-  { value: 'LOW', label: 'Düşük', color: '#22c55e' },
-  { value: 'MEDIUM', label: 'Orta', color: '#f59e0b' },
-  { value: 'HIGH', label: 'Yüksek', color: '#ef4444' },
+  { value: 'NONE', label: 'Yok', color: colors.dark.text.tertiary },
+  { value: 'LOW', label: 'Düşük', color: colors.priority.low },
+  { value: 'MEDIUM', label: 'Orta', color: colors.priority.medium },
+  { value: 'HIGH', label: 'Yüksek', color: colors.priority.high },
 ];
 
 export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels = [], onClose, onSave }) => {
@@ -42,11 +43,11 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
     try {
-      const response = await subtaskService.createSubtask({
+      const newSubtask = await subtaskService.createSubtask({
         title: newSubtaskTitle.trim(),
         taskId: task.id,
       });
-      setSubtasks([...subtasks, response.data]);
+      setSubtasks([...subtasks, newSubtask]);
       setNewSubtaskTitle("");
       setIsAddingSubtask(false);
     } catch (error) {
@@ -56,8 +57,8 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
 
   const handleToggleSubtask = async (subtaskId: number) => {
     try {
-      const response = await subtaskService.toggleSubtask(subtaskId);
-      setSubtasks(subtasks.map(s => s.id === subtaskId ? response.data : s));
+      const updatedSubtask = await subtaskService.toggleSubtask(subtaskId);
+      setSubtasks(subtasks.map(s => s.id === subtaskId ? updatedSubtask : s));
     } catch (error) {
       console.error("Alt görev güncellenemedi:", error);
     }
@@ -97,60 +98,60 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: colors.dark.bg.overlay,
       backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: zIndex.modal,
     }}>
-      <div 
+      <div
         className="modal-content glass"
         style={{
           width: "550px",
-          borderRadius: "20px",
-          padding: "32px",
+          borderRadius: radius['2xl'],
+          padding: spacing[8],
           display: "flex",
           flexDirection: "column",
-          gap: "24px",
+          gap: spacing[6],
           position: "relative",
           background: "var(--bg-card)",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          boxShadow: shadows.modal,
           border: '1px solid var(--border)',
-          animation: 'modalFadeIn 0.3s ease-out'
+          animation: `modalFadeIn ${animation.duration.slow} ${animation.easing.smooth}`
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "var(--text-main)" }}>
-            <div style={{ padding: '10px', backgroundColor: 'rgba(var(--primary-rgb), 0.1)', borderRadius: '12px' }}>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[3], color: "var(--text-main)" }}>
+            <div style={{ padding: spacing[2.5], backgroundColor: 'rgba(var(--primary-rgb), 0.1)', borderRadius: radius.lg }}>
               <Type size={20} className="text-primary" />
             </div>
-            <h3 style={{ margin: 0, fontSize: "22px", fontWeight: "700", letterSpacing: '-0.02em' }}>Görevi Düzenle</h3>
+            <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Görevi Düzenle</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={24} />
           </button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
           <div className="form-group">
-            <label style={{ display: "block", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Başlık</label>
-            <input 
+            <label style={{ display: "block", fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>Başlık</label>
+            <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Görev başlığı..."
               autoFocus
-              style={{ 
+              style={{
                 width: "100%",
-                padding: '12px 16px',
-                borderRadius: '12px',
+                padding: `${spacing[3]} ${spacing[4]}`,
+                borderRadius: radius.lg,
                 border: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.03)',
-                color: 'white',
-                fontSize: '15px',
+                background: colors.dark.glass.bg,
+                color: cssVars.textMain,
+                fontSize: typography.fontSize.xl,
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: `border-color ${animation.duration.normal}`
               }}
               onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
               onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
@@ -160,7 +161,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
           {/* Description field removed - only title and link editable */}
 
           <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
               <LinkIcon size={14} /> Link
             </label>
             <div style={{ position: 'relative' }}>
@@ -171,14 +172,14 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                 placeholder="https://..."
                 style={{
                   width: "100%",
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  padding: `${spacing[3]} ${spacing[4]}`,
+                  borderRadius: radius.lg,
                   border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.03)',
+                  background: colors.dark.glass.bg,
                   color: 'var(--primary)',
-                  fontSize: '14px',
+                  fontSize: typography.fontSize.lg,
                   outline: 'none',
-                  fontWeight: '500'
+                  fontWeight: typography.fontWeight.medium
                 }}
                 onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
                 onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
@@ -187,24 +188,24 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
           </div>
 
           <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
               <Calendar size={14} /> Son Tarih
             </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: spacing[2] }}>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 style={{
                   flex: 1,
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  padding: `${spacing[3]} ${spacing[4]}`,
+                  borderRadius: radius.lg,
                   border: '1px solid var(--border)',
-                  background: 'rgba(255,255,255,0.03)',
-                  color: 'white',
-                  fontSize: '14px',
+                  background: colors.dark.glass.bg,
+                  color: cssVars.textMain,
+                  fontSize: typography.fontSize.lg,
                   outline: 'none',
-                  fontWeight: '500',
+                  fontWeight: typography.fontWeight.medium,
                   colorScheme: 'dark'
                 }}
                 onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
@@ -215,14 +216,14 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                   type="button"
                   onClick={() => setDueDate("")}
                   style={{
-                    padding: '12px 16px',
-                    borderRadius: '12px',
+                    padding: `${spacing[3]} ${spacing[4]}`,
+                    borderRadius: radius.lg,
                     border: '1px solid var(--border)',
-                    background: 'rgba(255,255,255,0.03)',
+                    background: colors.dark.glass.bg,
                     color: 'var(--text-muted)',
-                    fontSize: '12px',
+                    fontSize: typography.fontSize.md,
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: `all ${animation.duration.normal}`
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = 'var(--danger)';
@@ -241,10 +242,10 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
 
           {/* Priority Section */}
           <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
               <Flag size={14} /> Öncelik
             </label>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: spacing[2] }}>
               {PRIORITY_OPTIONS.map(option => (
                 <button
                   key={option.value}
@@ -255,22 +256,22 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '6px',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
+                    gap: spacing[1.5],
+                    padding: `${spacing[2.5]} ${spacing[3]}`,
+                    borderRadius: radius.md,
                     border: priority === option.value
                       ? `1px solid ${option.color}`
-                      : '1px solid rgba(255,255,255,0.1)',
+                      : `1px solid ${cssVars.borderStrong}`,
                     background: priority === option.value
                       ? `${option.color}20`
-                      : 'rgba(255,255,255,0.03)',
+                      : colors.dark.glass.bg,
                     color: priority === option.value
                       ? option.color
-                      : 'rgba(255,255,255,0.6)',
-                    fontSize: '12px',
-                    fontWeight: '600',
+                      : colors.dark.text.secondary,
+                    fontSize: typography.fontSize.md,
+                    fontWeight: typography.fontWeight.semibold,
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    transition: `all ${animation.duration.normal}`,
                   }}
                   onMouseEnter={(e) => {
                     if (priority !== option.value) {
@@ -280,8 +281,8 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                   }}
                   onMouseLeave={(e) => {
                     if (priority !== option.value) {
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                      e.currentTarget.style.borderColor = cssVars.borderStrong;
+                      e.currentTarget.style.background = colors.dark.glass.bg;
                     }
                   }}
                 >
@@ -295,10 +296,10 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
           {/* Labels Section */}
           {boardLabels.length > 0 && (
             <div className="form-group">
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
                 <Tag size={14} /> Etiketler
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
                 {boardLabels.map(label => {
                   const isSelected = selectedLabelIds.includes(label.id);
                   return (
@@ -309,16 +310,16 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        padding: '8px 12px',
-                        borderRadius: '10px',
-                        border: `1px solid ${isSelected ? label.color : 'rgba(255,255,255,0.1)'}`,
-                        background: isSelected ? `${label.color}25` : 'rgba(255,255,255,0.03)',
-                        color: isSelected ? label.color : 'rgba(255,255,255,0.6)',
-                        fontSize: '12px',
-                        fontWeight: '600',
+                        gap: spacing[1.5],
+                        padding: `${spacing[2]} ${spacing[3]}`,
+                        borderRadius: radius.md,
+                        border: `1px solid ${isSelected ? label.color : cssVars.borderStrong}`,
+                        background: isSelected ? `${label.color}25` : colors.dark.glass.bg,
+                        color: isSelected ? label.color : colors.dark.text.secondary,
+                        fontSize: typography.fontSize.md,
+                        fontWeight: typography.fontWeight.semibold,
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        transition: `all ${animation.duration.normal}`,
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
@@ -328,8 +329,8 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                       }}
                       onMouseLeave={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                          e.currentTarget.style.borderColor = cssVars.borderStrong;
+                          e.currentTarget.style.background = colors.dark.glass.bg;
                         }
                       }}
                     >
@@ -344,15 +345,15 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
 
           {/* Subtasks Section */}
           <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: '700', color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
               <ListChecks size={14} /> Alt Görevler
               {subtasks.length > 0 && (
                 <span style={{
-                  fontSize: '10px',
-                  background: 'rgba(255,255,255,0.1)',
-                  padding: '2px 6px',
-                  borderRadius: '6px',
-                  fontWeight: '600'
+                  fontSize: typography.fontSize.xs,
+                  background: cssVars.borderStrong,
+                  padding: `${spacing[0.5]} ${spacing[1.5]}`,
+                  borderRadius: radius.sm,
+                  fontWeight: typography.fontWeight.semibold
                 }}>
                   {subtasks.filter(s => s.isCompleted).length}/{subtasks.length}
                 </span>
@@ -360,19 +361,19 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
             </label>
 
             {/* Subtask List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: subtasks.length > 0 ? '10px' : '0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1.5], marginBottom: subtasks.length > 0 ? spacing[2.5] : '0' }}>
               {subtasks.map(subtask => (
                 <div
                   key={subtask.id}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    background: subtask.isCompleted ? 'rgba(81, 207, 102, 0.08)' : 'rgba(255,255,255,0.03)',
-                    border: subtask.isCompleted ? '1px solid rgba(81, 207, 102, 0.15)' : '1px solid rgba(255,255,255,0.06)',
-                    transition: 'all 0.2s',
+                    gap: spacing[2.5],
+                    padding: `${spacing[2.5]} ${spacing[3]}`,
+                    borderRadius: radius.md,
+                    background: subtask.isCompleted ? colors.semantic.successLight : colors.dark.glass.bg,
+                    border: subtask.isCompleted ? `1px solid ${colors.semantic.success}26` : `1px solid ${colors.dark.border.subtle}`,
+                    transition: `all ${animation.duration.normal}`,
                   }}
                   className="group/subtask"
                 >
@@ -383,18 +384,18 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      padding: '2px',
+                      padding: spacing[0.5],
                       display: 'flex',
-                      color: subtask.isCompleted ? 'var(--success)' : 'rgba(255,255,255,0.4)',
-                      transition: 'color 0.2s',
+                      color: subtask.isCompleted ? 'var(--success)' : colors.dark.text.tertiary,
+                      transition: `color ${animation.duration.normal}`,
                     }}
                   >
                     {subtask.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}
                   </button>
                   <span style={{
                     flex: 1,
-                    fontSize: '13px',
-                    color: subtask.isCompleted ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)',
+                    fontSize: typography.fontSize.base,
+                    color: subtask.isCompleted ? colors.dark.text.tertiary : colors.dark.text.secondary,
                     textDecoration: subtask.isCompleted ? 'line-through' : 'none',
                   }}>
                     {subtask.title}
@@ -406,20 +407,20 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      padding: '4px',
+                      padding: spacing[1],
                       display: 'flex',
-                      color: 'rgba(255,255,255,0.3)',
+                      color: colors.dark.text.subtle,
                       opacity: 0,
-                      transition: 'all 0.2s',
-                      borderRadius: '4px',
+                      transition: `all ${animation.duration.normal}`,
+                      borderRadius: radius.sm,
                     }}
                     className="group-hover/subtask:!opacity-100"
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = 'var(--danger)';
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                      e.currentTarget.style.background = colors.semantic.dangerLight;
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.3)';
+                      e.currentTarget.style.color = colors.dark.text.subtle;
                       e.currentTarget.style.background = 'none';
                     }}
                   >
@@ -431,7 +432,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
 
             {/* Add Subtask */}
             {isAddingSubtask ? (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: spacing[2] }}>
                 <input
                   autoFocus
                   value={newSubtaskTitle}
@@ -439,12 +440,12 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                   placeholder="Alt görev başlığı..."
                   style={{
                     flex: 1,
-                    padding: '10px 12px',
-                    borderRadius: '10px',
+                    padding: `${spacing[2.5]} ${spacing[3]}`,
+                    borderRadius: radius.md,
                     border: '1px solid var(--border)',
-                    background: 'rgba(255,255,255,0.03)',
-                    color: 'white',
-                    fontSize: '13px',
+                    background: colors.dark.glass.bg,
+                    color: cssVars.textMain,
+                    fontSize: typography.fontSize.base,
                     outline: 'none',
                   }}
                   onKeyDown={(e) => {
@@ -462,7 +463,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                   onClick={handleAddSubtask}
                   disabled={!newSubtaskTitle.trim()}
                   className="btn btn-primary"
-                  style={{ padding: '10px 16px', fontSize: '12px', fontWeight: '600' }}
+                  style={{ padding: `${spacing[2.5]} ${spacing[4]}`, fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.semibold }}
                 >
                   Ekle
                 </button>
@@ -473,7 +474,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                     setNewSubtaskTitle("");
                   }}
                   className="btn btn-ghost"
-                  style={{ padding: '10px' }}
+                  style={{ padding: spacing[2.5] }}
                 >
                   <X size={16} />
                 </button>
@@ -485,27 +486,27 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  border: '1px dashed rgba(255,255,255,0.15)',
+                  gap: spacing[1.5],
+                  padding: `${spacing[2.5]} ${spacing[3.5]}`,
+                  borderRadius: radius.md,
+                  border: `1px dashed ${cssVars.borderStrong}`,
                   background: 'transparent',
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: '12px',
-                  fontWeight: '600',
+                  color: colors.dark.text.tertiary,
+                  fontSize: typography.fontSize.md,
+                  fontWeight: typography.fontWeight.semibold,
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
+                  transition: `all ${animation.duration.normal}`,
                   width: '100%',
                   justifyContent: 'center',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(77, 171, 247, 0.4)';
+                  e.currentTarget.style.borderColor = colors.brand.primary + '66';
                   e.currentTarget.style.color = 'var(--primary)';
-                  e.currentTarget.style.background = 'rgba(77, 171, 247, 0.05)';
+                  e.currentTarget.style.background = colors.brand.primaryLight;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
+                  e.currentTarget.style.borderColor = cssVars.borderStrong;
+                  e.currentTarget.style.color = colors.dark.text.tertiary;
                   e.currentTarget.style.background = 'transparent';
                 }}
               >
@@ -515,24 +516,24 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", marginTop: "12px" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: spacing[4], marginTop: spacing[3] }}>
           <button
             onClick={onClose}
             className="btn btn-ghost"
-            style={{ padding: '12px 24px', fontWeight: '600' }}
+            style={{ padding: `${spacing[3]} ${spacing[6]}`, fontWeight: typography.fontWeight.semibold }}
           >
             İptal
           </button>
           <button
-            onClick={handleSave} 
+            onClick={handleSave}
             className="btn btn-primary"
             disabled={isSaving || !title.trim()}
-            style={{ 
-              padding: '12px 28px', 
-              fontWeight: '700',
+            style={{
+              padding: `${spacing[3]} ${spacing[7]}`,
+              fontWeight: typography.fontWeight.bold,
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              gap: spacing[2.5],
               boxShadow: '0 4px 14px 0 rgba(var(--primary-rgb), 0.39)'
             }}
           >

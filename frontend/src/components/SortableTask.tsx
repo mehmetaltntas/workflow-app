@@ -3,7 +3,8 @@ import { CheckSquare, Square, Link as LinkIcon, MessageSquare, Calendar, Flag, L
 import type { Task, TaskList, Priority } from "../types";
 import { ActionMenu } from "./ActionMenu";
 import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors } from "../utils/themeColors";
+import { getThemeColors, cssVars, colors } from "../utils/themeColors";
+import { typography, spacing, radius } from "../styles/tokens";
 
 interface TaskCardProps {
   task: Task;
@@ -18,11 +19,11 @@ interface TaskCardProps {
 const getPriorityInfo = (priority: Priority | undefined): { label: string; color: string; bgColor: string } => {
   switch (priority) {
     case 'HIGH':
-      return { label: 'Yüksek', color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.15)' };
+      return { label: 'Yüksek', color: colors.priority.high, bgColor: colors.priority.highBg };
     case 'MEDIUM':
-      return { label: 'Orta', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)' };
+      return { label: 'Orta', color: colors.priority.medium, bgColor: colors.priority.mediumBg };
     case 'LOW':
-      return { label: 'Düşük', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)' };
+      return { label: 'Düşük', color: colors.priority.low, bgColor: colors.priority.lowBg };
     default:
       return { label: '', color: '', bgColor: '' };
   }
@@ -42,23 +43,23 @@ const getDueDateStatus = (dueDate: string | null | undefined): { status: 'overdu
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return { status: 'overdue', label: `${Math.abs(diffDays)} gün gecikti`, color: 'var(--danger)' };
+    return { status: 'overdue', label: `${Math.abs(diffDays)} gün gecikti`, color: cssVars.danger };
   } else if (diffDays === 0) {
-    return { status: 'today', label: 'Bugün', color: '#f59e0b' }; // Turuncu
+    return { status: 'today', label: 'Bugün', color: colors.priority.medium }; // Turuncu
   } else if (diffDays === 1) {
-    return { status: 'tomorrow', label: 'Yarın', color: '#f59e0b' }; // Turuncu
+    return { status: 'tomorrow', label: 'Yarın', color: colors.priority.medium }; // Turuncu
   } else if (diffDays <= 7) {
-    return { status: 'upcoming', label: `${diffDays} gün`, color: 'var(--primary)' };
+    return { status: 'upcoming', label: `${diffDays} gün`, color: cssVars.primary };
   } else {
     // Format date as "15 Oca" style
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-    return { status: 'upcoming', label: due.toLocaleDateString('tr-TR', options), color: 'rgba(255,255,255,0.4)' };
+    return { status: 'upcoming', label: due.toLocaleDateString('tr-TR', options), color: colors.dark.text.subtle };
   }
 };
 
 export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggleComplete }: TaskCardProps) => {
   const { theme } = useTheme();
-  const colors = getThemeColors(theme);
+  const themeColors = getThemeColors(theme);
 
   // Due date status hesapla (memoized)
   const dueDateInfo = useMemo(() => getDueDateStatus(task.dueDate), [task.dueDate]);
@@ -77,13 +78,13 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
   return (
     <div
       style={{
-        background: task.isCompleted ? colors.taskCompletedBg : colors.taskBg,
-        padding: "12px 14px",
-        borderRadius: "14px",
-        border: `1px solid ${task.isCompleted ? colors.taskCompletedBorder : colors.taskBorder}`,
+        background: task.isCompleted ? themeColors.taskCompletedBg : themeColors.taskBg,
+        padding: `${spacing[3]} ${spacing[3.5]}`,
+        borderRadius: radius.lg,
+        border: `1px solid ${task.isCompleted ? themeColors.taskCompletedBorder : themeColors.taskBorder}`,
         display: 'flex',
         alignItems: 'center',
-        gap: '10px',
+        gap: spacing[2.5],
       }}
       className="group/task"
     >
@@ -101,15 +102,15 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Labels */}
         {task.labels && task.labels.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[1], marginBottom: spacing[1.5] }}>
             {task.labels.map(label => (
               <span
                 key={label.id}
                 style={{
                   fontSize: '9px',
-                  fontWeight: '600',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
+                  fontWeight: typography.fontWeight.semibold,
+                  padding: `${spacing[0.5]} ${spacing[1.5]}`,
+                  borderRadius: radius.sm,
                   background: label.color + '25', // 25 = 15% opacity in hex
                   color: label.color,
                   border: `1px solid ${label.color}40`, // 40 = 25% opacity
@@ -121,21 +122,21 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           </div>
         )}
         <div className="task-title" style={{
-          fontSize: "13px",
-          fontWeight: "500",
-          lineHeight: "1.5",
-          color: task.isCompleted ? colors.textMuted : colors.textPrimary
+          fontSize: typography.fontSize.base,
+          fontWeight: typography.fontWeight.medium,
+          lineHeight: typography.lineHeight.normal,
+          color: task.isCompleted ? themeColors.textMuted : themeColors.textPrimary
         }}>
           {task.title}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: task.description || dueDateInfo.status !== 'none' || priorityInfo.color || subtaskProgress ? '4px' : '0', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], marginTop: task.description || dueDateInfo.status !== 'none' || priorityInfo.color || subtaskProgress ? spacing[1] : '0', flexWrap: 'wrap' }}>
           {task.description && (
             <div style={{
-              fontSize: "11px",
-              color: colors.textSubtle,
+              fontSize: typography.fontSize.sm,
+              color: themeColors.textSubtle,
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: spacing[1]
             }}>
               <MessageSquare size={10} />
               <span>Not var</span>
@@ -144,19 +145,19 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           {/* Subtasks Progress Badge */}
           {subtaskProgress && !task.isCompleted && (
             <div style={{
-              fontSize: "10px",
-              fontWeight: "600",
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
               color: subtaskProgress.completed === subtaskProgress.total
-                ? 'var(--success)'
-                : colors.textTertiary,
+                ? cssVars.success
+                : themeColors.textTertiary,
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              padding: '2px 6px',
-              borderRadius: '6px',
+              gap: spacing[1],
+              padding: `${spacing[0.5]} ${spacing[1.5]}`,
+              borderRadius: spacing[1.5],
               background: subtaskProgress.completed === subtaskProgress.total
-                ? 'rgba(81, 207, 102, 0.15)'
-                : colors.bgHover,
+                ? colors.semantic.successLight
+                : themeColors.bgHover,
             }}>
               <ListChecks size={10} />
               <span>{subtaskProgress.completed}/{subtaskProgress.total}</span>
@@ -165,14 +166,14 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           {/* Priority Badge */}
           {priorityInfo.color && !task.isCompleted && (
             <div style={{
-              fontSize: "10px",
-              fontWeight: "600",
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
               color: priorityInfo.color,
               display: 'flex',
               alignItems: 'center',
               gap: '3px',
-              padding: '2px 6px',
-              borderRadius: '6px',
+              padding: `${spacing[0.5]} ${spacing[1.5]}`,
+              borderRadius: spacing[1.5],
               background: priorityInfo.bgColor,
             }}>
               <Flag size={9} />
@@ -182,19 +183,19 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           {/* Due Date Badge */}
           {dueDateInfo.status !== 'none' && !task.isCompleted && (
             <div style={{
-              fontSize: "10px",
-              fontWeight: "600",
-              color: dueDateInfo.status === 'upcoming' && !dueDateInfo.color.startsWith('var') ? colors.textMuted : dueDateInfo.color,
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
+              color: dueDateInfo.status === 'upcoming' && !dueDateInfo.color.startsWith('var') ? themeColors.textMuted : dueDateInfo.color,
               display: 'flex',
               alignItems: 'center',
               gap: '3px',
-              padding: '2px 6px',
-              borderRadius: '6px',
+              padding: `${spacing[0.5]} ${spacing[1.5]}`,
+              borderRadius: spacing[1.5],
               background: dueDateInfo.status === 'overdue'
-                ? 'rgba(239, 68, 68, 0.15)'
+                ? colors.priority.highBg
                 : dueDateInfo.status === 'today' || dueDateInfo.status === 'tomorrow'
-                  ? 'rgba(245, 158, 11, 0.15)'
-                  : colors.bgHover,
+                  ? colors.priority.mediumBg
+                  : themeColors.bgHover,
             }}>
               <Calendar size={9} />
               <span>{dueDateInfo.label}</span>
@@ -212,11 +213,11 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           onClick={(e) => e.stopPropagation()}
           className="task-hover-element"
           style={{
-            color: "var(--primary)",
+            color: cssVars.primary,
             display: 'flex',
             alignItems: 'center',
-            padding: '4px',
-            borderRadius: '6px',
+            padding: spacing[1],
+            borderRadius: spacing[1.5],
             transition: 'all 0.2s',
           }}
         >
@@ -233,10 +234,10 @@ export const SortableTask = memo(({ task, list, index, onEdit, onDelete, onToggl
           border: "none",
           cursor: "pointer",
           display: 'flex',
-          padding: '4px',
-          borderRadius: '6px',
+          padding: spacing[1],
+          borderRadius: spacing[1.5],
           transition: 'all 0.2s',
-          color: task.isCompleted ? 'var(--success)' : colors.textTertiary,
+          color: task.isCompleted ? cssVars.success : themeColors.textTertiary,
         }}
       >
         {task.isCompleted ? <CheckSquare size={16} /> : <Square size={16} />}

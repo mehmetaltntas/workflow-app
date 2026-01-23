@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const LandingPage = () => {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        background: `linear-gradient(135deg, ${cssVars.bgBody} 0%, #16213e 50%, #0f3460 100%)`,
       }}
     >
       {/* Header */}
@@ -86,7 +87,7 @@ const LandingPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "20px 40px",
+          padding: `${spacing[5]} ${spacing[10]}`,
           maxWidth: "1400px",
           margin: "0 auto",
         }}
@@ -95,15 +96,15 @@ const LandingPage = () => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
+            gap: spacing[3],
           }}
         >
           <div
             style={{
-              width: "40px",
-              height: "40px",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              borderRadius: "10px",
+              width: spacing[10],
+              height: spacing[10],
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+              borderRadius: radius.md,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -113,39 +114,39 @@ const LandingPage = () => {
               width="24"
               height="24"
               viewBox="0 0 24 24"
-              fill="white"
+              fill={cssVars.textInverse}
             >
               <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
           </div>
           <span
             style={{
-              fontSize: "24px",
-              fontWeight: "700",
-              color: "#fff",
-              letterSpacing: "-0.5px",
+              fontSize: typography.fontSize["4xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
+              letterSpacing: typography.letterSpacing.tight,
             }}
           >
             WorkFlow
           </span>
         </div>
 
-        <div style={{ display: "flex", gap: "16px" }}>
+        <div style={{ display: "flex", gap: spacing[4] }}>
           <button
             onClick={() => navigate("/login")}
             style={{
-              padding: "10px 24px",
-              borderRadius: "8px",
-              border: "1px solid rgba(255,255,255,0.2)",
+              padding: `${spacing[2.5]} ${spacing[6]}`,
+              borderRadius: radius.md,
+              border: `1px solid ${cssVars.borderStrong}`,
               background: "transparent",
-              color: "#fff",
-              fontSize: "15px",
-              fontWeight: "500",
+              color: cssVars.textMain,
+              fontSize: typography.fontSize.xl,
+              fontWeight: typography.fontWeight.medium,
               cursor: "pointer",
               transition: "all 0.2s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+              e.currentTarget.style.background = colors.dark.bg.hover;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
@@ -156,19 +157,19 @@ const LandingPage = () => {
           <button
             onClick={() => navigate("/register")}
             style={{
-              padding: "10px 24px",
-              borderRadius: "8px",
+              padding: `${spacing[2.5]} ${spacing[6]}`,
+              borderRadius: radius.md,
               border: "none",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "#fff",
-              fontSize: "15px",
-              fontWeight: "600",
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+              color: cssVars.textMain,
+              fontSize: typography.fontSize.xl,
+              fontWeight: typography.fontWeight.semibold,
               cursor: "pointer",
               transition: "all 0.2s",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 10px 20px rgba(102, 126, 234, 0.3)";
+              e.currentTarget.style.boxShadow = shadows.lg;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
@@ -185,25 +186,25 @@ const LandingPage = () => {
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: "80px 40px",
+          padding: `${spacing[20]} ${spacing[10]}`,
           textAlign: "center",
         }}
       >
         <h1
           style={{
             fontSize: "clamp(36px, 5vw, 64px)",
-            fontWeight: "800",
-            color: "#fff",
-            lineHeight: "1.1",
-            marginBottom: "24px",
-            letterSpacing: "-1px",
+            fontWeight: typography.fontWeight.extrabold,
+            color: cssVars.textMain,
+            lineHeight: typography.lineHeight.tight,
+            marginBottom: spacing[6],
+            letterSpacing: typography.letterSpacing.tighter,
           }}
         >
           Projelerinizi
           <br />
           <span
             style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -215,10 +216,10 @@ const LandingPage = () => {
         <p
           style={{
             fontSize: "clamp(16px, 2vw, 20px)",
-            color: "rgba(255,255,255,0.7)",
+            color: colors.dark.text.secondary,
             maxWidth: "600px",
-            margin: "0 auto 48px",
-            lineHeight: "1.6",
+            margin: `0 auto ${spacing[12]}`,
+            lineHeight: typography.lineHeight.relaxed,
           }}
         >
           WorkFlow ile gorevlerinizi organize edin, ekibinizle isbirligi yapin ve
@@ -228,24 +229,24 @@ const LandingPage = () => {
         <button
           onClick={() => navigate("/register")}
           style={{
-            padding: "16px 48px",
-            borderRadius: "12px",
+            padding: `${spacing[4]} ${spacing[12]}`,
+            borderRadius: radius.lg,
             border: "none",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "#fff",
-            fontSize: "18px",
-            fontWeight: "600",
+            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+            color: cssVars.textMain,
+            fontSize: typography.fontSize["2xl"],
+            fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
             transition: "all 0.3s",
-            boxShadow: "0 10px 30px rgba(102, 126, 234, 0.3)",
+            boxShadow: shadows.lg,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-3px)";
-            e.currentTarget.style.boxShadow = "0 15px 40px rgba(102, 126, 234, 0.4)";
+            e.currentTarget.style.boxShadow = shadows.xl;
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 10px 30px rgba(102, 126, 234, 0.3)";
+            e.currentTarget.style.boxShadow = shadows.lg;
           }}
         >
           Ucretsiz Baslayiniz
@@ -257,35 +258,35 @@ const LandingPage = () => {
             marginTop: "120px",
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "32px",
+            gap: spacing[8],
           }}
         >
           {features.map((feature, index) => (
             <div
               key={index}
               style={{
-                background: "rgba(255,255,255,0.05)",
+                background: colors.dark.bg.hover,
                 backdropFilter: "blur(10px)",
-                borderRadius: "16px",
-                padding: "40px 32px",
-                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: radius.xl,
+                padding: `${spacing[10]} ${spacing[8]}`,
+                border: `1px solid ${cssVars.border}`,
                 transition: "all 0.3s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)";
+                e.currentTarget.style.background = colors.dark.bg.active;
+                e.currentTarget.style.boxShadow = shadows.xl;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                e.currentTarget.style.background = colors.dark.bg.hover;
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
               <div
                 style={{
-                  color: "#667eea",
-                  marginBottom: "20px",
+                  color: colors.brand.primary,
+                  marginBottom: spacing[5],
                   display: "flex",
                   justifyContent: "center",
                 }}
@@ -294,19 +295,19 @@ const LandingPage = () => {
               </div>
               <h3
                 style={{
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  color: "#fff",
-                  marginBottom: "12px",
+                  fontSize: typography.fontSize["3xl"],
+                  fontWeight: typography.fontWeight.bold,
+                  color: cssVars.textMain,
+                  marginBottom: spacing[3],
                 }}
               >
                 {feature.title}
               </h3>
               <p
                 style={{
-                  fontSize: "15px",
-                  color: "rgba(255,255,255,0.6)",
-                  lineHeight: "1.6",
+                  fontSize: typography.fontSize.xl,
+                  color: colors.dark.text.secondary,
+                  lineHeight: typography.lineHeight.relaxed,
                 }}
               >
                 {feature.description}
@@ -319,10 +320,10 @@ const LandingPage = () => {
       {/* Footer */}
       <footer
         style={{
-          padding: "40px",
+          padding: spacing[10],
           textAlign: "center",
-          color: "rgba(255,255,255,0.4)",
-          fontSize: "14px",
+          color: colors.dark.text.subtle,
+          fontSize: typography.fontSize.lg,
         }}
       >
         &copy; 2025 WorkFlow. Tum haklari saklidir.

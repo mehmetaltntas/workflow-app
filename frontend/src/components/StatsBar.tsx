@@ -3,6 +3,7 @@ import { CheckCircle2, Clock, AlertTriangle, ListTodo, TrendingUp, Calendar } fr
 import type { Board } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
+import { colors as tokenColors } from "../styles/tokens";
 
 interface StatsBarProps {
   board: Board;
@@ -120,7 +121,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
                 width: `${stats.progressPercent}%`,
                 background: stats.progressPercent === 100
                   ? "var(--success)"
-                  : "linear-gradient(90deg, var(--primary), #60a5fa)",
+                  : `linear-gradient(90deg, ${tokenColors.brand.primary}, ${tokenColors.semantic.info})`,
                 borderRadius: "4px",
                 transition: "width 0.5s ease",
               }}
@@ -190,7 +191,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
             icon={<Calendar size={15} />}
             label="Bugün"
             value={stats.todayTasks}
-            color="#f59e0b"
+            color={tokenColors.priority.medium}
             labelColor={colors.textMuted}
           />
         )}
@@ -230,8 +231,8 @@ const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, labelCol
       gap: "8px",
       padding: highlight ? "6px 12px" : "0",
       borderRadius: highlight ? "8px" : "0",
-      background: highlight ? "rgba(239, 68, 68, 0.1)" : "transparent",
-      border: highlight ? "1px solid rgba(239, 68, 68, 0.2)" : "none",
+      background: highlight ? tokenColors.semantic.dangerLight : "transparent",
+      border: highlight ? `1px solid ${tokenColors.semantic.danger}33` : "none",
     }}
   >
     <div style={{ color, display: "flex", alignItems: "center" }}>{icon}</div>
