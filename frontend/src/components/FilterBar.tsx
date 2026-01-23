@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Search, X, Filter, Calendar, CheckSquare, Tag, ChevronDown, Flag } from "lucide-react";
 import type { Label, Priority } from "../types";
-import { colors, cssVars, shadows } from "../styles/tokens";
+import { colors, cssVars, shadows, spacing, radius, typography } from "../styles/tokens";
 
 export interface FilterState {
   searchText: string;
@@ -86,8 +86,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "10px",
-        padding: "12px 24px",
+        gap: spacing[3],
+        padding: `${spacing[3]} ${spacing[6]}`,
         background: colors.dark.bg.overlay,
         borderBottom: `1px solid ${colors.dark.border.subtle}`,
       }}
@@ -103,7 +103,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           size={16}
           style={{
             position: "absolute",
-            left: "12px",
+            left: spacing[3],
             top: "50%",
             transform: "translateY(-50%)",
             color: colors.dark.text.subtle,
@@ -116,14 +116,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           placeholder="Görev ara..."
           style={{
             width: "100%",
-            padding: "10px 12px 10px 38px",
-            borderRadius: "10px",
+            padding: `${spacing[2.5]} ${spacing[3]} ${spacing[2.5]} ${spacing[10]}`,
+            borderRadius: radius.lg,
             border: `1px solid ${cssVars.border}`,
             background: colors.dark.glass.bg,
             color: cssVars.textMain,
-            fontSize: "13px",
+            fontSize: typography.fontSize.base,
             outline: "none",
             transition: "all 0.2s",
+            boxSizing: "border-box",
           }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = colors.brand.primary;
@@ -139,18 +140,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
             onClick={() => updateFilter("searchText", "")}
             style={{
               position: "absolute",
-              right: "8px",
+              right: spacing[2],
               top: "50%",
               transform: "translateY(-50%)",
               background: "none",
               border: "none",
               cursor: "pointer",
               color: colors.dark.text.subtle,
-              padding: "4px",
+              padding: spacing[1],
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: "4px",
+              borderRadius: radius.sm,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = cssVars.textMain)}
             onMouseLeave={(e) => (e.currentTarget.style.color = colors.dark.text.subtle)}
@@ -161,9 +162,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       </div>
 
       {/* Filter Icon */}
-      <div style={{ display: "flex", alignItems: "center", gap: "4px", color: colors.dark.text.tertiary }}>
+      <div style={{ display: "flex", alignItems: "center", gap: spacing[1], color: colors.dark.text.tertiary, paddingLeft: spacing[2] }}>
         <Filter size={14} />
-        <span style={{ fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <span style={{ fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.semibold, textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
           Filtreler
         </span>
       </div>
@@ -180,9 +181,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              padding: "8px 12px",
-              borderRadius: "8px",
+              gap: spacing[1.5],
+              padding: `${spacing[2]} ${spacing[3]}`,
+              borderRadius: radius.md,
               border: filters.selectedLabels.length > 0
                 ? `1px solid ${colors.brand.primary}`
                 : `1px solid ${cssVars.border}`,
@@ -190,8 +191,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 ? colors.brand.primaryLight
                 : colors.dark.glass.bg,
               color: filters.selectedLabels.length > 0 ? colors.brand.primary : colors.dark.text.secondary,
-              fontSize: "12px",
-              fontWeight: "600",
+              fontSize: typography.fontSize.md,
+              fontWeight: typography.fontWeight.semibold,
               cursor: "pointer",
               transition: "all 0.2s",
             }}
@@ -203,10 +204,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 style={{
                   background: colors.brand.primary,
                   color: cssVars.textMain,
-                  fontSize: "10px",
-                  padding: "2px 6px",
-                  borderRadius: "6px",
-                  minWidth: "16px",
+                  fontSize: typography.fontSize.xs,
+                  padding: `${spacing[0.5]} ${spacing[1.5]}`,
+                  borderRadius: spacing[1.5],
+                  minWidth: spacing[4],
                   textAlign: "center",
                 }}
               >
@@ -220,13 +221,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
             <div
               style={{
                 position: "absolute",
-                top: "calc(100% + 6px)",
+                top: `calc(100% + ${spacing[1.5]})`,
                 left: 0,
                 minWidth: "200px",
                 background: cssVars.bgCard,
                 border: `1px solid ${cssVars.border}`,
-                borderRadius: "12px",
-                padding: "8px",
+                borderRadius: radius.lg,
+                padding: spacing[2],
                 zIndex: 100,
                 boxShadow: shadows.lg,
               }}
@@ -238,10 +239,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "10px",
+                    gap: spacing[2.5],
                     width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: "8px",
+                    padding: `${spacing[2]} ${spacing[2.5]}`,
+                    borderRadius: radius.md,
                     border: "none",
                     background: filters.selectedLabels.includes(label.id)
                       ? `${label.color}20`
@@ -262,9 +263,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 >
                   <div
                     style={{
-                      width: "16px",
-                      height: "16px",
-                      borderRadius: "4px",
+                      width: spacing[4],
+                      height: spacing[4],
+                      borderRadius: radius.sm,
                       background: label.color,
                       border: filters.selectedLabels.includes(label.id)
                         ? `2px solid ${cssVars.textMain}`
@@ -275,8 +276,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                     style={{
                       flex: 1,
                       textAlign: "left",
-                      fontSize: "12px",
-                      fontWeight: "500",
+                      fontSize: typography.fontSize.md,
+                      fontWeight: typography.fontWeight.medium,
                       color: filters.selectedLabels.includes(label.id)
                         ? label.color
                         : colors.dark.text.secondary,
@@ -288,18 +289,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               ))}
               {filters.selectedLabels.length > 0 && (
                 <>
-                  <div style={{ height: "1px", background: cssVars.border, margin: "6px 0" }} />
+                  <div style={{ height: "1px", background: cssVars.border, margin: `${spacing[1.5]} 0` }} />
                   <button
                     onClick={() => updateFilter("selectedLabels", [])}
                     style={{
                       width: "100%",
-                      padding: "8px 10px",
-                      borderRadius: "8px",
+                      padding: `${spacing[2]} ${spacing[2.5]}`,
+                      borderRadius: radius.md,
                       border: "none",
                       background: "transparent",
                       color: colors.semantic.danger,
-                      fontSize: "11px",
-                      fontWeight: "600",
+                      fontSize: typography.fontSize.sm,
+                      fontWeight: typography.fontWeight.semibold,
                       cursor: "pointer",
                       textAlign: "center",
                     }}
@@ -324,9 +325,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            padding: "8px 12px",
-            borderRadius: "8px",
+            gap: spacing[1.5],
+            padding: `${spacing[2]} ${spacing[3]}`,
+            borderRadius: radius.md,
             border: filters.dueDateFilter !== "all"
               ? `1px solid ${colors.brand.primary}`
               : `1px solid ${cssVars.border}`,
@@ -334,8 +335,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               ? colors.brand.primaryLight
               : colors.dark.glass.bg,
             color: filters.dueDateFilter !== "all" ? colors.brand.primary : colors.dark.text.secondary,
-            fontSize: "12px",
-            fontWeight: "600",
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
             transition: "all 0.2s",
           }}
@@ -349,13 +350,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           <div
             style={{
               position: "absolute",
-              top: "calc(100% + 6px)",
+              top: `calc(100% + ${spacing[1.5]})`,
               left: 0,
               minWidth: "160px",
               background: cssVars.bgCard,
               border: `1px solid ${cssVars.border}`,
-              borderRadius: "12px",
-              padding: "8px",
+              borderRadius: radius.lg,
+              padding: spacing[2],
               zIndex: 100,
               boxShadow: shadows.lg,
             }}
@@ -370,10 +371,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "10px",
+                  gap: spacing[2.5],
                   width: "100%",
-                  padding: "8px 10px",
-                  borderRadius: "8px",
+                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                  borderRadius: radius.md,
                   border: "none",
                   background: filters.dueDateFilter === option.value
                     ? colors.brand.primaryLight
@@ -395,17 +396,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 {option.color && (
                   <div
                     style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
+                      width: spacing[2],
+                      height: spacing[2],
+                      borderRadius: radius.full,
                       background: option.color,
                     }}
                   />
                 )}
                 <span
                   style={{
-                    fontSize: "12px",
-                    fontWeight: "500",
+                    fontSize: typography.fontSize.md,
+                    fontWeight: typography.fontWeight.medium,
                     color: filters.dueDateFilter === option.value
                       ? colors.brand.primary
                       : colors.dark.text.secondary,
@@ -430,9 +431,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            padding: "8px 12px",
-            borderRadius: "8px",
+            gap: spacing[1.5],
+            padding: `${spacing[2]} ${spacing[3]}`,
+            borderRadius: radius.md,
             border: filters.completionFilter !== "all"
               ? `1px solid ${colors.brand.primary}`
               : `1px solid ${cssVars.border}`,
@@ -440,8 +441,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               ? colors.brand.primaryLight
               : colors.dark.glass.bg,
             color: filters.completionFilter !== "all" ? colors.brand.primary : colors.dark.text.secondary,
-            fontSize: "12px",
-            fontWeight: "600",
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
             transition: "all 0.2s",
           }}
@@ -455,13 +456,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           <div
             style={{
               position: "absolute",
-              top: "calc(100% + 6px)",
+              top: `calc(100% + ${spacing[1.5]})`,
               left: 0,
               minWidth: "150px",
               background: cssVars.bgCard,
               border: `1px solid ${cssVars.border}`,
-              borderRadius: "12px",
-              padding: "8px",
+              borderRadius: radius.lg,
+              padding: spacing[2],
               zIndex: 100,
               boxShadow: shadows.lg,
             }}
@@ -476,10 +477,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "10px",
+                  gap: spacing[2.5],
                   width: "100%",
-                  padding: "8px 10px",
-                  borderRadius: "8px",
+                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                  borderRadius: radius.md,
                   border: "none",
                   background: filters.completionFilter === option.value
                     ? colors.brand.primaryLight
@@ -500,8 +501,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               >
                 <span
                   style={{
-                    fontSize: "12px",
-                    fontWeight: "500",
+                    fontSize: typography.fontSize.md,
+                    fontWeight: typography.fontWeight.medium,
                     color: filters.completionFilter === option.value
                       ? colors.brand.primary
                       : colors.dark.text.secondary,
@@ -527,9 +528,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            padding: "8px 12px",
-            borderRadius: "8px",
+            gap: spacing[1.5],
+            padding: `${spacing[2]} ${spacing[3]}`,
+            borderRadius: radius.md,
             border: filters.priorityFilter !== "all"
               ? `1px solid ${colors.brand.primary}`
               : `1px solid ${cssVars.border}`,
@@ -537,8 +538,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               ? colors.brand.primaryLight
               : colors.dark.glass.bg,
             color: filters.priorityFilter !== "all" ? colors.brand.primary : colors.dark.text.secondary,
-            fontSize: "12px",
-            fontWeight: "600",
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
             transition: "all 0.2s",
           }}
@@ -552,13 +553,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           <div
             style={{
               position: "absolute",
-              top: "calc(100% + 6px)",
+              top: `calc(100% + ${spacing[1.5]})`,
               left: 0,
               minWidth: "150px",
               background: cssVars.bgCard,
               border: `1px solid ${cssVars.border}`,
-              borderRadius: "12px",
-              padding: "8px",
+              borderRadius: radius.lg,
+              padding: spacing[2],
               zIndex: 100,
               boxShadow: shadows.lg,
             }}
@@ -573,10 +574,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "10px",
+                  gap: spacing[2.5],
                   width: "100%",
-                  padding: "8px 10px",
-                  borderRadius: "8px",
+                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                  borderRadius: radius.md,
                   border: "none",
                   background: filters.priorityFilter === option.value
                     ? colors.brand.primaryLight
@@ -598,17 +599,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 {option.color && (
                   <div
                     style={{
-                      width: "8px",
-                      height: "8px",
-                      borderRadius: "50%",
+                      width: spacing[2],
+                      height: spacing[2],
+                      borderRadius: radius.full,
                       background: option.color,
                     }}
                   />
                 )}
                 <span
                   style={{
-                    fontSize: "12px",
-                    fontWeight: "500",
+                    fontSize: typography.fontSize.md,
+                    fontWeight: typography.fontWeight.medium,
                     color: filters.priorityFilter === option.value
                       ? colors.brand.primary
                       : colors.dark.text.secondary,
@@ -629,14 +630,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            padding: "8px 12px",
-            borderRadius: "8px",
+            gap: spacing[1.5],
+            padding: `${spacing[2]} ${spacing[3]}`,
+            borderRadius: radius.md,
             border: `1px solid ${colors.semantic.danger}4d`,
             background: colors.semantic.dangerLight,
             color: colors.semantic.danger,
-            fontSize: "12px",
-            fontWeight: "600",
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
             transition: "all 0.2s",
             marginLeft: "auto",

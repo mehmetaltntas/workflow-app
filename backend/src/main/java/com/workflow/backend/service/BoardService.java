@@ -140,7 +140,26 @@ public class BoardService {
                 TaskListDto listDto = new TaskListDto();
                 listDto.setId(taskList.getId());
                 listDto.setName(taskList.getName());
+                listDto.setDescription(taskList.getDescription());
                 listDto.setLink(taskList.getLink());
+                listDto.setIsCompleted(taskList.getIsCompleted());
+                listDto.setDueDate(taskList.getDueDate());
+                listDto.setPriority(taskList.getPriority() != null ? taskList.getPriority().name() : null);
+
+                // Oluşturulma tarihi
+                listDto.setCreatedAt(taskList.getCreatedAt());
+
+                // TaskList Labels (@BatchSize ile batch yüklenir)
+                if (taskList.getLabels() != null && !taskList.getLabels().isEmpty()) {
+                    List<LabelDto> listLabelDtos = taskList.getLabels().stream().map(label -> {
+                        LabelDto labelDto = new LabelDto();
+                        labelDto.setId(label.getId());
+                        labelDto.setName(label.getName());
+                        labelDto.setColor(label.getColor());
+                        return labelDto;
+                    }).collect(Collectors.toList());
+                    listDto.setLabels(listLabelDtos);
+                }
 
                 // Tasks (@BatchSize ile batch yüklenir)
                 if (taskList.getTasks() != null) {

@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
+import com.workflow.backend.entity.Priority;
 import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.repository.BoardRepository;
@@ -31,6 +32,7 @@ public class TaskService {
     private final AuthorizationService authorizationService;
 
     // 1. YENİ LİSTE (SÜTUN) OLUŞTURMA
+    @Transactional
     public TaskListDto createTaskList(CreateTaskListRequest request) {
         // Kullanıcı sadece kendi panosuna liste ekleyebilir
         authorizationService.verifyBoardOwnership(request.getBoardId());
@@ -40,8 +42,25 @@ public class TaskService {
 
         TaskList list = new TaskList();
         list.setName(request.getName());
+        list.setDescription(request.getDescription());
         list.setLink(request.getLink());
+        list.setDueDate(request.getDueDate());
         list.setBoard(board);
+
+        // Öncelik
+        if (request.getPriority() != null && !request.getPriority().isEmpty()) {
+            try {
+                list.setPriority(Priority.valueOf(request.getPriority()));
+            } catch (IllegalArgumentException e) {
+                // Geçersiz priority değeri, null olarak bırak
+            }
+        }
+
+        // Etiketler
+        if (request.getLabelIds() != null && !request.getLabelIds().isEmpty()) {
+            List<Label> labels = labelRepository.findAllById(request.getLabelIds());
+            list.setLabels(new HashSet<>(labels));
+        }
 
         if (taskListRepository.existsByNameAndBoard(request.getName(), board)) {
             throw new RuntimeException("Bu liste isminden zaten var!");
@@ -204,8 +223,30 @@ public class TaskService {
             list.setName(request.getName());
         }
 
+        if (request.getDescription() != null) {
+            list.setDescription(request.getDescription());
+        }
+
         if (request.getLink() != null) {
             list.setLink(request.getLink());
+        }
+
+        // dueDate null olarak da gönderilebilir (tarihi kaldırmak için)
+        list.setDueDate(request.getDueDate());
+
+        // Öncelik
+        if (request.getPriority() != null) {
+            try {
+                list.setPriority(Priority.valueOf(request.getPriority()));
+            } catch (IllegalArgumentException e) {
+                list.setPriority(null);
+            }
+        }
+
+        // Etiketleri güncelle (labelIds gönderildiyse)
+        if (request.getLabelIds() != null) {
+            List<Label> labels = labelRepository.findAllById(request.getLabelIds());
+            list.setLabels(new HashSet<>(labels));
         }
 
         if (request.getIsCompleted() != null) {
@@ -315,8 +356,24 @@ public class TaskService {
         TaskListDto dto = new TaskListDto();
         dto.setId(list.getId());
         dto.setName(list.getName());
+        dto.setDescription(list.getDescription());
         dto.setLink(list.getLink());
         dto.setIsCompleted(list.getIsCompleted());
+        dto.setDueDate(list.getDueDate());
+        dto.setPriority(list.getPriority() != null ? list.getPriority().name() : null);
+        dto.setCreatedAt(list.getCreatedAt());
+
+        // Etiketleri ekle
+        if (list.getLabels() != null && !list.getLabels().isEmpty()) {
+            dto.setLabels(list.getLabels().stream().map(label -> {
+                LabelDto labelDto = new LabelDto();
+                labelDto.setId(label.getId());
+                labelDto.setName(label.getName());
+                labelDto.setColor(label.getColor());
+                return labelDto;
+            }).toList());
+        }
+
         if (list.getTasks() != null) {
             dto.setTasks(list.getTasks().stream().map(this::mapToDto).toList());
         } else {
