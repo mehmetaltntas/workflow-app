@@ -177,7 +177,15 @@ export const boardService = {
 
 // 5. Görev ve Liste İşlemleri
 export const taskService = {
-  createTaskList: async (data: { name: string; boardId: number; link?: string }): Promise<TaskList> => {
+  createTaskList: async (data: {
+    name: string;
+    boardId: number;
+    description?: string;
+    link?: string;
+    dueDate?: string;
+    priority?: string;
+    labelIds?: number[];
+  }): Promise<TaskList> => {
     const response = await apiClient.post<TaskList>("/lists", data);
     return extractEntity<TaskList>(response);
   },
@@ -194,7 +202,15 @@ export const taskService = {
   },
 
   deleteTaskList: (listId: number) => apiClient.delete(`/lists/${listId}`),
-  updateTaskList: async (listId: number, data: { name?: string; link?: string; isCompleted?: boolean }): Promise<TaskList> => {
+  updateTaskList: async (listId: number, data: {
+    name?: string;
+    description?: string;
+    link?: string;
+    isCompleted?: boolean;
+    dueDate?: string | null;
+    priority?: string;
+    labelIds?: number[];
+  }): Promise<TaskList> => {
     const response = await apiClient.put<TaskList>(`/lists/${listId}`, data);
     return extractEntity<TaskList>(response);
   },
@@ -219,13 +235,29 @@ export const taskService = {
 // 6. Alt Görev İşlemleri
 export const subtaskService = {
   // Alt görev oluştur
-  createSubtask: async (data: { title: string; taskId: number }): Promise<Subtask> => {
+  createSubtask: async (data: {
+    title: string;
+    taskId: number;
+    description?: string;
+    link?: string;
+    dueDate?: string;
+    priority?: string;
+    labelIds?: number[];
+  }): Promise<Subtask> => {
     const response = await apiClient.post<Subtask>("/subtasks", data);
     return extractEntity<Subtask>(response);
   },
 
   // Alt görevi güncelle
-  updateSubtask: async (subtaskId: number, data: { title?: string; isCompleted?: boolean }): Promise<Subtask> => {
+  updateSubtask: async (subtaskId: number, data: {
+    title?: string;
+    description?: string;
+    link?: string;
+    isCompleted?: boolean;
+    dueDate?: string | null;
+    priority?: string;
+    labelIds?: number[];
+  }): Promise<Subtask> => {
     const response = await apiClient.put<Subtask>(`/subtasks/${subtaskId}`, data);
     return extractEntity<Subtask>(response);
   },

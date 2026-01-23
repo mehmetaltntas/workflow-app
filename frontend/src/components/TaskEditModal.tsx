@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check, Flag, ListChecks, Plus, Trash2, Square, CheckSquare } from "lucide-react";
+import { X, Save, Link as LinkIcon, Type, Calendar, Tag, Check, Flag, ListChecks, Plus, Trash2, Square, CheckSquare, Edit3 } from "lucide-react";
 import type { Task, Label, Priority, Subtask } from "../types";
 import { subtaskService } from "../services/api";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
+import { SubtaskEditModal } from "./SubtaskEditModal";
 
 interface TaskEditModalProps {
   task: Task;
@@ -30,6 +31,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
 
   const toggleLabel = (labelId: number) => {
     setSelectedLabelIds(prev =>
@@ -73,6 +75,23 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
     }
   };
 
+  const handleUpdateSubtask = async (subtaskId: number, updates: {
+    title?: string;
+    description?: string;
+    link?: string;
+    dueDate?: string | null;
+    priority?: string;
+    labelIds?: number[];
+  }) => {
+    try {
+      const updatedSubtask = await subtaskService.updateSubtask(subtaskId, updates);
+      setSubtasks(subtasks.map(s => s.id === subtaskId ? updatedSubtask : s));
+    } catch (error) {
+      console.error("Alt görev güncellenemedi:", error);
+      throw error;
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -92,6 +111,15 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
   };
 
   return (
+    <>
+    {editingSubtask && (
+      <SubtaskEditModal
+        subtask={editingSubtask}
+        boardLabels={boardLabels}
+        onClose={() => setEditingSubtask(null)}
+        onSave={handleUpdateSubtask}
+      />
+    )}
     <div className="modal-overlay" onClick={onClose} style={{
       position: 'fixed',
       top: 0,
@@ -400,9 +428,59 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
                   }}>
                     {subtask.title}
                   </span>
+                  {/* Subtask info indicators */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1.5] }}>
+                    {subtask.dueDate && (
+                      <span style={{ fontSize: typography.fontSize.xs, color: colors.dark.text.tertiary, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <Calendar size={10} />
+                      </span>
+                    )}
+                    {subtask.priority && subtask.priority !== 'NONE' && (
+                      <span style={{ fontSize: typography.fontSize.xs, color: colors.priority[subtask.priority.toLowerCase() as 'high' | 'medium' | 'low'], display: 'flex', alignItems: 'center' }}>
+                        <Flag size={10} />
+                      </span>
+                    )}
+                    {subtask.link && (
+                      <span style={{ fontSize: typography.fontSize.xs, color: 'var(--primary)', display: 'flex', alignItems: 'center' }}>
+                        <LinkIcon size={10} />
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
-                    onClick={() => handleDeleteSubtask(subtask.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingSubtask(subtask);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: spacing[1],
+                      display: 'flex',
+                      color: colors.dark.text.subtle,
+                      opacity: 0,
+                      transition: `all ${animation.duration.normal}`,
+                      borderRadius: radius.sm,
+                    }}
+                    className="group-hover/subtask:!opacity-100"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--primary)';
+                      e.currentTarget.style.background = colors.brand.primaryLight;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = colors.dark.text.subtle;
+                      e.currentTarget.style.background = 'none';
+                    }}
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSubtask(subtask.id);
+                    }}
                     style={{
                       background: 'none',
                       border: 'none',
@@ -553,5 +631,6 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, boardLabels 
         }
       `}</style>
     </div>
+    </>
   );
 };

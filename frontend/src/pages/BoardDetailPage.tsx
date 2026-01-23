@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AxiosError } from "axios";
 import { boardService, taskService, labelService } from "../services/api";
-import type { Board, Task, TaskList, Subtask } from "../types";
+import type { Board, Task, TaskList, Subtask, Priority, Label } from "../types";
 
 import toast from "react-hot-toast";
 import { ArrowLeft, X, ArrowUp, ArrowDown, Tag, Home, ChevronRight } from "lucide-react";
@@ -34,6 +34,11 @@ const BoardDetailPage = () => {
   // UI States
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListName, setNewListName] = useState("");
+  const [newListDescription, setNewListDescription] = useState("");
+  const [newListLink, setNewListLink] = useState("");
+  const [newListDueDate, setNewListDueDate] = useState("");
+  const [newListPriority, setNewListPriority] = useState<Priority>("NONE");
+  const [newListLabelIds, setNewListLabelIds] = useState<number[]>([]);
   const [activeListId, setActiveListId] = useState<number | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
@@ -49,6 +54,9 @@ const BoardDetailPage = () => {
   const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
   const [subtaskCache, setSubtaskCache] = useState<Map<number, Subtask[]>>(new Map());
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false);
+
+  // Undo state for list completion - using ref to avoid closure issues
+  const listCompletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sorting
   // Default: Date (oldest to newest), down arrow
@@ -112,22 +120,36 @@ const BoardDetailPage = () => {
     }
   }, [subtaskCache]);
 
+  const resetListForm = useCallback(() => {
+    setNewListName("");
+    setNewListDescription("");
+    setNewListLink("");
+    setNewListDueDate("");
+    setNewListPriority("NONE");
+    setNewListLabelIds([]);
+    setIsAddingList(false);
+  }, []);
+
   const handleCreateList = useCallback(async () => {
     if (!newListName) return;
     try {
       await taskService.createTaskList({
         name: newListName,
         boardId: board!.id,
+        description: newListDescription || undefined,
+        link: newListLink || undefined,
+        dueDate: newListDueDate || undefined,
+        priority: newListPriority !== "NONE" ? newListPriority : undefined,
+        labelIds: newListLabelIds.length > 0 ? newListLabelIds : undefined,
       });
-      setNewListName("");
-      setIsAddingList(false);
+      resetListForm();
       loadBoardData(slug!);
       toast.success("Liste eklendi");
     } catch (error) {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [newListName, board, loadBoardData, slug]);
+  }, [newListName, newListDescription, newListLink, newListDueDate, newListPriority, newListLabelIds, board, loadBoardData, slug, resetListForm]);
 
   const handleDeleteList = useCallback(async () => {
     if (deleteListId) {
@@ -146,18 +168,94 @@ const BoardDetailPage = () => {
   // handleUpdateListName removed - now handled via ListEditModal
 
   const handleListCompletionToggle = useCallback(async (list: TaskList) => {
-    try {
-      await taskService.updateTaskList(list.id, { isCompleted: !list.isCompleted });
-      loadBoardData(slug!);
-      toast.success(list.isCompleted ? "Liste devam ediyor" : "Liste tamamlandı", {
-        icon: list.isCompleted ? "⏳" : "✅",
-        duration: 2000
-      });
-    } catch (error) {
-      console.error(error);
-      toast.error("Hata oluştu");
+    const newState = !list.isCompleted;
+
+    // If there's a pending completion, cancel it
+    if (listCompletionTimeoutRef.current) {
+      clearTimeout(listCompletionTimeoutRef.current);
+      listCompletionTimeoutRef.current = null;
+      toast.dismiss();
     }
-  }, [loadBoardData, slug]);
+
+    // Update UI optimistically
+    setBoard(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        taskLists: prev.taskLists.map(l =>
+          l.id === list.id ? { ...l, isCompleted: newState } : l
+        )
+      };
+    });
+
+    // Show toast with undo option
+    const toastId = toast(
+      (t) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span>{newState ? "Liste tamamlandı" : "Liste devam ediyor"}</span>
+          <button
+            onClick={() => {
+              // Cancel the pending update
+              if (listCompletionTimeoutRef.current) {
+                clearTimeout(listCompletionTimeoutRef.current);
+                listCompletionTimeoutRef.current = null;
+              }
+              toast.dismiss(t.id);
+              toast.success("Geri alındı", { icon: "↩️", duration: 1500 });
+              // Revert optimistic update
+              setBoard(prev => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  taskLists: prev.taskLists.map(l =>
+                    l.id === list.id ? { ...l, isCompleted: !newState } : l
+                  )
+                };
+              });
+            }}
+            style={{
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              padding: '4px 12px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '13px',
+            }}
+          >
+            Geri Al
+          </button>
+        </div>
+      ),
+      {
+        icon: newState ? "✅" : "⏳",
+        duration: 5000,
+      }
+    );
+
+    // Set timeout to actually save the change
+    listCompletionTimeoutRef.current = setTimeout(async () => {
+      try {
+        await taskService.updateTaskList(list.id, { isCompleted: newState });
+        listCompletionTimeoutRef.current = null;
+        toast.dismiss(toastId);
+      } catch (error) {
+        console.error(error);
+        toast.error("Hata oluştu");
+        // Revert optimistic update on error
+        setBoard(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            taskLists: prev.taskLists.map(l =>
+              l.id === list.id ? { ...l, isCompleted: !newState } : l
+            )
+          };
+        });
+      }
+    }, 5000);
+  }, []);
 
   const handleCreateTask = useCallback(async (listId: number) => {
     if (!newTaskTitle) return;
@@ -230,7 +328,7 @@ const BoardDetailPage = () => {
   }, [loadBoardData, slug]);
 
   // Handler for updating list from modal
-  const handleUpdateList = useCallback(async (listId: number, updates: { name?: string; link?: string }) => {
+  const handleUpdateList = useCallback(async (listId: number, updates: { name?: string; description?: string; link?: string; dueDate?: string | null; priority?: string; labelIds?: number[] }) => {
     try {
       await taskService.updateTaskList(listId, updates);
       loadBoardData(slug!);
@@ -556,6 +654,7 @@ const BoardDetailPage = () => {
       {editingList && (
         <ListEditModal
           list={editingList}
+          boardLabels={board.labels}
           onClose={() => setEditingList(null)}
           onSave={handleUpdateList}
           onDeleteTasks={handleBulkDeleteTasks}
@@ -903,40 +1002,182 @@ const BoardDetailPage = () => {
             justifyContent: 'center',
             zIndex: 1000,
           }}
-          onClick={() => setIsAddingList(false)}
+          onClick={resetListForm}
         >
           <div
             style={{
               background: tokenColors.dark.bg.card,
               borderRadius: '16px',
               padding: '24px',
-              width: '400px',
+              width: '550px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
               border: `1px solid ${tokenColors.dark.border.default}`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
-              <span style={{ fontSize: "14px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Liste</span>
-              <button onClick={() => setIsAddingList(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
+              <span style={{ fontSize: "16px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Liste</span>
+              <button onClick={resetListForm} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
             </div>
-            <input
-              autoFocus
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              placeholder="Liste adı..."
+
+            {/* Liste Adı */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Liste Adı *</label>
+              <input
+                autoFocus
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                placeholder="Liste adı..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                }}
+              />
+            </div>
+
+            {/* Açıklama */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Açıklama</label>
+              <textarea
+                value={newListDescription}
+                onChange={(e) => setNewListDescription(e.target.value)}
+                placeholder="Liste açıklaması..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                  minHeight: '80px',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            {/* Link */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Link</label>
+              <input
+                type="url"
+                value={newListLink}
+                onChange={(e) => setNewListLink(e.target.value)}
+                placeholder="https://..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--primary)',
+                }}
+              />
+            </div>
+
+            {/* Son Tarih ve Öncelik */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Son Tarih</label>
+                <input
+                  type="date"
+                  value={newListDueDate}
+                  onChange={(e) => setNewListDueDate(e.target.value)}
+                  style={{
+                    width: "100%",
+                    borderRadius: '10px',
+                    background: tokenColors.dark.bg.hover,
+                    border: `1px solid ${tokenColors.dark.border.subtle}`,
+                    padding: '12px',
+                    fontSize: '14px',
+                    color: 'var(--text-main)',
+                    colorScheme: 'dark',
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Öncelik</label>
+                <select
+                  value={newListPriority}
+                  onChange={(e) => setNewListPriority(e.target.value as Priority)}
+                  style={{
+                    width: "100%",
+                    borderRadius: '10px',
+                    background: tokenColors.dark.bg.hover,
+                    border: `1px solid ${tokenColors.dark.border.subtle}`,
+                    padding: '12px',
+                    fontSize: '14px',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="NONE">Yok</option>
+                  <option value="LOW">Düşük</option>
+                  <option value="MEDIUM">Orta</option>
+                  <option value="HIGH">Yüksek</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Etiketler */}
+            {board?.labels && board.labels.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Etiketler</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {board.labels.map((label: Label) => {
+                    const isSelected = newListLabelIds.includes(label.id);
+                    return (
+                      <button
+                        key={label.id}
+                        type="button"
+                        onClick={() => setNewListLabelIds(prev =>
+                          isSelected ? prev.filter(id => id !== label.id) : [...prev, label.id]
+                        )}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          border: `1px solid ${isSelected ? label.color : tokenColors.dark.border.subtle}`,
+                          background: isSelected ? `${label.color}25` : 'transparent',
+                          color: isSelected ? label.color : 'var(--text-muted)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: label.color }} />
+                        {label.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleCreateList}
+              disabled={!newListName.trim()}
+              className="btn btn-primary font-semibold"
               style={{
-                width: "100%",
+                width: '100%',
                 borderRadius: '10px',
-                background: tokenColors.dark.bg.hover,
-                border: `1px solid ${tokenColors.dark.border.subtle}`,
-                padding: '12px',
-                fontSize: '14px',
-                marginBottom: '12px',
-                color: 'var(--text-main)',
+                height: '42px',
+                opacity: !newListName.trim() ? 0.5 : 1,
+                cursor: !newListName.trim() ? 'not-allowed' : 'pointer',
               }}
-              onKeyDown={(e) => { if(e.key === 'Enter') handleCreateList(); }}
-            />
-            <button onClick={handleCreateList} className="btn btn-primary font-semibold" style={{ width: '100%', borderRadius: '10px', height: '42px' }}>Oluştur</button>
+            >
+              Oluştur
+            </button>
           </div>
         </div>
       )}

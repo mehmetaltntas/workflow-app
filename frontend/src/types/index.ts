@@ -53,8 +53,13 @@ export interface Label extends HateoasModel {
 export interface Subtask extends HateoasModel {
   id: number;
   title: string;
+  description?: string;
+  link?: string;
   isCompleted: boolean;
   position: number;
+  dueDate?: string | null;
+  priority?: Priority;
+  labels?: Label[];
 }
 
 // Görev Kartı
@@ -76,9 +81,13 @@ export interface Task extends HateoasModel {
 export interface TaskList extends HateoasModel {
   id: number;
   name: string;
+  description?: string;
   link?: string;
   isCompleted?: boolean;
   createdAt?: string;
+  dueDate?: string | null;
+  priority?: Priority;
+  labels?: Label[];
   tasks: Task[]; // İçinde görevler dizisi var
 }
 
