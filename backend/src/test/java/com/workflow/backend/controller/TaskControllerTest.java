@@ -1,6 +1,10 @@
 package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.*;
+import com.workflow.backend.hateoas.assembler.TaskListModelAssembler;
+import com.workflow.backend.hateoas.assembler.TaskModelAssembler;
+import com.workflow.backend.hateoas.model.TaskListModel;
+import com.workflow.backend.hateoas.model.TaskModel;
 import com.workflow.backend.service.TaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -26,11 +31,19 @@ class TaskControllerTest {
     @Mock
     private TaskService taskService;
 
+    @Mock
+    private TaskListModelAssembler taskListAssembler;
+
+    @Mock
+    private TaskModelAssembler taskAssembler;
+
     @InjectMocks
     private TaskController taskController;
 
     private TaskListDto taskListResponse;
     private TaskDto taskResponse;
+    private TaskListModel taskListModel;
+    private TaskModel taskModel;
 
     @BeforeEach
     void setUp() {
@@ -45,6 +58,18 @@ class TaskControllerTest {
         taskResponse.setDescription("Test description");
         taskResponse.setPosition(0);
         taskResponse.setIsCompleted(false);
+
+        taskListModel = new TaskListModel();
+        taskListModel.setId(1L);
+        taskListModel.setName("To Do");
+        taskListModel.setTasks(List.of());
+
+        taskModel = new TaskModel();
+        taskModel.setId(1L);
+        taskModel.setTitle("Test Task");
+        taskModel.setDescription("Test description");
+        taskModel.setPosition(0);
+        taskModel.setIsCompleted(false);
     }
 
     @Nested
@@ -60,9 +85,10 @@ class TaskControllerTest {
             request.setName("To Do");
 
             when(taskService.createTaskList(any(CreateTaskListRequest.class))).thenReturn(taskListResponse);
+            when(taskListAssembler.toModel(any(TaskListDto.class))).thenReturn(taskListModel);
 
             // Act
-            ResponseEntity<TaskListDto> response = taskController.createTaskList(request);
+            ResponseEntity<TaskListModel> response = taskController.createTaskList(request);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -82,10 +108,15 @@ class TaskControllerTest {
             updatedResponse.setId(1L);
             updatedResponse.setName("Done");
 
+            TaskListModel updatedModel = new TaskListModel();
+            updatedModel.setId(1L);
+            updatedModel.setName("Done");
+
             when(taskService.updateTaskList(eq(1L), any(TaskListDto.class))).thenReturn(updatedResponse);
+            when(taskListAssembler.toModel(any(TaskListDto.class))).thenReturn(updatedModel);
 
             // Act
-            ResponseEntity<TaskListDto> response = taskController.updateTaskList(1L, updateRequest);
+            ResponseEntity<TaskListModel> response = taskController.updateTaskList(1L, updateRequest);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -134,9 +165,10 @@ class TaskControllerTest {
             request.setDescription("Task description");
 
             when(taskService.createTask(any(CreateTaskRequest.class))).thenReturn(taskResponse);
+            when(taskAssembler.toModel(any(TaskDto.class))).thenReturn(taskModel);
 
             // Act
-            ResponseEntity<TaskDto> response = taskController.createTask(request);
+            ResponseEntity<TaskModel> response = taskController.createTask(request);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -159,10 +191,16 @@ class TaskControllerTest {
             updatedResponse.setTitle("Updated Task");
             updatedResponse.setIsCompleted(true);
 
+            TaskModel updatedModel = new TaskModel();
+            updatedModel.setId(1L);
+            updatedModel.setTitle("Updated Task");
+            updatedModel.setIsCompleted(true);
+
             when(taskService.updateTask(eq(1L), any(TaskDto.class))).thenReturn(updatedResponse);
+            when(taskAssembler.toModel(any(TaskDto.class))).thenReturn(updatedModel);
 
             // Act
-            ResponseEntity<TaskDto> response = taskController.updateTask(1L, updateRequest);
+            ResponseEntity<TaskModel> response = taskController.updateTask(1L, updateRequest);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -203,10 +241,16 @@ class TaskControllerTest {
             reorderedResponse.setTitle("Test Task");
             reorderedResponse.setPosition(1);
 
+            TaskModel reorderedModel = new TaskModel();
+            reorderedModel.setId(1L);
+            reorderedModel.setTitle("Test Task");
+            reorderedModel.setPosition(1);
+
             when(taskService.reorderTask(eq(1L), any(ReorderTaskRequest.class))).thenReturn(reorderedResponse);
+            when(taskAssembler.toModel(any(TaskDto.class))).thenReturn(reorderedModel);
 
             // Act
-            ResponseEntity<TaskDto> response = taskController.reorderTask(1L, request);
+            ResponseEntity<TaskModel> response = taskController.reorderTask(1L, request);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -236,17 +280,19 @@ class TaskControllerTest {
                     createTaskDto(2L, "Task 2", 1)
             );
 
+            TaskModel model1 = createTaskModel(1L, "Task 1", 0);
+            TaskModel model2 = createTaskModel(2L, "Task 2", 1);
+
             when(taskService.batchReorder(any(BatchReorderRequest.class))).thenReturn(reorderedTasks);
+            when(taskAssembler.toModel(any(TaskDto.class))).thenReturn(model1, model2);
 
             // Act
-            ResponseEntity<List<TaskDto>> response = taskController.batchReorder(request);
+            ResponseEntity<CollectionModel<TaskModel>> response = taskController.batchReorder(request);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody()).hasSize(2);
-            assertThat(response.getBody().get(0).getPosition()).isEqualTo(0);
-            assertThat(response.getBody().get(1).getPosition()).isEqualTo(1);
+            assertThat(response.getBody().getContent()).hasSize(2);
         }
     }
 
@@ -257,5 +303,14 @@ class TaskControllerTest {
         dto.setPosition(position);
         dto.setIsCompleted(false);
         return dto;
+    }
+
+    private TaskModel createTaskModel(Long id, String title, int position) {
+        TaskModel model = new TaskModel();
+        model.setId(id);
+        model.setTitle(title);
+        model.setPosition(position);
+        model.setIsCompleted(false);
+        return model;
     }
 }

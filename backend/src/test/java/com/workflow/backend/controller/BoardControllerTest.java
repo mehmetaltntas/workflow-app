@@ -3,6 +3,8 @@ package com.workflow.backend.controller;
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.PaginatedResponse;
+import com.workflow.backend.hateoas.assembler.BoardModelAssembler;
+import com.workflow.backend.hateoas.model.BoardModel;
 import com.workflow.backend.service.BoardService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -29,11 +32,15 @@ class BoardControllerTest {
     @Mock
     private BoardService boardService;
 
+    @Mock
+    private BoardModelAssembler boardAssembler;
+
     @InjectMocks
     private BoardController boardController;
 
     private CreateBoardRequest createBoardRequest;
     private BoardResponse boardResponse;
+    private BoardModel boardModel;
 
     @BeforeEach
     void setUp() {
@@ -49,6 +56,14 @@ class BoardControllerTest {
         boardResponse.setStatus("PLANLANDI");
         boardResponse.setDescription("Test description");
         boardResponse.setOwnerName("testuser");
+
+        boardModel = new BoardModel();
+        boardModel.setId(1L);
+        boardModel.setName("Test Board");
+        boardModel.setSlug("test-board");
+        boardModel.setStatus("PLANLANDI");
+        boardModel.setDescription("Test description");
+        boardModel.setOwnerName("testuser");
     }
 
     @Nested
@@ -60,9 +75,10 @@ class BoardControllerTest {
         void createBoard_ValidRequest_Returns200() {
             // Arrange
             when(boardService.createBoard(any(CreateBoardRequest.class))).thenReturn(boardResponse);
+            when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(boardModel);
 
             // Act
-            ResponseEntity<BoardResponse> response = boardController.createBoard(createBoardRequest);
+            ResponseEntity<BoardModel> response = boardController.createBoard(createBoardRequest);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -105,16 +121,17 @@ class BoardControllerTest {
             );
 
             when(boardService.getAllBoards(eq(1L), any(Pageable.class))).thenReturn(paginatedResponse);
+            when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(boardModel);
 
             // Act
-            ResponseEntity<PaginatedResponse<BoardResponse>> response =
+            ResponseEntity<PagedModel<BoardModel>> response =
                     boardController.getUserBoards(1L, 0, 10, "id", "desc");
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().content()).hasSize(1);
-            assertThat(response.getBody().totalElements()).isEqualTo(1L);
+            assertThat(response.getBody().getContent()).hasSize(1);
+            assertThat(response.getBody().getMetadata().getTotalElements()).isEqualTo(1L);
         }
     }
 
@@ -127,9 +144,10 @@ class BoardControllerTest {
         void getBoardDetails_ValidSlug_ReturnsBoard() {
             // Arrange
             when(boardService.getBoardDetails("test-board")).thenReturn(boardResponse);
+            when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(boardModel);
 
             // Act
-            ResponseEntity<BoardResponse> response = boardController.getBoardDetails("test-board");
+            ResponseEntity<BoardModel> response = boardController.getBoardDetails("test-board");
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -169,10 +187,16 @@ class BoardControllerTest {
             updatedResponse.setName("Updated Board");
             updatedResponse.setStatus("DEVAM_EDIYOR");
 
+            BoardModel updatedModel = new BoardModel();
+            updatedModel.setId(1L);
+            updatedModel.setName("Updated Board");
+            updatedModel.setStatus("DEVAM_EDIYOR");
+
             when(boardService.updateBoard(eq(1L), any(CreateBoardRequest.class))).thenReturn(updatedResponse);
+            when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(updatedModel);
 
             // Act
-            ResponseEntity<BoardResponse> response = boardController.updateBoard(1L, updateRequest);
+            ResponseEntity<BoardModel> response = boardController.updateBoard(1L, updateRequest);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -213,10 +237,15 @@ class BoardControllerTest {
             updatedResponse.setId(1L);
             updatedResponse.setStatus("TAMAMLANDI");
 
+            BoardModel updatedModel = new BoardModel();
+            updatedModel.setId(1L);
+            updatedModel.setStatus("TAMAMLANDI");
+
             when(boardService.updateBoardStatus(eq(1L), any(String.class))).thenReturn(updatedResponse);
+            when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(updatedModel);
 
             // Act
-            ResponseEntity<BoardResponse> response = boardController.updateBoardStatus(1L, "TAMAMLANDI");
+            ResponseEntity<BoardModel> response = boardController.updateBoardStatus(1L, "TAMAMLANDI");
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);

@@ -3,15 +3,54 @@
 // Öncelik seviyeleri
 export type Priority = 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
 
+// HATEOAS Link yapısı
+export interface HateoasLink {
+  href: string;
+  templated?: boolean;
+}
+
+export interface HateoasLinks {
+  self?: HateoasLink;
+  update?: HateoasLink;
+  delete?: HateoasLink;
+  [key: string]: HateoasLink | undefined;
+}
+
+// HATEOAS base model
+export interface HateoasModel {
+  _links?: HateoasLinks;
+}
+
+// Sayfalanmış HATEOAS yanıt yapısı
+export interface PageMetadata {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface PagedResponse<T> {
+  _embedded?: {
+    [key: string]: T[];
+  };
+  _links?: HateoasLinks & {
+    first?: HateoasLink;
+    prev?: HateoasLink;
+    next?: HateoasLink;
+    last?: HateoasLink;
+  };
+  page?: PageMetadata;
+}
+
 // Etiket
-export interface Label {
+export interface Label extends HateoasModel {
   id: number;
   name: string;
   color: string; // Hex color code (e.g., "#ff5733")
 }
 
 // Alt Görev
-export interface Subtask {
+export interface Subtask extends HateoasModel {
   id: number;
   title: string;
   isCompleted: boolean;
@@ -19,7 +58,7 @@ export interface Subtask {
 }
 
 // Görev Kartı
-export interface Task {
+export interface Task extends HateoasModel {
   id: number;
   title: string;
   description: string;
@@ -34,7 +73,7 @@ export interface Task {
 }
 
 // Sütun (Liste)
-export interface TaskList {
+export interface TaskList extends HateoasModel {
   id: number;
   name: string;
   link?: string;
@@ -44,7 +83,7 @@ export interface TaskList {
 }
 
 // Pano (Dashboard)
-export interface Board {
+export interface Board extends HateoasModel {
   id: number;
   name: string;
   slug: string; // YENİ
@@ -58,7 +97,7 @@ export interface Board {
 }
 
 // Kullanıcı (Login olunca dönen veri)
-export interface User {
+export interface User extends HateoasModel {
   id: number;
   username: string;
   email: string;

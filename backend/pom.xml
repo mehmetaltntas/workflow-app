@@ -74,6 +74,12 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
+		<!-- Spring HATEOAS (Richardson Maturity Model Level 3) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-hateoas</artifactId>
+		</dependency>
+
 		<!-- JWT Kütüphanesi (Token Üretip/Okumak için) -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

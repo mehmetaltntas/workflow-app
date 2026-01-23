@@ -1,13 +1,21 @@
 package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.*;
+import com.workflow.backend.hateoas.assembler.TaskListModelAssembler;
+import com.workflow.backend.hateoas.assembler.TaskModelAssembler;
+import com.workflow.backend.hateoas.model.TaskListModel;
+import com.workflow.backend.hateoas.model.TaskModel;
 import com.workflow.backend.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping
@@ -15,19 +23,25 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskListModelAssembler taskListAssembler;
+    private final TaskModelAssembler taskAssembler;
 
     // ==================== LİSTE (SÜTUN) İŞLEMLERİ ====================
 
     // LİSTE EKLE: POST /lists
     @PostMapping("/lists")
-    public ResponseEntity<TaskListDto> createTaskList(@Valid @RequestBody CreateTaskListRequest request) {
-        return ResponseEntity.ok(taskService.createTaskList(request));
+    public ResponseEntity<TaskListModel> createTaskList(@Valid @RequestBody CreateTaskListRequest request) {
+        TaskListDto result = taskService.createTaskList(request);
+        TaskListModel model = taskListAssembler.toModel(result);
+        return ResponseEntity.ok(model);
     }
 
     // LİSTE GÜNCELLE: PUT /lists/{id}
     @PutMapping("/lists/{id}")
-    public ResponseEntity<TaskListDto> updateTaskList(@PathVariable Long id, @Valid @RequestBody TaskListDto request) {
-        return ResponseEntity.ok(taskService.updateTaskList(id, request));
+    public ResponseEntity<TaskListModel> updateTaskList(@PathVariable Long id, @Valid @RequestBody TaskListDto request) {
+        TaskListDto result = taskService.updateTaskList(id, request);
+        TaskListModel model = taskListAssembler.toModel(result);
+        return ResponseEntity.ok(model);
     }
 
     // LİSTE SİL: DELETE /lists/{id}
@@ -41,14 +55,18 @@ public class TaskController {
 
     // GÖREV EKLE: POST /tasks
     @PostMapping("/tasks")
-    public ResponseEntity<TaskDto> createTask(@Valid @RequestBody CreateTaskRequest request) {
-        return ResponseEntity.ok(taskService.createTask(request));
+    public ResponseEntity<TaskModel> createTask(@Valid @RequestBody CreateTaskRequest request) {
+        TaskDto result = taskService.createTask(request);
+        TaskModel model = taskAssembler.toModel(result);
+        return ResponseEntity.ok(model);
     }
 
     // GÖREV GÜNCELLE: PUT /tasks/{id}
     @PutMapping("/tasks/{id}")
-    public ResponseEntity<TaskDto> updateTask(@PathVariable Long id, @Valid @RequestBody TaskDto request) {
-        return ResponseEntity.ok(taskService.updateTask(id, request));
+    public ResponseEntity<TaskModel> updateTask(@PathVariable Long id, @Valid @RequestBody TaskDto request) {
+        TaskDto result = taskService.updateTask(id, request);
+        TaskModel model = taskAssembler.toModel(result);
+        return ResponseEntity.ok(model);
     }
 
     // GÖREV SİL: DELETE /tasks/{id}
@@ -68,10 +86,12 @@ public class TaskController {
      * Body: { targetListId: 5, newPosition: 2 }
      */
     @PutMapping("/tasks/{id}/reorder")
-    public ResponseEntity<TaskDto> reorderTask(
+    public ResponseEntity<TaskModel> reorderTask(
             @PathVariable Long id,
             @Valid @RequestBody ReorderTaskRequest request) {
-        return ResponseEntity.ok(taskService.reorderTask(id, request));
+        TaskDto result = taskService.reorderTask(id, request);
+        TaskModel model = taskAssembler.toModel(result);
+        return ResponseEntity.ok(model);
     }
 
     /**
@@ -82,7 +102,18 @@ public class TaskController {
      * Body: { listId: 1, taskPositions: [{ taskId: 5, position: 0 }, { taskId: 3, position: 1 }] }
      */
     @PutMapping("/tasks/batch-reorder")
-    public ResponseEntity<List<TaskDto>> batchReorder(@Valid @RequestBody BatchReorderRequest request) {
-        return ResponseEntity.ok(taskService.batchReorder(request));
+    public ResponseEntity<CollectionModel<TaskModel>> batchReorder(@Valid @RequestBody BatchReorderRequest request) {
+        List<TaskDto> results = taskService.batchReorder(request);
+        List<TaskModel> taskModels = results.stream()
+                .map(taskAssembler::toModel)
+                .collect(Collectors.toList());
+
+        CollectionModel<TaskModel> collectionModel = CollectionModel.of(taskModels);
+
+        // Self link
+        collectionModel.add(linkTo(methodOn(TaskController.class).batchReorder(null))
+                .withSelfRel());
+
+        return ResponseEntity.ok(collectionModel);
     }
 }

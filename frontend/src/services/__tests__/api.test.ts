@@ -99,17 +99,20 @@ describe('API Services', () => {
 
   describe('boardService', () => {
     it('getUserBoards returns paginated boards', async () => {
+      // HATEOAS PagedModel format
       const mockResponse = {
-        content: [
-          { id: 1, name: 'Board 1', slug: 'board-1' },
-          { id: 2, name: 'Board 2', slug: 'board-2' },
-        ],
-        page: 0,
-        size: 10,
-        totalElements: 2,
-        totalPages: 1,
-        first: true,
-        last: true,
+        _embedded: {
+          boards: [
+            { id: 1, name: 'Board 1', slug: 'board-1' },
+            { id: 2, name: 'Board 2', slug: 'board-2' },
+          ],
+        },
+        page: {
+          size: 10,
+          number: 0,
+          totalElements: 2,
+          totalPages: 1,
+        },
       }
 
       server.use(
@@ -118,10 +121,10 @@ describe('API Services', () => {
         })
       )
 
-      const response = await boardService.getUserBoards(1)
+      const result = await boardService.getUserBoards(1)
 
-      expect(response.data.content).toHaveLength(2)
-      expect(response.data.totalElements).toBe(2)
+      expect(result.content).toHaveLength(2)
+      expect(result.totalElements).toBe(2)
     })
 
     it('createBoard returns new board', async () => {
@@ -138,14 +141,14 @@ describe('API Services', () => {
         })
       )
 
-      const response = await boardService.createBoard({
+      const result = await boardService.createBoard({
         name: 'New Board',
         userId: 1,
         status: 'PLANLANDI',
       })
 
-      expect(response.data.name).toBe('New Board')
-      expect(response.data.slug).toBe('new-board')
+      expect(result.name).toBe('New Board')
+      expect(result.slug).toBe('new-board')
     })
 
     it('getBoardDetails returns board with details', async () => {
@@ -167,11 +170,11 @@ describe('API Services', () => {
         })
       )
 
-      const response = await boardService.getBoardDetails('test-board')
+      const result = await boardService.getBoardDetails('test-board')
 
-      expect(response.data.name).toBe('Test Board')
-      expect(response.data.taskLists).toHaveLength(1)
-      expect(response.data.labels).toHaveLength(1)
+      expect(result.name).toBe('Test Board')
+      expect(result.taskLists).toHaveLength(1)
+      expect(result.labels).toHaveLength(1)
     })
 
     it('deleteBoard returns 204', async () => {
@@ -202,14 +205,14 @@ describe('API Services', () => {
         })
       )
 
-      const response = await taskService.createTask({
+      const result = await taskService.createTask({
         title: 'New Task',
         description: 'Description',
         taskListId: 1,
       })
 
-      expect(response.data.title).toBe('New Task')
-      expect(response.data.position).toBe(0)
+      expect(result.title).toBe('New Task')
+      expect(result.position).toBe(0)
     })
 
     it('updateTask returns updated task', async () => {
@@ -225,13 +228,13 @@ describe('API Services', () => {
         })
       )
 
-      const response = await taskService.updateTask(1, {
+      const result = await taskService.updateTask(1, {
         title: 'Updated Task',
         isCompleted: true,
       })
 
-      expect(response.data.title).toBe('Updated Task')
-      expect(response.data.isCompleted).toBe(true)
+      expect(result.title).toBe('Updated Task')
+      expect(result.isCompleted).toBe(true)
     })
 
     it('deleteTask returns 204', async () => {
@@ -247,10 +250,15 @@ describe('API Services', () => {
     })
 
     it('batchReorder returns reordered tasks', async () => {
-      const mockResponse = [
-        { id: 1, title: 'Task 1', position: 0 },
-        { id: 2, title: 'Task 2', position: 1 },
-      ]
+      // HATEOAS CollectionModel format
+      const mockResponse = {
+        _embedded: {
+          tasks: [
+            { id: 1, title: 'Task 1', position: 0 },
+            { id: 2, title: 'Task 2', position: 1 },
+          ],
+        },
+      }
 
       server.use(
         http.put(`${API_URL}/tasks/batch-reorder`, () => {
@@ -258,7 +266,7 @@ describe('API Services', () => {
         })
       )
 
-      const response = await taskService.batchReorder({
+      const result = await taskService.batchReorder({
         listId: 1,
         taskPositions: [
           { taskId: 1, position: 0 },
@@ -266,17 +274,22 @@ describe('API Services', () => {
         ],
       })
 
-      expect(response.data).toHaveLength(2)
-      expect(response.data[0].position).toBe(0)
+      expect(result).toHaveLength(2)
+      expect(result[0].position).toBe(0)
     })
   })
 
   describe('labelService', () => {
     it('getLabelsByBoard returns labels', async () => {
-      const mockResponse = [
-        { id: 1, name: 'Bug', color: '#ff0000' },
-        { id: 2, name: 'Feature', color: '#00ff00' },
-      ]
+      // HATEOAS CollectionModel format
+      const mockResponse = {
+        _embedded: {
+          labels: [
+            { id: 1, name: 'Bug', color: '#ff0000' },
+            { id: 2, name: 'Feature', color: '#00ff00' },
+          ],
+        },
+      }
 
       server.use(
         http.get(`${API_URL}/labels/board/1`, () => {
@@ -284,9 +297,9 @@ describe('API Services', () => {
         })
       )
 
-      const response = await labelService.getLabelsByBoard(1)
+      const result = await labelService.getLabelsByBoard(1)
 
-      expect(response.data).toHaveLength(2)
+      expect(result).toHaveLength(2)
     })
 
     it('createLabel returns new label', async () => {
@@ -302,13 +315,13 @@ describe('API Services', () => {
         })
       )
 
-      const response = await labelService.createLabel({
+      const result = await labelService.createLabel({
         name: 'New Label',
         color: '#0000ff',
         boardId: 1,
       })
 
-      expect(response.data.name).toBe('New Label')
+      expect(result.name).toBe('New Label')
     })
   })
 

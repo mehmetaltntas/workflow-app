@@ -18,8 +18,8 @@ export const useBoards = () => {
 
     try {
       setLoading(true);
-      const response = await boardService.getUserBoards(userId);
-      setBoards(response.data.content || []);
+      const result = await boardService.getUserBoards(userId);
+      setBoards(result.content || []);
     } catch (error) {
       console.error("Panolar yüklenemedi", error);
       toast.error("Panolar yüklenirken bir hata oluştu");
