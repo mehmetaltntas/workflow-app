@@ -5,7 +5,7 @@ import { boardService, taskService, labelService } from "../services/api";
 import type { Board, Task, TaskList, Priority } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag, Flag, LayoutGrid, CalendarDays } from "lucide-react";
+import { ArrowLeft, Plus, X, ArrowUp, ArrowDown, CheckSquare, Square, Link as LinkIcon, ExternalLink, ChevronDown, Calendar, Tag, Flag, LayoutGrid, CalendarDays, Columns3 } from "lucide-react";
 import { ActionMenu } from "../components/ActionMenu";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
@@ -489,6 +489,27 @@ const BoardDetailPage = () => {
             >
               <CalendarDays size={14} />
               Takvim
+            </button>
+            <button
+              onClick={() => navigate(`/boards/${slug}/miller`)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'transparent',
+                color: colors.textTertiary,
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              title="Miller Columns görünümü"
+            >
+              <Columns3 size={14} />
+              Miller
             </button>
           </div>
 

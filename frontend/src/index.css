@@ -905,3 +905,39 @@ select:focus {
 [data-theme="light"] [style*="backdropFilter: \"blur"] {
   background: rgba(255, 255, 255, 0.9) !important;
 }
+
+/* ===== Miller Columns Layout ===== */
+
+/* Miller column slide-in animation */
+@keyframes millerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Miller column light theme overrides */
+[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.2)"] {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.15)"] {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.1)"] {
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.05)"] {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Miller column item hover in light mode */
+[data-theme="light"] [style*="background: var(--card-hover-bg)"] {
+  background: rgba(0, 0, 0, 0.04) !important;
+}

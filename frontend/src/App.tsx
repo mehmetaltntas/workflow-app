@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import BoardsPage from "./pages/BoardsPage";
 import BoardDetailPage from "./pages/BoardDetailPage";
+import BoardMillerView from "./pages/BoardMillerView";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
@@ -65,6 +66,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/boards" element={<BoardsPage />} />
           <Route path="/boards/:slug" element={<BoardDetailPage />} />
+          <Route path="/boards/:slug/miller" element={<BoardMillerView />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

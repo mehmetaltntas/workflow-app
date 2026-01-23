@@ -27,11 +27,11 @@ export const mockTask: Task = {
   position: 0,
   isCompleted: false,
   createdAt: '2024-01-15T10:00:00Z',
-  dueDate: null,
+  dueDate: undefined,
   priority: undefined,
   labels: [],
   subtasks: [],
-  link: null,
+  link: undefined,
 }
 
 export const mockTaskWithLabels: Task = {
@@ -53,7 +53,7 @@ export const mockTaskCompleted: Task = {
 export const mockTaskList: TaskList = {
   id: 1,
   name: 'To Do',
-  link: null,
+  link: undefined,
   isCompleted: false,
   tasks: [mockTask, mockTaskWithLabels],
 }
@@ -61,7 +61,7 @@ export const mockTaskList: TaskList = {
 export const mockTaskListDone: TaskList = {
   id: 2,
   name: 'Done',
-  link: null,
+  link: undefined,
   isCompleted: true,
   tasks: [mockTaskCompleted],
 }
@@ -72,8 +72,8 @@ export const mockBoard: Board = {
   slug: 'test-board',
   status: 'PLANLANDI',
   description: 'Test board description',
-  link: null,
-  deadline: null,
+  link: undefined,
+  deadline: undefined,
   ownerName: 'testuser',
   taskLists: [mockTaskList, mockTaskListDone],
   labels: mockLabels,
@@ -87,7 +87,7 @@ export const mockBoards: Board[] = [
     slug: 'another-board',
     status: 'DEVAM_EDIYOR',
     description: 'Another description',
-    link: null,
+    link: undefined,
     deadline: '2024-02-01',
     ownerName: 'testuser',
     taskLists: [],

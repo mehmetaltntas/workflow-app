@@ -76,7 +76,7 @@ describe('useBoards', () => {
   })
 
   it('loadBoards fetches boards from API', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
 
     renderHook(() => useBoards())
 
@@ -95,8 +95,8 @@ describe('useBoards', () => {
       ownerName: 'testuser',
     }
 
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
-    vi.mocked(boardService.createBoard).mockResolvedValue({ data: newBoard })
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.createBoard).mockResolvedValue({ data: newBoard } as any)
 
     const { result } = renderHook(() => useBoards())
 
@@ -115,8 +115,8 @@ describe('useBoards', () => {
   })
 
   it('deleteBoard removes board from list', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
-    vi.mocked(boardService.deleteBoard).mockResolvedValue({ data: {} })
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.deleteBoard).mockResolvedValue({ data: {} } as any)
 
     const { result } = renderHook(() => useBoards())
 
@@ -127,7 +127,7 @@ describe('useBoards', () => {
     // Delete a board
     vi.mocked(boardService.getUserBoards).mockResolvedValue({
       data: { content: mockBoards.filter(b => b.id !== 1) },
-    })
+    } as any)
 
     let success: boolean | undefined
     await act(async () => {
@@ -151,8 +151,8 @@ describe('useBoards', () => {
   })
 
   it('updateBoard updates board and refreshes list', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
-    vi.mocked(boardService.updateBoard).mockResolvedValue({ data: mockBoards[0] })
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.updateBoard).mockResolvedValue({ data: mockBoards[0] } as any)
 
     const { result } = renderHook(() => useBoards())
 
@@ -171,8 +171,8 @@ describe('useBoards', () => {
   })
 
   it('updateBoardStatus updates status and refreshes list', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
-    vi.mocked(boardService.updateBoardStatus).mockResolvedValue({ data: mockBoards[0] })
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.updateBoardStatus).mockResolvedValue({ data: mockBoards[0] } as any)
 
     const { result } = renderHook(() => useBoards())
 
@@ -205,7 +205,7 @@ describe('useBoards', () => {
   })
 
   it('createBoard shows error toast on failure', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
     vi.mocked(boardService.createBoard).mockRejectedValue(new Error('Creation failed'))
 
     const { result } = renderHook(() => useBoards())
@@ -224,7 +224,7 @@ describe('useBoards', () => {
   })
 
   it('createBoard returns false for empty name', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
 
     const { result } = renderHook(() => useBoards())
 

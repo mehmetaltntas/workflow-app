@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { useRef } from 'react'
+import type { RefObject } from 'react'
 import { useClickOutside } from '../useClickOutside'
 
 describe('useClickOutside', () => {
@@ -56,7 +56,7 @@ describe('useClickOutside', () => {
   })
 
   it('does not call handler when ref is null', () => {
-    const ref = { current: null }
+    const ref = { current: null } as unknown as RefObject<HTMLElement>
 
     renderHook(() => useClickOutside(ref, handler))
 
