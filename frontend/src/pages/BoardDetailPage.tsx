@@ -12,6 +12,7 @@ import { subtaskService } from "../services/api";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { TaskEditModal } from "../components/TaskEditModal";
 import { ListEditModal } from "../components/ListEditModal";
+import { SubtaskEditModal } from "../components/SubtaskEditModal";
 import { LabelManager } from "../components/LabelManager";
 import { FilterBar, getDefaultFilters } from "../components/FilterBar";
 import { StatsBar } from "../components/StatsBar";
@@ -52,6 +53,7 @@ const BoardDetailPage = () => {
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
+  const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
   const [showLabelManager, setShowLabelManager] = useState(false);
   const [filters, setFilters] = useState<FilterState>(getDefaultFilters());
 
@@ -356,7 +358,7 @@ const BoardDetailPage = () => {
     }
   }, [loadBoardData, slug]);
 
-  const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task> & { labelIds?: number[] }) => {
+  const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task>) => {
     try {
       await taskService.updateTask(taskId, updates);
       loadBoardData(slug!);
@@ -704,6 +706,31 @@ const BoardDetailPage = () => {
     }
   }, [selectedTask, loadBoardData, slug]);
 
+  const handleUpdateSubtask = useCallback(async (subtaskId: number, updates: {
+    title?: string;
+    description?: string;
+    link?: string;
+  }) => {
+    try {
+      await subtaskService.updateSubtask(subtaskId, updates);
+      // Subtask cache'i temizle ve yeniden yükle
+      if (selectedTask) {
+        setSubtaskCache(prev => {
+          const newCache = new Map(prev);
+          newCache.delete(selectedTask.id);
+          return newCache;
+        });
+        loadSubtasks(selectedTask.id);
+      }
+      loadBoardData(slug!);
+      toast.success("Alt görev güncellendi");
+    } catch (error) {
+      console.error(error);
+      toast.error("Alt görev güncellenemedi");
+      throw error;
+    }
+  }, [selectedTask, loadSubtasks, loadBoardData, slug]);
+
   const handleBreadcrumbClick = useCallback((level: 'board' | 'list' | 'task') => {
     switch (level) {
       case 'board':
@@ -754,9 +781,17 @@ const BoardDetailPage = () => {
       {editingTask && (
         <TaskEditModal
           task={editingTask}
-          boardLabels={board.labels}
           onClose={() => setEditingTask(null)}
           onSave={handleUpdateTask}
+          onSubtaskChange={() => {
+            // Subtask cache'ini temizle ve yeniden yükle
+            setSubtaskCache(prev => {
+              const newCache = new Map(prev);
+              newCache.delete(editingTask.id);
+              return newCache;
+            });
+            loadBoardData(slug!);
+          }}
         />
       )}
 
@@ -767,6 +802,14 @@ const BoardDetailPage = () => {
           onClose={() => setEditingList(null)}
           onSave={handleUpdateList}
           onDeleteTasks={handleBulkDeleteTasks}
+        />
+      )}
+
+      {editingSubtask && (
+        <SubtaskEditModal
+          subtask={editingSubtask}
+          onClose={() => setEditingSubtask(null)}
+          onSave={handleUpdateSubtask}
         />
       )}
 
@@ -1096,6 +1139,11 @@ const BoardDetailPage = () => {
               isLoading={isLoadingSubtasks}
               emptyMessage="Alt görev yok"
               onAddItem={() => setActiveTaskIdForSubtask(selectedTask.id)}
+              onItemEdit={(item) => {
+                const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
+                const subtask = subtasks.find(s => s.id === item.id);
+                if (subtask) setEditingSubtask(subtask);
+              }}
               onItemToggle={(item) => {
                 const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
                 const subtask = subtasks.find(s => s.id === item.id);
@@ -1124,10 +1172,13 @@ const BoardDetailPage = () => {
             isLoading={isLoadingSubtasks && previewType === 'task'}
             onEditTask={(task) => setEditingTask(task)}
             onEditList={(list) => setEditingList(list)}
+            onEditSubtask={(subtask) => setEditingSubtask(subtask)}
             onToggleTask={(task) => {
               if (selectedList) handleTaskCompletionToggle(task, selectedList);
             }}
             onToggleList={(list) => handleListCompletionToggle(list)}
+            onToggleSubtask={(subtask) => handleSubtaskToggle(subtask)}
+            onDeleteSubtask={(subtaskId) => handleDeleteSubtask(subtaskId)}
           />
         </div>
       </div>
