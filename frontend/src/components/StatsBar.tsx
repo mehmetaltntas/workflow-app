@@ -195,20 +195,6 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
             labelColor={colors.textMuted}
           />
         )}
-
-        {/* Subtasks Progress */}
-        {stats.totalSubtasks > 0 && (
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "11px", color: colors.textMuted }}>Alt Görevler:</span>
-            <span style={{
-              fontSize: "12px",
-              fontWeight: "600",
-              color: stats.completedSubtasks === stats.totalSubtasks ? "var(--success)" : colors.textSecondary,
-            }}>
-              {stats.completedSubtasks}/{stats.totalSubtasks}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

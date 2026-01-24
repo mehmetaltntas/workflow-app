@@ -612,13 +612,22 @@ const BoardDetailPage = () => {
 
   // Miller navigation handlers
   const handleListSelect = useCallback((item: MillerColumnItem) => {
+    // Toggle: if clicking the same list, close it
+    if (selectedListId === item.id) {
+      setSearchParams(new URLSearchParams());
+      setHoveredTask(null);
+      setHoveredSubtask(null);
+      setSelectedSubtaskId(null);
+      return;
+    }
+
     const newParams = new URLSearchParams();
     newParams.set('list', item.id.toString());
     setSearchParams(newParams);
     setHoveredTask(null);
     setHoveredSubtask(null);
     setSelectedSubtaskId(null);
-  }, [setSearchParams]);
+  }, [setSearchParams, selectedListId]);
 
   const handleTaskSelect = useCallback((item: MillerColumnItem) => {
     if (!selectedListId) return;
