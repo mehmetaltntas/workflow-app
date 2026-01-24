@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown, Sun, Moon, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
@@ -132,6 +132,13 @@ const Layout = () => {
             >
               <LayoutDashboard size={16} strokeWidth={2} />
               <span>Panolarım</span>
+            </Link>
+            <Link
+              to="/calendar"
+              className={`nav-pill ${isActive("/calendar") ? "active" : ""}`}
+            >
+              <Calendar size={16} strokeWidth={2} />
+              <span>Takvim</span>
             </Link>
           </div>
         </div>

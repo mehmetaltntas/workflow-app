@@ -8,6 +8,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import BoardsPage from "./pages/BoardsPage";
 import BoardDetailPage from "./pages/BoardDetailPage";
+import CalendarPage from "./pages/CalendarPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
@@ -76,6 +77,7 @@ function App() {
           <Route path="/boards/:slug" element={<BoardDetailPage />} />
           {/* Redirect old Miller route to main board page */}
           <Route path="/boards/:slug/miller" element={<MillerRedirect />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
