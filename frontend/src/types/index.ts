@@ -47,6 +47,7 @@ export interface Label extends HateoasModel {
   id: number;
   name: string;
   color: string; // Hex color code (e.g., "#ff5733")
+  isDefault?: boolean; // Varsayılan etiketler silinemez
 }
 
 // Alt Görev

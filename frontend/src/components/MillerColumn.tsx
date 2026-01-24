@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ChevronRight, Folder, FileText, CheckSquare, Loader2, Plus, MoreHorizontal, Edit2, Trash2, Check, ListTodo } from 'lucide-react';
-import { colors, cssVars, typography, spacing, radius, shadows, animation } from '../styles/tokens';
+import { colors, typography, spacing, radius, shadows, animation } from '../styles/tokens';
 
 // Miller Column item tipi
 export interface MillerColumnItem {

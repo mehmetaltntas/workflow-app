@@ -266,28 +266,31 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   >
                     <Edit2 size={14} />
                   </button>
-                  <button
-                    onClick={() => onDeleteLabel(label.id)}
-                    style={{
-                      padding: spacing[1.5],
-                      borderRadius: radius.sm,
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--text-muted)",
-                      transition: `all ${animation.duration.normal}`,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = colors.semantic.dangerLight;
-                      e.currentTarget.style.color = "var(--danger)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "var(--text-muted)";
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {/* Varsayılan etiketler silinemez */}
+                  {!label.isDefault && (
+                    <button
+                      onClick={() => onDeleteLabel(label.id)}
+                      style={{
+                        padding: spacing[1.5],
+                        borderRadius: radius.sm,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--text-muted)",
+                        transition: `all ${animation.duration.normal}`,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = colors.semantic.dangerLight;
+                        e.currentTarget.style.color = "var(--danger)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "var(--text-muted)";
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
             )

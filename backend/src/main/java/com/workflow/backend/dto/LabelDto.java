@@ -16,4 +16,6 @@ public class LabelDto {
     @NotBlank(message = "Renk boş olamaz")
     @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Geçerli bir hex renk kodu giriniz (örn: #ff5733)")
     private String color;
+
+    private Boolean isDefault = false; // Varsayılan etiketler silinemez
 }

@@ -31,6 +31,7 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
+    private final LabelService labelService;
 
     // PANO OLUŞTURMA
     public BoardResponse createBoard(CreateBoardRequest request) {
@@ -61,7 +62,10 @@ public class BoardService {
         // 4. Kaydet
         Board savedBoard = boardRepository.save(board);
 
-        // 5. Response'a çevir
+        // 5. Varsayılan etiketleri oluştur (Kolay, Orta, Zor)
+        labelService.createDefaultLabelsForBoard(savedBoard);
+
+        // 6. Response'a çevir
         return mapToResponse(savedBoard);
     }
 
@@ -129,6 +133,7 @@ public class BoardService {
                 labelDto.setId(label.getId());
                 labelDto.setName(label.getName());
                 labelDto.setColor(label.getColor());
+                labelDto.setIsDefault(label.getIsDefault());
                 return labelDto;
             }).collect(Collectors.toList());
             response.setLabels(labelDtos);
@@ -156,6 +161,7 @@ public class BoardService {
                         labelDto.setId(label.getId());
                         labelDto.setName(label.getName());
                         labelDto.setColor(label.getColor());
+                        labelDto.setIsDefault(label.getIsDefault());
                         return labelDto;
                     }).collect(Collectors.toList());
                     listDto.setLabels(listLabelDtos);
@@ -182,6 +188,7 @@ public class BoardService {
                                 labelDto.setId(label.getId());
                                 labelDto.setName(label.getName());
                                 labelDto.setColor(label.getColor());
+                                labelDto.setIsDefault(label.getIsDefault());
                                 return labelDto;
                             }).collect(Collectors.toList()));
                         }

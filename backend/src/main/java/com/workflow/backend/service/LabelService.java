@@ -87,6 +87,11 @@ public class LabelService {
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
 
+        // Varsayılan etiketler silinemez
+        if (Boolean.TRUE.equals(label.getIsDefault())) {
+            throw new RuntimeException("Varsayılan etiketler silinemez!");
+        }
+
         // Önce tüm görevlerden bu etiketi kaldır
         label.getTasks().forEach(task -> task.getLabels().remove(label));
 
@@ -99,6 +104,27 @@ public class LabelService {
         dto.setId(label.getId());
         dto.setName(label.getName());
         dto.setColor(label.getColor());
+        dto.setIsDefault(label.getIsDefault());
         return dto;
+    }
+
+    // Panoya varsayılan etiketleri oluştur
+    @Transactional
+    public void createDefaultLabelsForBoard(Board board) {
+        // Varsayılan etiketler: Kolay (yeşil), Orta (sarı), Zor (kırmızı)
+        String[][] defaultLabels = {
+            {"Kolay", "#22c55e"},  // Green
+            {"Orta", "#f59e0b"},   // Amber
+            {"Zor", "#ef4444"}     // Red
+        };
+
+        for (String[] labelData : defaultLabels) {
+            Label label = new Label();
+            label.setName(labelData[0]);
+            label.setColor(labelData[1]);
+            label.setBoard(board);
+            label.setIsDefault(true);
+            labelRepository.save(label);
+        }
     }
 }

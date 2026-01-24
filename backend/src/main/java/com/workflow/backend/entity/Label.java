@@ -23,6 +23,9 @@ public class Label {
     @Column(nullable = false)
     private String color; // Hex color code (e.g., "#ff5733")
 
+    @Column(nullable = false)
+    private Boolean isDefault = false; // Varsayılan etiketler silinemez
+
     // Her etiket bir panoya aittir
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
