@@ -631,6 +631,17 @@ const BoardDetailPage = () => {
 
   const handleTaskSelect = useCallback((item: MillerColumnItem) => {
     if (!selectedListId) return;
+
+    // Toggle: if clicking the same task, close it but keep list open
+    if (selectedTaskId === item.id) {
+      const newParams = new URLSearchParams();
+      newParams.set('list', selectedListId.toString());
+      setSearchParams(newParams);
+      setHoveredSubtask(null);
+      setSelectedSubtaskId(null);
+      return;
+    }
+
     const newParams = new URLSearchParams();
     newParams.set('list', selectedListId.toString());
     newParams.set('task', item.id.toString());
@@ -638,7 +649,7 @@ const BoardDetailPage = () => {
     setHoveredSubtask(null);
     setSelectedSubtaskId(null);
     loadSubtasks(item.id);
-  }, [selectedListId, setSearchParams, loadSubtasks]);
+  }, [selectedListId, selectedTaskId, setSearchParams, loadSubtasks]);
 
   const handleListHover = useCallback((item: MillerColumnItem | null) => {
     if (item) {
@@ -660,8 +671,13 @@ const BoardDetailPage = () => {
   }, [sortedTaskLists, selectedListId]);
 
   const handleSubtaskSelect = useCallback((item: MillerColumnItem) => {
+    // Toggle: if clicking the same subtask, close it but keep task open
+    if (selectedSubtaskId === item.id) {
+      setSelectedSubtaskId(null);
+      return;
+    }
     setSelectedSubtaskId(item.id);
-  }, []);
+  }, [selectedSubtaskId]);
 
   const handleSubtaskHover = useCallback((item: MillerColumnItem | null) => {
     if (item && selectedTask) {
