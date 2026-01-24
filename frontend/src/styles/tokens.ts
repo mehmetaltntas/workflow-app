@@ -18,9 +18,9 @@ export const colors = {
 
   // Semantic Colors
   semantic: {
-    success: '#51cf66',
-    successLight: 'rgba(81, 207, 102, 0.15)',
-    successDark: '#40c057',
+    success: '#16a34a',
+    successLight: 'rgba(22, 163, 74, 0.2)',
+    successDark: '#15803d',
 
     danger: '#ff6b6b',
     dangerLight: 'rgba(255, 107, 107, 0.15)',

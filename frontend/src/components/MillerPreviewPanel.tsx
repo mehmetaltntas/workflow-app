@@ -34,6 +34,8 @@ interface MillerPreviewPanelProps {
   onToggleTask?: (task: Task) => void;
   onToggleList?: (list: TaskList) => void;
   onToggleSubtask?: (subtask: Subtask) => void;
+  onDeleteTask?: (taskId: number) => void;
+  onDeleteList?: (listId: number) => void;
   onDeleteSubtask?: (subtaskId: number) => void;
 }
 
@@ -331,6 +333,8 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   onToggleTask,
   onToggleList,
   onToggleSubtask,
+  onDeleteTask,
+  onDeleteList,
   onDeleteSubtask,
 }) => {
   // Boş durum
@@ -451,8 +455,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   fontWeight: typography.fontWeight.bold,
                   color: colors.dark.text.primary,
                   lineHeight: typography.lineHeight.tight,
-                  textDecoration: list.isCompleted ? 'line-through' : 'none',
-                  opacity: list.isCompleted ? 0.7 : 1,
                 }}
               >
                 {list.name}
@@ -500,6 +502,19 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   title="Düzenle"
                 >
                   <Edit2 size={18} />
+                </button>
+              )}
+              {onDeleteList && (
+                <button
+                  onClick={() => onDeleteList(list.id)}
+                  style={{
+                    ...styles.iconButton,
+                    background: colors.semantic.dangerLight,
+                    color: colors.semantic.danger,
+                  }}
+                  title="Sil"
+                >
+                  <Trash2 size={18} />
                 </button>
               )}
             </div>
@@ -600,8 +615,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   // Görev Önizlemesi
   if (type === 'task') {
     const task = data as Task;
-    const priority = getPriorityConfig(task.priority);
-    const dueDate = formatDueDate(task.dueDate);
     const completedSubtasks = subtasks?.filter(s => s.isCompleted).length ||
                               task.subtasks?.filter(s => s.isCompleted).length || 0;
     const totalSubtasks = subtasks?.length || task.subtasks?.length || 0;
@@ -644,52 +657,25 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   fontWeight: typography.fontWeight.bold,
                   color: colors.dark.text.primary,
                   lineHeight: typography.lineHeight.tight,
-                  textDecoration: task.isCompleted ? 'line-through' : 'none',
-                  opacity: task.isCompleted ? 0.7 : 1,
                 }}
               >
                 {task.title}
               </h2>
 
-              {/* Quick Badges */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[3] }}>
-                {task.isCompleted && (
-                  <span
-                    style={{
-                      ...styles.badge,
-                      color: colors.semantic.success,
-                      background: colors.semantic.successLight,
-                    }}
-                  >
-                    <CheckSquare size={12} />
-                    Tamamlandı
-                  </span>
-                )}
-                {priority && (
-                  <span
-                    style={{
-                      ...styles.badge,
-                      color: priority.color,
-                      background: priority.bgColor,
-                    }}
-                  >
-                    <Flag size={12} />
-                    {priority.label}
-                  </span>
-                )}
-                {dueDate && (
-                  <span
-                    style={{
-                      ...styles.badge,
-                      color: dueDate.color,
-                      background: `${dueDate.color}20`,
-                    }}
-                  >
-                    <Calendar size={12} />
-                    {dueDate.label}
-                  </span>
-                )}
-              </div>
+              {/* Status Badge */}
+              {task.isCompleted && (
+                <span
+                  style={{
+                    ...styles.badge,
+                    marginTop: spacing[2],
+                    color: colors.semantic.success,
+                    background: colors.semantic.successLight,
+                  }}
+                >
+                  <CheckSquare size={12} />
+                  Tamamlandı
+                </span>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -720,6 +706,19 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   <Edit2 size={18} />
                 </button>
               )}
+              {onDeleteTask && (
+                <button
+                  onClick={() => onDeleteTask(task.id)}
+                  style={{
+                    ...styles.iconButton,
+                    background: colors.semantic.dangerLight,
+                    color: colors.semantic.danger,
+                  }}
+                  title="Sil"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -733,69 +732,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
 
         {/* Content */}
         <div style={{ flex: 1, padding: spacing[5], overflowY: 'auto' }}>
-          {/* Açıklama */}
-          {task.description && (
-            <div style={{ marginBottom: spacing[5] }}>
-              <h4 style={styles.sectionTitle}>
-                <FileText size={12} />
-                Açıklama
-              </h4>
-              <div
-                style={{
-                  padding: spacing[4],
-                  borderRadius: radius.lg,
-                  background: colors.dark.glass.bg,
-                  border: `1px solid ${colors.dark.border.subtle}`,
-                }}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: typography.fontSize.lg,
-                    color: colors.dark.text.primary,
-                    lineHeight: typography.lineHeight.relaxed,
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {task.description}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Detay Bilgileri Grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], marginBottom: spacing[5] }}>
-            {/* Son Tarih (eğer header'da yoksa burada göster) */}
-            {dueDate && (
-              <InfoRow
-                icon={Calendar}
-                label="Son Tarih"
-                value={
-                  <span style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-                    {dueDate.label}
-                    {dueDate.isUrgent && (
-                      <AlertCircle size={14} style={{ color: dueDate.color }} />
-                    )}
-                  </span>
-                }
-                color={dueDate.color}
-              />
-            )}
-
-            {/* Öncelik */}
-            {priority && (
-              <InfoRow
-                icon={Flag}
-                label="Öncelik"
-                value={priority.label}
-                color={priority.color}
-              />
-            )}
-          </div>
-
-          {/* Etiketler */}
-          <LabelsSection labels={task.labels || []} />
-
           {/* Bağlantı */}
           {task.link && (
             <div style={{ marginBottom: spacing[5] }}>
@@ -812,64 +748,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 <ExternalLink size={16} />
                 Bağlantıyı Aç
               </a>
-            </div>
-          )}
-
-          {/* Alt Görevler */}
-          {totalSubtasks > 0 && (
-            <div style={{ marginBottom: spacing[5] }}>
-              <h4 style={styles.sectionTitle}>
-                <ListTodo size={12} />
-                Alt Görevler ({completedSubtasks}/{totalSubtasks})
-              </h4>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-                {(subtasks || task.subtasks || []).map((subtask) => (
-                  <div
-                    key={subtask.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: spacing[3],
-                      padding: spacing[3],
-                      borderRadius: radius.lg,
-                      background: subtask.isCompleted
-                        ? colors.semantic.successLight
-                        : colors.dark.glass.bg,
-                      border: `1px solid ${subtask.isCompleted ? `${colors.semantic.success}30` : colors.dark.border.subtle}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: radius.sm,
-                        border: subtask.isCompleted
-                          ? `2px solid ${colors.semantic.success}`
-                          : `2px solid ${colors.dark.border.strong}`,
-                        background: subtask.isCompleted ? colors.semantic.success : 'transparent',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {subtask.isCompleted && <Check size={12} color={colors.dark.text.primary} />}
-                    </div>
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: typography.fontSize.base,
-                        fontWeight: typography.fontWeight.medium,
-                        color: subtask.isCompleted ? colors.dark.text.muted : colors.dark.text.primary,
-                        textDecoration: subtask.isCompleted ? 'line-through' : 'none',
-                      }}
-                    >
-                      {subtask.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -903,8 +781,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   // Alt Görev (Subtask) Önizlemesi
   if (type === 'subtask') {
     const subtask = data as Subtask;
-    const priority = getPriorityConfig(subtask.priority);
-    const dueDate = formatDueDate(subtask.dueDate);
 
     return (
       <div style={styles.container}>
@@ -944,52 +820,25 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   fontWeight: typography.fontWeight.bold,
                   color: colors.dark.text.primary,
                   lineHeight: typography.lineHeight.tight,
-                  textDecoration: subtask.isCompleted ? 'line-through' : 'none',
-                  opacity: subtask.isCompleted ? 0.7 : 1,
                 }}
               >
                 {subtask.title}
               </h2>
 
-              {/* Quick Badges */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[2] }}>
-                {subtask.isCompleted && (
-                  <span
-                    style={{
-                      ...styles.badge,
-                      color: colors.semantic.success,
-                      background: colors.semantic.successLight,
-                    }}
-                  >
-                    <CheckSquare size={12} />
-                    Tamamlandı
-                  </span>
-                )}
-                {priority && (
-                  <span
-                    style={{
-                      ...styles.badge,
-                      color: priority.color,
-                      background: priority.bgColor,
-                    }}
-                  >
-                    <Flag size={12} />
-                    {priority.label}
-                  </span>
-                )}
-                {dueDate && (
-                  <span
-                    style={{
-                      ...styles.badge,
-                      color: dueDate.color,
-                      background: `${dueDate.color}20`,
-                    }}
-                  >
-                    <Calendar size={12} />
-                    {dueDate.label}
-                  </span>
-                )}
-              </div>
+              {/* Status Badge */}
+              {subtask.isCompleted && (
+                <span
+                  style={{
+                    ...styles.badge,
+                    marginTop: spacing[2],
+                    color: colors.semantic.success,
+                    background: colors.semantic.successLight,
+                  }}
+                >
+                  <CheckSquare size={12} />
+                  Tamamlandı
+                </span>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -1002,26 +851,10 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     background: subtask.isCompleted ? colors.semantic.warningLight : colors.semantic.successLight,
                     color: subtask.isCompleted ? colors.semantic.warning : colors.semantic.success,
                   }}
-                  title={subtask.isCompleted ? 'Geri Al' : 'Tamamla'}
+                  title={subtask.isCompleted ? 'Geri Al' : 'Onayla'}
                 >
                   {subtask.isCompleted ? <Square size={18} /> : <Check size={18} />}
                 </button>
-              )}
-              {subtask.link && (
-                <a
-                  href={subtask.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    ...styles.iconButton,
-                    background: colors.brand.primaryLight,
-                    color: colors.brand.primary,
-                    textDecoration: 'none',
-                  }}
-                  title="Bağlantıyı Aç"
-                >
-                  <ExternalLink size={18} />
-                </a>
               )}
               {onEditSubtask && (
                 <button
@@ -1103,39 +936,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
               </a>
             </div>
           )}
-
-          {/* Detay Bilgileri Grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], marginBottom: spacing[5] }}>
-            {/* Son Tarih */}
-            {dueDate && (
-              <InfoRow
-                icon={Calendar}
-                label="Son Tarih"
-                value={
-                  <span style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-                    {dueDate.label}
-                    {dueDate.isUrgent && (
-                      <AlertCircle size={14} style={{ color: dueDate.color }} />
-                    )}
-                  </span>
-                }
-                color={dueDate.color}
-              />
-            )}
-
-            {/* Öncelik */}
-            {priority && (
-              <InfoRow
-                icon={Flag}
-                label="Öncelik"
-                value={priority.label}
-                color={priority.color}
-              />
-            )}
-          </div>
-
-          {/* Etiketler */}
-          <LabelsSection labels={subtask.labels || []} />
 
           {/* Oluşturulma Tarihi */}
           {subtask.createdAt && (

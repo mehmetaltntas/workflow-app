@@ -266,7 +266,6 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
                     flex: 1,
                     fontSize: typography.fontSize.base,
                     color: subtask.isCompleted ? colors.dark.text.tertiary : colors.dark.text.secondary,
-                    textDecoration: subtask.isCompleted ? 'line-through' : 'none',
                   }}>
                     {subtask.title}
                   </span>

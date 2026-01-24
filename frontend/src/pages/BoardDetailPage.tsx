@@ -1178,6 +1178,8 @@ const BoardDetailPage = () => {
             }}
             onToggleList={(list) => handleListCompletionToggle(list)}
             onToggleSubtask={(subtask) => handleSubtaskToggle(subtask)}
+            onDeleteTask={(taskId) => handleDeleteTask(taskId)}
+            onDeleteList={(listId) => setDeleteListId(listId)}
             onDeleteSubtask={(subtaskId) => handleDeleteSubtask(subtaskId)}
           />
         </div>

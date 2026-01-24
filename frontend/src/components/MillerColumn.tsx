@@ -344,8 +344,6 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        textDecoration: item.isCompleted ? 'line-through' : 'none',
-                        opacity: item.isCompleted ? 0.65 : 1,
                         lineHeight: typography.lineHeight.tight,
                       }}
                     >

@@ -297,7 +297,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
                     gap: "4px",
                     borderLeft: `2px solid ${task.isCompleted ? colors.semantic.success : getPriorityColor(task.priority)}`,
                     transition: "all 0.2s",
-                    textDecoration: task.isCompleted ? "line-through" : "none",
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.background = task.isCompleted
