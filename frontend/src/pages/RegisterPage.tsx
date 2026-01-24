@@ -275,7 +275,7 @@ const RegisterPage = () => {
               </label>
               <input
                 type="text"
-                placeholder="örn: ali_yilmaz"
+                placeholder="Kullanıcı Adı"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={{

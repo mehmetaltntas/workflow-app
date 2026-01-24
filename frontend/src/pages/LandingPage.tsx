@@ -32,7 +32,7 @@ const LandingPage = () => {
       ),
       title: "Panolar",
       description:
-        "Projelerinizi gorsel panolarla organize edin. Surukle-birak ile kolayca yonetin.",
+        "Projelerinizi görsel panolarla organize edin. Sürükle-bırak ile kolayca yönetin.",
     },
     {
       icon: (
@@ -48,9 +48,9 @@ const LandingPage = () => {
           <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
         </svg>
       ),
-      title: "Gorevler",
+      title: "Görevler",
       description:
-        "Gorevlerinizi listeleyin, onceliklendirin ve takip edin. Hic bir detayi kacirmayin.",
+        "Görevlerinizi listeleyin, önceliklendirin ve takip edin. Hiçbir detayı kaçırmayın.",
     },
     {
       icon: (
@@ -70,7 +70,7 @@ const LandingPage = () => {
       ),
       title: "Takvim",
       description:
-        "Son tarihlerinizi takvim gorunumunde takip edin. Planlamanizi kolaylastirin.",
+        "Son tarihlerinizi takvim görünümünde takip edin. Planlamanızı kolaylaştırın.",
     },
   ];
 
@@ -152,7 +152,7 @@ const LandingPage = () => {
               e.currentTarget.style.background = "transparent";
             }}
           >
-            Giris Yap
+            Giriş Yap
           </button>
           <button
             onClick={() => navigate("/register")}
@@ -176,7 +176,7 @@ const LandingPage = () => {
               e.currentTarget.style.boxShadow = "none";
             }}
           >
-            Kayit Ol
+            Kayıt Ol
           </button>
         </div>
       </header>
@@ -209,7 +209,7 @@ const LandingPage = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            Kolayca Yonetin
+            Kolayca Yönetin
           </span>
         </h1>
 
@@ -222,8 +222,8 @@ const LandingPage = () => {
             lineHeight: typography.lineHeight.relaxed,
           }}
         >
-          WorkFlow ile gorevlerinizi organize edin, ekibinizle isbirligi yapin ve
-          projelerinizi zamaninda tamamlayin.
+          WorkFlow ile görevlerinizi organize edin, ekibinizle iş birliği yapın ve
+          projelerinizi zamanında tamamlayın.
         </p>
 
         <button
@@ -249,7 +249,7 @@ const LandingPage = () => {
             e.currentTarget.style.boxShadow = shadows.lg;
           }}
         >
-          Ucretsiz Baslayiniz
+          Ücretsiz Başlayın
         </button>
 
         {/* Features Section */}
@@ -326,7 +326,7 @@ const LandingPage = () => {
           fontSize: typography.fontSize.lg,
         }}
       >
-        &copy; 2025 WorkFlow. Tum haklari saklidir.
+        &copy; 2025 WorkFlow. Tüm hakları saklıdır.
       </footer>
     </div>
   );
