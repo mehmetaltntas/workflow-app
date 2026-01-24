@@ -56,7 +56,8 @@ export const useBoards = () => {
 
   const updateBoard = async (boardId: number, data: { name?: string; status?: string; link?: string; description?: string; deadline?: string }) => {
       try {
-          await boardService.updateBoard(boardId, data);
+          // Backend CreateBoardRequest userId gerektirir
+          await boardService.updateBoard(boardId, { ...data, userId });
           toast.success("Pano güncellendi");
           await loadBoards();
           return true;
