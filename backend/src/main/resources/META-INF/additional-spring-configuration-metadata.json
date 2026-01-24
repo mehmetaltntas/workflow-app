@@ -22,6 +22,11 @@
       "type": "java.lang.String",
       "description": "Comma-separated list of allowed CORS origins.",
       "defaultValue": "http://localhost:3000,http://localhost:5173"
+    },
+    {
+      "name": "google.client-id",
+      "type": "java.lang.String",
+      "description": "Google OAuth2 Client ID for authentication"
     }
   ]
 }
