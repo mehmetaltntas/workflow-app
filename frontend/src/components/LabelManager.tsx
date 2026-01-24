@@ -12,13 +12,15 @@ interface LabelManagerProps {
   onDeleteLabel: (labelId: number) => Promise<void>;
 }
 
+// Maksimum kullanıcı etiketi sayısı (varsayılan etiketler hariç)
+const MAX_USER_LABELS = 7;
+
+// Kullanıcı etiketleri için mevcut renkler
+// NOT: #ef4444 (Zor), #f59e0b (Orta), #22c55e (Kolay) varsayılan etiketler için rezerve
 const PRESET_COLORS = [
-  "#ef4444", // Red
   "#f97316", // Orange
-  "#f59e0b", // Amber
   "#eab308", // Yellow
   "#84cc16", // Lime
-  "#22c55e", // Green
   "#14b8a6", // Teal
   "#06b6d4", // Cyan
   "#0ea5e9", // Sky
@@ -46,6 +48,10 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
   const [editLabelName, setEditLabelName] = useState("");
   const [editLabelColor, setEditLabelColor] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Kullanıcı etiketlerini say (varsayılan olmayanlar)
+  const userLabelCount = labels.filter(l => !l.isDefault).length;
+  const canCreateMoreLabels = userLabelCount < MAX_USER_LABELS;
 
   const handleCreate = async () => {
     if (!newLabelName.trim()) return;
@@ -123,7 +129,12 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
             <div style={{ padding: spacing[2.5], backgroundColor: "rgba(var(--primary-rgb), 0.1)", borderRadius: radius.lg }}>
               <Tag size={20} className="text-primary" />
             </div>
-            <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Etiketler</h3>
+            <div>
+              <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Etiketler</h3>
+              <span style={{ fontSize: typography.fontSize.sm, color: userLabelCount >= MAX_USER_LABELS ? 'var(--warning)' : 'var(--text-muted)' }}>
+                {userLabelCount}/{MAX_USER_LABELS} özel etiket
+              </span>
+            </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={22} />
@@ -244,30 +255,31 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   {label.name}
                 </span>
                 <div style={{ display: "flex", gap: spacing[1], opacity: 0, transition: `opacity ${animation.duration.normal}` }} className="group-hover/label:!opacity-100">
-                  <button
-                    onClick={() => startEditing(label)}
-                    style={{
-                      padding: spacing[1.5],
-                      borderRadius: radius.sm,
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "var(--text-muted)",
-                      transition: `all ${animation.duration.normal}`,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = colors.brand.primaryLight;
-                      e.currentTarget.style.color = "var(--primary)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.color = "var(--text-muted)";
-                    }}
-                  >
-                    <Edit2 size={14} />
-                  </button>
-                  {/* Varsayılan etiketler silinemez */}
+                  {/* Varsayılan etiketler düzenlenemez ve silinemez */}
                   {!label.isDefault && (
+                    <>
+                    <button
+                      onClick={() => startEditing(label)}
+                      style={{
+                        padding: spacing[1.5],
+                        borderRadius: radius.sm,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--text-muted)",
+                        transition: `all ${animation.duration.normal}`,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = colors.brand.primaryLight;
+                        e.currentTarget.style.color = "var(--primary)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "var(--text-muted)";
+                      }}
+                    >
+                      <Edit2 size={14} />
+                    </button>
                     <button
                       onClick={() => onDeleteLabel(label.id)}
                       style={{
@@ -290,6 +302,7 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                     >
                       <Trash2 size={14} />
                     </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -372,21 +385,24 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
+            disabled={!canCreateMoreLabels}
             className="btn btn-ghost"
             style={{
               width: "100%",
               justifyContent: "center",
               height: "44px",
               gap: spacing[2],
-              color: "var(--primary)",
+              color: canCreateMoreLabels ? "var(--primary)" : "var(--text-muted)",
               fontWeight: typography.fontWeight.semibold,
               borderRadius: radius.lg,
               fontSize: typography.fontSize.base,
-              border: `1px dashed ${colors.brand.primary}4D`,
-              background: colors.brand.primaryLight,
+              border: `1px dashed ${canCreateMoreLabels ? colors.brand.primary + '4D' : 'var(--border)'}`,
+              background: canCreateMoreLabels ? colors.brand.primaryLight : 'transparent',
+              opacity: canCreateMoreLabels ? 1 : 0.6,
+              cursor: canCreateMoreLabels ? 'pointer' : 'not-allowed',
             }}
           >
-            <Plus size={18} /> Yeni Etiket Ekle
+            <Plus size={18} /> {canCreateMoreLabels ? 'Yeni Etiket Ekle' : 'Maksimum etiket sayısına ulaşıldı'}
           </button>
         )}
       </div>

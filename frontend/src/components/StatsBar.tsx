@@ -1,89 +1,135 @@
 import React, { useMemo } from "react";
 import { CheckCircle2, Clock, AlertTriangle, ListTodo, TrendingUp, Calendar } from "lucide-react";
-import type { Board } from "../types";
+import type { Board, TaskList, Task, Subtask } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { colors as tokenColors } from "../styles/tokens";
 
 interface StatsBarProps {
   board: Board;
+  selectedList?: TaskList | null;
+  selectedTask?: Task | null;
+  subtasks?: Subtask[];
 }
 
-interface BoardStats {
-  totalTasks: number;
-  completedTasks: number;
-  pendingTasks: number;
-  overdueTasks: number;
-  todayTasks: number;
-  totalSubtasks: number;
-  completedSubtasks: number;
+interface Stats {
+  total: number;
+  completed: number;
+  pending: number;
+  overdue: number;
+  today: number;
   progressPercent: number;
+  label: string; // "Liste", "Görev", "Alt Görev"
 }
 
-const calculateStats = (board: Board): BoardStats => {
-  let totalTasks = 0;
-  let completedTasks = 0;
-  let overdueTasks = 0;
-  let todayTasks = 0;
-  let totalSubtasks = 0;
-  let completedSubtasks = 0;
-
+const calculateStats = (
+  board: Board,
+  selectedList?: TaskList | null,
+  selectedTask?: Task | null,
+  subtasks?: Subtask[]
+): Stats => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  board.taskLists?.forEach(list => {
-    list.tasks?.forEach(task => {
-      totalTasks++;
+  // Level 3: Task selected - show subtask stats
+  if (selectedTask) {
+    const taskSubtasks = subtasks || [];
+    const total = taskSubtasks.length;
+    const completed = taskSubtasks.filter(s => s.isCompleted).length;
+    const pending = total - completed;
 
-      if (task.isCompleted) {
-        completedTasks++;
-      } else {
-        // Check due date only for non-completed tasks
-        if (task.dueDate) {
-          const dueDate = new Date(task.dueDate);
-          dueDate.setHours(0, 0, 0, 0);
-          const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-          if (diffDays < 0) {
-            overdueTasks++;
-          } else if (diffDays === 0) {
-            todayTasks++;
-          }
-        }
+    let overdue = 0;
+    let todayCount = 0;
+    taskSubtasks.forEach(subtask => {
+      if (!subtask.isCompleted && subtask.dueDate) {
+        const dueDate = new Date(subtask.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) overdue++;
+        else if (diffDays === 0) todayCount++;
       }
-
-      // Count subtasks
-      task.subtasks?.forEach(subtask => {
-        totalSubtasks++;
-        if (subtask.isCompleted) {
-          completedSubtasks++;
-        }
-      });
     });
+
+    return {
+      total,
+      completed,
+      pending,
+      overdue,
+      today: todayCount,
+      progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      label: "Alt Görev",
+    };
+  }
+
+  // Level 2: List selected - show task stats for that list
+  if (selectedList) {
+    const tasks = selectedList.tasks || [];
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.isCompleted).length;
+    const pending = total - completed;
+
+    let overdue = 0;
+    let todayCount = 0;
+    tasks.forEach(task => {
+      if (!task.isCompleted && task.dueDate) {
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) overdue++;
+        else if (diffDays === 0) todayCount++;
+      }
+    });
+
+    return {
+      total,
+      completed,
+      pending,
+      overdue,
+      today: todayCount,
+      progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      label: "Görev",
+    };
+  }
+
+  // Level 1: Board level - show list stats
+  const lists = board.taskLists || [];
+  const total = lists.length;
+  const completed = lists.filter(l => l.isCompleted).length;
+  const pending = total - completed;
+
+  let overdue = 0;
+  let todayCount = 0;
+  lists.forEach(list => {
+    if (!list.isCompleted && list.dueDate) {
+      const dueDate = new Date(list.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) overdue++;
+      else if (diffDays === 0) todayCount++;
+    }
   });
 
-  const pendingTasks = totalTasks - completedTasks;
-  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
   return {
-    totalTasks,
-    completedTasks,
-    pendingTasks,
-    overdueTasks,
-    todayTasks,
-    totalSubtasks,
-    completedSubtasks,
-    progressPercent,
+    total,
+    completed,
+    pending,
+    overdue,
+    today: todayCount,
+    progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+    label: "Liste",
   };
 };
 
-export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
+export const StatsBar: React.FC<StatsBarProps> = ({ board, selectedList, selectedTask, subtasks }) => {
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
-  const stats = useMemo(() => calculateStats(board), [board]);
+  const stats = useMemo(
+    () => calculateStats(board, selectedList, selectedTask, subtasks),
+    [board, selectedList, selectedTask, subtasks]
+  );
 
-  if (stats.totalTasks === 0) {
-    return null; // Don't show stats if there are no tasks
+  if (stats.total === 0) {
+    return null; // Don't show stats if there are no items
   }
 
   return (
@@ -146,51 +192,51 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board }) => {
 
       {/* Stats Cards */}
       <div style={{ display: "flex", alignItems: "center", gap: "20px", flex: 1 }}>
-        {/* Total Tasks */}
+        {/* Total */}
         <StatItem
           icon={<ListTodo size={15} />}
-          label="Toplam"
-          value={stats.totalTasks}
+          label={`Toplam ${stats.label}`}
+          value={stats.total}
           color={colors.textSecondary}
           labelColor={colors.textMuted}
         />
 
-        {/* Completed Tasks */}
+        {/* Completed */}
         <StatItem
           icon={<CheckCircle2 size={15} />}
           label="Tamamlanan"
-          value={stats.completedTasks}
+          value={stats.completed}
           color="var(--success)"
           labelColor={colors.textMuted}
         />
 
-        {/* Pending Tasks */}
+        {/* Pending */}
         <StatItem
           icon={<Clock size={15} />}
           label="Devam Eden"
-          value={stats.pendingTasks}
+          value={stats.pending}
           color="var(--primary)"
           labelColor={colors.textMuted}
         />
 
-        {/* Overdue Tasks */}
-        {stats.overdueTasks > 0 && (
+        {/* Overdue */}
+        {stats.overdue > 0 && (
           <StatItem
             icon={<AlertTriangle size={15} />}
             label="Gecikmiş"
-            value={stats.overdueTasks}
+            value={stats.overdue}
             color="var(--danger)"
             labelColor={colors.textMuted}
             highlight
           />
         )}
 
-        {/* Today's Tasks */}
-        {stats.todayTasks > 0 && (
+        {/* Today */}
+        {stats.today > 0 && (
           <StatItem
             icon={<Calendar size={15} />}
             label="Bugün"
-            value={stats.todayTasks}
+            value={stats.today}
             color={tokenColors.priority.medium}
             labelColor={colors.textMuted}
           />
@@ -231,11 +277,43 @@ const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, labelCol
   </div>
 );
 
+// Separate stats calculation for MiniStats (board cards - shows all tasks)
+const calculateBoardTaskStats = (board: Board) => {
+  let totalTasks = 0;
+  let completedTasks = 0;
+  let overdueTasks = 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  board.taskLists?.forEach(list => {
+    list.tasks?.forEach(task => {
+      totalTasks++;
+      if (task.isCompleted) {
+        completedTasks++;
+      } else if (task.dueDate) {
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        if (dueDate.getTime() < today.getTime()) {
+          overdueTasks++;
+        }
+      }
+    });
+  });
+
+  return {
+    totalTasks,
+    completedTasks,
+    overdueTasks,
+    progressPercent: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+  };
+};
+
 // Mini stats for board cards (BoardsPage)
 export const MiniStats: React.FC<{ board: Board }> = ({ board }) => {
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
-  const stats = useMemo(() => calculateStats(board), [board]);
+  const stats = useMemo(() => calculateBoardTaskStats(board), [board]);
 
   if (stats.totalTasks === 0) {
     return (

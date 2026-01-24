@@ -33,11 +33,18 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
   const [deletedTaskIds, setDeletedTaskIds] = useState<number[]>([]);
 
   const toggleLabel = (labelId: number) => {
-    setSelectedLabelIds(prev =>
-      prev.includes(labelId)
-        ? prev.filter(id => id !== labelId)
-        : [...prev, labelId]
-    );
+    setSelectedLabelIds(prev => {
+      if (prev.includes(labelId)) {
+        // Eğer zaten seçiliyse, kaldır (en az 0 olabilir)
+        return prev.filter(id => id !== labelId);
+      } else {
+        // Eğer seçili değilse ve 3'ten az varsa, ekle
+        if (prev.length >= 3) {
+          return prev; // Maksimum 3 etiket
+        }
+        return [...prev, labelId];
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -350,17 +357,36 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
           {/* Labels */}
           {boardLabels.length > 0 && (
             <div className="form-group">
-              <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
-                <Tag size={14} /> Etiketler
-              </label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: spacing[2] }}>
+                <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
+                  <Tag size={14} /> Etiketler
+                </label>
+                <span style={{
+                  fontSize: typography.fontSize.sm,
+                  color: selectedLabelIds.length >= 3 ? 'var(--warning)' : 'var(--text-muted)',
+                  fontWeight: typography.fontWeight.medium
+                }}>
+                  {selectedLabelIds.length}/3 seçili
+                </span>
+              </div>
+              <p style={{
+                fontSize: typography.fontSize.sm,
+                color: 'var(--text-muted)',
+                marginBottom: spacing[3],
+                fontStyle: 'italic'
+              }}>
+                Birden fazla etiket seçebilirsiniz (maks. 3 adet)
+              </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
                 {boardLabels.map(label => {
                   const isSelected = selectedLabelIds.includes(label.id);
+                  const isDisabled = !isSelected && selectedLabelIds.length >= 3;
                   return (
                     <button
                       key={label.id}
                       type="button"
                       onClick={() => toggleLabel(label.id)}
+                      disabled={isDisabled}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -372,17 +398,18 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
                         color: isSelected ? label.color : colors.dark.text.secondary,
                         fontSize: typography.fontSize.md,
                         fontWeight: typography.fontWeight.semibold,
-                        cursor: 'pointer',
+                        cursor: isDisabled ? 'not-allowed' : 'pointer',
+                        opacity: isDisabled ? 0.5 : 1,
                         transition: `all ${animation.duration.normal}`,
                       }}
                       onMouseEnter={(e) => {
-                        if (!isSelected) {
+                        if (!isSelected && !isDisabled) {
                           e.currentTarget.style.borderColor = `${label.color}60`;
                           e.currentTarget.style.background = `${label.color}15`;
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!isSelected) {
+                        if (!isSelected && !isDisabled) {
                           e.currentTarget.style.borderColor = cssVars.borderStrong;
                           e.currentTarget.style.background = colors.dark.glass.bg;
                         }

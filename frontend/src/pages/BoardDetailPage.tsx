@@ -1087,7 +1087,12 @@ const BoardDetailPage = () => {
       </div>
 
       {/* Stats Bar */}
-      <StatsBar board={board} />
+      <StatsBar
+        board={board}
+        selectedList={selectedList}
+        selectedTask={selectedTask}
+        subtasks={selectedTask ? (subtaskCache.get(selectedTask.id) || selectedTask.subtasks || []) : undefined}
+      />
 
       {/* Filter Bar */}
       <FilterBar
