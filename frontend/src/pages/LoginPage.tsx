@@ -16,7 +16,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
-      toast.error("Kullanici adi ve sifre gereklidir");
+      toast.error("Kullanıcı adı ve şifre gereklidir");
       return;
     }
 
@@ -30,10 +30,10 @@ const LoginPage = () => {
       localStorage.setItem("userId", response.data.id);
       localStorage.setItem("username", response.data.username);
 
-      toast.success("Giris Basarili!");
+      toast.success("Giriş başarılı!");
       navigate("/home");
     } catch {
-      toast.error("Kullanici adi veya sifre hatali!");
+      toast.error("Kullanıcı adı veya şifre hatalı!");
     } finally {
       setIsLoading(false);
     }
@@ -49,10 +49,10 @@ const LoginPage = () => {
       localStorage.setItem("userId", response.data.id);
       localStorage.setItem("username", response.data.username);
 
-      toast.success("Google ile giris basarili!");
+      toast.success("Google ile giriş başarılı!");
       navigate("/home");
     } catch {
-      toast.error("Google ile giris basarisiz oldu");
+      toast.error("Google ile giriş başarısız oldu");
     } finally {
       setIsLoading(false);
     }
@@ -134,8 +134,8 @@ const LoginPage = () => {
             lineHeight: typography.lineHeight.relaxed,
           }}
         >
-          Gorevlerinizi kolayca yonetin, ekibinizle isbirligi yapin ve
-          projelerinizi zamaninda tamamlayin.
+          Görevlerinizi kolayca yönetin, ekibinizle iş birliği yapın ve
+          projelerinizi zamanında tamamlayın.
         </p>
 
         {/* Dekoratif Elementler */}
@@ -191,7 +191,7 @@ const LoginPage = () => {
               textAlign: "center",
             }}
           >
-            Hos Geldiniz
+            Hoş Geldiniz
           </h2>
           <p
             style={{
@@ -201,7 +201,7 @@ const LoginPage = () => {
               textAlign: "center",
             }}
           >
-            Hesabiniza giris yapin
+            Hesabınıza giriş yapın
           </p>
 
           {/* Google Sign-In */}
@@ -244,11 +244,11 @@ const LoginPage = () => {
                   marginBottom: spacing[2],
                 }}
               >
-                Kullanici Adi
+                Kullanıcı Adı
               </label>
               <input
                 type="text"
-                placeholder="kullaniciadi"
+                placeholder="örn: ali_yilmaz"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={{
@@ -284,7 +284,7 @@ const LoginPage = () => {
                   marginBottom: spacing[2],
                 }}
               >
-                Sifre
+                Şifre
               </label>
               <div style={{ position: "relative" }}>
                 <input
@@ -354,7 +354,7 @@ const LoginPage = () => {
                   fontWeight: typography.fontWeight.medium,
                 }}
               >
-                Sifremi Unuttum
+                Şifremi Unuttum
               </span>
             </div>
 
@@ -392,10 +392,10 @@ const LoginPage = () => {
                   >
                     <path d="M21 12a9 9 0 11-6.219-8.56" />
                   </svg>
-                  Giris Yapiliyor...
+                  Giriş yapılıyor...
                 </>
               ) : (
-                "Giris Yap"
+                "Giriş Yap"
               )}
             </button>
           </form>
@@ -409,7 +409,7 @@ const LoginPage = () => {
               color: colors.dark.text.tertiary,
             }}
           >
-            Hesabiniz yok mu?{" "}
+            Hesabınız yok mu?{" "}
             <span
               onClick={() => navigate("/register")}
               style={{
@@ -418,7 +418,7 @@ const LoginPage = () => {
                 fontWeight: typography.fontWeight.semibold,
               }}
             >
-              Kayit Ol
+              Kayıt Ol
             </span>
           </p>
         </div>

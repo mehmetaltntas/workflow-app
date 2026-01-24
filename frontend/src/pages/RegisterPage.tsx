@@ -20,7 +20,7 @@ const RegisterPage = () => {
   const handleEmailChange = (value: string) => {
     setEmail(value);
     if (value && !isValidEmail(value)) {
-      setEmailError("Gecerli bir email adresi giriniz");
+      setEmailError("Geçerli bir e-posta adresi giriniz");
     } else {
       setEmailError("");
     }
@@ -30,17 +30,17 @@ const RegisterPage = () => {
     e.preventDefault();
 
     if (!username.trim() || !email.trim() || !password.trim()) {
-      toast.error("Tum alanlar gereklidir");
+      toast.error("Tüm alanlar gereklidir");
       return;
     }
 
     if (!isValidEmail(email)) {
-      toast.error("Gecerli bir email adresi giriniz");
+      toast.error("Geçerli bir e-posta adresi giriniz");
       return;
     }
 
     if (passwordStrength.score < 3) {
-      toast.error("Daha guclu bir sifre secin");
+      toast.error("Daha güçlü bir şifre seçin");
       return;
     }
 
@@ -58,10 +58,10 @@ const RegisterPage = () => {
       localStorage.setItem("userId", response.data.id);
       localStorage.setItem("username", response.data.username);
 
-      toast.success("Kayit Basarili!");
+      toast.success("Kayıt başarılı!");
       navigate("/home");
     } catch {
-      toast.error("Kayit basarisiz! Kullanici adi veya email alinmis olabilir.");
+      toast.error("Kayıt başarısız! Kullanıcı adı veya e-posta alınmış olabilir.");
     } finally {
       setIsLoading(false);
     }
@@ -77,10 +77,10 @@ const RegisterPage = () => {
       localStorage.setItem("userId", response.data.id);
       localStorage.setItem("username", response.data.username);
 
-      toast.success("Google ile kayit basarili!");
+      toast.success("Google ile kayıt başarılı!");
       navigate("/home");
     } catch {
-      toast.error("Google ile kayit basarisiz oldu");
+      toast.error("Google ile kayıt başarısız oldu");
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +162,7 @@ const RegisterPage = () => {
             lineHeight: typography.lineHeight.relaxed,
           }}
         >
-          Ucretsiz hesap olusturun ve projelerinizi yonetmeye hemen baslayin.
+          Ücretsiz hesap oluşturun ve projelerinizi yönetmeye hemen başlayın.
         </p>
 
         {/* Dekoratif Elementler */}
@@ -218,7 +218,7 @@ const RegisterPage = () => {
               textAlign: "center",
             }}
           >
-            Hesap Olustur
+            Hesap Oluştur
           </h2>
           <p
             style={{
@@ -228,7 +228,7 @@ const RegisterPage = () => {
               textAlign: "center",
             }}
           >
-            Ucretsiz kayit olun
+            Ücretsiz kayıt olun
           </p>
 
           {/* Google Sign-In */}
@@ -271,11 +271,11 @@ const RegisterPage = () => {
                   marginBottom: spacing[2],
                 }}
               >
-                Kullanici Adi
+                Kullanıcı Adı
               </label>
               <input
                 type="text"
-                placeholder="kullaniciadi"
+                placeholder="örn: ali_yilmaz"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={{
@@ -311,11 +311,11 @@ const RegisterPage = () => {
                   marginBottom: spacing[2],
                 }}
               >
-                Email
+                E-posta
               </label>
               <input
                 type="email"
-                placeholder="ornek@email.com"
+                placeholder="ornek@eposta.com"
                 value={email}
                 onChange={(e) => handleEmailChange(e.target.value)}
                 style={{
@@ -360,7 +360,7 @@ const RegisterPage = () => {
                   marginBottom: spacing[2],
                 }}
               >
-                Sifre
+                Şifre
               </label>
               <div style={{ position: "relative" }}>
                 <input
@@ -482,7 +482,7 @@ const RegisterPage = () => {
                   Kaydediliyor...
                 </>
               ) : (
-                "Kayit Ol"
+                "Kayıt Ol"
               )}
             </button>
           </form>
@@ -496,7 +496,7 @@ const RegisterPage = () => {
               color: colors.dark.text.tertiary,
             }}
           >
-            Zaten hesabiniz var mi?{" "}
+            Zaten hesabınız var mı?{" "}
             <span
               onClick={() => navigate("/login")}
               style={{
@@ -505,7 +505,7 @@ const RegisterPage = () => {
                 fontWeight: typography.fontWeight.semibold,
               }}
             >
-              Giris Yap
+              Giriş Yap
             </span>
           </p>
         </div>

@@ -24,9 +24,9 @@ export const getPasswordStrength = (password: string): {
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
 
-  if (score <= 2) return { score, label: 'Zayif', color: '#ef4444' };
+  if (score <= 2) return { score, label: 'Zayıf', color: '#ef4444' };
   if (score <= 4) return { score, label: 'Orta', color: '#f59e0b' };
-  return { score, label: 'Guclu', color: '#22c55e' };
+  return { score, label: 'Güçlü', color: '#22c55e' };
 };
 
 /**
