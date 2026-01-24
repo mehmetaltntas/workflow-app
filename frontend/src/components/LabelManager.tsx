@@ -58,6 +58,9 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Hover state for label actions
+  const [hoveredLabelId, setHoveredLabelId] = useState<number | null>(null);
+
   // Toplam etiket sayısını say
   const totalLabelCount = labels.length;
   const canCreateMoreLabels = totalLabelCount < MAX_LABELS;
@@ -277,7 +280,8 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   border: `1px solid ${colors.dark.border.subtle}`,
                   transition: `all ${animation.duration.normal}`,
                 }}
-                className="group/label"
+                onMouseEnter={() => setHoveredLabelId(label.id)}
+                onMouseLeave={() => setHoveredLabelId(null)}
               >
                 <div
                   style={{
@@ -296,7 +300,7 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                 <span style={{ flex: 1, fontSize: typography.fontSize.base, fontWeight: typography.fontWeight.semibold, color: "var(--text-main)" }}>
                   {label.name}
                 </span>
-                <div style={{ display: "flex", gap: spacing[1], opacity: 0, transition: `opacity ${animation.duration.normal}` }} className="group-hover/label:!opacity-100">
+                <div style={{ display: "flex", gap: spacing[1], opacity: hoveredLabelId === label.id ? 1 : 0, transition: `opacity ${animation.duration.normal}` }}>
                   <button
                     onClick={() => startEditing(label)}
                     style={{
