@@ -1,13 +1,27 @@
 package com.workflow.backend.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "Kullanıcı bilgileri yanıtı")
 public class UserResponse {
+
+    @Schema(description = "Kullanıcı ID", example = "1")
     private Long id;
+
+    @Schema(description = "Kullanıcı adı", example = "johndoe")
     private String username;
+
+    @Schema(description = "Email adresi", example = "john@example.com")
     private String email;
-    private String profilePicture; // Base64 encoded image
-    private String token; // Access Token (kısa süreli - 15 dk)
-    private String refreshToken; // Refresh Token (uzun süreli - 7 gün)
+
+    @Schema(description = "Profil resmi (Base64 encoded)")
+    private String profilePicture;
+
+    @Schema(description = "Access Token (15 dakika geçerli)")
+    private String token;
+
+    @Schema(description = "Refresh Token (7 gün geçerli)")
+    private String refreshToken;
 }

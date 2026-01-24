@@ -2,6 +2,8 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.entity.PasswordResetToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.exception.ExpiredTokenException;
+import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.repository.PasswordResetTokenRepository;
 import com.workflow.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,10 +86,10 @@ public class PasswordResetService {
     @Transactional
     public void resetPassword(String email, String code, String newPassword) {
         PasswordResetToken token = tokenRepository.findByUserEmailAndCodeAndUsedFalse(email, code)
-                .orElseThrow(() -> new RuntimeException("Gecersiz veya suresi dolmus kod"));
+                .orElseThrow(() -> new InvalidCredentialsException("Geçersiz veya süresi dolmuş kod"));
 
         if (token.isExpired()) {
-            throw new RuntimeException("Kodun suresi dolmus. Lutfen yeni kod isteyin.");
+            throw new ExpiredTokenException("Kodun süresi dolmuş. Lütfen yeni kod isteyin.");
         }
 
         // Sifreyi guncelle

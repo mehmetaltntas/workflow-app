@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:headed": "cypress run --headed"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -21,6 +24,7 @@
     "react-router-dom": "^7.12.0"
   },
   "devDependencies": {
+    "cypress": "^13.17.0",
     "@eslint/js": "^9.39.1",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",

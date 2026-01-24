@@ -7,6 +7,9 @@ import com.workflow.backend.dto.UpdateProfileRequest;
 import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.exception.DuplicateResourceException;
+import com.workflow.backend.exception.InvalidCredentialsException;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.UserRepository;
 import com.workflow.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +30,12 @@ public class UserService {
     public UserResponse register(RegisterRequest request) {
         // 1. Kural: Bu kullanıcı adı zaten var mı?
         if (userRepository.findByUsername(request.getUsername()) != null) {
-            throw new RuntimeException("Bu kullanıcı adı zaten alınmış!");
+            throw new DuplicateResourceException("Kullanıcı adı", "username", request.getUsername());
         }
 
         // 2. Kural: Bu email zaten kullanılıyor mu?
         if (userRepository.findByEmail(request.getEmail()) != null) {
-            throw new RuntimeException("Bu email adresi zaten kullanılıyor!");
+            throw new DuplicateResourceException("Email adresi", "email", request.getEmail());
         }
 
         // 3. Entity Oluştur ve Verileri Aktar
@@ -64,7 +67,7 @@ public class UserService {
 
         // 2. Kullanıcı yoksa veya şifre yanlışsa hata ver
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Kullanıcı adı veya şifre hatalı!");
+            throw new InvalidCredentialsException("Kullanıcı adı veya şifre hatalı!");
         }
 
         // 3. Access Token Üret
@@ -86,7 +89,7 @@ public class UserService {
         authorizationService.verifyUserOwnership(id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
         return mapToResponse(user);
     }
 
@@ -96,13 +99,13 @@ public class UserService {
         authorizationService.verifyUserOwnership(id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
 
         // Username güncelleme (eğer değiştirildiyse ve başkası kullanmıyorsa)
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
             User existingUser = userRepository.findByUsername(request.getUsername());
             if (existingUser != null && !existingUser.getId().equals(id)) {
-                throw new RuntimeException("Bu kullanıcı adı zaten kullanılıyor!");
+                throw new DuplicateResourceException("Kullanıcı adı", "username", request.getUsername());
             }
             user.setUsername(request.getUsername());
         }
@@ -122,11 +125,11 @@ public class UserService {
         authorizationService.verifyUserOwnership(id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
 
         // Mevcut şifre kontrolü
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new RuntimeException("Mevcut şifre hatalı!");
+            throw new InvalidCredentialsException("Mevcut şifre hatalı!");
         }
 
         // Yeni şifre güncelle

@@ -6,6 +6,8 @@ import com.workflow.backend.dto.TaskListUsageDto;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.TaskList;
+import com.workflow.backend.exception.DuplicateResourceException;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
 import com.workflow.backend.repository.TaskListRepository;
@@ -44,7 +46,7 @@ public class LabelService {
         authorizationService.verifyBoardOwnership(request.getBoardId());
 
         Board board = boardRepository.findById(request.getBoardId())
-                .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", request.getBoardId()));
 
         // Maksimum toplam etiket sayısını kontrol et
         List<Label> existingLabels = labelRepository.findByBoard(board);
@@ -54,7 +56,7 @@ public class LabelService {
 
         // Aynı isimde etiket var mı kontrol et
         if (labelRepository.existsByNameAndBoard(request.getName(), board)) {
-            throw new RuntimeException("Bu isimde bir etiket zaten var!");
+            throw new DuplicateResourceException("Etiket", "name", request.getName());
         }
 
         Label label = new Label();
@@ -73,12 +75,12 @@ public class LabelService {
         authorizationService.verifyLabelOwnership(labelId);
 
         Label label = labelRepository.findById(labelId)
-                .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Etiket", "id", labelId));
 
         // İsim değiştiyse ve başka bir etiket aynı isme sahipse hata ver
         if (request.getName() != null && !request.getName().equals(label.getName())) {
             if (labelRepository.existsByNameAndBoard(request.getName(), label.getBoard())) {
-                throw new RuntimeException("Bu isimde bir etiket zaten var!");
+                throw new DuplicateResourceException("Etiket", "name", request.getName());
             }
             label.setName(request.getName());
         }
@@ -99,7 +101,7 @@ public class LabelService {
         authorizationService.verifyLabelOwnership(labelId);
 
         Label label = labelRepository.findById(labelId)
-                .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Etiket", "id", labelId));
 
         // Önce tüm görevlerden bu etiketi kaldır
         label.getTasks().forEach(task -> task.getLabels().remove(label));
@@ -117,7 +119,7 @@ public class LabelService {
         authorizationService.verifyLabelOwnership(labelId);
 
         Label label = labelRepository.findById(labelId)
-                .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Etiket", "id", labelId));
 
         List<TaskList> affectedLists = taskListRepository.findByLabelsContaining(label);
 

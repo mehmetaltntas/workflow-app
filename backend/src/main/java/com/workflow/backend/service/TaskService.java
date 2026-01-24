@@ -6,6 +6,8 @@ import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.Priority;
 import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
+import com.workflow.backend.exception.DuplicateResourceException;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
 import com.workflow.backend.repository.TaskListRepository;
@@ -38,7 +40,7 @@ public class TaskService {
         authorizationService.verifyBoardOwnership(request.getBoardId());
 
         Board board = boardRepository.findById(request.getBoardId())
-                .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", request.getBoardId()));
 
         TaskList list = new TaskList();
         list.setName(request.getName());
@@ -63,7 +65,7 @@ public class TaskService {
         }
 
         if (taskListRepository.existsByNameAndBoard(request.getName(), board)) {
-            throw new RuntimeException("Bu liste isminden zaten var!");
+            throw new DuplicateResourceException("Liste", "name", request.getName());
         }
 
         TaskList savedList = taskListRepository.save(list);
@@ -77,10 +79,10 @@ public class TaskService {
         authorizationService.verifyTaskListOwnership(request.getTaskListId());
 
         TaskList taskList = taskListRepository.findById(request.getTaskListId())
-                .orElseThrow(() -> new RuntimeException("Liste bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", request.getTaskListId()));
 
         if (taskRepository.existsByTitleAndTaskList(request.getTitle(), taskList)) {
-            throw new RuntimeException("Bu görev isminden bu listede zaten var!");
+            throw new DuplicateResourceException("Görev", "title", request.getTitle());
         }
 
         // POZİSYON HESABI: Listedeki en yüksek pozisyon + 1
@@ -110,10 +112,10 @@ public class TaskService {
         authorizationService.verifyTaskListOwnership(request.getTargetListId());
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
 
         TaskList targetList = taskListRepository.findById(request.getTargetListId())
-                .orElseThrow(() -> new RuntimeException("Hedef liste bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Hedef liste", "id", request.getTargetListId()));
 
         Long sourceListId = task.getTaskList().getId();
         Long targetListId = request.getTargetListId();
@@ -180,13 +182,13 @@ public class TaskService {
         authorizationService.verifyTaskListOwnership(request.getListId());
 
         TaskList list = taskListRepository.findById(request.getListId())
-                .orElseThrow(() -> new RuntimeException("Liste bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", request.getListId()));
 
         logger.info("Toplu sıralama başlatıldı: Liste {} için {} görev", list.getName(), request.getTaskPositions().size());
 
         for (BatchReorderRequest.TaskPosition tp : request.getTaskPositions()) {
             Task task = taskRepository.findById(tp.getTaskId())
-                    .orElseThrow(() -> new RuntimeException("Görev bulunamadı: " + tp.getTaskId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", tp.getTaskId()));
 
             if (!task.getTaskList().getId().equals(request.getListId())) {
                 throw new RuntimeException("Görev bu listeye ait değil: " + tp.getTaskId());
@@ -214,11 +216,11 @@ public class TaskService {
         authorizationService.verifyTaskListOwnership(listId);
 
         TaskList list = taskListRepository.findById(listId)
-                .orElseThrow(() -> new RuntimeException("Liste bulunamadı"));
+                .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", listId));
 
         if (request.getName() != null && !request.getName().equals(list.getName())) {
             if (taskListRepository.existsByNameAndBoard(request.getName(), list.getBoard())) {
-                throw new RuntimeException("Bu liste isminden zaten var!");
+                throw new DuplicateResourceException("Liste", "name", request.getName());
             }
             list.setName(request.getName());
         }
@@ -270,7 +272,7 @@ public class TaskService {
         authorizationService.verifyTaskOwnership(taskId);
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
 
         Long listId = task.getTaskList().getId();
         Integer position = task.getPosition();
@@ -288,7 +290,7 @@ public class TaskService {
         authorizationService.verifyTaskOwnership(taskId);
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
+                .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
 
         if (request.getTitle() != null)
             task.setTitle(request.getTitle());

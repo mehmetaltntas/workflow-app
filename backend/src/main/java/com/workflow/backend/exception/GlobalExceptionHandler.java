@@ -51,6 +51,91 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Kaynak bulunamadı hatalarını yakala (404 Not Found)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        logger.warn("Kaynak bulunamadı: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "Kayıt Bulunamadı",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
+     * Çakışma (duplicate) hatalarını yakala (409 Conflict)
+     */
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(DuplicateResourceException ex) {
+        logger.warn("Çakışma hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Çakışma Hatası",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
+     * Kimlik doğrulama hatalarını yakala (401 Unauthorized)
+     */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+        logger.warn("Kimlik doğrulama hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Kimlik Doğrulama Hatası",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
+    /**
+     * Token süresi dolmuş hatalarını yakala (401 Unauthorized)
+     */
+    @ExceptionHandler(ExpiredTokenException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredTokenException(ExpiredTokenException ex) {
+        logger.warn("Token süresi dolmuş: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Token Süresi Dolmuş",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
+    /**
+     * Yapılandırma hatalarını yakala (500 Internal Server Error)
+     */
+    @ExceptionHandler(ConfigurationException.class)
+    public ResponseEntity<ErrorResponse> handleConfigurationException(ConfigurationException ex) {
+        logger.error("Yapılandırma hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Yapılandırma Hatası",
+                "Sunucu yapılandırmasında bir sorun var. Lütfen yönetici ile iletişime geçin.",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    /**
      * Yetkisiz erişim hatalarını yakala (403 Forbidden)
      */
     @ExceptionHandler(UnauthorizedAccessException.class)
@@ -68,40 +153,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Genel RuntimeException'ları yakala (Kullanıcı bulunamadı, şifre hatalı vb.)
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
-        logger.error("Runtime hatası: {}", ex.getMessage());
-
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String errorType = "İşlem Hatası";
-
-        // Daha spesifik hata mesajları için
-        if (ex.getMessage() != null) {
-            if (ex.getMessage().contains("bulunamadı")) {
-                status = HttpStatus.NOT_FOUND;
-                errorType = "Kayıt Bulunamadı";
-            } else if (ex.getMessage().contains("hatalı") || ex.getMessage().contains("yanlış")) {
-                status = HttpStatus.UNAUTHORIZED;
-                errorType = "Kimlik Doğrulama Hatası";
-            } else if (ex.getMessage().contains("zaten")) {
-                status = HttpStatus.CONFLICT;
-                errorType = "Çakışma Hatası";
-            }
-        }
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                status.value(),
-                errorType,
-                ex.getMessage(),
-                null
-        );
-
-        return ResponseEntity.status(status).body(errorResponse);
-    }
-
-    /**
      * IllegalStateException'ları yakala (JWT secret key hatası vb.)
      */
     @ExceptionHandler(IllegalStateException.class)
@@ -116,6 +167,23 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    /**
+     * Genel RuntimeException'ları yakala (Fallback)
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
+        logger.error("Runtime hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "İşlem Hatası",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
     /**

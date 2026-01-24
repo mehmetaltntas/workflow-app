@@ -9,6 +9,8 @@ import com.workflow.backend.dto.TaskDto;
 import com.workflow.backend.dto.TaskListDto;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.exception.DuplicateResourceException;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.BoardRepository;
 
 import jakarta.transaction.Transactional;
@@ -39,7 +41,7 @@ public class BoardService {
         User user = currentUserService.getCurrentUser();
 
         if (boardRepository.existsByNameAndUser(request.getName(), user)) {
-            throw new RuntimeException("Bu isimde bir pano zaten var!");
+            throw new DuplicateResourceException("Pano", "name", request.getName());
         }
 
         // 2. Pano Entity'sini oluştur
@@ -102,7 +104,7 @@ public class BoardService {
 
         // Query 1: Board + User (tek sorgu, diğer ilişkiler @BatchSize ile yüklenir)
         Board board = boardRepository.findBySlugWithUser(slug)
-                .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pano", "slug", slug));
 
         // Kullanıcı sadece kendi panosuna erişebilir
         authorizationService.verifyBoardOwnership(board.getId());
@@ -260,11 +262,11 @@ public class BoardService {
         authorizationService.verifyBoardOwnership(boardId);
 
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Pano bulunamadı"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", boardId));
 
         if (request.getName() != null && !board.getName().equals(request.getName())) {
             if (boardRepository.existsByNameAndUser(request.getName(), board.getUser())) {
-                throw new RuntimeException("Bu isimde bir pano zaten var!");
+                throw new DuplicateResourceException("Pano", "name", request.getName());
             }
             board.setName(request.getName());
             // Ad değişirse slug da değişmeli mi? Genelde değişmez ama burada sabit
@@ -291,7 +293,7 @@ public class BoardService {
         authorizationService.verifyBoardOwnership(boardId);
 
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new RuntimeException("Pano bulunamadı"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", boardId));
         board.setStatus(newStatus);
         Board savedBoard = boardRepository.save(board);
         return mapToResponse(savedBoard);

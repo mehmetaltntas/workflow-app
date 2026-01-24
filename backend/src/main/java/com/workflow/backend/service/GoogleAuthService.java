@@ -8,6 +8,8 @@ import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.entity.AuthProvider;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.exception.ConfigurationException;
+import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.repository.UserRepository;
 import com.workflow.backend.security.JwtService;
 import jakarta.annotation.PostConstruct;
@@ -53,14 +55,14 @@ public class GoogleAuthService {
     @Transactional
     public UserResponse authenticateWithGoogle(String idToken) {
         if (verifier == null) {
-            throw new RuntimeException("Google OAuth yapilandirilmamis");
+            throw new ConfigurationException("Google OAuth yapılandırılmamış");
         }
 
         try {
             // Token'i dogrula
             GoogleIdToken googleIdToken = verifier.verify(idToken);
             if (googleIdToken == null) {
-                throw new RuntimeException("Gecersiz Google token");
+                throw new InvalidCredentialsException("Geçersiz Google token");
             }
 
             GoogleIdToken.Payload payload = googleIdToken.getPayload();
@@ -91,9 +93,11 @@ public class GoogleAuthService {
 
             return response;
 
+        } catch (ConfigurationException | InvalidCredentialsException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Google authentication hatasi: {}", e.getMessage());
-            throw new RuntimeException("Google ile giris basarisiz: " + e.getMessage());
+            throw new InvalidCredentialsException("Google ile giriş başarısız: " + e.getMessage());
         }
     }
 

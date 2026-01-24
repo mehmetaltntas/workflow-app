@@ -46,6 +46,7 @@ public class SecurityConfig {
                                                 .contentTypeOptions(contentType -> {}))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/auth/**", "/error").permitAll()
+                                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                                                 .anyRequest().authenticated())
                                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)

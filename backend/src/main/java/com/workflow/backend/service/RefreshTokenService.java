@@ -3,6 +3,8 @@ package com.workflow.backend.service;
 import com.workflow.backend.config.JwtProperties;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.exception.ExpiredTokenException;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.RefreshTokenRepository;
 import com.workflow.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +31,7 @@ public class RefreshTokenService {
     public RefreshToken createRefreshToken(String username) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
-            throw new RuntimeException("Kullanıcı bulunamadı: " + username);
+            throw new ResourceNotFoundException("Kullanıcı", "username", username);
         }
 
         // Mevcut refresh token'ı sil (varsa)
@@ -59,7 +61,7 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token süresi dolmuş. Lütfen tekrar giriş yapın.");
+            throw new ExpiredTokenException("Refresh token süresi dolmuş. Lütfen tekrar giriş yapın.");
         }
         return token;
     }

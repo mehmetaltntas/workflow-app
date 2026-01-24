@@ -7,6 +7,13 @@ import com.workflow.backend.service.GoogleAuthService;
 import com.workflow.backend.service.PasswordResetService;
 import com.workflow.backend.service.RefreshTokenService;
 import com.workflow.backend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth") // Bu sınıftaki tüm adresler "/auth" ile başlar
+@RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth", description = "Kimlik doğrulama işlemleri")
 public class AuthController {
 
     private final UserService userService;
@@ -25,22 +33,38 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final GoogleAuthService googleAuthService;
 
-    // POST http://localhost:8080/auth/register
+    @Operation(summary = "Yeni kullanıcı kaydı", description = "Yeni bir kullanıcı hesabı oluşturur ve JWT token döner")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Kayıt başarılı",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Geçersiz istek veya kullanıcı adı/email zaten kullanılıyor"),
+            @ApiResponse(responseCode = "500", description = "Sunucu hatası")
+    })
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse result = userService.register(request);
         return ResponseEntity.ok(result);
     }
 
-    // POST http://localhost:8080/auth/login
+    @Operation(summary = "Kullanıcı girişi", description = "Kullanıcı adı ve şifre ile giriş yapar, JWT token döner")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Giriş başarılı",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Kullanıcı adı veya şifre hatalı"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz istek")
+    })
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
         UserResponse result = userService.login(request);
         return ResponseEntity.ok(result);
     }
 
-    // POST http://localhost:8080/auth/refresh
-    // Refresh token ile yeni access token al
+    @Operation(summary = "Token yenileme", description = "Refresh token ile yeni access token alır")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token yenileme başarılı",
+                    content = @Content(schema = @Schema(implementation = TokenRefreshResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Refresh token geçersiz veya süresi dolmuş")
+    })
     @PostMapping("/refresh")
     public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         String requestRefreshToken = request.getRefreshToken();
@@ -55,10 +79,15 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("Refresh token bulunamadı!"));
     }
 
-    // POST http://localhost:8080/auth/logout
-    // Kullanıcının refresh token'ını sil
+    @Operation(summary = "Çıkış yap", description = "Kullanıcının refresh token'ını siler")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Çıkış başarılı"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz token")
+    })
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<String> logout(
+            @Parameter(description = "Bearer token", required = true)
+            @RequestHeader("Authorization") String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             String username = jwtService.extractUsername(token);
@@ -68,21 +97,22 @@ public class AuthController {
         return ResponseEntity.badRequest().body("Geçersiz token");
     }
 
-    // ==========================================
-    // SIFREMI UNUTTUM ENDPOINT'LERI
-    // ==========================================
-
-    // POST http://localhost:8080/auth/forgot-password
-    // Email'e 6 haneli dogrulama kodu gonder
+    @Operation(summary = "Şifre sıfırlama kodu gönder", description = "Email adresine 6 haneli doğrulama kodu gönderir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Kod gönderildi (email kayıtlıysa)"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz email formatı")
+    })
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         passwordResetService.sendResetCode(request.getEmail());
-        // Guvenlik icin her zaman ayni mesaji don (kullanici var/yok bilgisi verme)
         return ResponseEntity.ok(Map.of("message", "Eger email adresi sistemde kayitliysa, dogrulama kodu gonderildi."));
     }
 
-    // POST http://localhost:8080/auth/verify-code
-    // Dogrulama kodunu kontrol et
+    @Operation(summary = "Doğrulama kodunu kontrol et", description = "Şifre sıfırlama için gönderilen kodu doğrular")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Kod doğrulandı"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz veya süresi dolmuş kod")
+    })
     @PostMapping("/verify-code")
     public ResponseEntity<Map<String, Object>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
         boolean isValid = passwordResetService.verifyCode(request.getEmail(), request.getCode());
@@ -92,20 +122,24 @@ public class AuthController {
         return ResponseEntity.badRequest().body(Map.of("valid", false, "message", "Gecersiz veya suresi dolmus kod"));
     }
 
-    // POST http://localhost:8080/auth/reset-password
-    // Yeni sifre belirle
+    @Operation(summary = "Şifreyi sıfırla", description = "Doğrulama kodu ile yeni şifre belirler")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Şifre güncellendi"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz kod veya şifre formatı")
+    })
     @PostMapping("/reset-password")
     public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request.getEmail(), request.getCode(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Sifreniz basariyla guncellendi"));
     }
 
-    // ==========================================
-    // GOOGLE OAUTH ENDPOINT'I
-    // ==========================================
-
-    // POST http://localhost:8080/auth/google
-    // Google ile giris/kayit
+    @Operation(summary = "Google ile giriş", description = "Google OAuth ID token ile giriş yapar veya yeni hesap oluşturur")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Giriş başarılı",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Geçersiz Google token"),
+            @ApiResponse(responseCode = "500", description = "Google OAuth yapılandırılmamış")
+    })
     @PostMapping("/google")
     public ResponseEntity<UserResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
         UserResponse result = googleAuthService.authenticateWithGoogle(request.getIdToken());
