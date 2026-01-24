@@ -301,6 +301,12 @@ export const labelService = {
 
   // Etiket sil
   deleteLabel: (labelId: number) => apiClient.delete(`/labels/${labelId}`),
+
+  // Etiketin kullanıldığı listeleri getir
+  getLabelUsage: async (labelId: number): Promise<{ id: number; name: string }[]> => {
+    const response = await apiClient.get<{ id: number; name: string }[]>(`/labels/${labelId}/usage`);
+    return response.data;
+  },
 };
 
 // 8. Kullanıcı Profil İşlemleri

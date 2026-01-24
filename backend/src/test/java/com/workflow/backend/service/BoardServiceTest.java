@@ -39,6 +39,9 @@ class BoardServiceTest {
     @Mock
     private AuthorizationService authorizationService;
 
+    @Mock
+    private LabelService labelService;
+
     @InjectMocks
     private BoardService boardService;
 

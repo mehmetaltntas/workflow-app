@@ -2,16 +2,18 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
+import com.workflow.backend.dto.TaskListUsageDto;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
+import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
+import com.workflow.backend.repository.TaskListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -19,17 +21,11 @@ public class LabelService {
 
     private final LabelRepository labelRepository;
     private final BoardRepository boardRepository;
+    private final TaskListRepository taskListRepository;
     private final AuthorizationService authorizationService;
 
-    // Varsayılan etiketler için rezerve edilmiş renkler (başka etiketlerde kullanılamaz)
-    private static final Set<String> RESERVED_COLORS = Set.of(
-        "#ef4444",  // Zor - Kırmızı
-        "#f59e0b",  // Orta - Turuncu/Sarı
-        "#22c55e"   // Kolay - Yeşil
-    );
-
-    // Maksimum kullanıcı etiketi sayısı (3 varsayılan etiket hariç)
-    private static final int MAX_USER_LABELS_PER_BOARD = 7;
+    // Maksimum toplam etiket sayısı (varsayılan dahil)
+    private static final int MAX_LABELS_PER_BOARD = 10;
 
     // Panoya ait tüm etiketleri getir
     public List<LabelDto> getLabelsByBoardId(Long boardId) {
@@ -50,23 +46,15 @@ public class LabelService {
         Board board = boardRepository.findById(request.getBoardId())
                 .orElseThrow(() -> new RuntimeException("Pano bulunamadı!"));
 
-        // Maksimum kullanıcı etiketi sayısını kontrol et
+        // Maksimum toplam etiket sayısını kontrol et
         List<Label> existingLabels = labelRepository.findByBoard(board);
-        long userLabelCount = existingLabels.stream()
-                .filter(l -> !Boolean.TRUE.equals(l.getIsDefault()))
-                .count();
-        if (userLabelCount >= MAX_USER_LABELS_PER_BOARD) {
-            throw new RuntimeException("Maksimum " + MAX_USER_LABELS_PER_BOARD + " adet özel etiket oluşturabilirsiniz!");
+        if (existingLabels.size() >= MAX_LABELS_PER_BOARD) {
+            throw new RuntimeException("Maksimum " + MAX_LABELS_PER_BOARD + " adet etiket oluşturabilirsiniz!");
         }
 
         // Aynı isimde etiket var mı kontrol et
         if (labelRepository.existsByNameAndBoard(request.getName(), board)) {
             throw new RuntimeException("Bu isimde bir etiket zaten var!");
-        }
-
-        // Rezerve edilmiş renkler kullanılamaz
-        if (RESERVED_COLORS.contains(request.getColor().toLowerCase())) {
-            throw new RuntimeException("Bu renk varsayılan etiketler için ayrılmıştır!");
         }
 
         Label label = new Label();
@@ -87,11 +75,6 @@ public class LabelService {
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
 
-        // Varsayılan etiketler düzenlenemez
-        if (Boolean.TRUE.equals(label.getIsDefault())) {
-            throw new RuntimeException("Varsayılan etiketler düzenlenemez!");
-        }
-
         // İsim değiştiyse ve başka bir etiket aynı isme sahipse hata ver
         if (request.getName() != null && !request.getName().equals(label.getName())) {
             if (labelRepository.existsByNameAndBoard(request.getName(), label.getBoard())) {
@@ -100,11 +83,8 @@ public class LabelService {
             label.setName(request.getName());
         }
 
-        // Renk değiştiyse ve rezerve edilmiş bir renk mi kontrol et
+        // Renk değiştiyse güncelle
         if (request.getColor() != null && !request.getColor().equals(label.getColor())) {
-            if (RESERVED_COLORS.contains(request.getColor().toLowerCase())) {
-                throw new RuntimeException("Bu renk varsayılan etiketler için ayrılmıştır!");
-            }
             label.setColor(request.getColor());
         }
 
@@ -121,15 +101,29 @@ public class LabelService {
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
 
-        // Varsayılan etiketler silinemez
-        if (Boolean.TRUE.equals(label.getIsDefault())) {
-            throw new RuntimeException("Varsayılan etiketler silinemez!");
-        }
-
         // Önce tüm görevlerden bu etiketi kaldır
         label.getTasks().forEach(task -> task.getLabels().remove(label));
 
+        // Önce tüm listelerden bu etiketi kaldır
+        List<TaskList> affectedLists = taskListRepository.findByLabelsContaining(label);
+        affectedLists.forEach(list -> list.getLabels().remove(label));
+
         labelRepository.delete(label);
+    }
+
+    // Etiketin kullanıldığı listeleri getir
+    public List<TaskListUsageDto> getLabelUsage(Long labelId) {
+        // Kullanıcı sadece kendi etiketinin kullanımını görebilir
+        authorizationService.verifyLabelOwnership(labelId);
+
+        Label label = labelRepository.findById(labelId)
+                .orElseThrow(() -> new RuntimeException("Etiket bulunamadı!"));
+
+        List<TaskList> affectedLists = taskListRepository.findByLabelsContaining(label);
+
+        return affectedLists.stream()
+                .map(list -> new TaskListUsageDto(list.getId(), list.getName()))
+                .toList();
     }
 
     // Entity -> DTO çevirici

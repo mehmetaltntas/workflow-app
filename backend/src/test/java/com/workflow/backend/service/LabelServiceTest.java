@@ -2,11 +2,14 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
+import com.workflow.backend.dto.TaskListUsageDto;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
+import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
+import com.workflow.backend.repository.TaskListRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,6 +36,9 @@ class LabelServiceTest {
 
     @Mock
     private BoardRepository boardRepository;
+
+    @Mock
+    private TaskListRepository taskListRepository;
 
     @Mock
     private AuthorizationService authorizationService;
@@ -224,6 +230,7 @@ class LabelServiceTest {
             // Arrange
             doNothing().when(authorizationService).verifyLabelOwnership(1L);
             when(labelRepository.findById(1L)).thenReturn(Optional.of(testLabel));
+            when(taskListRepository.findByLabelsContaining(testLabel)).thenReturn(List.of());
             doNothing().when(labelRepository).delete(testLabel);
 
             // Act
@@ -244,6 +251,51 @@ class LabelServiceTest {
             assertThatThrownBy(() -> labelService.deleteLabel(999L))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Etiket bulunamadı");
+        }
+    }
+
+    @Nested
+    @DisplayName("Get Label Usage Tests")
+    class GetLabelUsageTests {
+
+        @Test
+        @DisplayName("Should return affected task lists")
+        void getLabelUsage_Success() {
+            // Arrange
+            TaskList taskList1 = new TaskList();
+            taskList1.setId(1L);
+            taskList1.setName("Todo");
+
+            TaskList taskList2 = new TaskList();
+            taskList2.setId(2L);
+            taskList2.setName("In Progress");
+
+            doNothing().when(authorizationService).verifyLabelOwnership(1L);
+            when(labelRepository.findById(1L)).thenReturn(Optional.of(testLabel));
+            when(taskListRepository.findByLabelsContaining(testLabel)).thenReturn(List.of(taskList1, taskList2));
+
+            // Act
+            List<TaskListUsageDto> result = labelService.getLabelUsage(1L);
+
+            // Assert
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getName()).isEqualTo("Todo");
+            assertThat(result.get(1).getName()).isEqualTo("In Progress");
+        }
+
+        @Test
+        @DisplayName("Should return empty list when label not used")
+        void getLabelUsage_NoUsage() {
+            // Arrange
+            doNothing().when(authorizationService).verifyLabelOwnership(1L);
+            when(labelRepository.findById(1L)).thenReturn(Optional.of(testLabel));
+            when(taskListRepository.findByLabelsContaining(testLabel)).thenReturn(List.of());
+
+            // Act
+            List<TaskListUsageDto> result = labelService.getLabelUsage(1L);
+
+            // Assert
+            assertThat(result).isEmpty();
         }
     }
 }

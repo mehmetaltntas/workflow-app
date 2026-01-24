@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { X, Tag, Plus, Edit2, Trash2, Check } from "lucide-react";
 import type { Label } from "../types";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
+import { LabelDeleteConfirmModal } from "./LabelDeleteConfirmModal";
+import { labelService } from "../services/api";
 
 interface LabelManagerProps {
   boardId: number;
@@ -12,25 +14,26 @@ interface LabelManagerProps {
   onDeleteLabel: (labelId: number) => Promise<void>;
 }
 
-// Maksimum kullanıcı etiketi sayısı (varsayılan etiketler hariç)
-const MAX_USER_LABELS = 7;
+interface TaskListUsage {
+  id: number;
+  name: string;
+}
 
-// Kullanıcı etiketleri için mevcut renkler
-// NOT: #ef4444 (Zor), #f59e0b (Orta), #22c55e (Kolay) varsayılan etiketler için rezerve
+// Maksimum toplam etiket sayısı (varsayılan dahil)
+const MAX_LABELS = 10;
+
+// Etiketler için mevcut renkler (10 renk)
 const PRESET_COLORS = [
+  "#ef4444", // Red
   "#f97316", // Orange
-  "#eab308", // Yellow
-  "#84cc16", // Lime
+  "#f59e0b", // Amber
+  "#22c55e", // Green
   "#14b8a6", // Teal
   "#06b6d4", // Cyan
-  "#0ea5e9", // Sky
   "#3b82f6", // Blue
   "#6366f1", // Indigo
   "#8b5cf6", // Violet
-  "#a855f7", // Purple
-  "#d946ef", // Fuchsia
   "#ec4899", // Pink
-  "#f43f5e", // Rose
 ];
 
 export const LabelManager: React.FC<LabelManagerProps> = ({
@@ -49,9 +52,15 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
   const [editLabelColor, setEditLabelColor] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Kullanıcı etiketlerini say (varsayılan olmayanlar)
-  const userLabelCount = labels.filter(l => !l.isDefault).length;
-  const canCreateMoreLabels = userLabelCount < MAX_USER_LABELS;
+  // Delete confirmation modal state
+  const [labelToDelete, setLabelToDelete] = useState<Label | null>(null);
+  const [affectedLists, setAffectedLists] = useState<TaskListUsage[]>([]);
+  const [isLoadingUsage, setIsLoadingUsage] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toplam etiket sayısını say
+  const totalLabelCount = labels.length;
+  const canCreateMoreLabels = totalLabelCount < MAX_LABELS;
 
   const handleCreate = async () => {
     if (!newLabelName.trim()) return;
@@ -85,6 +94,39 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
     setEditingLabelId(label.id);
     setEditLabelName(label.name);
     setEditLabelColor(label.color);
+  };
+
+  const handleDeleteClick = async (label: Label) => {
+    setLabelToDelete(label);
+    setIsLoadingUsage(true);
+    try {
+      const usage = await labelService.getLabelUsage(label.id);
+      setAffectedLists(usage);
+    } catch (error) {
+      console.error("Etiket kullanımı alınamadı:", error);
+      setAffectedLists([]);
+    } finally {
+      setIsLoadingUsage(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!labelToDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDeleteLabel(labelToDelete.id);
+      setLabelToDelete(null);
+      setAffectedLists([]);
+    } catch (error) {
+      console.error("Etiket silinemedi:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setLabelToDelete(null);
+    setAffectedLists([]);
   };
 
   return (
@@ -131,8 +173,8 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Etiketler</h3>
-              <span style={{ fontSize: typography.fontSize.sm, color: userLabelCount >= MAX_USER_LABELS ? 'var(--warning)' : 'var(--text-muted)' }}>
-                {userLabelCount}/{MAX_USER_LABELS} özel etiket
+              <span style={{ fontSize: typography.fontSize.sm, color: totalLabelCount >= MAX_LABELS ? 'var(--warning)' : 'var(--text-muted)' }}>
+                {totalLabelCount}/{MAX_LABELS} etiket
               </span>
             </div>
           </div>
@@ -255,55 +297,50 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   {label.name}
                 </span>
                 <div style={{ display: "flex", gap: spacing[1], opacity: 0, transition: `opacity ${animation.duration.normal}` }} className="group-hover/label:!opacity-100">
-                  {/* Varsayılan etiketler düzenlenemez ve silinemez */}
-                  {!label.isDefault && (
-                    <>
-                    <button
-                      onClick={() => startEditing(label)}
-                      style={{
-                        padding: spacing[1.5],
-                        borderRadius: radius.sm,
-                        background: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--text-muted)",
-                        transition: `all ${animation.duration.normal}`,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = colors.brand.primaryLight;
-                        e.currentTarget.style.color = "var(--primary)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.color = "var(--text-muted)";
-                      }}
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => onDeleteLabel(label.id)}
-                      style={{
-                        padding: spacing[1.5],
-                        borderRadius: radius.sm,
-                        background: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--text-muted)",
-                        transition: `all ${animation.duration.normal}`,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = colors.semantic.dangerLight;
-                        e.currentTarget.style.color = "var(--danger)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                        e.currentTarget.style.color = "var(--text-muted)";
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                    </>
-                  )}
+                  <button
+                    onClick={() => startEditing(label)}
+                    style={{
+                      padding: spacing[1.5],
+                      borderRadius: radius.sm,
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--text-muted)",
+                      transition: `all ${animation.duration.normal}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = colors.brand.primaryLight;
+                      e.currentTarget.style.color = "var(--primary)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = "var(--text-muted)";
+                    }}
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(label)}
+                    style={{
+                      padding: spacing[1.5],
+                      borderRadius: radius.sm,
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--text-muted)",
+                      transition: `all ${animation.duration.normal}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = colors.semantic.dangerLight;
+                      e.currentTarget.style.color = "var(--danger)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = "var(--text-muted)";
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             )
@@ -413,6 +450,17 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
+
+      {/* Delete Confirmation Modal */}
+      {labelToDelete && !isLoadingUsage && (
+        <LabelDeleteConfirmModal
+          label={labelToDelete}
+          affectedLists={affectedLists}
+          isLoading={isDeleting}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+      )}
     </div>
   );
 };

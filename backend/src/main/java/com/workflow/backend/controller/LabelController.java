@@ -2,6 +2,7 @@ package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
+import com.workflow.backend.dto.TaskListUsageDto;
 import com.workflow.backend.hateoas.assembler.LabelModelAssembler;
 import com.workflow.backend.hateoas.model.LabelModel;
 import com.workflow.backend.service.LabelService;
@@ -71,5 +72,12 @@ public class LabelController {
     public ResponseEntity<Void> deleteLabel(@PathVariable Long id) {
         labelService.deleteLabel(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // GET /labels/{id}/usage - Etiketin kullanıldığı listeleri getir
+    @GetMapping("/{id}/usage")
+    public ResponseEntity<List<TaskListUsageDto>> getLabelUsage(@PathVariable Long id) {
+        List<TaskListUsageDto> usage = labelService.getLabelUsage(id);
+        return ResponseEntity.ok(usage);
     }
 }
