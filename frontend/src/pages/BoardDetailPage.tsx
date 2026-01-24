@@ -671,13 +671,8 @@ const BoardDetailPage = () => {
   }, [sortedTaskLists, selectedListId]);
 
   const handleSubtaskSelect = useCallback((item: MillerColumnItem) => {
-    // Toggle: if clicking the same subtask, close it but keep task open
-    if (selectedSubtaskId === item.id) {
-      setSelectedSubtaskId(null);
-      return;
-    }
     setSelectedSubtaskId(item.id);
-  }, [selectedSubtaskId]);
+  }, []);
 
   const handleSubtaskHover = useCallback((item: MillerColumnItem | null) => {
     if (item && selectedTask) {
