@@ -21,6 +21,12 @@ public class Subtask {
 
     private Integer position = 0; // Sıralama için
 
+    @Column(length = 1000)
+    private String description;
+
+    @Column(length = 500)
+    private String link;
+
     // İLİŞKİ: Hangi göreve ait?
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)

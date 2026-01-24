@@ -38,6 +38,8 @@ public class SubtaskService {
         subtask.setIsCompleted(false);
         subtask.setPosition(newPosition);
         subtask.setTask(task);
+        subtask.setDescription(request.getDescription());
+        subtask.setLink(request.getLink());
 
         Subtask saved = subtaskRepository.save(subtask);
         return mapToDto(saved);
@@ -57,6 +59,12 @@ public class SubtaskService {
         }
         if (request.getIsCompleted() != null) {
             subtask.setIsCompleted(request.getIsCompleted());
+        }
+        if (request.getDescription() != null) {
+            subtask.setDescription(request.getDescription());
+        }
+        if (request.getLink() != null) {
+            subtask.setLink(request.getLink());
         }
 
         Subtask saved = subtaskRepository.save(subtask);
@@ -103,6 +111,8 @@ public class SubtaskService {
         dto.setTitle(subtask.getTitle());
         dto.setIsCompleted(subtask.getIsCompleted());
         dto.setPosition(subtask.getPosition());
+        dto.setDescription(subtask.getDescription());
+        dto.setLink(subtask.getLink());
         return dto;
     }
 }

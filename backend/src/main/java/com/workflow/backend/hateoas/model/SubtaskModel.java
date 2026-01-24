@@ -13,4 +13,6 @@ public class SubtaskModel extends RepresentationModel<SubtaskModel> {
     private String title;
     private Boolean isCompleted;
     private Integer position;
+    private String description;
+    private String link;
 }

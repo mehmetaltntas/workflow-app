@@ -14,4 +14,10 @@ public class SubtaskDto {
 
     private Boolean isCompleted;
     private Integer position;
+
+    @Size(max = 1000, message = "Açıklama en fazla 1000 karakter olabilir")
+    private String description;
+
+    @Size(max = 500, message = "Link en fazla 500 karakter olabilir")
+    private String link;
 }

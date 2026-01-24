@@ -57,6 +57,7 @@ export interface Subtask extends HateoasModel {
   link?: string;
   isCompleted: boolean;
   position: number;
+  createdAt?: string;
   dueDate?: string | null;
   priority?: Priority;
   labels?: Label[];

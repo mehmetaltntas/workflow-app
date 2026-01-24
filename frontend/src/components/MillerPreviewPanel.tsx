@@ -14,7 +14,8 @@ import {
   Square,
   AlertCircle,
   CheckCircle2,
-  Circle
+  Circle,
+  Trash2
 } from 'lucide-react';
 import type { Task, TaskList, Subtask, Priority } from '../types';
 import { colors, typography, spacing, radius, shadows, animation } from '../styles/tokens';
@@ -29,8 +30,11 @@ interface MillerPreviewPanelProps {
   isLoading?: boolean;
   onEditTask?: (task: Task) => void;
   onEditList?: (list: TaskList) => void;
+  onEditSubtask?: (subtask: Subtask) => void;
   onToggleTask?: (task: Task) => void;
   onToggleList?: (list: TaskList) => void;
+  onToggleSubtask?: (subtask: Subtask) => void;
+  onDeleteSubtask?: (subtaskId: number) => void;
 }
 
 // Priority bilgisi
@@ -323,8 +327,11 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   isLoading = false,
   onEditTask,
   onEditList,
+  onEditSubtask,
   onToggleTask,
   onToggleList,
+  onToggleSubtask,
+  onDeleteSubtask,
 }) => {
   // Boş durum
   if (!type || !data) {
@@ -984,6 +991,65 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: spacing[2], flexShrink: 0 }}>
+              {onToggleSubtask && (
+                <button
+                  onClick={() => onToggleSubtask(subtask)}
+                  style={{
+                    ...styles.iconButton,
+                    background: subtask.isCompleted ? colors.semantic.warningLight : colors.semantic.successLight,
+                    color: subtask.isCompleted ? colors.semantic.warning : colors.semantic.success,
+                  }}
+                  title={subtask.isCompleted ? 'Geri Al' : 'Tamamla'}
+                >
+                  {subtask.isCompleted ? <Square size={18} /> : <Check size={18} />}
+                </button>
+              )}
+              {subtask.link && (
+                <a
+                  href={subtask.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    ...styles.iconButton,
+                    background: colors.brand.primaryLight,
+                    color: colors.brand.primary,
+                    textDecoration: 'none',
+                  }}
+                  title="Bağlantıyı Aç"
+                >
+                  <ExternalLink size={18} />
+                </a>
+              )}
+              {onEditSubtask && (
+                <button
+                  onClick={() => onEditSubtask(subtask)}
+                  style={{
+                    ...styles.iconButton,
+                    background: colors.brand.primaryLight,
+                    color: colors.brand.primary,
+                  }}
+                  title="Düzenle"
+                >
+                  <Edit2 size={18} />
+                </button>
+              )}
+              {onDeleteSubtask && (
+                <button
+                  onClick={() => onDeleteSubtask(subtask.id)}
+                  style={{
+                    ...styles.iconButton,
+                    background: colors.semantic.dangerLight,
+                    color: colors.semantic.danger,
+                  }}
+                  title="Sil"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1070,6 +1136,29 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
 
           {/* Etiketler */}
           <LabelsSection labels={subtask.labels || []} />
+
+          {/* Oluşturulma Tarihi */}
+          {subtask.createdAt && (
+            <div
+              style={{
+                marginTop: spacing[6],
+                paddingTop: spacing[4],
+                borderTop: `1px solid ${colors.dark.border.subtle}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2],
+                fontSize: typography.fontSize.sm,
+                color: colors.dark.text.muted,
+              }}
+            >
+              <Clock size={14} />
+              {new Date(subtask.createdAt).toLocaleDateString('tr-TR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })} tarihinde oluşturuldu
+            </div>
+          )}
         </div>
       </div>
     );
