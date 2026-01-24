@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Save, Link as LinkIcon, ListChecks } from "lucide-react";
 import type { Subtask } from "../types";
-import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
+import { colors, cssVars, typography, spacing, radius, zIndex, animation } from "../styles/tokens";
 
 interface SubtaskEditModalProps {
   subtask: Subtask;
@@ -42,8 +42,9 @@ export const SubtaskEditModal: React.FC<SubtaskEditModalProps> = ({ subtask, onC
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: colors.dark.bg.overlay,
-      backdropFilter: 'blur(8px)',
+      backgroundColor: colors.dark.bg.modalOverlay,
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -61,9 +62,9 @@ export const SubtaskEditModal: React.FC<SubtaskEditModalProps> = ({ subtask, onC
           flexDirection: "column",
           gap: spacing[5],
           position: "relative",
-          background: "var(--bg-card)",
-          boxShadow: shadows.modal,
-          border: '1px solid var(--border)',
+          background: colors.dark.bg.card,
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+          border: `1px solid ${colors.dark.border.strong}`,
           animation: `modalFadeIn ${animation.duration.slow} ${animation.easing.smooth}`
         }}
         onClick={(e) => e.stopPropagation()}

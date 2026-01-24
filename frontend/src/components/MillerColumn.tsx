@@ -91,17 +91,34 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
     }
   }, [selectedId]);
 
-  // Column background colors based on depth
+  // Column background colors based on depth - improved for better visual hierarchy
   const getColumnBackground = (index: number) => {
     switch (index) {
-      case 0: // Lists column
-        return colors.dark.bg.overlay;
-      case 1: // Tasks column
-        return `linear-gradient(180deg, ${colors.dark.bg.secondary} 0%, ${colors.dark.bg.card} 100%)`;
-      case 2: // Subtasks column
-        return `linear-gradient(180deg, ${colors.dark.bg.active} 0%, ${colors.dark.bg.elevated} 100%)`;
+      case 0: // Lists column - darkest for visual anchor
+        return `linear-gradient(180deg, ${colors.dark.bg.secondary} 0%, rgba(13, 14, 16, 0.95) 100%)`;
+      case 1: // Tasks column - slightly lighter
+        return `linear-gradient(180deg, rgba(26, 27, 30, 0.98) 0%, rgba(20, 21, 24, 0.95) 100%)`;
+      case 2: // Subtasks column - lightest for depth perception
+        return `linear-gradient(180deg, rgba(30, 32, 36, 0.95) 0%, rgba(25, 27, 31, 0.92) 100%)`;
       default:
         return colors.dark.bg.body;
+    }
+  };
+
+  // Card background colors based on column depth
+  const getCardBackground = (index: number, isSelected: boolean, isHovered: boolean) => {
+    if (isSelected) return colors.brand.primary;
+    if (isHovered) return 'rgba(255, 255, 255, 0.08)';
+
+    switch (index) {
+      case 0: // Lists - solid background
+        return 'rgba(35, 38, 45, 0.9)';
+      case 1: // Tasks - slightly transparent
+        return 'rgba(40, 43, 50, 0.85)';
+      case 2: // Subtasks - more transparent
+        return 'rgba(45, 48, 55, 0.8)';
+      default:
+        return colors.dark.glass.bg;
     }
   };
 
@@ -279,18 +296,20 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                     gap: spacing[3],
                     width: '100%',
                     padding: `${spacing[3]} ${spacing[3.5]}`,
-                    border: isSelected ? `1px solid ${colors.brand.primary}` : `1px solid transparent`,
+                    border: isSelected
+                      ? `1px solid ${colors.brand.primary}`
+                      : `1px solid ${isHovered ? colors.dark.border.strong : colors.dark.border.default}`,
                     borderRadius: radius.lg,
-                    background: isSelected
-                      ? colors.brand.primary
-                      : isHovered
-                        ? colors.dark.bg.hover
-                        : colors.dark.glass.bg,
+                    background: getCardBackground(columnIndex, isSelected, isHovered),
                     cursor: 'pointer',
                     transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
                     textAlign: 'left',
                     position: 'relative',
-                    boxShadow: isSelected ? shadows.md : isHovered ? shadows.sm : 'none',
+                    boxShadow: isSelected
+                      ? `${shadows.md}, 0 0 0 1px rgba(77, 171, 247, 0.3)`
+                      : isHovered
+                        ? '0 4px 16px rgba(0, 0, 0, 0.2)'
+                        : '0 2px 8px rgba(0, 0, 0, 0.15)',
                   }}
                 >
                   {/* Priority Indicator */}
@@ -339,8 +358,8 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                     <div
                       style={{
                         fontSize: typography.fontSize.lg,
-                        fontWeight: typography.fontWeight.medium,
-                        color: isSelected ? colors.dark.text.primary : colors.dark.text.primary,
+                        fontWeight: isSelected ? typography.fontWeight.semibold : typography.fontWeight.medium,
+                        color: isSelected ? colors.dark.text.inverse : colors.dark.text.primary,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -364,7 +383,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                           style={{
                             fontSize: typography.fontSize.sm,
                             color: isSelected
-                              ? colors.dark.text.secondary
+                              ? 'rgba(0, 0, 0, 0.7)'
                               : colors.dark.text.muted,
                           }}
                         >
@@ -392,7 +411,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                               style={{
                                 fontSize: typography.fontSize.xs,
                                 color: isSelected
-                                  ? colors.dark.text.tertiary
+                                  ? 'rgba(0, 0, 0, 0.5)'
                                   : colors.dark.text.muted,
                                 fontWeight: typography.fontWeight.medium,
                               }}
@@ -410,7 +429,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                             fontSize: typography.fontSize.xs,
                             fontWeight: typography.fontWeight.semibold,
                             color: isSelected
-                              ? colors.dark.text.secondary
+                              ? 'rgba(0, 0, 0, 0.7)'
                               : colors.dark.text.muted,
                             background: isSelected
                               ? 'rgba(255, 255, 255, 0.15)'
@@ -441,8 +460,10 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                           height: '26px',
                           borderRadius: radius.md,
                           border: 'none',
-                          background: actionMenuId === item.id ? colors.dark.bg.active : 'transparent',
-                          color: isSelected ? colors.dark.text.secondary : colors.dark.text.muted,
+                          background: actionMenuId === item.id
+                            ? (isSelected ? 'rgba(0, 0, 0, 0.15)' : colors.dark.bg.active)
+                            : 'transparent',
+                          color: isSelected ? 'rgba(0, 0, 0, 0.6)' : colors.dark.text.muted,
                           cursor: 'pointer',
                           opacity: isHovered || isSelected || actionMenuId === item.id ? 1 : 0,
                           transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
@@ -580,7 +601,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       size={18}
                       style={{
                         color: isSelected
-                          ? colors.dark.text.secondary
+                          ? 'rgba(0, 0, 0, 0.6)'
                           : colors.dark.text.muted,
                         flexShrink: 0,
                         opacity: isHovered || isSelected ? 1 : 0.4,

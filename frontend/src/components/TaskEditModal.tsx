@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { X, Save, Link as LinkIcon, Type, ListChecks, Plus, Trash2, Square, CheckSquare, Edit3 } from "lucide-react";
 import type { Task, Subtask } from "../types";
 import { subtaskService } from "../services/api";
-import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
+import { colors, cssVars, typography, spacing, radius, zIndex, animation } from "../styles/tokens";
 import { SubtaskEditModal } from "./SubtaskEditModal";
 
 interface TaskEditModalProps {
@@ -102,8 +102,9 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: colors.dark.bg.overlay,
-      backdropFilter: 'blur(8px)',
+      backgroundColor: colors.dark.bg.modalOverlay,
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -119,9 +120,9 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
           flexDirection: "column",
           gap: spacing[6],
           position: "relative",
-          background: "var(--bg-card)",
-          boxShadow: shadows.modal,
-          border: '1px solid var(--border)',
+          background: colors.dark.bg.card,
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+          border: `1px solid ${colors.dark.border.strong}`,
           animation: `modalFadeIn ${animation.duration.slow} ${animation.easing.smooth}`
         }}
         onClick={(e) => e.stopPropagation()}

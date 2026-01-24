@@ -57,13 +57,14 @@ export const colors = {
   dark: {
     bg: {
       body: '#0d0e10',
-      card: 'rgba(25, 27, 31, 0.7)',
-      elevated: 'rgba(20, 21, 24, 0.6)',
+      card: 'rgba(25, 27, 31, 0.95)',
+      elevated: 'rgba(20, 21, 24, 0.92)',
       input: '#151618',
       secondary: '#1a1b1e',
-      hover: 'rgba(255, 255, 255, 0.05)',
-      active: 'rgba(255, 255, 255, 0.08)',
-      overlay: 'rgba(0, 0, 0, 0.6)',
+      hover: 'rgba(255, 255, 255, 0.06)',
+      active: 'rgba(255, 255, 255, 0.10)',
+      overlay: 'rgba(0, 0, 0, 0.75)',
+      modalOverlay: 'rgba(0, 0, 0, 0.85)',
     },
     text: {
       primary: '#f3f5f7',
@@ -90,13 +91,14 @@ export const colors = {
   light: {
     bg: {
       body: '#f8f9fa',
-      card: 'rgba(255, 255, 255, 0.9)',
+      card: 'rgba(255, 255, 255, 0.98)',
       elevated: '#ffffff',
       input: '#ffffff',
       secondary: '#e9ecef',
-      hover: 'rgba(0, 0, 0, 0.04)',
-      active: 'rgba(0, 0, 0, 0.06)',
-      overlay: 'rgba(0, 0, 0, 0.4)',
+      hover: 'rgba(0, 0, 0, 0.05)',
+      active: 'rgba(0, 0, 0, 0.08)',
+      overlay: 'rgba(0, 0, 0, 0.5)',
+      modalOverlay: 'rgba(0, 0, 0, 0.7)',
     },
     text: {
       primary: '#1a1b1e',

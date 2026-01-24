@@ -108,14 +108,15 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
-    background: colors.dark.bg.elevated,
+    background: 'rgba(18, 19, 22, 0.98)',
     overflow: 'hidden',
     animation: `fadeIn ${animation.duration.normal} ${animation.easing.smooth}`,
+    borderLeft: `1px solid ${colors.dark.border.default}`,
   },
   header: {
     padding: spacing[6],
-    background: `linear-gradient(180deg, ${colors.dark.bg.card} 0%, ${colors.dark.bg.elevated} 100%)`,
-    borderBottom: `1px solid ${colors.dark.border.subtle}`,
+    background: `linear-gradient(180deg, rgba(30, 32, 38, 0.95) 0%, rgba(22, 24, 28, 0.92) 100%)`,
+    borderBottom: `1px solid ${colors.dark.border.strong}`,
   },
   sectionTitle: {
     margin: 0,
@@ -135,9 +136,10 @@ const styles = {
     gap: spacing[3],
     padding: `${spacing[3]} ${spacing[4]}`,
     borderRadius: radius.lg,
-    background: colors.dark.glass.bg,
-    border: `1px solid ${colors.dark.border.subtle}`,
+    background: 'rgba(35, 38, 45, 0.8)',
+    border: `1px solid ${colors.dark.border.default}`,
     transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
   },
   badge: {
     display: 'inline-flex',
@@ -350,7 +352,8 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           padding: spacing[10],
           color: colors.dark.text.muted,
           textAlign: 'center',
-          background: colors.dark.bg.elevated,
+          background: 'rgba(18, 19, 22, 0.98)',
+          borderLeft: `1px solid ${colors.dark.border.default}`,
         }}
       >
         <div
@@ -388,7 +391,8 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           justifyContent: 'center',
           padding: spacing[10],
           color: colors.dark.text.muted,
-          background: colors.dark.bg.elevated,
+          background: 'rgba(18, 19, 22, 0.98)',
+          borderLeft: `1px solid ${colors.dark.border.default}`,
         }}
       >
         <div style={{ textAlign: 'center' }}>

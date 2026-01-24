@@ -1082,7 +1082,7 @@ const BoardDetailPage = () => {
         <div style={{ display: 'flex', flex: 1, overflowX: 'auto', overflowY: 'hidden' }}>
           {/* Column 1: Lists */}
           <MillerColumn
-            title="Listeler"
+            title="LİSTELER"
             items={listItems}
             selectedId={selectedListId}
             hoveredId={hoveredList?.id ?? null}
@@ -1105,7 +1105,7 @@ const BoardDetailPage = () => {
           {/* Column 2: Tasks (when list selected) */}
           {selectedListId && selectedList && (
             <MillerColumn
-              title={`${selectedList.name} - Görevler`}
+              title="GÖREVLER"
               items={taskItems}
               selectedId={selectedTaskId}
               hoveredId={hoveredTask?.id ?? null}
@@ -1129,7 +1129,7 @@ const BoardDetailPage = () => {
           {/* Column 3: Subtasks (when task selected - always visible) */}
           {selectedTaskId && selectedTask && (
             <MillerColumn
-              title={`${selectedTask.title} - Alt Görevler`}
+              title="ALT GÖREVLER"
               items={subtaskItems}
               selectedId={selectedSubtaskId}
               hoveredId={hoveredSubtask?.id ?? null}
@@ -1194,7 +1194,9 @@ const BoardDetailPage = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: tokenColors.dark.bg.modalOverlay,
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1205,12 +1207,13 @@ const BoardDetailPage = () => {
           <div
             style={{
               background: tokenColors.dark.bg.card,
-              borderRadius: '16px',
-              padding: '24px',
+              borderRadius: '20px',
+              padding: '28px',
               width: '550px',
               maxHeight: '85vh',
               overflowY: 'auto',
-              border: `1px solid ${tokenColors.dark.border.default}`,
+              border: `1px solid ${tokenColors.dark.border.strong}`,
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1389,7 +1392,9 @@ const BoardDetailPage = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: tokenColors.dark.bg.modalOverlay,
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1405,12 +1410,13 @@ const BoardDetailPage = () => {
           <div
             style={{
               background: tokenColors.dark.bg.card,
-              borderRadius: '16px',
-              padding: '24px',
+              borderRadius: '20px',
+              padding: '28px',
               width: '500px',
               maxHeight: '85vh',
               overflowY: 'auto',
-              border: `1px solid ${tokenColors.dark.border.default}`,
+              border: `1px solid ${tokenColors.dark.border.strong}`,
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1513,7 +1519,9 @@ const BoardDetailPage = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: tokenColors.dark.bg.modalOverlay,
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1529,12 +1537,13 @@ const BoardDetailPage = () => {
           <div
             style={{
               background: tokenColors.dark.bg.card,
-              borderRadius: '16px',
-              padding: '24px',
+              borderRadius: '20px',
+              padding: '28px',
               width: '500px',
               maxHeight: '85vh',
               overflowY: 'auto',
-              border: `1px solid ${tokenColors.dark.border.default}`,
+              border: `1px solid ${tokenColors.dark.border.strong}`,
+              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
