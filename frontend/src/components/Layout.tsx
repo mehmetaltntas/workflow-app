@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Home, User, Settings, LogOut, ChevronDown, Sun, Moon, Calendar } from "lucide-react";
+import { LayoutDashboard, Home, Settings, LogOut, ChevronDown, Sun, Moon, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
@@ -242,13 +242,6 @@ const Layout = () => {
                   Hesabınızı yönetin
                 </div>
               </div>
-
-              <Link to="/profile" className="menu-item">
-                <span className="menu-item-icon">
-                  <User size={parseInt(sizes.iconSm)} strokeWidth={2} />
-                </span>
-                <span>Profil</span>
-              </Link>
 
               <Link to="/settings" className="menu-item">
                 <span className="menu-item-icon">
