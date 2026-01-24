@@ -893,6 +893,188 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
     );
   }
 
+  // Alt Görev (Subtask) Önizlemesi
+  if (type === 'subtask') {
+    const subtask = data as Subtask;
+    const priority = getPriorityConfig(subtask.priority);
+    const dueDate = formatDueDate(subtask.dueDate);
+
+    return (
+      <div style={styles.container}>
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[4] }}>
+            {/* Icon */}
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: radius.lg,
+                background: subtask.isCompleted
+                  ? `linear-gradient(135deg, ${colors.semantic.success}, ${colors.semantic.successDark})`
+                  : colors.dark.bg.active,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: subtask.isCompleted ? shadows.md : 'none',
+                border: subtask.isCompleted ? 'none' : `2px solid ${colors.dark.border.strong}`,
+                flexShrink: 0,
+              }}
+            >
+              {subtask.isCompleted ? (
+                <CheckCircle2 size={24} color={colors.dark.text.primary} />
+              ) : (
+                <ListTodo size={24} style={{ color: colors.dark.text.muted }} />
+              )}
+            </div>
+
+            {/* Title */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.bold,
+                  color: colors.dark.text.primary,
+                  lineHeight: typography.lineHeight.tight,
+                  textDecoration: subtask.isCompleted ? 'line-through' : 'none',
+                  opacity: subtask.isCompleted ? 0.7 : 1,
+                }}
+              >
+                {subtask.title}
+              </h2>
+
+              {/* Quick Badges */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[2] }}>
+                {subtask.isCompleted && (
+                  <span
+                    style={{
+                      ...styles.badge,
+                      color: colors.semantic.success,
+                      background: colors.semantic.successLight,
+                    }}
+                  >
+                    <CheckSquare size={12} />
+                    Tamamlandı
+                  </span>
+                )}
+                {priority && (
+                  <span
+                    style={{
+                      ...styles.badge,
+                      color: priority.color,
+                      background: priority.bgColor,
+                    }}
+                  >
+                    <Flag size={12} />
+                    {priority.label}
+                  </span>
+                )}
+                {dueDate && (
+                  <span
+                    style={{
+                      ...styles.badge,
+                      color: dueDate.color,
+                      background: `${dueDate.color}20`,
+                    }}
+                  >
+                    <Calendar size={12} />
+                    {dueDate.label}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, padding: spacing[5], overflowY: 'auto' }}>
+          {/* Açıklama */}
+          {subtask.description && (
+            <div style={{ marginBottom: spacing[5] }}>
+              <h4 style={styles.sectionTitle}>
+                <FileText size={12} />
+                Açıklama
+              </h4>
+              <div
+                style={{
+                  padding: spacing[4],
+                  borderRadius: radius.lg,
+                  background: colors.dark.glass.bg,
+                  border: `1px solid ${colors.dark.border.subtle}`,
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: typography.fontSize.lg,
+                    color: colors.dark.text.primary,
+                    lineHeight: typography.lineHeight.relaxed,
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {subtask.description}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Bağlantı */}
+          {subtask.link && (
+            <div style={{ marginBottom: spacing[5] }}>
+              <h4 style={styles.sectionTitle}>
+                <ExternalLink size={12} />
+                Bağlantı
+              </h4>
+              <a
+                href={subtask.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.linkButton}
+              >
+                <ExternalLink size={16} />
+                Bağlantıyı Aç
+              </a>
+            </div>
+          )}
+
+          {/* Detay Bilgileri Grid */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3], marginBottom: spacing[5] }}>
+            {/* Son Tarih */}
+            {dueDate && (
+              <InfoRow
+                icon={Calendar}
+                label="Son Tarih"
+                value={
+                  <span style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+                    {dueDate.label}
+                    {dueDate.isUrgent && (
+                      <AlertCircle size={14} style={{ color: dueDate.color }} />
+                    )}
+                  </span>
+                }
+                color={dueDate.color}
+              />
+            )}
+
+            {/* Öncelik */}
+            {priority && (
+              <InfoRow
+                icon={Flag}
+                label="Öncelik"
+                value={priority.label}
+                color={priority.color}
+              />
+            )}
+          </div>
+
+          {/* Etiketler */}
+          <LabelsSection labels={subtask.labels || []} />
+        </div>
+      </div>
+    );
+  }
+
   return null;
 };
 

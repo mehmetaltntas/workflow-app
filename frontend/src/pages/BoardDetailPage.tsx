@@ -41,6 +41,14 @@ const BoardDetailPage = () => {
   const [newListLabelIds, setNewListLabelIds] = useState<number[]>([]);
   const [activeListId, setActiveListId] = useState<number | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskLink, setNewTaskLink] = useState("");
+
+  // Subtask creation state
+  const [activeTaskIdForSubtask, setActiveTaskIdForSubtask] = useState<number | null>(null);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [newSubtaskDescription, setNewSubtaskDescription] = useState("");
+  const [newSubtaskLink, setNewSubtaskLink] = useState("");
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
@@ -52,6 +60,8 @@ const BoardDetailPage = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [hoveredList, setHoveredList] = useState<TaskList | null>(null);
   const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
+  const [selectedSubtaskId, setSelectedSubtaskId] = useState<number | null>(null);
+  const [hoveredSubtask, setHoveredSubtask] = useState<Subtask | null>(null);
   const [subtaskCache, setSubtaskCache] = useState<Map<number, Subtask[]>>(new Map());
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false);
 
@@ -262,18 +272,48 @@ const BoardDetailPage = () => {
     try {
       await taskService.createTask({
         title: newTaskTitle,
-        description: "",
+        description: newTaskDescription || "",
         taskListId: listId,
+        link: newTaskLink || undefined,
       });
       setNewTaskTitle("");
+      setNewTaskDescription("");
+      setNewTaskLink("");
       setActiveListId(null);
       loadBoardData(slug!);
-      toast.success("Eklendi");
+      toast.success("Görev eklendi");
     } catch (error) {
       console.error(error);
-      toast.error("Eklenemedi");
+      toast.error("Görev eklenemedi");
     }
-  }, [newTaskTitle, loadBoardData, slug]);
+  }, [newTaskTitle, newTaskDescription, newTaskLink, loadBoardData, slug]);
+
+  const handleCreateSubtask = useCallback(async (taskId: number) => {
+    if (!newSubtaskTitle) return;
+    try {
+      await subtaskService.createSubtask({
+        title: newSubtaskTitle,
+        taskId: taskId,
+        description: newSubtaskDescription || undefined,
+        link: newSubtaskLink || undefined,
+      });
+      setNewSubtaskTitle("");
+      setNewSubtaskDescription("");
+      setNewSubtaskLink("");
+      setActiveTaskIdForSubtask(null);
+      // Subtask cache'i temizle ve yeniden yükle
+      setSubtaskCache(prev => {
+        const newCache = new Map(prev);
+        newCache.delete(taskId);
+        return newCache;
+      });
+      loadBoardData(slug!);
+      toast.success("Alt görev eklendi");
+    } catch (error) {
+      console.error(error);
+      toast.error("Alt görev eklenemedi");
+    }
+  }, [newSubtaskTitle, newSubtaskDescription, newSubtaskLink, loadBoardData, slug]);
 
   const handleTaskCompletionToggle = useCallback(async (task: Task, list: TaskList) => {
     try {
@@ -518,6 +558,12 @@ const BoardDetailPage = () => {
     return selectedList.tasks.find(t => t.id === selectedTaskId) || null;
   }, [selectedList, selectedTaskId]);
 
+  const selectedSubtask = useMemo(() => {
+    if (!selectedTask || !selectedSubtaskId) return null;
+    const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
+    return subtasks.find(s => s.id === selectedSubtaskId) || null;
+  }, [selectedTask, selectedSubtaskId, subtaskCache]);
+
   const subtaskItems: MillerColumnItem[] = useMemo(() => {
     if (!selectedTask) return [];
     const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
@@ -534,18 +580,21 @@ const BoardDetailPage = () => {
 
   // Preview state
   const previewType = useMemo(() => {
+    if (hoveredSubtask || selectedSubtask) return 'subtask';
     if (hoveredTask || selectedTask) return 'task';
     if (hoveredList || selectedList) return 'list';
     return null;
-  }, [hoveredTask, selectedTask, hoveredList, selectedList]);
+  }, [hoveredSubtask, selectedSubtask, hoveredTask, selectedTask, hoveredList, selectedList]);
 
   const previewData = useMemo(() => {
+    if (hoveredSubtask) return hoveredSubtask;
+    if (selectedSubtask) return selectedSubtask;
     if (hoveredTask) return hoveredTask;
     if (selectedTask) return selectedTask;
     if (hoveredList) return hoveredList;
     if (selectedList) return selectedList;
     return null;
-  }, [hoveredTask, selectedTask, hoveredList, selectedList]);
+  }, [hoveredSubtask, selectedSubtask, hoveredTask, selectedTask, hoveredList, selectedList]);
 
   const previewTasks = useMemo(() => {
     if (hoveredList) return hoveredList.tasks;
@@ -565,6 +614,8 @@ const BoardDetailPage = () => {
     newParams.set('list', item.id.toString());
     setSearchParams(newParams);
     setHoveredTask(null);
+    setHoveredSubtask(null);
+    setSelectedSubtaskId(null);
   }, [setSearchParams]);
 
   const handleTaskSelect = useCallback((item: MillerColumnItem) => {
@@ -573,6 +624,8 @@ const BoardDetailPage = () => {
     newParams.set('list', selectedListId.toString());
     newParams.set('task', item.id.toString());
     setSearchParams(newParams);
+    setHoveredSubtask(null);
+    setSelectedSubtaskId(null);
     loadSubtasks(item.id);
   }, [selectedListId, setSearchParams, loadSubtasks]);
 
@@ -594,6 +647,62 @@ const BoardDetailPage = () => {
       setHoveredTask(null);
     }
   }, [sortedTaskLists, selectedListId]);
+
+  const handleSubtaskSelect = useCallback((item: MillerColumnItem) => {
+    setSelectedSubtaskId(item.id);
+  }, []);
+
+  const handleSubtaskHover = useCallback((item: MillerColumnItem | null) => {
+    if (item && selectedTask) {
+      const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
+      const subtask = subtasks.find(s => s.id === item.id);
+      setHoveredSubtask(subtask || null);
+    } else {
+      setHoveredSubtask(null);
+    }
+  }, [selectedTask, subtaskCache]);
+
+  const handleSubtaskToggle = useCallback(async (subtask: Subtask) => {
+    try {
+      await subtaskService.toggleSubtask(subtask.id);
+      // Subtask cache'i temizle ve yeniden yükle
+      if (selectedTask) {
+        setSubtaskCache(prev => {
+          const newCache = new Map(prev);
+          newCache.delete(selectedTask.id);
+          return newCache;
+        });
+        loadSubtasks(selectedTask.id);
+      }
+      loadBoardData(slug!);
+      toast.success(subtask.isCompleted ? "Devam ediyor" : "Tamamlandı", {
+        icon: subtask.isCompleted ? "⏳" : "✅",
+        duration: 2000
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Hata oluştu");
+    }
+  }, [selectedTask, loadSubtasks, loadBoardData, slug]);
+
+  const handleDeleteSubtask = useCallback(async (subtaskId: number) => {
+    try {
+      await subtaskService.deleteSubtask(subtaskId);
+      // Subtask cache'i temizle
+      if (selectedTask) {
+        setSubtaskCache(prev => {
+          const newCache = new Map(prev);
+          newCache.delete(selectedTask.id);
+          return newCache;
+        });
+      }
+      loadBoardData(slug!);
+      toast.success("Alt görev silindi");
+    } catch (error) {
+      console.error(error);
+      toast.error("Alt görev silinemedi");
+    }
+  }, [selectedTask, loadBoardData, slug]);
 
   const handleBreadcrumbClick = useCallback((level: 'board' | 'list' | 'task') => {
     switch (level) {
@@ -730,6 +839,35 @@ const BoardDetailPage = () => {
             {selectedTask && (
               <>
                 <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+                <button
+                  onClick={() => setSelectedSubtaskId(null)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: selectedTask && !selectedSubtask ? 'var(--primary)' : 'transparent',
+                    color: selectedTask && !selectedSubtask ? tokenColors.dark.text.primary : 'var(--text-main)',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    maxWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {selectedTask.title}
+                </button>
+              </>
+            )}
+
+            {selectedSubtask && (
+              <>
+                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
                 <span
                   style={{
                     display: 'flex',
@@ -747,7 +885,7 @@ const BoardDetailPage = () => {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {selectedTask.title}
+                  {selectedSubtask.title}
                 </span>
               </>
             )}
@@ -945,18 +1083,25 @@ const BoardDetailPage = () => {
             />
           )}
 
-          {/* Column 3: Subtasks (when task selected and has subtasks) */}
-          {selectedTaskId && selectedTask && subtaskItems.length > 0 && (
+          {/* Column 3: Subtasks (when task selected - always visible) */}
+          {selectedTaskId && selectedTask && (
             <MillerColumn
               title={`${selectedTask.title} - Alt Görevler`}
               items={subtaskItems}
-              selectedId={null}
-              hoveredId={null}
-              onSelect={() => {}}
-              onHover={() => {}}
+              selectedId={selectedSubtaskId}
+              hoveredId={hoveredSubtask?.id ?? null}
+              onSelect={handleSubtaskSelect}
+              onHover={handleSubtaskHover}
               columnIndex={2}
               isLoading={isLoadingSubtasks}
               emptyMessage="Alt görev yok"
+              onAddItem={() => setActiveTaskIdForSubtask(selectedTask.id)}
+              onItemToggle={(item) => {
+                const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
+                const subtask = subtasks.find(s => s.id === item.id);
+                if (subtask) handleSubtaskToggle(subtask);
+              }}
+              onItemDelete={(item) => handleDeleteSubtask(item.id)}
             />
           )}
         </div>
@@ -1197,42 +1342,235 @@ const BoardDetailPage = () => {
             justifyContent: 'center',
             zIndex: 1000,
           }}
-          onClick={() => setActiveListId(null)}
+          onClick={() => {
+            setActiveListId(null);
+            setNewTaskTitle("");
+            setNewTaskDescription("");
+            setNewTaskLink("");
+          }}
         >
           <div
             style={{
               background: tokenColors.dark.bg.card,
               borderRadius: '16px',
               padding: '24px',
-              width: '450px',
+              width: '500px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
               border: `1px solid ${tokenColors.dark.border.default}`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
-              <span style={{ fontSize: "14px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Görev</span>
-              <button onClick={() => setActiveListId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
+              <span style={{ fontSize: "16px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Görev</span>
+              <button onClick={() => {
+                setActiveListId(null);
+                setNewTaskTitle("");
+                setNewTaskDescription("");
+                setNewTaskLink("");
+              }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
             </div>
-            <textarea
-              autoFocus
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="Görev başlığı..."
+
+            {/* İsim */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Görev Adı *</label>
+              <input
+                autoFocus
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="Görev adı..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                }}
+                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleCreateTask(activeListId); } }}
+              />
+            </div>
+
+            {/* Açıklama */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Açıklama</label>
+              <textarea
+                value={newTaskDescription}
+                onChange={(e) => setNewTaskDescription(e.target.value)}
+                placeholder="Görev açıklaması..."
+                style={{
+                  width: "100%",
+                  minHeight: "80px",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            {/* Link */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Bağlantı</label>
+              <input
+                type="url"
+                value={newTaskLink}
+                onChange={(e) => setNewTaskLink(e.target.value)}
+                placeholder="https://..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--primary)',
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => handleCreateTask(activeListId)}
+              disabled={!newTaskTitle.trim()}
+              className="btn btn-primary font-semibold"
               style={{
-                width: "100%",
-                minHeight: "60px",
-                marginBottom: "12px",
-                background: tokenColors.dark.bg.hover,
-                border: `1px solid ${tokenColors.dark.border.subtle}`,
-                padding: '12px',
-                fontSize: "14px",
-                color: 'var(--text-main)',
-                resize: 'none',
+                width: '100%',
                 borderRadius: '10px',
+                height: '42px',
+                opacity: !newTaskTitle.trim() ? 0.5 : 1,
+                cursor: !newTaskTitle.trim() ? 'not-allowed' : 'pointer',
               }}
-              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleCreateTask(activeListId); } }}
-            />
-            <button onClick={() => handleCreateTask(activeListId)} className="btn btn-primary font-semibold" style={{ width: '100%', borderRadius: '10px', height: '42px' }}>Ekle</button>
+            >
+              Oluştur
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Subtask Modal */}
+      {activeTaskIdForSubtask && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => {
+            setActiveTaskIdForSubtask(null);
+            setNewSubtaskTitle("");
+            setNewSubtaskDescription("");
+            setNewSubtaskLink("");
+          }}
+        >
+          <div
+            style={{
+              background: tokenColors.dark.bg.card,
+              borderRadius: '16px',
+              padding: '24px',
+              width: '500px',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              border: `1px solid ${tokenColors.dark.border.default}`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
+              <span style={{ fontSize: "16px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Alt Görev</span>
+              <button onClick={() => {
+                setActiveTaskIdForSubtask(null);
+                setNewSubtaskTitle("");
+                setNewSubtaskDescription("");
+                setNewSubtaskLink("");
+              }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+            </div>
+
+            {/* İsim */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Alt Görev Adı *</label>
+              <input
+                autoFocus
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                placeholder="Alt görev adı..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                }}
+                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleCreateSubtask(activeTaskIdForSubtask); } }}
+              />
+            </div>
+
+            {/* Açıklama */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Açıklama</label>
+              <textarea
+                value={newSubtaskDescription}
+                onChange={(e) => setNewSubtaskDescription(e.target.value)}
+                placeholder="Alt görev açıklaması..."
+                style={{
+                  width: "100%",
+                  minHeight: "80px",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            {/* Link */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Bağlantı</label>
+              <input
+                type="url"
+                value={newSubtaskLink}
+                onChange={(e) => setNewSubtaskLink(e.target.value)}
+                placeholder="https://..."
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--primary)',
+                }}
+              />
+            </div>
+
+            <button
+              onClick={() => handleCreateSubtask(activeTaskIdForSubtask)}
+              disabled={!newSubtaskTitle.trim()}
+              className="btn btn-primary font-semibold"
+              style={{
+                width: '100%',
+                borderRadius: '10px',
+                height: '42px',
+                opacity: !newSubtaskTitle.trim() ? 0.5 : 1,
+                cursor: !newSubtaskTitle.trim() ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Oluştur
+            </button>
           </div>
         </div>
       )}

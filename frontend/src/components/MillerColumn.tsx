@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { ChevronRight, Folder, FileText, CheckSquare, Loader2, Plus, MoreHorizontal, Edit2, Trash2, Check } from 'lucide-react';
-import { colors, cssVars } from '../styles/tokens';
+import { ChevronRight, Folder, FileText, CheckSquare, Loader2, Plus, MoreHorizontal, Edit2, Trash2, Check, ListTodo } from 'lucide-react';
+import { colors, cssVars, typography, spacing, radius, shadows, animation } from '../styles/tokens';
 
 // Miller Column item tipi
 export interface MillerColumnItem {
@@ -34,17 +34,22 @@ interface MillerColumnProps {
   onItemToggle?: (item: MillerColumnItem) => void;
 }
 
-const getIconComponent = (icon?: string, isCompleted?: boolean) => {
+const getIconComponent = (icon?: string, isCompleted?: boolean, hasChildren?: boolean) => {
   if (isCompleted) {
-    return <CheckSquare size={16} style={{ color: 'var(--success)' }} />;
+    return <CheckSquare size={16} style={{ color: colors.semantic.success }} />;
   }
   switch (icon) {
     case 'folder':
-      return <Folder size={16} style={{ color: 'var(--primary)' }} />;
+      return <Folder size={16} style={{ color: colors.brand.primary }} />;
     case 'task':
-      return <FileText size={16} style={{ color: 'var(--text-muted)' }} />;
+      // Task with subtasks gets a different icon than task without
+      return hasChildren
+        ? <ListTodo size={16} style={{ color: colors.brand.primary }} />
+        : <FileText size={16} style={{ color: colors.dark.text.muted }} />;
+    case 'subtask':
+      return <FileText size={16} style={{ color: colors.dark.text.tertiary }} />;
     default:
-      return <FileText size={16} style={{ color: 'var(--text-muted)' }} />;
+      return <FileText size={16} style={{ color: colors.dark.text.muted }} />;
   }
 };
 
@@ -86,6 +91,20 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
     }
   }, [selectedId]);
 
+  // Column background colors based on depth
+  const getColumnBackground = (index: number) => {
+    switch (index) {
+      case 0: // Lists column
+        return colors.dark.bg.overlay;
+      case 1: // Tasks column
+        return `linear-gradient(180deg, ${colors.dark.bg.secondary} 0%, ${colors.dark.bg.card} 100%)`;
+      case 2: // Subtasks column
+        return `linear-gradient(180deg, ${colors.dark.bg.active} 0%, ${colors.dark.bg.elevated} 100%)`;
+      default:
+        return colors.dark.bg.body;
+    }
+  };
+
   return (
     <div
       ref={columnRef}
@@ -95,22 +114,18 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRight: '1px solid var(--border)',
-        background: columnIndex === 0
-          ? colors.dark.bg.overlay
-          : columnIndex === 1
-            ? cssVars.borderStrong
-            : colors.dark.bg.active,
-        animation: 'millerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+        borderRight: `1px solid ${colors.dark.border.default}`,
+        background: getColumnBackground(columnIndex),
+        animation: `millerSlideIn ${animation.duration.normal} ${animation.easing.spring}`,
       }}
     >
       {/* Sütun Başlığı */}
       <div
         style={{
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--border)',
-          background: colors.dark.bg.overlay,
-          backdropFilter: 'blur(8px)',
+          padding: `${spacing[3]} ${spacing[4]}`,
+          borderBottom: `1px solid ${colors.dark.border.subtle}`,
+          background: colors.dark.glass.bg,
+          backdropFilter: 'blur(12px)',
           position: 'sticky',
           top: 0,
           zIndex: 10,
@@ -122,25 +137,25 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
         <h3
           style={{
             margin: 0,
-            fontSize: '13px',
-            fontWeight: 700,
-            color: 'var(--text-muted)',
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.bold,
+            color: colors.dark.text.muted,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            letterSpacing: typography.letterSpacing.wider,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: spacing[2],
           }}
         >
           {title}
           <span
             style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              color: 'var(--primary)',
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.brand.primary,
               background: colors.brand.primaryLight,
-              padding: '2px 8px',
-              borderRadius: '10px',
+              padding: `${spacing[0.5]} ${spacing[2]}`,
+              borderRadius: radius.full,
             }}
           >
             {items.length}
@@ -153,14 +168,15 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '28px',
-              height: '28px',
-              borderRadius: '8px',
-              border: 'none',
+              width: '30px',
+              height: '30px',
+              borderRadius: radius.md,
+              border: `1px solid ${colors.brand.primary}30`,
               background: colors.brand.primaryLight,
-              color: 'var(--primary)',
+              color: colors.brand.primary,
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
+              boxShadow: shadows.sm,
             }}
             title="Ekle"
           >
@@ -175,7 +191,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          padding: '8px',
+          padding: spacing[2],
         }}
       >
         {isLoading ? (
@@ -185,30 +201,67 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '40px 20px',
-              color: 'var(--text-muted)',
-              gap: '12px',
+              padding: `${spacing[10]} ${spacing[5]}`,
+              color: colors.dark.text.muted,
+              gap: spacing[3],
             }}
           >
-            <Loader2 size={24} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-            <span style={{ fontSize: '13px' }}>Yükleniyor...</span>
+            <Loader2 size={24} className="spin" style={{ animation: 'spin 1s linear infinite', color: colors.brand.primary }} />
+            <span style={{ fontSize: typography.fontSize.base }}>Yükleniyor...</span>
           </div>
         ) : items.length === 0 ? (
           <div
             style={{
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '40px 20px',
-              color: 'var(--text-muted)',
-              fontSize: '13px',
+              padding: `${spacing[10]} ${spacing[5]}`,
+              color: colors.dark.text.muted,
+              fontSize: typography.fontSize.base,
               textAlign: 'center',
+              gap: spacing[3],
             }}
           >
-            {emptyMessage}
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: radius.lg,
+                background: colors.dark.bg.hover,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {columnIndex === 2 ? <ListTodo size={24} style={{ opacity: 0.4 }} /> : <FileText size={24} style={{ opacity: 0.4 }} />}
+            </div>
+            <span>{emptyMessage}</span>
+            {onAddItem && (
+              <button
+                onClick={onAddItem}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[1.5],
+                  padding: `${spacing[2]} ${spacing[3]}`,
+                  borderRadius: radius.md,
+                  border: `1px dashed ${colors.brand.primary}50`,
+                  background: 'transparent',
+                  color: colors.brand.primary,
+                  cursor: 'pointer',
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.medium,
+                  transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
+                }}
+              >
+                <Plus size={14} />
+                {columnIndex === 2 ? 'Alt Görev Ekle' : 'Ekle'}
+              </button>
+            )}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
             {items.map((item) => {
               const isSelected = selectedId === item.id;
               const isHovered = hoveredId === item.id;
@@ -223,20 +276,21 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
+                    gap: spacing[3],
                     width: '100%',
-                    padding: '12px 14px',
-                    border: 'none',
-                    borderRadius: '10px',
+                    padding: `${spacing[3]} ${spacing[3.5]}`,
+                    border: isSelected ? `1px solid ${colors.brand.primary}` : `1px solid transparent`,
+                    borderRadius: radius.lg,
                     background: isSelected
-                      ? 'var(--primary)'
+                      ? colors.brand.primary
                       : isHovered
-                        ? 'var(--card-hover-bg)'
-                        : 'transparent',
+                        ? colors.dark.bg.hover
+                        : colors.dark.glass.bg,
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                    transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
                     textAlign: 'left',
                     position: 'relative',
+                    boxShadow: isSelected ? shadows.md : isHovered ? shadows.sm : 'none',
                   }}
                 >
                   {/* Priority Indicator */}
@@ -244,13 +298,14 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                     <div
                       style={{
                         position: 'absolute',
-                        left: '4px',
+                        left: spacing[1],
                         top: '50%',
                         transform: 'translateY(-50%)',
                         width: '3px',
-                        height: '60%',
-                        borderRadius: '2px',
+                        height: '50%',
+                        borderRadius: radius.full,
                         background: getPriorityColor(item.metadata.priority),
+                        boxShadow: `0 0 8px ${getPriorityColor(item.metadata.priority)}60`,
                       }}
                     />
                   )}
@@ -261,30 +316,37 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '8px',
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: radius.md,
                       background: isSelected
-                        ? colors.dark.text.disabled
-                        : colors.dark.bg.hover,
+                        ? 'rgba(255, 255, 255, 0.2)'
+                        : item.isCompleted
+                          ? colors.semantic.successLight
+                          : colors.dark.bg.active,
+                      border: item.isCompleted && !isSelected
+                        ? `1px solid ${colors.semantic.success}30`
+                        : 'none',
                       flexShrink: 0,
+                      transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
                     }}
                   >
-                    {getIconComponent(item.icon, item.isCompleted)}
+                    {getIconComponent(item.icon, item.isCompleted, item.hasChildren)}
                   </div>
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                     <div
                       style={{
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        color: isSelected ? cssVars.textInverse : 'var(--text-main)',
+                        fontSize: typography.fontSize.lg,
+                        fontWeight: typography.fontWeight.medium,
+                        color: isSelected ? colors.dark.text.primary : colors.dark.text.primary,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         textDecoration: item.isCompleted ? 'line-through' : 'none',
-                        opacity: item.isCompleted ? 0.6 : 1,
+                        opacity: item.isCompleted ? 0.65 : 1,
+                        lineHeight: typography.lineHeight.tight,
                       }}
                     >
                       {item.title}
@@ -295,17 +357,17 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
-                        marginTop: '4px',
+                        gap: spacing[2],
+                        marginTop: spacing[1],
                       }}
                     >
                       {item.subtitle && (
                         <span
                           style={{
-                            fontSize: '12px',
+                            fontSize: typography.fontSize.sm,
                             color: isSelected
                               ? colors.dark.text.secondary
-                              : 'var(--text-muted)',
+                              : colors.dark.text.muted,
                           }}
                         >
                           {item.subtitle}
@@ -314,25 +376,27 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
 
                       {/* Labels Preview */}
                       {item.metadata?.labels && item.metadata.labels.length > 0 && (
-                        <div style={{ display: 'flex', gap: '3px' }}>
+                        <div style={{ display: 'flex', gap: spacing[1], alignItems: 'center' }}>
                           {item.metadata.labels.slice(0, 3).map((label) => (
                             <div
                               key={label.id}
                               style={{
                                 width: '8px',
                                 height: '8px',
-                                borderRadius: '50%',
+                                borderRadius: radius.full,
                                 background: label.color,
+                                boxShadow: `0 0 4px ${label.color}60`,
                               }}
                             />
                           ))}
                           {item.metadata.labels.length > 3 && (
                             <span
                               style={{
-                                fontSize: '10px',
+                                fontSize: typography.fontSize.xs,
                                 color: isSelected
                                   ? colors.dark.text.tertiary
-                                  : 'var(--text-muted)',
+                                  : colors.dark.text.muted,
+                                fontWeight: typography.fontWeight.medium,
                               }}
                             >
                               +{item.metadata.labels.length - 3}
@@ -345,16 +409,16 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       {item.metadata?.count !== undefined && (
                         <span
                           style={{
-                            fontSize: '11px',
-                            fontWeight: 600,
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.semibold,
                             color: isSelected
                               ? colors.dark.text.secondary
-                              : 'var(--text-muted)',
+                              : colors.dark.text.muted,
                             background: isSelected
-                              ? cssVars.borderStrong
-                              : colors.dark.bg.hover,
-                            padding: '2px 6px',
-                            borderRadius: '6px',
+                              ? 'rgba(255, 255, 255, 0.15)'
+                              : colors.dark.bg.active,
+                            padding: `${spacing[0.5]} ${spacing[1.5]}`,
+                            borderRadius: radius.sm,
                           }}
                         >
                           {item.metadata.count} görev
@@ -375,15 +439,15 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '6px',
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: radius.md,
                           border: 'none',
-                          background: 'transparent',
-                          color: isSelected ? colors.dark.text.secondary : 'var(--text-muted)',
+                          background: actionMenuId === item.id ? colors.dark.bg.active : 'transparent',
+                          color: isSelected ? colors.dark.text.secondary : colors.dark.text.muted,
                           cursor: 'pointer',
                           opacity: isHovered || isSelected || actionMenuId === item.id ? 1 : 0,
-                          transition: 'all 0.15s ease',
+                          transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
                         }}
                       >
                         <MoreHorizontal size={16} />
@@ -411,14 +475,15 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                               position: 'absolute',
                               top: '100%',
                               right: 0,
-                              marginTop: '4px',
+                              marginTop: spacing[1],
                               background: colors.dark.bg.card,
                               border: `1px solid ${colors.dark.border.default}`,
-                              borderRadius: '10px',
-                              padding: '6px',
-                              minWidth: '140px',
+                              borderRadius: radius.lg,
+                              padding: spacing[1.5],
+                              minWidth: '150px',
                               zIndex: 100,
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                              boxShadow: shadows.dropdown,
+                              backdropFilter: 'blur(12px)',
                             }}
                           >
                             {onItemToggle && (
@@ -431,16 +496,18 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '8px',
+                                  gap: spacing[2],
                                   width: '100%',
-                                  padding: '8px 10px',
-                                  borderRadius: '6px',
+                                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                                  borderRadius: radius.md,
                                   border: 'none',
                                   background: 'transparent',
-                                  color: item.isCompleted ? 'var(--warning)' : 'var(--success)',
-                                  fontSize: '13px',
+                                  color: item.isCompleted ? colors.semantic.warning : colors.semantic.success,
+                                  fontSize: typography.fontSize.base,
+                                  fontWeight: typography.fontWeight.medium,
                                   cursor: 'pointer',
                                   textAlign: 'left',
+                                  transition: `background ${animation.duration.fast}`,
                                 }}
                               >
                                 <Check size={14} />
@@ -457,16 +524,18 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '8px',
+                                  gap: spacing[2],
                                   width: '100%',
-                                  padding: '8px 10px',
-                                  borderRadius: '6px',
+                                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                                  borderRadius: radius.md,
                                   border: 'none',
                                   background: 'transparent',
-                                  color: 'var(--text-main)',
-                                  fontSize: '13px',
+                                  color: colors.dark.text.primary,
+                                  fontSize: typography.fontSize.base,
+                                  fontWeight: typography.fontWeight.medium,
                                   cursor: 'pointer',
                                   textAlign: 'left',
+                                  transition: `background ${animation.duration.fast}`,
                                 }}
                               >
                                 <Edit2 size={14} />
@@ -483,16 +552,18 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '8px',
+                                  gap: spacing[2],
                                   width: '100%',
-                                  padding: '8px 10px',
-                                  borderRadius: '6px',
+                                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                                  borderRadius: radius.md,
                                   border: 'none',
                                   background: 'transparent',
-                                  color: 'var(--danger)',
-                                  fontSize: '13px',
+                                  color: colors.semantic.danger,
+                                  fontSize: typography.fontSize.base,
+                                  fontWeight: typography.fontWeight.medium,
                                   cursor: 'pointer',
                                   textAlign: 'left',
+                                  transition: `background ${animation.duration.fast}`,
                                 }}
                               >
                                 <Trash2 size={14} />
@@ -512,10 +583,11 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       style={{
                         color: isSelected
                           ? colors.dark.text.secondary
-                          : 'var(--text-muted)',
+                          : colors.dark.text.muted,
                         flexShrink: 0,
-                        opacity: isHovered || isSelected ? 1 : 0.5,
-                        transition: 'all 0.15s ease',
+                        opacity: isHovered || isSelected ? 1 : 0.4,
+                        transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
+                        transform: isSelected ? 'translateX(2px)' : 'none',
                       }}
                     />
                   )}
