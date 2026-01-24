@@ -1,16 +1,17 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { X, Calendar } from "lucide-react";
 import { colors, typography, spacing, radius, shadows, zIndex } from "../styles/tokens";
 
 interface CreateBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string, status: string, link?: string, description?: string) => void;
+  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string) => void;
   initialData?: {
     name: string;
     status: string;
     link?: string;
     description?: string;
+    deadline?: string;
   };
 }
 
@@ -19,7 +20,8 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const [status, setStatus] = useState(initialData?.status || "PLANLANDI");
   const [link, setLink] = useState(initialData?.link || "");
   const [description, setDescription] = useState(initialData?.description || "");
-  
+  const [deadline, setDeadline] = useState(initialData?.deadline || "");
+
   const MAX_DESCRIPTION_LENGTH = 105; // 35 karakter x 3 satır
 
   if (!isOpen) return null;
@@ -27,12 +29,13 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onCreate(name, status, link || undefined, description || undefined);
+      onCreate(name, status, link || undefined, description || undefined, deadline || undefined);
       if (!initialData) {
         setName("");
         setStatus("PLANLANDI");
         setLink("");
         setDescription("");
+        setDeadline("");
       }
       onClose();
     }
@@ -186,6 +189,47 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               </span>
             </div>
           </div>
+
+          <div>
+            <label style={{ display: "flex", alignItems: "center", gap: spacing[1.5], marginBottom: spacing[2], color: "var(--text-muted)", fontSize: typography.fontSize.lg }}>
+              <Calendar size={16} /> Son Tarih (Opsiyonel)
+            </label>
+            <div style={{ display: "flex", gap: spacing[2] }}>
+              <input
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: spacing[2.5],
+                  borderRadius: radius.md,
+                  border: "1px solid var(--border)",
+                  background: "var(--bg-input)",
+                  color: "var(--text-main)",
+                  fontSize: typography.fontSize.lg,
+                  colorScheme: "dark"
+                }}
+              />
+              {deadline && (
+                <button
+                  type="button"
+                  onClick={() => setDeadline("")}
+                  style={{
+                    padding: `${spacing[2]} ${spacing[3]}`,
+                    borderRadius: radius.md,
+                    border: "1px solid var(--border)",
+                    background: "var(--bg-input)",
+                    color: "var(--text-muted)",
+                    fontSize: typography.fontSize.md,
+                    cursor: "pointer"
+                  }}
+                >
+                  Temizle
+                </button>
+              )}
+            </div>
+          </div>
+
           <div style={{ display: "flex", justifyContent: "flex-end", gap: spacing[2.5], marginTop: spacing[2.5] }}>
             <button
               type="button"

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Save, Link as LinkIcon, Trash2, CheckSquare, Square, Settings, Calendar, Flag, Tag, Check } from "lucide-react";
+import { X, Save, Link as LinkIcon, Trash2, CheckSquare, Square, Settings, Flag, Tag, Check } from "lucide-react";
 import type { Task, TaskList, Label, Priority } from "../types";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 
@@ -22,7 +22,6 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
   const [name, setName] = useState(list.name);
   const [description, setDescription] = useState(list.description || "");
   const [link, setLink] = useState(list.link || "");
-  const [dueDate, setDueDate] = useState(list.dueDate || "");
   const [priority, setPriority] = useState<Priority>(list.priority || 'NONE');
   const [selectedLabelIds, setSelectedLabelIds] = useState<number[]>(
     list.labels?.map(l => l.id) || []
@@ -54,7 +53,6 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
         name,
         description: description || undefined,
         link: link || undefined,
-        dueDate: dueDate || null,
         priority: priority !== 'NONE' ? priority : undefined,
         labelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
       });
@@ -245,60 +243,6 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
               onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
               onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
             />
-          </div>
-
-          {/* Due Date */}
-          <div className="form-group">
-            <label style={{ display: "flex", alignItems: "center", gap: spacing[2], fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: "var(--text-muted)", marginBottom: spacing[2], textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
-              <Calendar size={14} /> Son Tarih
-            </label>
-            <div style={{ display: 'flex', gap: spacing[2] }}>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: `${spacing[3]} ${spacing[4]}`,
-                  borderRadius: radius.lg,
-                  border: '1px solid var(--border)',
-                  background: colors.dark.glass.bg,
-                  color: cssVars.textMain,
-                  fontSize: typography.fontSize.lg,
-                  outline: 'none',
-                  fontWeight: typography.fontWeight.medium,
-                  colorScheme: 'dark'
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
-                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-              />
-              {dueDate && (
-                <button
-                  type="button"
-                  onClick={() => setDueDate("")}
-                  style={{
-                    padding: `${spacing[3]} ${spacing[4]}`,
-                    borderRadius: radius.lg,
-                    border: '1px solid var(--border)',
-                    background: colors.dark.glass.bg,
-                    color: 'var(--text-muted)',
-                    fontSize: typography.fontSize.md,
-                    cursor: 'pointer',
-                    transition: `all ${animation.duration.normal}`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--danger)';
-                    e.currentTarget.style.color = 'var(--danger)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border)';
-                    e.currentTarget.style.color = 'var(--text-muted)';
-                  }}
-                >
-                  Kaldır
-                </button>
-              )}
-            </div>
           </div>
 
           {/* Priority */}

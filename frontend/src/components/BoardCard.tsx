@@ -16,11 +16,39 @@ interface BoardCardProps {
   onDelete: () => void;
 }
 
+// Son tarihe göre renk hesapla
+const getDeadlineColor = (deadline: string | undefined) => {
+  if (!deadline) return null;
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const deadlineDate = new Date(deadline);
+  deadlineDate.setHours(0, 0, 0, 0);
+
+  const diffTime = deadlineDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    // Geçmiş tarih - koyu kırmızı
+    return { bg: '#dc262620', border: '#dc2626', text: '#dc2626', label: 'Gecikmiş' };
+  } else if (diffDays <= 3) {
+    // 3 gün veya daha az - kırmızı/turuncu
+    return { bg: '#f9731620', border: '#f97316', text: '#f97316', label: 'Acil' };
+  } else if (diffDays <= 7) {
+    // 7 gün veya daha az - sarı
+    return { bg: '#eab30820', border: '#eab308', text: '#eab308', label: 'Yaklaşıyor' };
+  } else {
+    // Daha uzun - yeşil
+    return { bg: '#22c55e20', border: '#22c55e', text: '#22c55e', label: 'Normal' };
+  }
+};
+
 const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, onEdit, onDelete }) => {
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
   const isLight = theme === 'light';
   const statusColor = STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
+  const deadlineColor = getDeadlineColor(board.deadline);
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
@@ -146,14 +174,15 @@ const BoardCard: React.FC<BoardCardProps> = ({ board, onClick, onStatusChange, o
             </a>
           )}
 
-          {board.deadline && (
+          {board.deadline && deadlineColor && (
             <div style={{
               display: "flex",
               alignItems: "center",
               gap: spacing[1.5],
               fontSize: typography.fontSize.md,
-              color: colors.textMuted,
-              background: colors.bgTertiary,
+              color: deadlineColor.text,
+              background: deadlineColor.bg,
+              border: `1px solid ${deadlineColor.border}40`,
               padding: `${spacing[1.5]} ${spacing[2.5]}`,
               borderRadius: radius.md,
               fontWeight: typography.fontWeight.semibold
