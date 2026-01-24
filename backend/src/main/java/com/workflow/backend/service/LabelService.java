@@ -28,8 +28,7 @@ public class LabelService {
         "#22c55e"   // Kolay - Yeşil
     );
 
-    // Maksimum etiket sayısı (3 varsayılan + 7 kullanıcı = 10)
-    private static final int MAX_LABELS_PER_BOARD = 10;
+    // Maksimum kullanıcı etiketi sayısı (3 varsayılan etiket hariç)
     private static final int MAX_USER_LABELS_PER_BOARD = 7;
 
     // Panoya ait tüm etiketleri getir
