@@ -194,6 +194,8 @@ public class BoardService {
                                 subtaskDto.setTitle(subtask.getTitle());
                                 subtaskDto.setIsCompleted(subtask.getIsCompleted());
                                 subtaskDto.setPosition(subtask.getPosition());
+                                subtaskDto.setDescription(subtask.getDescription());
+                                subtaskDto.setLink(subtask.getLink());
                                 return subtaskDto;
                             }).collect(Collectors.toList()));
                         }
