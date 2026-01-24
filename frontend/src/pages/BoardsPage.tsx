@@ -31,6 +31,9 @@ const BoardsPage = () => {
 
   // Hem Ekleme Hem Güncelleme için ortak fonksiyon
   const handleSaveBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string) => {
+    // Backend LocalDateTime formatı bekliyor (2024-12-31T23:59:59)
+    const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
+
     if (editingBoard) {
         // Güncelleme
         const success = await updateBoard(editingBoard.id, {
@@ -38,7 +41,7 @@ const BoardsPage = () => {
             status,
             link,
             description,
-            deadline
+            deadline: formattedDeadline
         });
         if (success) {
             setIsModalOpen(false);
@@ -46,7 +49,7 @@ const BoardsPage = () => {
         }
     } else {
         // Yeni Ekleme
-        const success = await createBoard(name, status, link, description, deadline);
+        const success = await createBoard(name, status, link, description, formattedDeadline);
         if (success) {
             setIsModalOpen(false);
         }
