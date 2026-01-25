@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { boardService } from "../services/api";
 import type { Board, TaskList, Task, Subtask } from "../types";
+import { useAuthStore } from "../stores/authStore";
 
 export interface BoardStats {
   total: number;
@@ -78,7 +79,7 @@ export const useProfileStats = () => {
   const [error, setError] = useState<string | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
 
-  const userId = localStorage.getItem("userId");
+  const userId = useAuthStore((state) => state.userId);
 
   useEffect(() => {
     const fetchStats = async () => {

@@ -10,6 +10,7 @@ interface AuthState {
   login: (data: { token: string; refreshToken: string; id: number; username: string }) => void;
   logout: () => void;
   updateToken: (token: string) => void;
+  updateUsername: (username: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -35,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: false,
       }),
       updateToken: (token) => set({ token }),
+      updateUsername: (username) => set({ username }),
     }),
     { name: 'workflow-auth' }
   )

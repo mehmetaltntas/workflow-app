@@ -12,10 +12,11 @@ import {
 import { useProfileStats } from "../hooks/useProfileStats";
 import { StatCard } from "../components/StatCard";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
+import { useAuthStore } from "../stores/authStore";
 
 const ProfilePage = () => {
   const { stats, isLoading, error } = useProfileStats();
-  const username = localStorage.getItem("username") || "Kullanici";
+  const username = useAuthStore((state) => state.username) || "Kullanici";
   const initials = username.substring(0, 2).toUpperCase();
 
   if (isLoading) {

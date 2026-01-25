@@ -16,6 +16,7 @@ import {
 import { userService } from "../services/api";
 import toast from "react-hot-toast";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from '../styles/tokens';
+import { useAuthStore } from '../stores/authStore';
 
 type SettingsSection = 'profile' | 'security';
 
@@ -41,14 +42,15 @@ const SettingsPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
-  const userId = localStorage.getItem("userId");
+  const userId = useAuthStore((state) => state.userId);
+  const updateAuthUsername = useAuthStore((state) => state.updateUsername);
 
   // Fetch user data
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId) return;
       try {
-        const user = await userService.getUser(Number(userId));
+        const user = await userService.getUser(userId);
         setUsername(user.username);
         setOriginalUsername(user.username);
         setEmail(user.email);
@@ -105,10 +107,10 @@ const SettingsPage = () => {
         data.profilePicture = profilePicture;
       }
 
-      const updatedUser = await userService.updateProfile(Number(userId), data);
+      const updatedUser = await userService.updateProfile(userId, data);
 
       if (updatedUser.username) {
-        localStorage.setItem("username", updatedUser.username);
+        updateAuthUsername(updatedUser.username);
         setOriginalUsername(updatedUser.username);
       }
 
@@ -131,7 +133,7 @@ const SettingsPage = () => {
     const loadingToast = toast.loading("Şifre değiştiriliyor...");
 
     try {
-      await userService.updatePassword(Number(userId), {
+      await userService.updatePassword(userId!, {
         currentPassword,
         newPassword,
       });

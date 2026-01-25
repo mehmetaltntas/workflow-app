@@ -1,17 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
+import { useAuthStore } from '../stores/authStore';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Zaten giris yapmis kullanicilari yonlendir
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
+    if (isAuthenticated) {
       navigate("/home", { replace: true });
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
 
   const features = [
     {
