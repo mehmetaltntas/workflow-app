@@ -13,7 +13,6 @@ describe('FilterBar', () => {
   const defaultFilters: FilterState = {
     searchText: '',
     selectedLabels: [],
-    dueDateFilter: 'all',
     completionFilter: 'all',
     priorityFilter: 'all',
   }
@@ -87,10 +86,8 @@ describe('FilterBar', () => {
       />
     )
 
-    // Open priority dropdown - it's the last filter button with "Tümü" text
-    // Buttons order: Etiket, Date(Tümü), Completion(Tümü), Priority(Tümü)
+    // Open priority dropdown - find button with Flag icon
     const allButtons = screen.getAllByRole('button')
-    // Find buttons that contain "Tümü" - priority is the 4th filter dropdown (last one showing Tümü)
     const tumuButtons = allButtons.filter(btn => btn.textContent?.includes('Tümü'))
     const priorityButton = tumuButtons[tumuButtons.length - 1] // Last "Tümü" button is priority
     fireEvent.click(priorityButton)
@@ -102,32 +99,6 @@ describe('FilterBar', () => {
     expect(mockOnFilterChange).toHaveBeenCalledWith({
       ...defaultFilters,
       priorityFilter: 'HIGH',
-    })
-  })
-
-  it('filters by due date', () => {
-    render(
-      <FilterBar
-        labels={mockLabels}
-        filters={defaultFilters}
-        onFilterChange={mockOnFilterChange}
-      />
-    )
-
-    // Open date dropdown - it's the first filter button with "Tümü" text
-    // Buttons order: Etiket, Date(Tümü), Completion(Tümü), Priority(Tümü)
-    const allButtons = screen.getAllByRole('button')
-    const tumuButtons = allButtons.filter(btn => btn.textContent?.includes('Tümü'))
-    const dateButton = tumuButtons[0] // First "Tümü" button is date filter
-    fireEvent.click(dateButton)
-
-    // Click on 'Bugün' option
-    const todayOption = screen.getByText('Bugün')
-    fireEvent.click(todayOption)
-
-    expect(mockOnFilterChange).toHaveBeenCalledWith({
-      ...defaultFilters,
-      dueDateFilter: 'today',
     })
   })
 
@@ -166,7 +137,6 @@ describe('FilterBar', () => {
     const activeFilters: FilterState = {
       searchText: 'test',
       selectedLabels: [1, 2],
-      dueDateFilter: 'today',
       completionFilter: 'completed',
       priorityFilter: 'HIGH',
     }
@@ -190,7 +160,6 @@ describe('FilterBar', () => {
     const activeFilters: FilterState = {
       searchText: 'test',
       selectedLabels: [1],
-      dueDateFilter: 'today',
       completionFilter: 'all',
       priorityFilter: 'all',
     }
@@ -203,8 +172,8 @@ describe('FilterBar', () => {
       />
     )
 
-    // Should show 3 active filters (searchText, labels, dueDate)
-    expect(screen.getByText(/Temizle \(3\)/)).toBeInTheDocument()
+    // Should show 2 active filters (searchText, labels)
+    expect(screen.getByText(/Temizle \(2\)/)).toBeInTheDocument()
   })
 
   it('toggles label off when clicked again', () => {
@@ -254,7 +223,6 @@ describe('FilterBar', () => {
     expect(defaults).toEqual({
       searchText: '',
       selectedLabels: [],
-      dueDateFilter: 'all',
       completionFilter: 'all',
       priorityFilter: 'all',
     })

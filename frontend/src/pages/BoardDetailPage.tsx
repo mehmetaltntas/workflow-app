@@ -37,7 +37,6 @@ const BoardDetailPage = () => {
   const [newListName, setNewListName] = useState("");
   const [newListDescription, setNewListDescription] = useState("");
   const [newListLink, setNewListLink] = useState("");
-  const [newListDueDate, setNewListDueDate] = useState("");
   const [newListPriority, setNewListPriority] = useState<Priority>("NONE");
   const [newListLabelIds, setNewListLabelIds] = useState<number[]>([]);
   const [activeListId, setActiveListId] = useState<number | null>(null);
@@ -136,7 +135,6 @@ const BoardDetailPage = () => {
     setNewListName("");
     setNewListDescription("");
     setNewListLink("");
-    setNewListDueDate("");
     setNewListPriority("NONE");
     setNewListLabelIds([]);
     setIsAddingList(false);
@@ -150,7 +148,6 @@ const BoardDetailPage = () => {
         boardId: board!.id,
         description: newListDescription || undefined,
         link: newListLink || undefined,
-        dueDate: newListDueDate || undefined,
         priority: newListPriority !== "NONE" ? newListPriority : undefined,
         labelIds: newListLabelIds.length > 0 ? newListLabelIds : undefined,
       });
@@ -161,7 +158,7 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [newListName, newListDescription, newListLink, newListDueDate, newListPriority, newListLabelIds, board, loadBoardData, slug, resetListForm]);
+  }, [newListName, newListDescription, newListLink, newListPriority, newListLabelIds, board, loadBoardData, slug, resetListForm]);
 
   const handleDeleteList = useCallback(async () => {
     if (deleteListId) {
@@ -463,37 +460,6 @@ const BoardDetailPage = () => {
       const taskPriority = task.priority || "NONE";
       if (taskPriority !== filters.priorityFilter) {
         return false;
-      }
-    }
-
-    // Due date filter
-    if (filters.dueDateFilter !== "all") {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (filters.dueDateFilter === "nodate") {
-        if (task.dueDate) return false;
-      } else {
-        if (!task.dueDate) return false;
-
-        const dueDate = new Date(task.dueDate);
-        dueDate.setHours(0, 0, 0, 0);
-        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-        switch (filters.dueDateFilter) {
-          case "overdue":
-            if (diffDays >= 0) return false;
-            break;
-          case "today":
-            if (diffDays !== 0) return false;
-            break;
-          case "tomorrow":
-            if (diffDays !== 1) return false;
-            break;
-          case "week":
-            if (diffDays < 0 || diffDays > 7) return false;
-            break;
-        }
       }
     }
 
@@ -1308,48 +1274,28 @@ const BoardDetailPage = () => {
               />
             </div>
 
-            {/* Son Tarih ve Öncelik */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Son Tarih</label>
-                <input
-                  type="date"
-                  value={newListDueDate}
-                  onChange={(e) => setNewListDueDate(e.target.value)}
-                  style={{
-                    width: "100%",
-                    borderRadius: '10px',
-                    background: tokenColors.dark.bg.hover,
-                    border: `1px solid ${tokenColors.dark.border.subtle}`,
-                    padding: '12px',
-                    fontSize: '14px',
-                    color: 'var(--text-main)',
-                    colorScheme: 'dark',
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Öncelik</label>
-                <select
-                  value={newListPriority}
-                  onChange={(e) => setNewListPriority(e.target.value as Priority)}
-                  style={{
-                    width: "100%",
-                    borderRadius: '10px',
-                    background: tokenColors.dark.bg.hover,
-                    border: `1px solid ${tokenColors.dark.border.subtle}`,
-                    padding: '12px',
-                    fontSize: '14px',
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="NONE">Yok</option>
-                  <option value="LOW">Düşük</option>
-                  <option value="MEDIUM">Orta</option>
-                  <option value="HIGH">Yüksek</option>
-                </select>
-              </div>
+            {/* Öncelik */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Öncelik</label>
+              <select
+                value={newListPriority}
+                onChange={(e) => setNewListPriority(e.target.value as Priority)}
+                style={{
+                  width: "100%",
+                  borderRadius: '10px',
+                  background: tokenColors.dark.bg.hover,
+                  border: `1px solid ${tokenColors.dark.border.subtle}`,
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="NONE">Yok</option>
+                <option value="LOW">Düşük</option>
+                <option value="MEDIUM">Orta</option>
+                <option value="HIGH">Yüksek</option>
+              </select>
             </div>
 
             {/* Etiketler */}

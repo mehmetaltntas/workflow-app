@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { Search, X, Filter, Calendar, CheckSquare, Tag, ChevronDown, Flag } from "lucide-react";
+import { Search, X, Filter, CheckSquare, Tag, ChevronDown, Flag } from "lucide-react";
 import type { Label, Priority } from "../types";
 import { colors, cssVars, shadows, spacing, radius, typography } from "../styles/tokens";
 
 export interface FilterState {
   searchText: string;
   selectedLabels: number[];
-  dueDateFilter: "all" | "overdue" | "today" | "tomorrow" | "week" | "nodate";
   completionFilter: "all" | "completed" | "pending";
   priorityFilter: "all" | Priority;
 }
@@ -16,15 +15,6 @@ interface FilterBarProps {
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
 }
-
-const dueDateOptions = [
-  { value: "all", label: "Tümü", icon: null },
-  { value: "overdue", label: "Gecikmiş", color: colors.semantic.danger },
-  { value: "today", label: "Bugün", color: colors.priority.medium },
-  { value: "tomorrow", label: "Yarın", color: colors.priority.medium },
-  { value: "week", label: "Bu Hafta", color: colors.brand.primary },
-  { value: "nodate", label: "Tarihsiz", color: colors.dark.text.subtle },
-];
 
 const completionOptions = [
   { value: "all", label: "Tümü" },
@@ -42,7 +32,6 @@ const priorityOptions = [
 
 export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterChange }) => {
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
-  const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [showCompletionDropdown, setShowCompletionDropdown] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
 
@@ -61,7 +50,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
     onFilterChange({
       searchText: "",
       selectedLabels: [],
-      dueDateFilter: "all",
       completionFilter: "all",
       priorityFilter: "all",
     });
@@ -70,14 +58,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
   const hasActiveFilters =
     filters.searchText ||
     filters.selectedLabels.length > 0 ||
-    filters.dueDateFilter !== "all" ||
     filters.completionFilter !== "all" ||
     filters.priorityFilter !== "all";
 
   const activeFilterCount =
     (filters.searchText ? 1 : 0) +
     (filters.selectedLabels.length > 0 ? 1 : 0) +
-    (filters.dueDateFilter !== "all" ? 1 : 0) +
     (filters.completionFilter !== "all" ? 1 : 0) +
     (filters.priorityFilter !== "all" ? 1 : 0);
 
@@ -175,8 +161,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           <button
             onClick={() => {
               setShowLabelDropdown(!showLabelDropdown);
-              setShowDateDropdown(false);
               setShowCompletionDropdown(false);
+              setShowPriorityDropdown(false);
             }}
             style={{
               display: "flex",
@@ -314,119 +300,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
         </div>
       )}
 
-      {/* Due Date Filter Dropdown */}
-      <div style={{ position: "relative" }}>
-        <button
-          onClick={() => {
-            setShowDateDropdown(!showDateDropdown);
-            setShowLabelDropdown(false);
-            setShowCompletionDropdown(false);
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: spacing[1.5],
-            padding: `${spacing[2]} ${spacing[3]}`,
-            borderRadius: radius.md,
-            border: filters.dueDateFilter !== "all"
-              ? `1px solid ${colors.brand.primary}`
-              : `1px solid ${cssVars.border}`,
-            background: filters.dueDateFilter !== "all"
-              ? colors.brand.primaryLight
-              : colors.dark.glass.bg,
-            color: filters.dueDateFilter !== "all" ? colors.brand.primary : colors.dark.text.secondary,
-            fontSize: typography.fontSize.md,
-            fontWeight: typography.fontWeight.semibold,
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
-        >
-          <Calendar size={14} />
-          {dueDateOptions.find((o) => o.value === filters.dueDateFilter)?.label || "Tarih"}
-          <ChevronDown size={12} style={{ transform: showDateDropdown ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }} />
-        </button>
-
-        {showDateDropdown && (
-          <div
-            style={{
-              position: "absolute",
-              top: `calc(100% + ${spacing[1.5]})`,
-              left: 0,
-              minWidth: "160px",
-              background: cssVars.bgCard,
-              border: `1px solid ${cssVars.border}`,
-              borderRadius: radius.lg,
-              padding: spacing[2],
-              zIndex: 100,
-              boxShadow: shadows.lg,
-            }}
-          >
-            {dueDateOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => {
-                  updateFilter("dueDateFilter", option.value as FilterState["dueDateFilter"]);
-                  setShowDateDropdown(false);
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: spacing[2.5],
-                  width: "100%",
-                  padding: `${spacing[2]} ${spacing[2.5]}`,
-                  borderRadius: radius.md,
-                  border: "none",
-                  background: filters.dueDateFilter === option.value
-                    ? colors.brand.primaryLight
-                    : "transparent",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  if (filters.dueDateFilter !== option.value) {
-                    e.currentTarget.style.background = colors.dark.bg.hover;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (filters.dueDateFilter !== option.value) {
-                    e.currentTarget.style.background = "transparent";
-                  }
-                }}
-              >
-                {option.color && (
-                  <div
-                    style={{
-                      width: spacing[2],
-                      height: spacing[2],
-                      borderRadius: radius.full,
-                      background: option.color,
-                    }}
-                  />
-                )}
-                <span
-                  style={{
-                    fontSize: typography.fontSize.md,
-                    fontWeight: typography.fontWeight.medium,
-                    color: filters.dueDateFilter === option.value
-                      ? colors.brand.primary
-                      : colors.dark.text.secondary,
-                  }}
-                >
-                  {option.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Completion Filter Dropdown */}
       <div style={{ position: "relative" }}>
         <button
           onClick={() => {
             setShowCompletionDropdown(!showCompletionDropdown);
             setShowLabelDropdown(false);
-            setShowDateDropdown(false);
+            setShowPriorityDropdown(false);
           }}
           style={{
             display: "flex",
@@ -522,7 +402,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           onClick={() => {
             setShowPriorityDropdown(!showPriorityDropdown);
             setShowLabelDropdown(false);
-            setShowDateDropdown(false);
             setShowCompletionDropdown(false);
           }}
           style={{
@@ -655,7 +534,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       )}
 
       {/* Click outside to close dropdowns */}
-      {(showLabelDropdown || showDateDropdown || showCompletionDropdown || showPriorityDropdown) && (
+      {(showLabelDropdown || showCompletionDropdown || showPriorityDropdown) && (
         <div
           style={{
             position: "fixed",
@@ -667,7 +546,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           }}
           onClick={() => {
             setShowLabelDropdown(false);
-            setShowDateDropdown(false);
             setShowCompletionDropdown(false);
             setShowPriorityDropdown(false);
           }}
@@ -680,7 +558,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
 export const getDefaultFilters = (): FilterState => ({
   searchText: "",
   selectedLabels: [],
-  dueDateFilter: "all",
   completionFilter: "all",
   priorityFilter: "all",
 });
