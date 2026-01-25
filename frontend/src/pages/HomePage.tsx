@@ -237,8 +237,7 @@ const HomePage = () => {
         style={{
           flex: 1,
           padding: spacing[10],
-          transition: `margin-right ${animation.duration.slow} ${animation.easing.spring}`,
-          marginRight: isPanelOpen ? "340px" : 0,
+          minWidth: 0,
         }}
       >
         {/* Header */}
@@ -522,20 +521,22 @@ const HomePage = () => {
       </div>
 
       {/* Right Panel */}
-      <div
+      <aside
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          width: "340px",
+          width: isPanelOpen ? "340px" : "0px",
+          minWidth: isPanelOpen ? "340px" : "0px",
+          maxWidth: "340px",
           height: "100vh",
+          position: "sticky",
+          top: 0,
+          alignSelf: "flex-start",
           background: isLight ? colors.light.bg.card : colors.dark.bg.card,
-          borderLeft: `1px solid ${themeColors.borderDefault}`,
+          borderLeft: isPanelOpen ? `1px solid ${themeColors.borderDefault}` : "none",
           display: "flex",
           flexDirection: "column",
-          transform: isPanelOpen ? "translateX(0)" : "translateX(100%)",
-          transition: `transform ${animation.duration.slow} ${animation.easing.spring}`,
-          zIndex: 10,
+          overflow: "hidden",
+          transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
+          opacity: isPanelOpen ? 1 : 0,
           boxShadow: isPanelOpen ? shadows.lg : "none",
         }}
       >
@@ -570,7 +571,7 @@ const HomePage = () => {
             canPin={canPin}
           />
         </div>
-      </div>
+      </aside>
 
       {/* Pano Düzenleme Modalı */}
       {isEditModalOpen && editingBoard && (

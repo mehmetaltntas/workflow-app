@@ -240,8 +240,6 @@ const BoardsPage = () => {
         style={{
           flex: 1,
           padding: spacing[10],
-          transition: `padding-right ${animation.duration.slow} ${animation.easing.spring}`,
-          paddingRight: isPanelOpen ? spacing[6] : spacing[10],
           minWidth: 0,
         }}
       >
@@ -526,26 +524,23 @@ const BoardsPage = () => {
         </div>
       </div>
 
-      {/* Right Panel - Sticky Sidebar */}
+      {/* Right Panel */}
       <aside
         style={{
-          position: "sticky",
-          top: spacing[4],
-          alignSelf: "flex-start",
           width: isPanelOpen ? "340px" : "0px",
           minWidth: isPanelOpen ? "340px" : "0px",
           maxWidth: "340px",
-          height: `calc(100vh - ${spacing[8]})`,
-          maxHeight: `calc(100vh - ${spacing[8]})`,
+          height: "100vh",
+          position: "sticky",
+          top: 0,
+          alignSelf: "flex-start",
           background: isLight ? colors.light.bg.card : colors.dark.bg.card,
           borderLeft: isPanelOpen ? `1px solid ${themeColors.borderDefault}` : "none",
-          borderRadius: `${radius.xl} 0 0 ${radius.xl}`,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
           transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
           opacity: isPanelOpen ? 1 : 0,
-          marginRight: isPanelOpen ? 0 : "-340px",
           boxShadow: isPanelOpen ? shadows.lg : "none",
         }}
       >
