@@ -355,6 +355,37 @@ const BoardsPage = () => {
                 </div>
               </div>
 
+              {/* Yeni Pano Button */}
+              <button
+                onClick={openCreateModal}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing[2],
+                  padding: `${spacing[2.5]} ${spacing[4]}`,
+                  borderRadius: radius.lg,
+                  border: "none",
+                  background: `linear-gradient(135deg, ${colors.brand.primary}, ${colors.brand.primaryDark})`,
+                  color: "#fff",
+                  cursor: "pointer",
+                  transition: `all ${animation.duration.normal}`,
+                  fontWeight: typography.fontWeight.semibold,
+                  fontSize: typography.fontSize.sm,
+                  boxShadow: `0 4px 12px ${colors.brand.primary}30`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = `0 6px 16px ${colors.brand.primary}40`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${colors.brand.primary}30`;
+                }}
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                Yeni Pano
+              </button>
+
               {/* Panel Toggle Button */}
               <button
                 onClick={() => setIsPanelOpen(!isPanelOpen)}
@@ -550,39 +581,6 @@ const BoardsPage = () => {
         variant="danger"
         autoCloseDelay={6000}
       />
-
-      {/* Floating Action Button */}
-      <button
-        onClick={openCreateModal}
-        style={{
-            position: "fixed",
-            bottom: spacing[10],
-            right: spacing[10],
-            background: `linear-gradient(135deg, ${colors.brand.primary}, ${colors.brand.primaryDark})`,
-            color: "#fff",
-            border: "none",
-            borderRadius: radius.full,
-            width: "60px",
-            height: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: `0 8px 32px ${colors.brand.primary}40`,
-            cursor: "pointer",
-            transition: `all ${animation.duration.normal} ${animation.easing.spring}`,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.1) translateY(-2px)";
-          e.currentTarget.style.boxShadow = `0 12px 40px ${colors.brand.primary}50`;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1) translateY(0)";
-          e.currentTarget.style.boxShadow = `0 8px 32px ${colors.brand.primary}40`;
-        }}
-        title="Yeni Pano Oluştur"
-      >
-        <Plus size={28} strokeWidth={2.5} />
-      </button>
 
       {isModalOpen && (
         <CreateBoardModal
