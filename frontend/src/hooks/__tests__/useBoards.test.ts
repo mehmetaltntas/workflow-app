@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useBoards } from '../useBoards'
 import { boardService } from '../../services/api'
+import type { ExtractedPagedData } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '../../stores/authStore'
+import type { Board } from '../../types'
 
 // Mock the api service
 vi.mock('../../services/api', () => ({
@@ -23,14 +26,20 @@ vi.mock('react-hot-toast', () => ({
   },
 }))
 
+// Mock Zustand store
+vi.mock('../../stores/authStore', () => ({
+  useAuthStore: vi.fn(),
+}))
+
 describe('useBoards', () => {
-  const mockBoards = [
+  const mockBoards: Board[] = [
     {
       id: 1,
       name: 'Test Board',
       slug: 'test-board',
       status: 'PLANLANDI',
       ownerName: 'testuser',
+      taskLists: [],
     },
     {
       id: 2,
@@ -38,36 +47,38 @@ describe('useBoards', () => {
       slug: 'another-board',
       status: 'DEVAM_EDIYOR',
       ownerName: 'testuser',
+      taskLists: [],
     },
   ]
 
-  const mockPaginatedResponse = {
-    data: {
-      content: mockBoards,
-      page: 0,
-      size: 10,
-      totalElements: 2,
-      totalPages: 1,
-      first: true,
-      last: true,
-    },
+  const mockPaginatedResponse: ExtractedPagedData<Board> = {
+    content: mockBoards,
+    page: 0,
+    size: 10,
+    totalElements: 2,
+    totalPages: 1,
+    first: true,
+    last: true,
   }
-
-  let localStorageMock: Record<string, string>
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Reset localStorage mock data
-    localStorageMock = { userId: '1' }
-    // Mock localStorage using Object.defineProperty
-    Object.defineProperty(window, 'localStorage', {
-      value: {
-        getItem: vi.fn((key: string) => localStorageMock[key] ?? null),
-        setItem: vi.fn((key: string, value: string) => { localStorageMock[key] = value }),
-        removeItem: vi.fn((key: string) => { delete localStorageMock[key] }),
-        clear: vi.fn(() => { localStorageMock = {} }),
-      },
-      writable: true,
+    // Default: user is logged in with userId = 1
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      const state = {
+        userId: 1,
+        token: 'test-token',
+        refreshToken: 'test-refresh-token',
+        username: 'testuser',
+        isAuthenticated: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        updateToken: vi.fn(),
+      }
+      if (typeof selector === 'function') {
+        return selector(state)
+      }
+      return state
     })
   })
 
@@ -76,7 +87,7 @@ describe('useBoards', () => {
   })
 
   it('loadBoards fetches boards from API', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
 
     renderHook(() => useBoards())
 
@@ -87,16 +98,17 @@ describe('useBoards', () => {
   })
 
   it('createBoard calls API and shows success toast', async () => {
-    const newBoard = {
+    const newBoard: Board = {
       id: 3,
       name: 'New Board',
       slug: 'new-board',
       status: 'PLANLANDI',
       ownerName: 'testuser',
+      taskLists: [],
     }
 
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
-    vi.mocked(boardService.createBoard).mockResolvedValue({ data: newBoard } as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.createBoard).mockResolvedValue(newBoard)
 
     const { result } = renderHook(() => useBoards())
 
@@ -115,8 +127,8 @@ describe('useBoards', () => {
   })
 
   it('deleteBoard removes board from list', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
-    vi.mocked(boardService.deleteBoard).mockResolvedValue({ data: {} } as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.deleteBoard).mockResolvedValue({} as never)
 
     const { result } = renderHook(() => useBoards())
 
@@ -126,8 +138,14 @@ describe('useBoards', () => {
 
     // Delete a board
     vi.mocked(boardService.getUserBoards).mockResolvedValue({
-      data: { content: mockBoards.filter(b => b.id !== 1) },
-    } as any)
+      content: mockBoards.filter(b => b.id !== 1),
+      page: 0,
+      size: 10,
+      totalElements: 1,
+      totalPages: 1,
+      first: true,
+      last: true,
+    } as ExtractedPagedData<Board>)
 
     let success: boolean | undefined
     await act(async () => {
@@ -151,8 +169,8 @@ describe('useBoards', () => {
   })
 
   it('updateBoard updates board and refreshes list', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
-    vi.mocked(boardService.updateBoard).mockResolvedValue({ data: mockBoards[0] } as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.updateBoard).mockResolvedValue(mockBoards[0] as Board)
 
     const { result } = renderHook(() => useBoards())
 
@@ -166,13 +184,13 @@ describe('useBoards', () => {
     })
 
     expect(success).toBe(true)
-    expect(boardService.updateBoard).toHaveBeenCalledWith(1, { name: 'Updated Name' })
+    expect(boardService.updateBoard).toHaveBeenCalledWith(1, { name: 'Updated Name', userId: 1 })
     expect(toast.success).toHaveBeenCalledWith('Pano güncellendi')
   })
 
   it('updateBoardStatus updates status and refreshes list', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
-    vi.mocked(boardService.updateBoardStatus).mockResolvedValue({ data: mockBoards[0] } as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
+    vi.mocked(boardService.updateBoardStatus).mockResolvedValue(mockBoards[0] as Board)
 
     const { result } = renderHook(() => useBoards())
 
@@ -191,8 +209,23 @@ describe('useBoards', () => {
   })
 
   it('does not load boards when userId is not set', async () => {
-    // Override localStorage to return null for userId
-    localStorageMock = {}
+    // Override the mock to return null userId
+    vi.mocked(useAuthStore).mockImplementation((selector) => {
+      const state = {
+        userId: null,
+        token: null,
+        refreshToken: null,
+        username: null,
+        isAuthenticated: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        updateToken: vi.fn(),
+      }
+      if (typeof selector === 'function') {
+        return selector(state)
+      }
+      return state
+    })
 
     const { result } = renderHook(() => useBoards())
 
@@ -205,7 +238,7 @@ describe('useBoards', () => {
   })
 
   it('createBoard shows error toast on failure', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
     vi.mocked(boardService.createBoard).mockRejectedValue(new Error('Creation failed'))
 
     const { result } = renderHook(() => useBoards())
@@ -224,7 +257,7 @@ describe('useBoards', () => {
   })
 
   it('createBoard returns false for empty name', async () => {
-    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse as any)
+    vi.mocked(boardService.getUserBoards).mockResolvedValue(mockPaginatedResponse)
 
     const { result } = renderHook(() => useBoards())
 

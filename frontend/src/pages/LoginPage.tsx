@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { authService } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
+import { useAuthStore } from "../stores/authStore";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -11,6 +12,11 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const login = useAuthStore((state) => state.login);
+
+  // Get the redirect target from location state (set by PrivateRoute)
+  const from = (location.state as { from?: string })?.from || "/home";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,14 +30,16 @@ const LoginPage = () => {
     try {
       const response = await authService.login({ username, password });
 
-      // Token ve bilgileri kaydet
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-      localStorage.setItem("userId", response.data.id);
-      localStorage.setItem("username", response.data.username);
+      // Token ve bilgileri authStore'a kaydet
+      login({
+        token: response.data.token,
+        refreshToken: response.data.refreshToken,
+        id: response.data.id,
+        username: response.data.username,
+      });
 
       toast.success("Giriş başarılı!");
-      navigate("/home");
+      navigate(from, { replace: true });
     } catch {
       toast.error("Kullanıcı adı veya şifre hatalı!");
     } finally {
@@ -44,13 +52,16 @@ const LoginPage = () => {
     try {
       const response = await authService.googleAuth(idToken);
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-      localStorage.setItem("userId", response.data.id);
-      localStorage.setItem("username", response.data.username);
+      // Token ve bilgileri authStore'a kaydet
+      login({
+        token: response.data.token,
+        refreshToken: response.data.refreshToken,
+        id: response.data.id,
+        username: response.data.username,
+      });
 
       toast.success("Google ile giriş başarılı!");
-      navigate("/home");
+      navigate(from, { replace: true });
     } catch {
       toast.error("Google ile giriş başarısız oldu");
     } finally {

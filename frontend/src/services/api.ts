@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata } from "../types";
+import { useAuthStore } from "../stores/authStore";
 
 // 1. Temel Ayarlar
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -103,7 +104,7 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 // Her istekten önce çalışır ve token'ı ekler
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const { token } = useAuthStore.getState();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -354,13 +355,13 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem("refreshToken");
+      const { refreshToken, logout, updateToken } = useAuthStore.getState();
 
       // Refresh token yoksa logout yap
       if (!refreshToken) {
         isRefreshing = false;
         console.warn("Refresh token bulunamadı, çıkış yapılıyor...");
-        localStorage.clear();
+        logout();
         window.location.href = "/login";
         return Promise.reject(error);
       }
@@ -371,7 +372,7 @@ apiClient.interceptors.response.use(
         const { accessToken } = response.data;
 
         // Yeni token'ı kaydet
-        localStorage.setItem("token", accessToken);
+        updateToken(accessToken);
 
         // Bekleyen istekleri işle
         processQueue(null, accessToken);
@@ -383,7 +384,7 @@ apiClient.interceptors.response.use(
         // Refresh başarısız - logout yap
         processQueue(refreshError as AxiosError, null);
         console.warn("Token yenileme başarısız, çıkış yapılıyor...");
-        localStorage.clear();
+        logout();
         window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
@@ -395,7 +396,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 403) {
       console.error("Yetkisiz erişim (403):", error.response.data);
       if (!window.location.pathname.startsWith("/login")) {
-        localStorage.clear();
+        useAuthStore.getState().logout();
         window.location.href = "/login";
       }
     }

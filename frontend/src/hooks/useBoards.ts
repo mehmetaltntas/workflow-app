@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { boardService } from "../services/api";
 import type { Board } from "../types";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../stores/authStore";
 
 export const useBoards = () => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Kullanıcı ID'yi al
-  const userId = Number(localStorage.getItem("userId"));
+
+  // authStore'dan kullanıcı ID'yi al
+  const userId = useAuthStore((state) => state.userId);
 
   const loadBoards = useCallback(async () => {
     if (!userId) {
@@ -57,7 +58,7 @@ export const useBoards = () => {
   const updateBoard = async (boardId: number, data: { name?: string; status?: string; link?: string; description?: string; deadline?: string }) => {
       try {
           // Backend CreateBoardRequest userId gerektirir
-          await boardService.updateBoard(boardId, { ...data, userId });
+          await boardService.updateBoard(boardId, { ...data, userId: userId ?? undefined });
           toast.success("Pano güncellendi");
           await loadBoards();
           return true;
@@ -102,6 +103,6 @@ export const useBoards = () => {
     updateBoard,
     deleteBoard,
     updateBoardStatus,
-    userId // export userId in case components need to check auth
+    userId: userId ?? undefined // export userId in case components need to check auth
   };
 };

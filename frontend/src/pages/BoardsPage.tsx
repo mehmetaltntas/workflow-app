@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Board } from "../types";
-import toast from "react-hot-toast";
 import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, PanelRightOpen, PanelRightClose } from "lucide-react";
 
 import { useBoards } from "../hooks/useBoards";
@@ -20,7 +19,7 @@ import { BoardInfoPanel } from "../components/BoardInfoPanel";
 
 const BoardsPage = () => {
   const navigate = useNavigate();
-  const { boards, loading, createBoard, updateBoard, deleteBoard, updateBoardStatus, userId } = useBoards();
+  const { boards, loading, createBoard, updateBoard, deleteBoard, updateBoardStatus } = useBoards();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
@@ -41,13 +40,6 @@ const BoardsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [loading]);
-
-  useEffect(() => {
-    if (!userId) {
-      toast.error("Oturum süresi dolmuş");
-      navigate("/login");
-    }
-  }, [userId, navigate]);
 
   // Status bazlı sayıları hesapla
   const statusCounts = useMemo(() => {

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { authService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { typography, spacing, radius, sizes, zIndex, animation, cssVars, colors } from "../styles/tokens";
+import { useAuthStore } from "../stores/authStore";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -20,7 +21,9 @@ const Layout = () => {
     setIsDropdownOpen(false);
   }
 
-  const username = localStorage.getItem("username") || "Kullanıcı";
+  // authStore'dan kullanıcı bilgilerini al
+  const { username: storedUsername, logout } = useAuthStore();
+  const username = storedUsername || "Kullanıcı";
   // Avatar için baş harfler
   const initials = username.substring(0, 2).toUpperCase();
 
@@ -35,8 +38,8 @@ const Layout = () => {
       // Logout API hatası olsa bile devam et
       console.warn("Logout API hatası:", error);
     } finally {
-      // Her durumda localStorage'ı temizle ve yönlendir
-      localStorage.clear();
+      // Her durumda authStore'u temizle ve yönlendir
+      logout();
       toast.success("Çıkış yapıldı");
       navigate("/login");
     }
