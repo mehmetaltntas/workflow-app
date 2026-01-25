@@ -1,8 +1,9 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
-import { Info } from "lucide-react";
+import { Info, Pin, PinOff } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
+import type { ActionMenuItem } from "./ActionMenu";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors, cssVars } from "../utils/themeColors";
 import { typography, spacing, radius, shadows, animation, colors as tokenColors } from "../styles/tokens";
@@ -14,6 +15,9 @@ interface BoardCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onShowInfo?: () => void;
+  onTogglePin?: () => void;
+  isPinned?: boolean;
+  canPin?: boolean;
   viewMode?: 'grid' | 'list';
 }
 
@@ -24,6 +28,9 @@ const BoardCard: React.FC<BoardCardProps> = ({
   onEdit,
   onDelete,
   onShowInfo,
+  onTogglePin,
+  isPinned = false,
+  canPin = true,
   viewMode = 'grid'
 }) => {
   const { theme } = useTheme();
@@ -35,6 +42,42 @@ const BoardCard: React.FC<BoardCardProps> = ({
     e.stopPropagation();
     onStatusChange(board, e.target.value);
   };
+
+  // Action menu items oluştur
+  const menuItems: ActionMenuItem[] = [];
+
+  // Sabitle/Sabitlemeyi Kaldır seçeneği
+  if (onTogglePin) {
+    if (isPinned) {
+      menuItems.push({
+        label: "Sabitlemeyi Kaldır",
+        onClick: onTogglePin,
+        variant: "default",
+        icon: PinOff,
+      });
+    } else if (canPin) {
+      menuItems.push({
+        label: "Sabitle",
+        onClick: onTogglePin,
+        variant: "default",
+        icon: Pin,
+      });
+    }
+  }
+
+  // Düzenle seçeneği
+  menuItems.push({
+    label: "Düzenle",
+    onClick: onEdit,
+    variant: "default",
+  });
+
+  // Sil seçeneği
+  menuItems.push({
+    label: "Sil",
+    onClick: onDelete,
+    variant: "danger",
+  });
 
   // Liste görünümü için kompakt kart
   if (viewMode === 'list') {
@@ -133,8 +176,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
           {/* Action Menu */}
           <ActionMenu
-            onEdit={onEdit}
-            onDelete={onDelete}
+            items={menuItems}
             triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
           />
         </div>
@@ -159,7 +201,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
         border: `1px solid ${colors.borderDefault}`,
         cursor: "pointer",
         transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-        overflow: "hidden",
         boxShadow: isLight ? shadows.card : shadows.md,
       }}
     >
@@ -235,8 +276,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
           {/* Action Menu */}
           <ActionMenu
-            onEdit={onEdit}
-            onDelete={onDelete}
+            items={menuItems}
             triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
           />
         </div>

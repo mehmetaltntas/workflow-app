@@ -6,7 +6,6 @@ import { getThemeColors } from "../utils/themeColors";
 import {
   Home,
   Pin,
-  PinOff,
   PanelRightOpen,
   PanelRightClose,
   Sparkles,
@@ -21,7 +20,6 @@ import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
 import { SortingOptions, type SortField, type SortDirection } from "../components/ui/SortingOptions";
 import { EmptyState } from "../components/ui/EmptyState";
 import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
-import { STATUS_COLORS } from "../constants";
 
 const PINNED_BOARDS_KEY = 'workflow_pinned_boards';
 const MAX_PINNED_BOARDS = 3;
@@ -36,28 +34,26 @@ const HomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [deleteBoardId, setDeleteBoardId] = useState<number | null>(null);
-  const [pinnedBoardIds, setPinnedBoardIds] = useState<number[]>([]);
+  const [pinnedBoardIds, setPinnedBoardIds] = useState<number[]>(() => {
+    const stored = localStorage.getItem(PINNED_BOARDS_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+    return [];
+  });
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isVisible, setIsVisible] = useState(false);
-
-  // localStorage'dan pinned boards yükle
-  useEffect(() => {
-    const stored = localStorage.getItem(PINNED_BOARDS_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setPinnedBoardIds(parsed);
-        }
-      } catch {
-        // Invalid JSON, ignore
-      }
-    }
-  }, []);
 
   // Pinned boards'u localStorage'a kaydet
   useEffect(() => {
@@ -197,89 +193,16 @@ const HomePage = () => {
 
   // Board kartı render fonksiyonu
   const renderBoardCard = (board: Board, isPinned: boolean, index: number, groupIndex: number) => {
-    const statusColor = STATUS_COLORS[board.status || "PLANLANDI"];
-
     return (
       <div
         key={board.id}
         style={{
-          position: "relative",
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.98)",
           transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
           transitionDelay: `${(groupIndex * 100) + (index * 50)}ms`,
         }}
       >
-        {/* Pin Button Overlay */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            togglePin(board.id);
-          }}
-          disabled={!isPinned && !canPin}
-          style={{
-            position: "absolute",
-            top: spacing[2],
-            left: spacing[2],
-            zIndex: 10,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: spacing[8],
-            height: spacing[8],
-            borderRadius: radius.lg,
-            border: isPinned
-              ? `1px solid ${colors.semantic.warning}50`
-              : `1px solid ${themeColors.borderDefault}`,
-            background: isPinned
-              ? `linear-gradient(135deg, ${colors.semantic.warning}25, ${colors.semantic.warning}15)`
-              : isLight
-                ? colors.light.bg.elevated
-                : colors.dark.bg.elevated,
-            color: isPinned ? colors.semantic.warning : cssVars.textMuted,
-            cursor: (!isPinned && !canPin) ? "not-allowed" : "pointer",
-            transition: `all ${animation.duration.fast}`,
-            opacity: (!isPinned && !canPin) ? 0.5 : 1,
-            boxShadow: isPinned ? `0 4px 12px ${colors.semantic.warning}20` : shadows.sm,
-          }}
-          title={
-            isPinned
-              ? "Sabitlemeyi Kaldır"
-              : canPin
-                ? "Sabitle"
-                : `Maksimum ${MAX_PINNED_BOARDS} pano sabitlenebilir`
-          }
-        >
-          {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
-        </button>
-
-        {/* Pinned Badge */}
-        {isPinned && (
-          <div
-            style={{
-              position: "absolute",
-              top: spacing[2],
-              right: spacing[2],
-              zIndex: 10,
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[1],
-              padding: `${spacing[1]} ${spacing[2]}`,
-              borderRadius: radius.md,
-              background: `linear-gradient(135deg, ${statusColor}25, ${statusColor}15)`,
-              border: `1px solid ${statusColor}40`,
-              fontSize: typography.fontSize.xs,
-              fontWeight: typography.fontWeight.bold,
-              color: statusColor,
-              textTransform: "uppercase",
-              letterSpacing: typography.letterSpacing.wide,
-            }}
-          >
-            <Pin size={10} />
-            SABİT
-          </div>
-        )}
-
         <BoardCard
           board={board}
           onClick={() => navigate(`/boards/${board.slug}`)}
@@ -287,6 +210,9 @@ const HomePage = () => {
           onEdit={() => handleEdit(board)}
           onDelete={() => handleDelete(board.id)}
           onShowInfo={() => handleShowInfo(board)}
+          onTogglePin={() => togglePin(board.id)}
+          isPinned={isPinned}
+          canPin={canPin}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}
         />
       </div>
