@@ -44,40 +44,18 @@ const BoardCard: React.FC<BoardCardProps> = ({
   };
 
   // Action menu items oluştur
-  const menuItems: ActionMenuItem[] = [];
-
-  // Sabitle/Sabitlemeyi Kaldır seçeneği
-  if (onTogglePin) {
-    if (isPinned) {
-      menuItems.push({
-        label: "Sabitlemeyi Kaldır",
-        onClick: onTogglePin,
-        variant: "default",
-        icon: PinOff,
-      });
-    } else if (canPin) {
-      menuItems.push({
-        label: "Sabitle",
-        onClick: onTogglePin,
-        variant: "default",
-        icon: Pin,
-      });
-    }
-  }
-
-  // Düzenle seçeneği
-  menuItems.push({
-    label: "Düzenle",
-    onClick: onEdit,
-    variant: "default",
-  });
-
-  // Sil seçeneği
-  menuItems.push({
-    label: "Sil",
-    onClick: onDelete,
-    variant: "danger",
-  });
+  const menuItems: ActionMenuItem[] = [
+    {
+      label: "Düzenle",
+      onClick: onEdit,
+      variant: "default",
+    },
+    {
+      label: "Sil",
+      onClick: onDelete,
+      variant: "danger",
+    },
+  ];
 
   // Liste görünümü için kompakt kart
   if (viewMode === 'list') {
@@ -151,6 +129,34 @@ const BoardCard: React.FC<BoardCardProps> = ({
               </option>
             ))}
           </select>
+
+          {/* Pin Button */}
+          {onTogglePin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTogglePin();
+              }}
+              disabled={!isPinned && !canPin}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: spacing[7],
+                height: spacing[7],
+                borderRadius: radius.md,
+                border: `1px solid ${isPinned ? tokenColors.semantic.warning : statusColor}30`,
+                background: isPinned ? `${tokenColors.semantic.warning}20` : `${statusColor}15`,
+                color: isPinned ? tokenColors.semantic.warning : statusColor,
+                cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
+                opacity: !isPinned && !canPin ? 0.5 : 1,
+              }}
+              title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
+            >
+              {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+            </button>
+          )}
 
           {/* Info Button */}
           {onShowInfo && (
@@ -243,6 +249,45 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
         {/* Action Buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5] }} onClick={(e) => e.stopPropagation()}>
+          {/* Pin Button */}
+          {onTogglePin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTogglePin();
+              }}
+              disabled={!isPinned && !canPin}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: spacing[7],
+                height: spacing[7],
+                borderRadius: radius.md,
+                border: `1px solid ${isPinned ? tokenColors.semantic.warning : statusColor}30`,
+                background: isPinned ? `${tokenColors.semantic.warning}20` : `${statusColor}15`,
+                color: isPinned ? tokenColors.semantic.warning : statusColor,
+                cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
+                opacity: !isPinned && !canPin ? 0.5 : 1,
+                transition: `all ${animation.duration.fast}`,
+              }}
+              onMouseEnter={(e) => {
+                if (isPinned || canPin) {
+                  e.currentTarget.style.background = isPinned ? `${tokenColors.semantic.warning}30` : `${statusColor}25`;
+                  e.currentTarget.style.transform = "scale(1.05)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = isPinned ? `${tokenColors.semantic.warning}20` : `${statusColor}15`;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+              title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
+            >
+              {isPinned ? <PinOff size={14} strokeWidth={2.5} /> : <Pin size={14} strokeWidth={2.5} />}
+            </button>
+          )}
+
           {/* Info Button */}
           {onShowInfo && (
             <button

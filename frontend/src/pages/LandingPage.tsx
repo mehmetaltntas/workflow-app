@@ -1,13 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
+import { typography, spacing, radius, colors, animation } from '../styles/tokens';
 import { useAuthStore } from '../stores/authStore';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  // Zaten giris yapmis kullanicilari yonlendir
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/home", { replace: true });
@@ -79,12 +78,43 @@ const LandingPage = () => {
     <div
       style={{
         minHeight: "100vh",
-        background: `linear-gradient(135deg, ${cssVars.bgBody} 0%, #16213e 50%, #0f3460 100%)`,
+        background: colors.dark.bg.body,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* Animated Background Gradients */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-50%",
+          left: "-20%",
+          width: "70%",
+          height: "100%",
+          background: `radial-gradient(ellipse, ${colors.brand.primary}15 0%, transparent 60%)`,
+          filter: "blur(80px)",
+          pointerEvents: "none",
+          animation: "pulse 8s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-30%",
+          right: "-10%",
+          width: "60%",
+          height: "80%",
+          background: `radial-gradient(ellipse, rgba(139, 92, 246, 0.12) 0%, transparent 60%)`,
+          filter: "blur(80px)",
+          pointerEvents: "none",
+          animation: "pulse 10s ease-in-out infinite reverse",
+        }}
+      />
+
       {/* Header */}
       <header
         style={{
+          position: "relative",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -104,18 +134,19 @@ const LandingPage = () => {
             style={{
               width: spacing[10],
               height: spacing[10],
-              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
               borderRadius: radius.md,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              boxShadow: `0 4px 24px ${colors.brand.primary}40`,
             }}
           >
             <svg
               width="24"
               height="24"
               viewBox="0 0 24 24"
-              fill={cssVars.textInverse}
+              fill={colors.dark.text.inverse}
             >
               <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
@@ -124,7 +155,7 @@ const LandingPage = () => {
             style={{
               fontSize: typography.fontSize["4xl"],
               fontWeight: typography.fontWeight.bold,
-              color: cssVars.textMain,
+              color: colors.dark.text.primary,
               letterSpacing: typography.letterSpacing.tight,
             }}
           >
@@ -138,19 +169,21 @@ const LandingPage = () => {
             style={{
               padding: `${spacing[2.5]} ${spacing[6]}`,
               borderRadius: radius.md,
-              border: `1px solid ${cssVars.borderStrong}`,
+              border: `1px solid ${colors.dark.border.strong}`,
               background: "transparent",
-              color: cssVars.textMain,
+              color: colors.dark.text.primary,
               fontSize: typography.fontSize.xl,
               fontWeight: typography.fontWeight.medium,
               cursor: "pointer",
-              transition: "all 0.2s",
+              transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = colors.dark.bg.hover;
+              e.currentTarget.style.borderColor = colors.dark.text.tertiary;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = colors.dark.border.strong;
             }}
           >
             Giriş Yap
@@ -161,20 +194,21 @@ const LandingPage = () => {
               padding: `${spacing[2.5]} ${spacing[6]}`,
               borderRadius: radius.md,
               border: "none",
-              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
-              color: cssVars.textMain,
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
+              color: colors.dark.text.primary,
               fontSize: typography.fontSize.xl,
               fontWeight: typography.fontWeight.semibold,
               cursor: "pointer",
-              transition: "all 0.2s",
+              transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
+              boxShadow: `0 4px 16px ${colors.brand.primary}30`,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = shadows.lg;
+              e.currentTarget.style.boxShadow = `0 8px 24px ${colors.brand.primary}40`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.boxShadow = `0 4px 16px ${colors.brand.primary}30`;
             }}
           >
             Kayıt Ol
@@ -185,6 +219,7 @@ const LandingPage = () => {
       {/* Hero Section */}
       <main
         style={{
+          position: "relative",
           maxWidth: "1200px",
           margin: "0 auto",
           padding: `${spacing[20]} ${spacing[10]}`,
@@ -195,7 +230,7 @@ const LandingPage = () => {
           style={{
             fontSize: "clamp(36px, 5vw, 64px)",
             fontWeight: typography.fontWeight.extrabold,
-            color: cssVars.textMain,
+            color: colors.dark.text.primary,
             lineHeight: typography.lineHeight.tight,
             marginBottom: spacing[6],
             letterSpacing: typography.letterSpacing.tighter,
@@ -205,9 +240,11 @@ const LandingPage = () => {
           <br />
           <span
             style={{
-              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 50%, #ec4899 100%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              backgroundSize: "200% 200%",
+              animation: "gradientShift 5s ease infinite",
             }}
           >
             Kolayca Yönetin
@@ -233,21 +270,23 @@ const LandingPage = () => {
             padding: `${spacing[4]} ${spacing[12]}`,
             borderRadius: radius.lg,
             border: "none",
-            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
-            color: cssVars.textMain,
+            background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
+            color: colors.dark.text.primary,
             fontSize: typography.fontSize["2xl"],
             fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
-            transition: "all 0.3s",
-            boxShadow: shadows.lg,
+            transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
+            boxShadow: `0 8px 32px ${colors.brand.primary}35`,
+            position: "relative",
+            overflow: "hidden",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-3px)";
-            e.currentTarget.style.boxShadow = shadows.xl;
+            e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
+            e.currentTarget.style.boxShadow = `0 12px 40px ${colors.brand.primary}50`;
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = shadows.lg;
+            e.currentTarget.style.transform = "translateY(0) scale(1)";
+            e.currentTarget.style.boxShadow = `0 8px 32px ${colors.brand.primary}35`;
           }}
         >
           Ücretsiz Başlayın
@@ -266,24 +305,41 @@ const LandingPage = () => {
             <div
               key={index}
               style={{
-                background: colors.dark.bg.hover,
-                backdropFilter: "blur(10px)",
+                background: colors.dark.glass.bg,
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
                 borderRadius: radius.xl,
                 padding: `${spacing[10]} ${spacing[8]}`,
-                border: `1px solid ${cssVars.border}`,
-                transition: "all 0.3s",
+                border: `1px solid ${colors.dark.border.default}`,
+                transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
+                position: "relative",
+                overflow: "hidden",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.background = colors.dark.bg.active;
-                e.currentTarget.style.boxShadow = shadows.xl;
+                e.currentTarget.style.background = colors.dark.bg.hover;
+                e.currentTarget.style.borderColor = colors.dark.border.strong;
+                e.currentTarget.style.boxShadow = `0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px ${colors.dark.border.subtle}`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = colors.dark.bg.hover;
+                e.currentTarget.style.background = colors.dark.glass.bg;
+                e.currentTarget.style.borderColor = colors.dark.border.default;
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
+              {/* Card Glow Effect */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "80%",
+                  height: "1px",
+                  background: `linear-gradient(90deg, transparent, ${colors.brand.primary}40, transparent)`,
+                }}
+              />
               <div
                 style={{
                   color: colors.brand.primary,
@@ -298,7 +354,7 @@ const LandingPage = () => {
                 style={{
                   fontSize: typography.fontSize["3xl"],
                   fontWeight: typography.fontWeight.bold,
-                  color: cssVars.textMain,
+                  color: colors.dark.text.primary,
                   marginBottom: spacing[3],
                 }}
               >
@@ -321,14 +377,32 @@ const LandingPage = () => {
       {/* Footer */}
       <footer
         style={{
+          position: "relative",
           padding: spacing[10],
           textAlign: "center",
           color: colors.dark.text.subtle,
           fontSize: typography.fontSize.lg,
+          borderTop: `1px solid ${colors.dark.border.subtle}`,
+          marginTop: spacing[20],
         }}
       >
         &copy; 2025 WorkFlow. Tüm hakları saklıdır.
       </footer>
+
+      {/* Animations */}
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+          }
+          @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}
+      </style>
     </div>
   );
 };

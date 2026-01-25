@@ -3,7 +3,7 @@ import { authService } from "../services/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import GoogleSignInButton from "../components/GoogleSignInButton";
-import { typography, spacing, radius, shadows, colors, cssVars } from '../styles/tokens';
+import { typography, spacing, radius, shadows, colors, animation } from '../styles/tokens';
 import { useAuthStore } from "../stores/authStore";
 
 const LoginPage = () => {
@@ -15,7 +15,6 @@ const LoginPage = () => {
   const location = useLocation();
   const login = useAuthStore((state) => state.login);
 
-  // Get the redirect target from location state (set by PrivateRoute)
   const from = (location.state as { from?: string })?.from || "/home";
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -30,7 +29,6 @@ const LoginPage = () => {
     try {
       const response = await authService.login({ username, password });
 
-      // Token ve bilgileri authStore'a kaydet
       login({
         token: response.data.token,
         refreshToken: response.data.refreshToken,
@@ -52,7 +50,6 @@ const LoginPage = () => {
     try {
       const response = await authService.googleAuth(idToken);
 
-      // Token ve bilgileri authStore'a kaydet
       login({
         token: response.data.token,
         refreshToken: response.data.refreshToken,
@@ -73,14 +70,55 @@ const LoginPage = () => {
     toast.error(error);
   };
 
+  const inputStyle = {
+    width: "100%",
+    boxSizing: "border-box" as const,
+    padding: `${spacing[3.5]} ${spacing[4]}`,
+    borderRadius: radius.md,
+    border: `1px solid ${colors.dark.border.default}`,
+    background: colors.dark.bg.secondary,
+    color: colors.dark.text.primary,
+    fontSize: typography.fontSize.xl,
+    outline: "none",
+    transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
+  };
+
   return (
     <div
       style={{
         minHeight: "100vh",
         display: "flex",
-        background: `linear-gradient(135deg, ${cssVars.bgBody} 0%, #16213e 50%, #0f3460 100%)`,
+        background: colors.dark.bg.body,
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* Background Gradient Effects */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-30%",
+          left: "-20%",
+          width: "60%",
+          height: "80%",
+          background: `radial-gradient(ellipse, ${colors.brand.primary}12 0%, transparent 60%)`,
+          filter: "blur(100px)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-20%",
+          right: "-10%",
+          width: "50%",
+          height: "70%",
+          background: `radial-gradient(ellipse, rgba(139, 92, 246, 0.1) 0%, transparent 60%)`,
+          filter: "blur(100px)",
+          pointerEvents: "none",
+        }}
+      />
+
       {/* Sol Panel - Branding */}
       <div
         style={{
@@ -90,7 +128,7 @@ const LoginPage = () => {
           justifyContent: "center",
           alignItems: "center",
           padding: spacing[10],
-          background: "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)",
+          position: "relative",
         }}
       >
         <div
@@ -106,22 +144,25 @@ const LoginPage = () => {
             style={{
               width: spacing[20],
               height: spacing[20],
-              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
+              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
               borderRadius: radius["2xl"],
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               marginBottom: spacing[6],
-              transition: "transform 0.3s",
+              transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
+              boxShadow: `0 8px 32px ${colors.brand.primary}40`,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "scale(1.05)";
+              e.currentTarget.style.boxShadow = `0 12px 40px ${colors.brand.primary}50`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = `0 8px 32px ${colors.brand.primary}40`;
             }}
           >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill={cssVars.textInverse}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill={colors.dark.text.inverse}>
               <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
           </div>
@@ -129,7 +170,7 @@ const LoginPage = () => {
             style={{
               fontSize: typography.fontSize["5xl"],
               fontWeight: typography.fontWeight.extrabold,
-              color: cssVars.textMain,
+              color: colors.dark.text.primary,
               marginBottom: spacing[4],
             }}
           >
@@ -164,8 +205,9 @@ const LoginPage = () => {
                 width: "60px",
                 height: "60px",
                 borderRadius: radius.lg,
-                background: `rgba(102, 126, 234, ${0.1 + i * 0.1})`,
-                border: `1px solid ${cssVars.border}`,
+                background: `linear-gradient(135deg, ${colors.brand.primary}${10 + i * 8} 0%, rgba(139, 92, 246, ${0.08 + i * 0.06}) 100%)`,
+                border: `1px solid ${colors.dark.border.default}`,
+                transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
               }}
             />
           ))}
@@ -180,24 +222,42 @@ const LoginPage = () => {
           alignItems: "center",
           justifyContent: "center",
           padding: spacing[10],
+          position: "relative",
         }}
       >
         <div
           style={{
             width: "100%",
-            maxWidth: "400px",
-            background: colors.dark.glass.bg,
-            backdropFilter: "blur(20px)",
+            maxWidth: "420px",
+            background: colors.dark.bg.elevated,
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
             borderRadius: radius["2xl"],
             padding: spacing[10],
-            border: `1px solid ${cssVars.border}`,
+            border: `1px solid ${colors.dark.border.default}`,
+            boxShadow: shadows.modal,
+            position: "relative",
+            overflow: "hidden",
           }}
         >
+          {/* Card Top Glow */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "60%",
+              height: "1px",
+              background: `linear-gradient(90deg, transparent, ${colors.brand.primary}50, transparent)`,
+            }}
+          />
+
           <h2
             style={{
               fontSize: typography.fontSize["4xl"],
               fontWeight: typography.fontWeight.bold,
-              color: cssVars.textMain,
+              color: colors.dark.text.primary,
               marginBottom: spacing[2],
               textAlign: "center",
             }}
@@ -231,9 +291,9 @@ const LoginPage = () => {
               margin: `${spacing[6]} 0`,
             }}
           >
-            <div style={{ flex: 1, height: "1px", background: cssVars.border }} />
+            <div style={{ flex: 1, height: "1px", background: colors.dark.border.default }} />
             <span style={{ fontSize: typography.fontSize.base, color: colors.dark.text.subtle }}>veya</span>
-            <div style={{ flex: 1, height: "1px", background: cssVars.border }} />
+            <div style={{ flex: 1, height: "1px", background: colors.dark.border.default }} />
           </div>
 
           {/* Form */}
@@ -262,25 +322,16 @@ const LoginPage = () => {
                 placeholder="Kullanıcı Adı"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                style={{
-                  width: "100%",
-                  boxSizing: "border-box",
-                  padding: `${spacing[3.5]} ${spacing[4]}`,
-                  borderRadius: radius.md,
-                  border: `1px solid ${cssVars.border}`,
-                  background: colors.dark.bg.hover,
-                  color: cssVars.textMain,
-                  fontSize: typography.fontSize.xl,
-                  outline: "none",
-                  transition: "all 0.2s",
-                }}
+                style={inputStyle}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = colors.brand.primary;
                   e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                  e.currentTarget.style.background = colors.dark.bg.input;
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = cssVars.border;
+                  e.currentTarget.style.borderColor = colors.dark.border.default;
                   e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.background = colors.dark.bg.secondary;
                 }}
               />
             </div>
@@ -304,24 +355,18 @@ const LoginPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
-                    borderRadius: radius.md,
-                    border: `1px solid ${cssVars.border}`,
-                    background: colors.dark.bg.hover,
-                    color: cssVars.textMain,
-                    fontSize: typography.fontSize.xl,
-                    outline: "none",
-                    transition: "all 0.2s",
+                    ...inputStyle,
+                    paddingRight: spacing[12],
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = colors.brand.primary;
                     e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                    e.currentTarget.style.background = colors.dark.bg.input;
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = cssVars.border;
+                    e.currentTarget.style.borderColor = colors.dark.border.default;
                     e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.background = colors.dark.bg.secondary;
                   }}
                 />
                 <button
@@ -337,6 +382,13 @@ const LoginPage = () => {
                     color: colors.dark.text.tertiary,
                     cursor: "pointer",
                     padding: spacing[1],
+                    transition: `color ${animation.duration.fast}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = colors.dark.text.secondary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = colors.dark.text.tertiary;
                   }}
                 >
                   {showPassword ? (
@@ -363,6 +415,13 @@ const LoginPage = () => {
                   color: colors.brand.primary,
                   cursor: "pointer",
                   fontWeight: typography.fontWeight.medium,
+                  transition: `opacity ${animation.duration.fast}`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = "0.8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = "1";
                 }}
               >
                 Şifremi Unuttum
@@ -377,17 +436,28 @@ const LoginPage = () => {
                 padding: spacing[3.5],
                 borderRadius: radius.md,
                 border: "none",
-                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #764ba2 100%)`,
-                color: cssVars.textMain,
+                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
+                color: colors.dark.text.primary,
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.semibold,
                 cursor: isLoading ? "not-allowed" : "pointer",
                 opacity: isLoading ? 0.7 : 1,
-                transition: "all 0.2s",
+                transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: spacing[2],
+                boxShadow: `0 4px 16px ${colors.brand.primary}30`,
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${colors.brand.primary}40`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = `0 4px 16px ${colors.brand.primary}30`;
               }}
             >
               {isLoading ? (
@@ -427,6 +497,13 @@ const LoginPage = () => {
                 color: colors.brand.primary,
                 cursor: "pointer",
                 fontWeight: typography.fontWeight.semibold,
+                transition: `opacity ${animation.duration.fast}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = "0.8";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = "1";
               }}
             >
               Kayıt Ol
