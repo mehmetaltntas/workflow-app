@@ -13,6 +13,7 @@ import { useProfileStats } from "../hooks/useProfileStats";
 import { StatCard } from "../components/StatCard";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
+import { STATUS_LABELS, STATUS_COLORS } from "../constants";
 
 const ProfilePage = () => {
   const { stats, isLoading, error } = useProfileStats();
@@ -94,22 +95,6 @@ const ProfilePage = () => {
       </div>
     );
   }
-
-  const statusLabels: Record<string, string> = {
-    PLANLANDI: "Planlandi",
-    DEVAM_EDIYOR: "Devam Ediyor",
-    TAMAMLANDI: "Tamamlandi",
-    BEKLEMEDE: "Beklemede",
-    IPTAL_EDILDI: "Iptal Edildi",
-  };
-
-  const statusColors: Record<string, string> = {
-    PLANLANDI: colors.status.planned,
-    DEVAM_EDIYOR: colors.status.inProgress,
-    TAMAMLANDI: colors.status.completed,
-    BEKLEMEDE: colors.status.paused,
-    IPTAL_EDILDI: colors.status.abandoned,
-  };
 
   return (
     <div
@@ -369,7 +354,7 @@ const ProfilePage = () => {
                       width: "10px",
                       height: "10px",
                       borderRadius: radius.full,
-                      background: statusColors[status],
+                      background: STATUS_COLORS[status],
                     }}
                   />
                   <span
@@ -378,7 +363,7 @@ const ProfilePage = () => {
                       color: cssVars.textMain,
                     }}
                   >
-                    {statusLabels[status]}
+                    {STATUS_LABELS[status]}
                   </span>
                 </div>
                 <span

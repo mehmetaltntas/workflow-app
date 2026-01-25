@@ -19,8 +19,8 @@ export const STATUS_LABELS: Record<string, string> = {
   PLANLANDI: 'Planlandı',
   DEVAM_EDIYOR: 'Devam Ediyor',
   TAMAMLANDI: 'Tamamlandı',
-  DURDURULDU: 'Durduruldu',
-  BIRAKILDI: 'Bırakıldı',
+  DURDURULDU: 'Beklemede',
+  BIRAKILDI: 'İptal Edildi',
 };
 
 // Priority colors - design token sisteminden

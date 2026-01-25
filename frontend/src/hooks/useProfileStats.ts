@@ -9,8 +9,8 @@ export interface BoardStats {
     PLANLANDI: number;
     DEVAM_EDIYOR: number;
     TAMAMLANDI: number;
-    BEKLEMEDE: number;
-    IPTAL_EDILDI: number;
+    DURDURULDU: number;
+    BIRAKILDI: number;
   };
 }
 
@@ -49,8 +49,8 @@ const defaultStats: ProfileStats = {
       PLANLANDI: 0,
       DEVAM_EDIYOR: 0,
       TAMAMLANDI: 0,
-      BEKLEMEDE: 0,
-      IPTAL_EDILDI: 0,
+      DURDURULDU: 0,
+      BIRAKILDI: 0,
     },
   },
   lists: {
@@ -131,8 +131,8 @@ function calculateStats(boards: Board[]): ProfileStats {
       PLANLANDI: 0,
       DEVAM_EDIYOR: 0,
       TAMAMLANDI: 0,
-      BEKLEMEDE: 0,
-      IPTAL_EDILDI: 0,
+      DURDURULDU: 0,
+      BIRAKILDI: 0,
     },
   };
 

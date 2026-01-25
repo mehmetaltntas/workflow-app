@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useBoardsQuery } from "../hooks/queries/useBoards";
-import { useUpdateBoard, useDeleteBoard, useUpdateBoardStatus } from "../hooks/queries/useBoardMutations";
+import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import {
@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
-import CreateBoardModal from "../components/CreateBoardModal";
-import { ConfirmationModal } from "../components/ConfirmationModal";
+import BoardEditModal from "../components/BoardEditModal";
 import { BoardInfoPanel } from "../components/BoardInfoPanel";
 import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
 import { SortingOptions, type SortField, type SortDirection } from "../components/ui/SortingOptions";
@@ -23,21 +22,19 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
 
 const PINNED_BOARDS_KEY = 'workflow_pinned_boards';
-const MAX_PINNED_BOARDS = 3;
+const MAX_PINNED_BOARDS = 4;
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { data: boards = [], isLoading: loading } = useBoardsQuery();
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
-  const updateBoardStatusMutation = useUpdateBoardStatus();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
-  const [deleteBoardId, setDeleteBoardId] = useState<number | null>(null);
   const [pinnedBoardIds, setPinnedBoardIds] = useState<number[]>(() => {
     const stored = localStorage.getItem(PINNED_BOARDS_KEY);
     if (stored) {
@@ -141,17 +138,9 @@ const HomePage = () => {
 
   const canPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
 
-  const handleStatusChange = async (board: Board, newStatus: string) => {
-    updateBoardStatusMutation.mutate({ boardId: board.id, status: newStatus });
-  };
-
   const handleEdit = (board: Board) => {
     setEditingBoard(board);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (boardId: number) => {
-    setDeleteBoardId(boardId);
+    setIsEditModalOpen(true);
   };
 
   const handleShowInfo = (board: Board) => {
@@ -159,14 +148,23 @@ const HomePage = () => {
     if (!isPanelOpen) setIsPanelOpen(true);
   };
 
-  const handleSaveBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string) => {
+  const handleSaveBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string }) => {
     if (editingBoard) {
-      const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
+      const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
       updateBoardMutation.mutate(
-        { boardId: editingBoard.id, data: { name, status, link, description, deadline: formattedDeadline } },
+        {
+          boardId: editingBoard.id,
+          data: {
+            name: data.name,
+            status: data.status || editingBoard.status || "PLANLANDI",
+            link: data.link,
+            description: data.description,
+            deadline: formattedDeadline
+          }
+        },
         {
           onSuccess: () => {
-            setIsModalOpen(false);
+            setIsEditModalOpen(false);
             setEditingBoard(null);
           },
         }
@@ -174,12 +172,13 @@ const HomePage = () => {
     }
   };
 
-  const confirmDelete = async () => {
-    if (deleteBoardId) {
+  const handleDeleteBoard = () => {
+    if (editingBoard) {
       // Pinned listesinden de kaldır
-      setPinnedBoardIds(prev => prev.filter(id => id !== deleteBoardId));
-      deleteBoardMutation.mutate(deleteBoardId);
-      setDeleteBoardId(null);
+      setPinnedBoardIds(prev => prev.filter(id => id !== editingBoard.id));
+      deleteBoardMutation.mutate(editingBoard.id);
+      setIsEditModalOpen(false);
+      setEditingBoard(null);
     }
   };
 
@@ -214,13 +213,8 @@ const HomePage = () => {
         <BoardCard
           board={board}
           onClick={() => navigate(`/boards/${board.slug}`)}
-          onStatusChange={handleStatusChange}
           onEdit={() => handleEdit(board)}
-          onDelete={() => handleDelete(board.id)}
           onShowInfo={() => handleShowInfo(board)}
-          onTogglePin={() => togglePin(board.id)}
-          isPinned={isPinned}
-          canPin={canPin}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}
         />
       </div>
@@ -324,16 +318,21 @@ const HomePage = () => {
                 alignItems: "center",
                 gap: spacing[2.5],
                 padding: `${spacing[2.5]} ${spacing[4]}`,
-                background: `linear-gradient(135deg, ${colors.semantic.warning}15, ${colors.semantic.warning}05)`,
+                background: isLight
+                  ? `linear-gradient(135deg, ${colors.brand.primary}12, ${colors.brand.primary}05)`
+                  : `linear-gradient(135deg, ${colors.semantic.warning}15, ${colors.semantic.warning}05)`,
                 borderRadius: radius.xl,
-                border: `1px solid ${colors.semantic.warning}20`,
+                border: isLight
+                  ? `1px solid ${colors.brand.primary}25`
+                  : `1px solid ${colors.semantic.warning}20`,
+                boxShadow: isLight ? `0 2px 8px ${colors.brand.primary}10` : 'none',
               }}>
-                <Pin size={18} color={colors.semantic.warning} />
+                <Pin size={18} color={isLight ? colors.brand.primary : colors.semantic.warning} />
                 <div>
                   <div style={{
                     fontSize: typography.fontSize.lg,
                     fontWeight: typography.fontWeight.bold,
-                    color: colors.semantic.warning
+                    color: isLight ? colors.brand.primary : colors.semantic.warning
                   }}>
                     {stats.pinned}/{MAX_PINNED_BOARDS}
                   </div>
@@ -395,10 +394,15 @@ const HomePage = () => {
                     width: spacing[8],
                     height: spacing[8],
                     borderRadius: radius.lg,
-                    background: `linear-gradient(135deg, ${colors.semantic.warning}25, ${colors.semantic.warning}15)`,
-                    border: `1px solid ${colors.semantic.warning}30`,
+                    background: isLight
+                      ? `linear-gradient(135deg, ${colors.brand.primary}20, ${colors.brand.primary}10)`
+                      : `linear-gradient(135deg, ${colors.semantic.warning}25, ${colors.semantic.warning}15)`,
+                    border: isLight
+                      ? `1px solid ${colors.brand.primary}30`
+                      : `1px solid ${colors.semantic.warning}30`,
+                    boxShadow: isLight ? `0 2px 8px ${colors.brand.primary}15` : 'none',
                   }}>
-                    <Pin size={16} color={colors.semantic.warning} />
+                    <Pin size={16} color={isLight ? colors.brand.primary : colors.semantic.warning} />
                   </div>
                   <h2 style={{
                     fontSize: typography.fontSize["2xl"],
@@ -410,10 +414,12 @@ const HomePage = () => {
                   </h2>
                   <span style={{
                     fontSize: typography.fontSize.md,
-                    color: cssVars.textMuted,
+                    color: isLight ? colors.brand.primary : colors.semantic.warning,
                     fontWeight: typography.fontWeight.medium,
                     padding: `${spacing[0.5]} ${spacing[2.5]}`,
-                    background: cssVars.bgSecondary,
+                    background: isLight
+                      ? `${colors.brand.primary}15`
+                      : `${colors.semantic.warning}15`,
                     borderRadius: radius.full,
                   }}>
                     {pinnedBoards.length}
@@ -559,35 +565,30 @@ const HomePage = () => {
           <BoardInfoPanel
             board={selectedInfoBoard}
             onClose={() => setSelectedInfoBoard(null)}
+            onTogglePin={selectedInfoBoard ? () => togglePin(selectedInfoBoard.id) : undefined}
+            isPinned={selectedInfoBoard ? pinnedBoardIds.includes(selectedInfoBoard.id) : false}
+            canPin={canPin}
           />
         </div>
       </div>
 
-      <ConfirmationModal
-        isOpen={!!deleteBoardId}
-        title="Panoyu Sil?"
-        message="Bu panoyu ve içindeki tüm listeleri/görevleri silmek istediğine emin misin? Bu işlem geri alınamaz."
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteBoardId(null)}
-        confirmText="Evet, Sil"
-        variant="danger"
-      />
-
-      {isModalOpen && (
-        <CreateBoardModal
-          isOpen={isModalOpen}
+      {/* Pano Düzenleme Modalı */}
+      {isEditModalOpen && editingBoard && (
+        <BoardEditModal
+          isOpen={isEditModalOpen}
           onClose={() => {
-            setIsModalOpen(false);
+            setIsEditModalOpen(false);
             setEditingBoard(null);
           }}
-          onCreate={handleSaveBoard}
-          initialData={editingBoard ? {
+          onSave={handleSaveBoard}
+          onDelete={handleDeleteBoard}
+          initialData={{
             name: editingBoard.name,
-            status: editingBoard.status || "PLANLANDI",
             link: editingBoard.link,
             description: editingBoard.description,
-            deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined
-          } : undefined}
+            deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
+            status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI"
+          }}
         />
       )}
     </div>

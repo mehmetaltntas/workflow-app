@@ -11,7 +11,9 @@ import {
   X,
   Clock,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Pin,
+  PinOff
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -21,6 +23,9 @@ import { typography, spacing, radius, colors, cssVars, animation } from "../styl
 interface BoardInfoPanelProps {
   board: Board | null;
   onClose: () => void;
+  onTogglePin?: () => void;
+  isPinned?: boolean;
+  canPin?: boolean;
 }
 
 // Pano istatistiklerini hesapla
@@ -104,7 +109,13 @@ const getDeadlineInfo = (deadline: string | undefined) => {
   }
 };
 
-export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({ board, onClose }) => {
+export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
+  board,
+  onClose,
+  onTogglePin,
+  isPinned = false,
+  canPin = true
+}) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
@@ -159,23 +170,26 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({ board, onClose }
           background: `linear-gradient(135deg, ${statusColor}10, transparent)`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[3], flex: 1, minWidth: 0 }}>
           <div
             style={{
               width: spacing[2],
               height: spacing[8],
               borderRadius: radius.full,
               background: statusColor,
+              flexShrink: 0,
             }}
           />
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3
               style={{
                 fontSize: typography.fontSize["2xl"],
                 fontWeight: typography.fontWeight.bold,
                 color: cssVars.textMain,
                 margin: 0,
-                marginBottom: spacing[0.5],
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {board.name}
@@ -193,24 +207,57 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({ board, onClose }
             </span>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: spacing[8],
-            height: spacing[8],
-            borderRadius: radius.lg,
-            border: `1px solid ${themeColors.borderDefault}`,
-            background: themeColors.bgHover,
-            color: cssVars.textMuted,
-            cursor: "pointer",
-            transition: `all ${animation.duration.fast}`,
-          }}
-        >
-          <X size={18} />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexShrink: 0, marginLeft: spacing[2] }}>
+          {/* Pin Button */}
+          {onTogglePin && (
+            <button
+              onClick={onTogglePin}
+              disabled={!isPinned && !canPin}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: spacing[8],
+                height: spacing[8],
+                borderRadius: radius.lg,
+                border: `1px solid ${isPinned
+                  ? (isLight ? colors.brand.primary : colors.semantic.warning)
+                  : themeColors.borderDefault}`,
+                background: isPinned
+                  ? (isLight ? `${colors.brand.primary}20` : `${colors.semantic.warning}20`)
+                  : themeColors.bgHover,
+                color: isPinned
+                  ? (isLight ? colors.brand.primary : colors.semantic.warning)
+                  : cssVars.textMuted,
+                cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
+                opacity: !isPinned && !canPin ? 0.5 : 1,
+                transition: `all ${animation.duration.fast}`,
+              }}
+              title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
+            >
+              {isPinned ? <PinOff size={16} strokeWidth={2.5} /> : <Pin size={16} strokeWidth={2.5} />}
+            </button>
+          )}
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: spacing[8],
+              height: spacing[8],
+              borderRadius: radius.lg,
+              border: `1px solid ${themeColors.borderDefault}`,
+              background: themeColors.bgHover,
+              color: cssVars.textMuted,
+              cursor: "pointer",
+              transition: `all ${animation.duration.fast}`,
+            }}
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Content */}

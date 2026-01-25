@@ -4,13 +4,13 @@ import type { Board } from "../types";
 import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, PanelRightOpen, PanelRightClose } from "lucide-react";
 
 import { useBoardsQuery } from "../hooks/queries/useBoards";
-import { useCreateBoard, useUpdateBoard, useDeleteBoard, useUpdateBoardStatus } from "../hooks/queries/useBoardMutations";
+import { useCreateBoard, useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
-import { DeleteConfirmation } from "../components/DeleteConfirmation";
+import BoardEditModal from "../components/BoardEditModal";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -24,15 +24,14 @@ const BoardsPage = () => {
   const createBoardMutation = useCreateBoard();
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
-  const updateBoardStatusMutation = useUpdateBoardStatus();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [deleteBoardId, setDeleteBoardId] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -64,52 +63,60 @@ const BoardsPage = () => {
     return { total, completed, inProgress, completionRate };
   }, [boards, statusCounts]);
 
-  // Hem Ekleme Hem Güncelleme için ortak fonksiyon
-  const handleSaveBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string) => {
+  // Yeni pano oluşturma
+  const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string) => {
     const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
+    createBoardMutation.mutate(
+      { name, status, link, description, deadline: formattedDeadline },
+      {
+        onSuccess: () => {
+          setIsModalOpen(false);
+        },
+      }
+    );
+  };
 
+  // Pano düzenleme
+  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string }) => {
+    if (!editingBoard) return;
+    const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
+    updateBoardMutation.mutate(
+      {
+        boardId: editingBoard.id,
+        data: {
+          name: data.name,
+          status: data.status || editingBoard.status || "PLANLANDI",
+          link: data.link,
+          description: data.description,
+          deadline: formattedDeadline
+        }
+      },
+      {
+        onSuccess: () => {
+          setIsEditModalOpen(false);
+          setEditingBoard(null);
+        },
+      }
+    );
+  };
+
+  // Pano silme
+  const handleDeleteBoard = () => {
     if (editingBoard) {
-        updateBoardMutation.mutate(
-            { boardId: editingBoard.id, data: { name, status, link, description, deadline: formattedDeadline } },
-            {
-                onSuccess: () => {
-                    setIsModalOpen(false);
-                    setEditingBoard(null);
-                },
-            }
-        );
-    } else {
-        createBoardMutation.mutate(
-            { name, status, link, description, deadline: formattedDeadline },
-            {
-                onSuccess: () => {
-                    setIsModalOpen(false);
-                },
-            }
-        );
+      deleteBoardMutation.mutate(editingBoard.id);
+      setIsEditModalOpen(false);
+      setEditingBoard(null);
     }
   };
 
-  const handleDeleteBoard = async () => {
-      if (deleteBoardId) {
-          deleteBoardMutation.mutate(deleteBoardId);
-          setDeleteBoardId(null);
-      }
-  }
-
   const openCreateModal = () => {
-      setEditingBoard(null);
       setIsModalOpen(true);
   }
 
   const openEditModal = (board: Board) => {
       setEditingBoard(board);
-      setIsModalOpen(true);
+      setIsEditModalOpen(true);
   }
-
-  const handleStatusChange = async (board: Board, newStatus: string) => {
-    updateBoardStatusMutation.mutate({ boardId: board.id, status: newStatus });
-  };
 
   const filteredBoards = boards.filter(b => statusFilter === "ALL" || (b.status || "PLANLANDI") === statusFilter);
 
@@ -210,7 +217,7 @@ const BoardsPage = () => {
             key="create-new"
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onCreate={handleSaveBoard}
+            onCreate={handleCreateBoard}
           />
         )}
       </div>
@@ -502,9 +509,7 @@ const BoardsPage = () => {
                             <BoardCard
                                 board={board}
                                 onClick={() => navigate(`/boards/${board.slug}`)}
-                                onStatusChange={handleStatusChange}
                                 onEdit={() => openEditModal(board)}
-                                onDelete={() => setDeleteBoardId(board.id)}
                                 onShowInfo={() => {
                                   setSelectedInfoBoard(board);
                                   if (!isPanelOpen) setIsPanelOpen(true);
@@ -570,30 +575,33 @@ const BoardsPage = () => {
         </div>
       </div>
 
-      <DeleteConfirmation
-        isOpen={!!deleteBoardId}
-        title="Panoyu silmek istiyor musun?"
-        message="Bu pano ve içindeki tüm listeler/görevler kalıcı olarak silinecek."
-        onConfirm={handleDeleteBoard}
-        onCancel={() => setDeleteBoardId(null)}
-        confirmText="Evet, Sil"
-        variant="danger"
-        autoCloseDelay={6000}
-      />
-
+      {/* Yeni Pano Oluşturma Modalı */}
       {isModalOpen && (
         <CreateBoardModal
-            key={editingBoard ? `edit-${editingBoard.id}` : 'create-new'}
+            key="create-new"
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            onCreate={handleSaveBoard}
-            initialData={editingBoard ? {
+            onCreate={handleCreateBoard}
+        />
+      )}
+
+      {/* Pano Düzenleme Modalı */}
+      {isEditModalOpen && editingBoard && (
+        <BoardEditModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingBoard(null);
+            }}
+            onSave={handleEditBoard}
+            onDelete={handleDeleteBoard}
+            initialData={{
                 name: editingBoard.name,
-                status: editingBoard.status || "PLANLANDI",
                 link: editingBoard.link,
                 description: editingBoard.description,
-                deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined
-            } : undefined}
+                deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
+                status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI"
+            }}
         />
       )}
 

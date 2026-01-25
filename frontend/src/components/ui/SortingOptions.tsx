@@ -96,8 +96,8 @@ export const SortingOptions: React.FC<SortingOptionsProps> = ({
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          gap: spacing[1],
+          flexDirection: "row",
+          gap: spacing[2],
         }}
       >
         {sortOptions.map((option) => {
@@ -109,19 +109,20 @@ export const SortingOptions: React.FC<SortingOptionsProps> = ({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: spacing[2],
-                padding: `${spacing[2]} ${spacing[3]}`,
+                justifyContent: "center",
+                gap: spacing[1.5],
+                padding: `${spacing[1.5]} ${spacing[2.5]}`,
                 background: isActive
                   ? `linear-gradient(135deg, ${colors.brand.primary}20, ${colors.brand.primary}10)`
                   : "transparent",
                 border: isActive ? `1px solid ${colors.brand.primary}40` : "1px solid transparent",
                 borderRadius: radius.md,
                 color: isActive ? colors.brand.primary : cssVars.textMuted,
-                fontSize: typography.fontSize.sm,
+                fontSize: typography.fontSize.xs,
                 fontWeight: isActive ? typography.fontWeight.semibold : typography.fontWeight.medium,
                 cursor: "pointer",
                 transition: `all ${animation.duration.fast}`,
-                textAlign: "left",
+                flex: 1,
               }}
             >
               {option.icon}
