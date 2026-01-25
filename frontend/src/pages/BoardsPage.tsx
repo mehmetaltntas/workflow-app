@@ -240,8 +240,9 @@ const BoardsPage = () => {
         style={{
           flex: 1,
           padding: spacing[10],
-          transition: `margin-right ${animation.duration.slow} ${animation.easing.spring}`,
-          marginRight: isPanelOpen ? "340px" : 0,
+          transition: `padding-right ${animation.duration.slow} ${animation.easing.spring}`,
+          paddingRight: isPanelOpen ? spacing[6] : spacing[10],
+          minWidth: 0,
         }}
       >
         {/* Header */}
@@ -525,21 +526,26 @@ const BoardsPage = () => {
         </div>
       </div>
 
-      {/* Right Panel */}
-      <div
+      {/* Right Panel - Sticky Sidebar */}
+      <aside
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          width: "340px",
-          height: "100vh",
+          position: "sticky",
+          top: spacing[4],
+          alignSelf: "flex-start",
+          width: isPanelOpen ? "340px" : "0px",
+          minWidth: isPanelOpen ? "340px" : "0px",
+          maxWidth: "340px",
+          height: `calc(100vh - ${spacing[8]})`,
+          maxHeight: `calc(100vh - ${spacing[8]})`,
           background: isLight ? colors.light.bg.card : colors.dark.bg.card,
-          borderLeft: `1px solid ${themeColors.borderDefault}`,
+          borderLeft: isPanelOpen ? `1px solid ${themeColors.borderDefault}` : "none",
+          borderRadius: `${radius.xl} 0 0 ${radius.xl}`,
           display: "flex",
           flexDirection: "column",
-          transform: isPanelOpen ? "translateX(0)" : "translateX(100%)",
-          transition: `transform ${animation.duration.slow} ${animation.easing.spring}`,
-          zIndex: 10,
+          overflow: "hidden",
+          transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
+          opacity: isPanelOpen ? 1 : 0,
+          marginRight: isPanelOpen ? 0 : "-340px",
           boxShadow: isPanelOpen ? shadows.lg : "none",
         }}
       >
@@ -573,7 +579,7 @@ const BoardsPage = () => {
             onClose={() => setSelectedInfoBoard(null)}
           />
         </div>
-      </div>
+      </aside>
 
       {/* Yeni Pano Oluşturma Modalı */}
       {isModalOpen && (

@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
-import { STATUS_COLORS, STATUS_LABELS } from "../constants";
-import { Info, Pin, PinOff } from "lucide-react";
+import { STATUS_COLORS } from "../constants";
+import { Info, ExternalLink } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
 import { useTheme } from "../contexts/ThemeContext";
@@ -11,26 +11,16 @@ import { typography, spacing, radius, shadows, animation, colors as tokenColors 
 interface BoardCardProps {
   board: Board;
   onClick: () => void;
-  onStatusChange: (board: Board, newStatus: string) => void;
   onEdit: () => void;
-  onDelete: () => void;
   onShowInfo?: () => void;
-  onTogglePin?: () => void;
-  isPinned?: boolean;
-  canPin?: boolean;
   viewMode?: 'grid' | 'list';
 }
 
 const BoardCard: React.FC<BoardCardProps> = ({
   board,
   onClick,
-  onStatusChange,
   onEdit,
-  onDelete,
   onShowInfo,
-  onTogglePin,
-  isPinned = false,
-  canPin = true,
   viewMode = 'grid'
 }) => {
   const { theme } = useTheme();
@@ -38,22 +28,12 @@ const BoardCard: React.FC<BoardCardProps> = ({
   const isLight = theme === 'light';
   const statusColor = STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.stopPropagation();
-    onStatusChange(board, e.target.value);
-  };
-
-  // Action menu items oluştur
+  // Action menu items oluştur - sadece düzenleme seçeneği
   const menuItems: ActionMenuItem[] = [
     {
       label: "Düzenle",
       onClick: onEdit,
       variant: "default",
-    },
-    {
-      label: "Sil",
-      onClick: onDelete,
-      variant: "danger",
     },
   ];
 
@@ -105,58 +85,11 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
         {/* Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }} onClick={(e) => e.stopPropagation()}>
-          {/* Status Select */}
-          <select
-            value={board.status || "PLANLANDI"}
-            onChange={handleStatusChange}
-            style={{
-              fontSize: typography.fontSize.xs,
-              padding: `${spacing[1]} ${spacing[2]}`,
-              borderRadius: radius.md,
-              border: `1px solid ${statusColor}44`,
-              background: `${statusColor}15`,
-              color: statusColor,
-              fontWeight: typography.fontWeight.bold,
-              cursor: "pointer",
-              outline: "none",
-              textTransform: 'uppercase',
-              letterSpacing: typography.letterSpacing.wide,
-            }}
-          >
-            {Object.keys(STATUS_LABELS).map((key) => (
-              <option key={key} value={key} style={{ background: isLight ? tokenColors.light.bg.elevated : tokenColors.dark.bg.secondary }}>
-                {STATUS_LABELS[key]}
-              </option>
-            ))}
-          </select>
-
-          {/* Pin Button */}
-          {onTogglePin && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onTogglePin();
-              }}
-              disabled={!isPinned && !canPin}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[7],
-                height: spacing[7],
-                borderRadius: radius.md,
-                border: `1px solid ${isPinned ? tokenColors.semantic.warning : statusColor}30`,
-                background: isPinned ? `${tokenColors.semantic.warning}20` : `${statusColor}15`,
-                color: isPinned ? tokenColors.semantic.warning : statusColor,
-                cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
-                opacity: !isPinned && !canPin ? 0.5 : 1,
-              }}
-              title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
-            >
-              {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-            </button>
-          )}
+          {/* Action Menu */}
+          <ActionMenu
+            items={menuItems}
+            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
+          />
 
           {/* Info Button */}
           {onShowInfo && (
@@ -180,11 +113,30 @@ const BoardCard: React.FC<BoardCardProps> = ({
             </button>
           )}
 
-          {/* Action Menu */}
-          <ActionMenu
-            items={menuItems}
-            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
-          />
+          {/* External Link Button */}
+          {board.link && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(board.link, '_blank', 'noopener,noreferrer');
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: spacing[7],
+                height: spacing[7],
+                borderRadius: radius.md,
+                border: `1px solid ${statusColor}30`,
+                background: `${statusColor}15`,
+                color: statusColor,
+                cursor: "pointer",
+              }}
+              title="Bağlantıya Git"
+            >
+              <ExternalLink size={14} />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -249,76 +201,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
         {/* Action Buttons */}
         <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5] }} onClick={(e) => e.stopPropagation()}>
-          {/* Pin Button */}
-          {onTogglePin && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onTogglePin();
-              }}
-              disabled={!isPinned && !canPin}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[7],
-                height: spacing[7],
-                borderRadius: radius.md,
-                border: `1px solid ${isPinned ? tokenColors.semantic.warning : statusColor}30`,
-                background: isPinned ? `${tokenColors.semantic.warning}20` : `${statusColor}15`,
-                color: isPinned ? tokenColors.semantic.warning : statusColor,
-                cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
-                opacity: !isPinned && !canPin ? 0.5 : 1,
-                transition: `all ${animation.duration.fast}`,
-              }}
-              onMouseEnter={(e) => {
-                if (isPinned || canPin) {
-                  e.currentTarget.style.background = isPinned ? `${tokenColors.semantic.warning}30` : `${statusColor}25`;
-                  e.currentTarget.style.transform = "scale(1.05)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = isPinned ? `${tokenColors.semantic.warning}20` : `${statusColor}15`;
-                e.currentTarget.style.transform = "scale(1)";
-              }}
-              title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
-            >
-              {isPinned ? <PinOff size={14} strokeWidth={2.5} /> : <Pin size={14} strokeWidth={2.5} />}
-            </button>
-          )}
-
-          {/* Info Button */}
-          {onShowInfo && (
-            <button
-              onClick={onShowInfo}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[7],
-                height: spacing[7],
-                borderRadius: radius.md,
-                border: `1px solid ${statusColor}30`,
-                background: `${statusColor}15`,
-                color: statusColor,
-                cursor: "pointer",
-                transition: `all ${animation.duration.fast}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${statusColor}25`;
-                e.currentTarget.style.transform = "scale(1.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = `${statusColor}15`;
-                e.currentTarget.style.transform = "scale(1)";
-              }}
-              title="Pano Bilgileri"
-            >
-              <Info size={14} strokeWidth={2.5} />
-            </button>
-          )}
-
           {/* Action Menu */}
           <ActionMenu
             items={menuItems}
@@ -327,8 +209,8 @@ const BoardCard: React.FC<BoardCardProps> = ({
         </div>
       </div>
 
-      {/* Description (if exists) */}
-      {board.description && (
+      {/* Description (if exists and not DEVAM_EDIYOR) */}
+      {board.description && board.status !== "DEVAM_EDIYOR" && (
         <p style={{
           color: colors.textTertiary,
           fontSize: typography.fontSize.sm,
@@ -346,48 +228,86 @@ const BoardCard: React.FC<BoardCardProps> = ({
         </p>
       )}
 
-      {/* Bottom Row: Status */}
-      <div style={{
-        display: "flex",
-        justifyContent: "flex-end",
-        alignItems: "center",
-        marginTop: "auto",
-      }}>
-        <div onClick={(e) => e.stopPropagation()}>
-          <select
-            value={board.status || "PLANLANDI"}
-            onChange={handleStatusChange}
+      {/* Spacer for bottom icons */}
+      <div style={{ flex: 1 }} />
+
+      {/* Bottom Right Icons */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: spacing[1.5],
+          marginTop: spacing[2],
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Info Button */}
+        {onShowInfo && (
+          <button
+            onClick={onShowInfo}
             style={{
-              fontSize: typography.fontSize.xs,
-              padding: `${spacing[1.5]} ${spacing[2.5]}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: spacing[7],
+              height: spacing[7],
               borderRadius: radius.md,
-              border: `1px solid ${statusColor}44`,
+              border: `1px solid ${statusColor}30`,
               background: `${statusColor}15`,
               color: statusColor,
-              fontWeight: typography.fontWeight.bold,
               cursor: "pointer",
-              outline: "none",
-              transition: `all ${animation.duration.normal}`,
-              textTransform: 'uppercase',
-              letterSpacing: typography.letterSpacing.wide,
+              transition: `all ${animation.duration.fast}`,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = `${statusColor}25`;
-              e.currentTarget.style.borderColor = statusColor;
+              e.currentTarget.style.transform = "scale(1.05)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = `${statusColor}15`;
-              e.currentTarget.style.borderColor = `${statusColor}44`;
+              e.currentTarget.style.transform = "scale(1)";
             }}
+            title="Pano Bilgileri"
           >
-            {Object.keys(STATUS_LABELS).map((key) => (
-              <option key={key} value={key} style={{ background: isLight ? tokenColors.light.bg.elevated : tokenColors.dark.bg.secondary, color: isLight ? tokenColors.light.text.primary : tokenColors.dark.text.primary }}>
-                {STATUS_LABELS[key]}
-              </option>
-            ))}
-          </select>
-        </div>
+            <Info size={14} strokeWidth={2.5} />
+          </button>
+        )}
+
+        {/* External Link Button */}
+        {board.link && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(board.link, '_blank', 'noopener,noreferrer');
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: spacing[7],
+              height: spacing[7],
+              borderRadius: radius.md,
+              border: `1px solid ${statusColor}30`,
+              background: `${statusColor}15`,
+              color: statusColor,
+              cursor: "pointer",
+              transition: `all ${animation.duration.fast}`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `${statusColor}25`;
+              e.currentTarget.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = `${statusColor}15`;
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+            title="Bağlantıya Git"
+          >
+            <ExternalLink size={14} strokeWidth={2.5} />
+          </button>
+        )}
       </div>
+
     </div>
   );
 };
