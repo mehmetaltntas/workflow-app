@@ -526,6 +526,7 @@ const BoardsPage = () => {
               value={statusFilter}
               onChange={setStatusFilter}
               counts={statusCounts}
+              defaultExpanded={false}
             />
           </div>
         </div>
