@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import type { Board } from "../types";
 import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, PanelRightOpen, PanelRightClose } from "lucide-react";
 
-import { useBoards } from "../hooks/useBoards";
+import { useBoardsQuery } from "../hooks/queries/useBoards";
+import { useCreateBoard, useUpdateBoard, useDeleteBoard, useUpdateBoardStatus } from "../hooks/queries/useBoardMutations";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
@@ -19,7 +20,11 @@ import { BoardInfoPanel } from "../components/BoardInfoPanel";
 
 const BoardsPage = () => {
   const navigate = useNavigate();
-  const { boards, loading, createBoard, updateBoard, deleteBoard, updateBoardStatus } = useBoards();
+  const { data: boards = [], isLoading: loading } = useBoardsQuery();
+  const createBoardMutation = useCreateBoard();
+  const updateBoardMutation = useUpdateBoard();
+  const deleteBoardMutation = useDeleteBoard();
+  const updateBoardStatusMutation = useUpdateBoardStatus();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
@@ -64,28 +69,30 @@ const BoardsPage = () => {
     const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
 
     if (editingBoard) {
-        const success = await updateBoard(editingBoard.id, {
-            name,
-            status,
-            link,
-            description,
-            deadline: formattedDeadline
-        });
-        if (success) {
-            setIsModalOpen(false);
-            setEditingBoard(null);
-        }
+        updateBoardMutation.mutate(
+            { boardId: editingBoard.id, data: { name, status, link, description, deadline: formattedDeadline } },
+            {
+                onSuccess: () => {
+                    setIsModalOpen(false);
+                    setEditingBoard(null);
+                },
+            }
+        );
     } else {
-        const success = await createBoard(name, status, link, description, formattedDeadline);
-        if (success) {
-            setIsModalOpen(false);
-        }
+        createBoardMutation.mutate(
+            { name, status, link, description, deadline: formattedDeadline },
+            {
+                onSuccess: () => {
+                    setIsModalOpen(false);
+                },
+            }
+        );
     }
   };
 
   const handleDeleteBoard = async () => {
       if (deleteBoardId) {
-          await deleteBoard(deleteBoardId);
+          deleteBoardMutation.mutate(deleteBoardId);
           setDeleteBoardId(null);
       }
   }
@@ -101,7 +108,7 @@ const BoardsPage = () => {
   }
 
   const handleStatusChange = async (board: Board, newStatus: string) => {
-    await updateBoardStatus(board.id, newStatus);
+    updateBoardStatusMutation.mutate({ boardId: board.id, status: newStatus });
   };
 
   const filteredBoards = boards.filter(b => statusFilter === "ALL" || (b.status || "PLANLANDI") === statusFilter);

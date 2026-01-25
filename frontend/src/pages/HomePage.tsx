@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useBoards } from "../hooks/useBoards";
+import { useBoardsQuery } from "../hooks/queries/useBoards";
+import { useUpdateBoard, useDeleteBoard, useUpdateBoardStatus } from "../hooks/queries/useBoardMutations";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import {
@@ -26,7 +27,10 @@ const MAX_PINNED_BOARDS = 3;
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { boards, loading, updateBoardStatus, updateBoard, deleteBoard } = useBoards();
+  const { data: boards = [], isLoading: loading } = useBoardsQuery();
+  const updateBoardMutation = useUpdateBoard();
+  const deleteBoardMutation = useDeleteBoard();
+  const updateBoardStatusMutation = useUpdateBoardStatus();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
@@ -138,7 +142,7 @@ const HomePage = () => {
   const canPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
 
   const handleStatusChange = async (board: Board, newStatus: string) => {
-    await updateBoardStatus(board.id, newStatus);
+    updateBoardStatusMutation.mutate({ boardId: board.id, status: newStatus });
   };
 
   const handleEdit = (board: Board) => {
@@ -158,11 +162,15 @@ const HomePage = () => {
   const handleSaveBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string) => {
     if (editingBoard) {
       const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
-      const success = await updateBoard(editingBoard.id, { name, status, link, description, deadline: formattedDeadline });
-      if (success) {
-        setIsModalOpen(false);
-        setEditingBoard(null);
-      }
+      updateBoardMutation.mutate(
+        { boardId: editingBoard.id, data: { name, status, link, description, deadline: formattedDeadline } },
+        {
+          onSuccess: () => {
+            setIsModalOpen(false);
+            setEditingBoard(null);
+          },
+        }
+      );
     }
   };
 
@@ -170,7 +178,7 @@ const HomePage = () => {
     if (deleteBoardId) {
       // Pinned listesinden de kaldır
       setPinnedBoardIds(prev => prev.filter(id => id !== deleteBoardId));
-      await deleteBoard(deleteBoardId);
+      deleteBoardMutation.mutate(deleteBoardId);
       setDeleteBoardId(null);
     }
   };
