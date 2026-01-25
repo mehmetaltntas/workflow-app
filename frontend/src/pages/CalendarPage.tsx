@@ -376,12 +376,12 @@ const CalendarPage = () => {
                       <div
                         key={event.id}
                         style={{
-                          padding: `${spacing[0.5]} ${spacing[1]}`,
+                          padding: `${spacing[1]} ${spacing[1.5]}`,
                           borderRadius: radius.sm,
                           background: event.color,
                           color: "#fff",
-                          fontSize: typography.fontSize.xs,
-                          fontWeight: typography.fontWeight.medium,
+                          fontSize: typography.fontSize.sm,
+                          fontWeight: typography.fontWeight.semibold,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
