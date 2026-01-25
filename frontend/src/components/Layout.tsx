@@ -397,8 +397,8 @@ const Footer = () => {
                 margin: 0,
               }}
             >
-              Projelerinizi ve gorevlerinizi kolayca yonetin. Modern, hizli ve kullanici dostu
-              is takip sistemi.
+              Projelerinizi ve görevlerinizi kolayca yönetin. Modern, hızlı ve kullanıcı dostu
+              iş takip sistemi.
             </p>
           </div>
 
@@ -413,7 +413,7 @@ const Footer = () => {
                 marginTop: 0,
               }}
             >
-              Hizli Erisim
+              Hızlı Erişim
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: spacing[2.5] }}>
               <Link
@@ -430,7 +430,7 @@ const Footer = () => {
                 onMouseEnter={footerLinkHoverHandler}
                 onMouseLeave={footerLinkLeaveHandler}
               >
-                Panolarim
+                Panolarım
               </Link>
               <Link
                 to="/calendar"
@@ -479,7 +479,7 @@ const Footer = () => {
                 onMouseEnter={footerLinkHoverHandler}
                 onMouseLeave={footerLinkLeaveHandler}
               >
-                Bize Ulasin
+                Bize Ulaşın
               </a>
               <a
                 href="#"
@@ -495,7 +495,7 @@ const Footer = () => {
                 onMouseEnter={footerLinkHoverHandler}
                 onMouseLeave={footerLinkLeaveHandler}
               >
-                Gizlilik Politikasi
+                Gizlilik Politikası
               </a>
             </div>
           </div>
@@ -599,7 +599,7 @@ const Footer = () => {
               gap: spacing[1],
             }}
           >
-            © {currentYear} WorkFlow. Tum haklar saklidir.
+            © {currentYear} WorkFlow. Tüm haklar saklıdır.
           </p>
           <p
             style={{
@@ -612,7 +612,7 @@ const Footer = () => {
             }}
           >
             <Heart size={12} style={{ color: colors.semantic.danger }} />
-            ile yapildi
+            ile yapıldı
           </p>
         </div>
       </div>

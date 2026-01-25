@@ -131,19 +131,19 @@ export const authService = {
   logout: () => {
     return apiClient.post("/auth/logout");
   },
-  // Sifremi Unuttum - Email'e kod gonder
+  // Şifremi Unuttum - E-posta'ya kod gönder
   forgotPassword: (email: string) => {
     return apiClient.post("/auth/forgot-password", { email });
   },
-  // Dogrulama kodunu kontrol et
+  // Doğrulama kodunu kontrol et
   verifyCode: (email: string, code: string) => {
     return apiClient.post("/auth/verify-code", { email, code });
   },
-  // Yeni sifre belirle
+  // Yeni şifre belirle
   resetPassword: (email: string, code: string, newPassword: string) => {
     return apiClient.post("/auth/reset-password", { email, code, newPassword });
   },
-  // Google ile giris/kayit
+  // Google ile giriş/kayıt
   googleAuth: (idToken: string) => {
     return apiClient.post("/auth/google", { idToken });
   },

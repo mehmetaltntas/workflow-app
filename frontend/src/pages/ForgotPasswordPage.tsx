@@ -31,17 +31,17 @@ const ForgotPasswordPage = () => {
     e.preventDefault();
 
     if (!isValidEmail(email)) {
-      toast.error("Gecerli bir email adresi giriniz");
+      toast.error("Geçerli bir e-posta adresi giriniz");
       return;
     }
 
     setIsLoading(true);
     try {
       await authService.forgotPassword(email);
-      toast.success("Dogrulama kodu email adresinize gonderildi");
+      toast.success("Doğrulama kodu e-posta adresinize gönderildi");
       setStep("code");
     } catch {
-      toast.error("Bir hata olustu. Lutfen tekrar deneyin.");
+      toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setIsLoading(false);
     }
@@ -85,13 +85,13 @@ const ForgotPasswordPage = () => {
     try {
       const response = await authService.verifyCode(email, fullCode);
       if (response.data.valid) {
-        toast.success("Kod dogrulandi");
+        toast.success("Kod doğrulandı");
         setStep("password");
       } else {
-        toast.error("Gecersiz veya suresi dolmus kod");
+        toast.error("Geçersiz veya süresi dolmuş kod");
       }
     } catch {
-      toast.error("Gecersiz veya suresi dolmus kod");
+      toast.error("Geçersiz veya süresi dolmuş kod");
     } finally {
       setIsLoading(false);
     }
@@ -102,23 +102,23 @@ const ForgotPasswordPage = () => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {
-      toast.error("Sifreler eslesmiyor");
+      toast.error("Şifreler eşleşmiyor");
       return;
     }
 
     const strength = getPasswordStrength(newPassword);
     if (strength.score < 3) {
-      toast.error("Daha guclu bir sifre secin");
+      toast.error("Daha güçlü bir şifre seçin");
       return;
     }
 
     setIsLoading(true);
     try {
       await authService.resetPassword(email, code.join(""), newPassword);
-      toast.success("Sifreniz basariyla guncellendi!");
+      toast.success("Şifreniz başarıyla güncellendi!");
       navigate("/login");
     } catch {
-      toast.error("Sifre guncellenirken bir hata olustu");
+      toast.error("Şifre güncellenirken bir hata oluştu");
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +180,7 @@ const ForgotPasswordPage = () => {
             maxWidth: "300px",
           }}
         >
-          Sifrenizi sifirlayin ve hesabiniza erismeye devam edin.
+          Şifrenizi sıfırlayın ve hesabınıza erişmeye devam edin.
         </p>
       </div>
 
@@ -242,9 +242,9 @@ const ForgotPasswordPage = () => {
               textAlign: "center",
             }}
           >
-            {step === "email" && "Sifremi Unuttum"}
-            {step === "code" && "Kodu Dogrulayin"}
-            {step === "password" && "Yeni Sifre"}
+            {step === "email" && "Şifremi Unuttum"}
+            {step === "code" && "Kodu Doğrulayın"}
+            {step === "password" && "Yeni Şifre"}
           </h2>
 
           <p
@@ -255,9 +255,9 @@ const ForgotPasswordPage = () => {
               textAlign: "center",
             }}
           >
-            {step === "email" && "Email adresinizi girin, size dogrulama kodu gonderelim."}
-            {step === "code" && `${email} adresine gonderilen 6 haneli kodu girin.`}
-            {step === "password" && "Hesabiniz icin yeni bir sifre belirleyin."}
+            {step === "email" && "E-posta adresinizi girin, size doğrulama kodu gönderelim."}
+            {step === "code" && `${email} adresine gönderilen 6 haneli kodu girin.`}
+            {step === "password" && "Hesabınız için yeni bir şifre belirleyin."}
           </p>
 
           {/* Email Adimi */}
@@ -273,7 +273,7 @@ const ForgotPasswordPage = () => {
                     marginBottom: spacing[2],
                   }}
                 >
-                  Email Adresi
+                  E-posta Adresi
                 </label>
                 <input
                   type="email"
@@ -312,7 +312,7 @@ const ForgotPasswordPage = () => {
                   transition: "all 0.2s",
                 }}
               >
-                {isLoading ? "Gonderiliyor..." : "Kod Gonder"}
+                {isLoading ? "Gönderiliyor..." : "Kod Gönder"}
               </button>
             </form>
           )}
@@ -365,7 +365,7 @@ const ForgotPasswordPage = () => {
                   transition: "all 0.2s",
                 }}
               >
-                {isLoading ? "Dogrulaniyor..." : "Dogrula"}
+                {isLoading ? "Doğrulanıyor..." : "Doğrula"}
               </button>
 
               <button
@@ -379,7 +379,7 @@ const ForgotPasswordPage = () => {
                   cursor: "pointer",
                 }}
               >
-                Farkli email adresi kullan
+                Farklı e-posta adresi kullan
               </button>
             </form>
           )}
@@ -397,7 +397,7 @@ const ForgotPasswordPage = () => {
                     marginBottom: spacing[2],
                   }}
                 >
-                  Yeni Sifre
+                  Yeni Şifre
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
@@ -481,13 +481,13 @@ const ForgotPasswordPage = () => {
                     marginBottom: spacing[2],
                   }}
                 >
-                  Sifre Tekrar
+                  Şifre Tekrar
                 </label>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Sifrenizi tekrar girin"
+                  placeholder="Şifrenizi tekrar girin"
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
@@ -519,7 +519,7 @@ const ForgotPasswordPage = () => {
                   transition: "all 0.2s",
                 }}
               >
-                {isLoading ? "Kaydediliyor..." : "Sifreyi Guncelle"}
+                {isLoading ? "Kaydediliyor..." : "Şifreyi Güncelle"}
               </button>
             </form>
           )}
@@ -533,7 +533,7 @@ const ForgotPasswordPage = () => {
               color: colors.dark.text.tertiary,
             }}
           >
-            Sifrenizi hatirladin mi?{" "}
+            Şifrenizi hatırladınız mı?{" "}
             <span
               onClick={() => navigate("/login")}
               style={{
@@ -542,7 +542,7 @@ const ForgotPasswordPage = () => {
                 fontWeight: typography.fontWeight.semibold,
               }}
             >
-              Giris Yap
+              Giriş Yap
             </span>
           </p>
         </div>

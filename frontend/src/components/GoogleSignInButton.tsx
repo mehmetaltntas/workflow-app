@@ -58,7 +58,7 @@ const GoogleSignInButton = ({
       if (response.credential) {
         onSuccess(response.credential);
       } else {
-        onError?.("Google girisinde hata olustu");
+        onError?.("Google girişinde hata oluştu");
       }
     },
     [onSuccess, onError]
@@ -68,7 +68,7 @@ const GoogleSignInButton = ({
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
-      console.warn("VITE_GOOGLE_CLIENT_ID environment variable ayarlanmamis");
+      console.warn("VITE_GOOGLE_CLIENT_ID environment variable ayarlanmamış");
       return;
     }
 
@@ -100,16 +100,16 @@ const GoogleSignInButton = ({
 
         initializedRef.current = true;
       } catch (error) {
-        console.error("Google Sign-In baslatma hatasi:", error);
-        onError?.("Google Sign-In yuklenemedi");
+        console.error("Google Sign-In başlatma hatası:", error);
+        onError?.("Google Sign-In yüklenemedi");
       }
     };
 
-    // Google SDK yuklendiginde initialize et
+    // Google SDK yüklendiğinde initialize et
     if (window.google) {
       initializeGoogle();
     } else {
-      // SDK henuz yuklenmediyse bekle
+      // SDK henüz yüklenmediyse bekle
       const checkGoogleLoaded = setInterval(() => {
         if (window.google) {
           clearInterval(checkGoogleLoaded);

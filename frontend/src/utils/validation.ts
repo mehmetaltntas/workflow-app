@@ -7,8 +7,8 @@ export const isValidEmail = (email: string): boolean => {
 };
 
 /**
- * Sifre guc kontrol fonksiyonu
- * En az 8 karakter, 1 buyuk harf, 1 kucuk harf, 1 rakam
+ * Şifre güç kontrol fonksiyonu
+ * En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam
  */
 export const getPasswordStrength = (password: string): {
   score: number;
@@ -30,8 +30,8 @@ export const getPasswordStrength = (password: string): {
 };
 
 /**
- * Kullanici adi validasyonu
- * En az 3 karakter, sadece harf, rakam ve alt cizgi
+ * Kullanıcı adı validasyonu
+ * En az 3 karakter, sadece harf, rakam ve alt çizgi
  */
 export const isValidUsername = (username: string): boolean => {
   const regex = /^[a-zA-Z0-9_]{3,50}$/;
