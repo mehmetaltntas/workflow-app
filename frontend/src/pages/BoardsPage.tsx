@@ -2,27 +2,37 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Board } from "../types";
 import toast from "react-hot-toast";
-import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, PanelRightOpen, PanelRightClose } from "lucide-react";
 
 import { useBoards } from "../hooks/useBoards";
-import { typography, spacing, radius, colors, cssVars, animation } from '../styles/tokens';
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
+import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
 import { DeleteConfirmation } from "../components/DeleteConfirmation";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
-import { StatusFilterTabs } from "../components/ui/StatusFilterTabs";
+import { VerticalStatusFilter } from "../components/ui/VerticalStatusFilter";
+import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
+import { BoardInfoPanel } from "../components/BoardInfoPanel";
 
 const BoardsPage = () => {
   const navigate = useNavigate();
   const { boards, loading, createBoard, updateBoard, deleteBoard, updateBoardStatus, userId } = useBoards();
+  const { theme } = useTheme();
+  const themeColors = getThemeColors(theme);
+  const isLight = theme === 'light';
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [deleteBoardId, setDeleteBoardId] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   // Animasyon için sayfa yüklendiğinde visible yap
   useEffect(() => {
@@ -213,237 +223,320 @@ const BoardsPage = () => {
       style={{
         minHeight: "100vh",
         background: cssVars.bgBody,
-        padding: spacing[10],
+        display: "flex",
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(10px)",
         transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
       }}
     >
-      {/* Header */}
-      <div style={{ marginBottom: spacing[8] }}>
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-          gap: spacing[4],
-          marginBottom: spacing[6]
-        }}>
-          {/* Title Section */}
-          <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: radius.xl,
-              background: `linear-gradient(135deg, ${colors.brand.primaryLight}, ${colors.brand.primary}20)`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: `1px solid ${colors.brand.primary}30`
-            }}>
-              <Layout color={colors.brand.primary} size={24} />
-            </div>
-            <div>
-              <h1 style={{
-                fontSize: typography.fontSize["4xl"],
-                fontWeight: typography.fontWeight.bold,
-                color: cssVars.textMain,
-                margin: 0,
-                letterSpacing: typography.letterSpacing.tight
+      {/* Main Content */}
+      <div
+        style={{
+          flex: 1,
+          padding: spacing[10],
+          transition: `margin-right ${animation.duration.slow} ${animation.easing.spring}`,
+          marginRight: isPanelOpen ? "340px" : 0,
+        }}
+      >
+        {/* Header */}
+        <div style={{ marginBottom: spacing[8] }}>
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            gap: spacing[4],
+            marginBottom: spacing[6]
+          }}>
+            {/* Title Section */}
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: radius.xl,
+                background: `linear-gradient(135deg, ${colors.brand.primaryLight}, ${colors.brand.primary}20)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: `1px solid ${colors.brand.primary}30`
               }}>
-                Panolarım
-              </h1>
-              <p style={{
-                fontSize: typography.fontSize.md,
-                color: cssVars.textMuted,
-                margin: 0
+                <Layout color={colors.brand.primary} size={24} />
+              </div>
+              <div>
+                <h1 style={{
+                  fontSize: typography.fontSize["4xl"],
+                  fontWeight: typography.fontWeight.bold,
+                  color: cssVars.textMain,
+                  margin: 0,
+                  letterSpacing: typography.letterSpacing.tight
+                }}>
+                  Panolarım
+                </h1>
+                <p style={{
+                  fontSize: typography.fontSize.md,
+                  color: cssVars.textMuted,
+                  margin: 0
+                }}>
+                  {stats.total} pano · {stats.inProgress} aktif
+                </p>
+              </div>
+            </div>
+
+            {/* Stats Cards & Panel Toggle */}
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[3], flexWrap: "wrap" }}>
+              {/* Completion Rate */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2.5],
+                padding: `${spacing[2.5]} ${spacing[4]}`,
+                background: `linear-gradient(135deg, ${colors.semantic.success}15, ${colors.semantic.success}05)`,
+                borderRadius: radius.xl,
+                border: `1px solid ${colors.semantic.success}20`,
               }}>
-                {stats.total} pano · {stats.inProgress} aktif
-              </p>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div style={{ display: "flex", gap: spacing[3], flexWrap: "wrap" }}>
-            {/* Completion Rate */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[2.5],
-              padding: `${spacing[2.5]} ${spacing[4]}`,
-              background: `linear-gradient(135deg, ${colors.semantic.success}15, ${colors.semantic.success}05)`,
-              borderRadius: radius.xl,
-              border: `1px solid ${colors.semantic.success}20`,
-            }}>
-              <TrendingUp size={18} color={colors.semantic.success} />
-              <div>
-                <div style={{
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.bold,
-                  color: colors.semantic.success
-                }}>
-                  %{stats.completionRate}
-                </div>
-                <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
-                  Tamamlanma
+                <TrendingUp size={18} color={colors.semantic.success} />
+                <div>
+                  <div style={{
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.bold,
+                    color: colors.semantic.success
+                  }}>
+                    %{stats.completionRate}
+                  </div>
+                  <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
+                    Tamamlanma
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Completed */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[2.5],
-              padding: `${spacing[2.5]} ${spacing[4]}`,
-              background: `linear-gradient(135deg, ${colors.status.completed}15, ${colors.status.completed}05)`,
-              borderRadius: radius.xl,
-              border: `1px solid ${colors.status.completed}20`,
-            }}>
-              <CheckCircle2 size={18} color={colors.status.completed} />
-              <div>
-                <div style={{
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.bold,
-                  color: colors.status.completed
-                }}>
-                  {stats.completed}
-                </div>
-                <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
-                  Tamamlandı
+              {/* Completed */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2.5],
+                padding: `${spacing[2.5]} ${spacing[4]}`,
+                background: `linear-gradient(135deg, ${colors.status.completed}15, ${colors.status.completed}05)`,
+                borderRadius: radius.xl,
+                border: `1px solid ${colors.status.completed}20`,
+              }}>
+                <CheckCircle2 size={18} color={colors.status.completed} />
+                <div>
+                  <div style={{
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.bold,
+                    color: colors.status.completed
+                  }}>
+                    {stats.completed}
+                  </div>
+                  <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
+                    Tamamlandı
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* In Progress */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[2.5],
-              padding: `${spacing[2.5]} ${spacing[4]}`,
-              background: `linear-gradient(135deg, ${colors.status.inProgress}15, ${colors.status.inProgress}05)`,
-              borderRadius: radius.xl,
-              border: `1px solid ${colors.status.inProgress}20`,
-            }}>
-              <Clock size={18} color={colors.status.inProgress} />
-              <div>
-                <div style={{
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.bold,
-                  color: colors.status.inProgress
-                }}>
-                  {stats.inProgress}
-                </div>
-                <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
-                  Devam Ediyor
+              {/* In Progress */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2.5],
+                padding: `${spacing[2.5]} ${spacing[4]}`,
+                background: `linear-gradient(135deg, ${colors.status.inProgress}15, ${colors.status.inProgress}05)`,
+                borderRadius: radius.xl,
+                border: `1px solid ${colors.status.inProgress}20`,
+              }}>
+                <Clock size={18} color={colors.status.inProgress} />
+                <div>
+                  <div style={{
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.bold,
+                    color: colors.status.inProgress
+                  }}>
+                    {stats.inProgress}
+                  </div>
+                  <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
+                    Devam Ediyor
+                  </div>
                 </div>
               </div>
+
+              {/* Panel Toggle Button */}
+              <button
+                onClick={() => setIsPanelOpen(!isPanelOpen)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: spacing[10],
+                  height: spacing[10],
+                  borderRadius: radius.lg,
+                  border: `1px solid ${themeColors.borderDefault}`,
+                  background: isPanelOpen ? colors.brand.primaryLight : themeColors.bgHover,
+                  color: isPanelOpen ? colors.brand.primary : cssVars.textMuted,
+                  cursor: "pointer",
+                  transition: `all ${animation.duration.normal}`,
+                }}
+                title={isPanelOpen ? "Paneli Kapat" : "Paneli Aç"}
+              >
+                {isPanelOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <StatusFilterTabs
-          value={statusFilter}
-          onChange={setStatusFilter}
-          counts={statusCounts}
-        />
+        {/* Filtered Empty State */}
+        {filteredBoards.length === 0 && statusFilter !== "ALL" && (
+          <EmptyState
+            icon={<Search size={36} strokeWidth={1.5} />}
+            title="Bu filtrede pano bulunamadı"
+            description={`"${STATUS_LABELS[statusFilter]}" durumunda pano bulunmuyor. Filtreyi değiştirmeyi veya yeni pano oluşturmayı deneyin.`}
+            variant="filtered"
+            action={{
+              label: "Tüm Panoları Göster",
+              onClick: () => setStatusFilter("ALL"),
+            }}
+          />
+        )}
+
+        {/* Board Groups */}
+        <div style={{ display: "flex", flexDirection: "column", gap: spacing[10] }}>
+          {(statusFilter === "ALL" ? Object.keys(STATUS_LABELS) : [statusFilter]).map((statusKey, groupIndex) => {
+             const boardsInStatus = filteredBoards.filter(b => (b.status || "PLANLANDI") === statusKey);
+
+             if (boardsInStatus.length === 0) return null;
+
+             return (
+               <div
+                 key={statusKey}
+                 style={{
+                   opacity: isVisible ? 1 : 0,
+                   transform: isVisible ? "translateY(0)" : "translateY(20px)",
+                   transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
+                   transitionDelay: `${groupIndex * 100}ms`,
+                 }}
+               >
+                  {/* Group Header */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing[3],
+                    marginBottom: spacing[5],
+                    paddingBottom: spacing[3],
+                    borderBottom: `1px solid ${cssVars.border}`,
+                  }}>
+                      <div style={{
+                        width: spacing[3],
+                        height: spacing[3],
+                        borderRadius: radius.full,
+                        background: STATUS_COLORS[statusKey],
+                        boxShadow: `0 0 12px ${STATUS_COLORS[statusKey]}50`
+                      }}></div>
+                      <h2 style={{
+                          fontSize: typography.fontSize["2xl"],
+                          fontWeight: typography.fontWeight.semibold,
+                          color: cssVars.textMain,
+                          margin: 0,
+                      }}>
+                          {STATUS_LABELS[statusKey]}
+                      </h2>
+                      <span style={{
+                        fontSize: typography.fontSize.md,
+                        color: cssVars.textMuted,
+                        fontWeight: typography.fontWeight.medium,
+                        padding: `${spacing[0.5]} ${spacing[2.5]}`,
+                        background: cssVars.bgSecondary,
+                        borderRadius: radius.full,
+                      }}>
+                        {boardsInStatus.length}
+                      </span>
+                  </div>
+
+                  {/* Cards Grid/List */}
+                  <div
+                      style={{
+                        display: viewMode === 'list' ? "flex" : "grid",
+                        flexDirection: viewMode === 'list' ? "column" : undefined,
+                        gridTemplateColumns: viewMode === 'grid'
+                          ? "repeat(auto-fill, minmax(280px, 1fr))"
+                          : viewMode === 'compact'
+                            ? "repeat(auto-fill, minmax(220px, 1fr))"
+                            : undefined,
+                        gap: viewMode === 'list' ? spacing[2] : spacing[4],
+                      }}
+                  >
+                      {boardsInStatus.map((board, cardIndex) => (
+                          <div
+                            key={board.id}
+                            style={{
+                              opacity: isVisible ? 1 : 0,
+                              transform: isVisible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.98)",
+                              transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
+                              transitionDelay: `${(groupIndex * 100) + (cardIndex * 50)}ms`,
+                            }}
+                          >
+                            <BoardCard
+                                board={board}
+                                onClick={() => navigate(`/boards/${board.slug}`)}
+                                onStatusChange={handleStatusChange}
+                                onEdit={() => openEditModal(board)}
+                                onDelete={() => setDeleteBoardId(board.id)}
+                                onShowInfo={() => {
+                                  setSelectedInfoBoard(board);
+                                  if (!isPanelOpen) setIsPanelOpen(true);
+                                }}
+                                viewMode={viewMode === 'list' ? 'list' : 'grid'}
+                            />
+                          </div>
+                      ))}
+                  </div>
+               </div>
+             )
+          })}
+        </div>
       </div>
 
-      {/* Filtered Empty State */}
-      {filteredBoards.length === 0 && statusFilter !== "ALL" && (
-        <EmptyState
-          icon={<Search size={36} strokeWidth={1.5} />}
-          title="Bu filtrede pano bulunamadı"
-          description={`"${STATUS_LABELS[statusFilter]}" durumunda pano bulunmuyor. Filtreyi değiştirmeyi veya yeni pano oluşturmayı deneyin.`}
-          variant="filtered"
-          action={{
-            label: "Tüm Panoları Göster",
-            onClick: () => setStatusFilter("ALL"),
+      {/* Right Panel */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          width: "340px",
+          height: "100vh",
+          background: isLight ? colors.light.bg.card : colors.dark.bg.card,
+          borderLeft: `1px solid ${themeColors.borderDefault}`,
+          display: "flex",
+          flexDirection: "column",
+          transform: isPanelOpen ? "translateX(0)" : "translateX(100%)",
+          transition: `transform ${animation.duration.slow} ${animation.easing.spring}`,
+          zIndex: 10,
+          boxShadow: isPanelOpen ? shadows.lg : "none",
+        }}
+      >
+        {/* Panel Header with View Switcher and Filters */}
+        <div
+          style={{
+            background: isLight ? colors.light.bg.elevated : colors.dark.bg.elevated,
           }}
-        />
-      )}
+        >
+          {/* View Switcher */}
+          <ViewSwitcher
+            value={viewMode}
+            onChange={setViewMode}
+          />
 
-      {/* Board Groups */}
-      <div style={{ display: "flex", flexDirection: "column", gap: spacing[10] }}>
-        {(statusFilter === "ALL" ? Object.keys(STATUS_LABELS) : [statusFilter]).map((statusKey, groupIndex) => {
-           const boardsInStatus = filteredBoards.filter(b => (b.status || "PLANLANDI") === statusKey);
+          {/* Filters */}
+          <div style={{ padding: spacing[4] }}>
+            <VerticalStatusFilter
+              value={statusFilter}
+              onChange={setStatusFilter}
+              counts={statusCounts}
+            />
+          </div>
+        </div>
 
-           if (boardsInStatus.length === 0) return null;
-
-           return (
-             <div
-               key={statusKey}
-               style={{
-                 opacity: isVisible ? 1 : 0,
-                 transform: isVisible ? "translateY(0)" : "translateY(20px)",
-                 transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-                 transitionDelay: `${groupIndex * 100}ms`,
-               }}
-             >
-                {/* Group Header */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: spacing[3],
-                  marginBottom: spacing[5],
-                  paddingBottom: spacing[3],
-                  borderBottom: `1px solid ${cssVars.border}`,
-                }}>
-                    <div style={{
-                      width: spacing[3],
-                      height: spacing[3],
-                      borderRadius: radius.full,
-                      background: STATUS_COLORS[statusKey],
-                      boxShadow: `0 0 12px ${STATUS_COLORS[statusKey]}50`
-                    }}></div>
-                    <h2 style={{
-                        fontSize: typography.fontSize["2xl"],
-                        fontWeight: typography.fontWeight.semibold,
-                        color: cssVars.textMain,
-                        margin: 0,
-                    }}>
-                        {STATUS_LABELS[statusKey]}
-                    </h2>
-                    <span style={{
-                      fontSize: typography.fontSize.md,
-                      color: cssVars.textMuted,
-                      fontWeight: typography.fontWeight.medium,
-                      padding: `${spacing[0.5]} ${spacing[2.5]}`,
-                      background: cssVars.bgSecondary,
-                      borderRadius: radius.full,
-                    }}>
-                      {boardsInStatus.length}
-                    </span>
-                </div>
-
-                {/* Cards Grid */}
-                <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-                      gap: spacing[5],
-                    }}
-                >
-                    {boardsInStatus.map((board, cardIndex) => (
-                        <div
-                          key={board.id}
-                          style={{
-                            opacity: isVisible ? 1 : 0,
-                            transform: isVisible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.98)",
-                            transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-                            transitionDelay: `${(groupIndex * 100) + (cardIndex * 50)}ms`,
-                          }}
-                        >
-                          <BoardCard
-                              board={board}
-                              onClick={() => navigate(`/boards/${board.slug}`)}
-                              onStatusChange={handleStatusChange}
-                              onEdit={() => openEditModal(board)}
-                              onDelete={() => setDeleteBoardId(board.id)}
-                          />
-                        </div>
-                    ))}
-                </div>
-             </div>
-           )
-        })}
+        {/* Board Info Section */}
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <BoardInfoPanel
+            board={selectedInfoBoard}
+            onClose={() => setSelectedInfoBoard(null)}
+          />
+        </div>
       </div>
 
       <DeleteConfirmation
