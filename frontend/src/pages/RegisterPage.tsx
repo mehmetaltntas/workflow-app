@@ -2,7 +2,7 @@ import { useState } from "react";
 import { authService } from "../services/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import GoogleSignInButton from "../components/GoogleSignInButton";
+
 import { isValidEmail, getPasswordStrength } from "../utils/validation";
 import { typography, spacing, radius, shadows, colors, animation } from '../styles/tokens';
 import { useAuthStore } from "../stores/authStore";
@@ -73,30 +73,6 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleSuccess = async (idToken: string) => {
-    setIsLoading(true);
-    try {
-      const response = await authService.googleAuth(idToken);
-
-      login({
-        token: response.data.token,
-        refreshToken: response.data.refreshToken,
-        id: response.data.id,
-        username: response.data.username,
-      });
-
-      toast.success("Google ile kayıt başarılı!");
-      navigate(from, { replace: true });
-    } catch {
-      toast.error("Google ile kayıt başarısız oldu");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleError = (error: string) => {
-    toast.error(error);
-  };
 
   const inputStyle = {
     width: "100%",
@@ -301,27 +277,6 @@ const RegisterPage = () => {
           >
             Ücretsiz kayıt olun
           </p>
-
-          {/* Google Sign-In */}
-          <GoogleSignInButton
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            text="signup_with"
-          />
-
-          {/* Ayirici */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[4],
-              margin: `${spacing[6]} 0`,
-            }}
-          >
-            <div style={{ flex: 1, height: "1px", background: colors.dark.border.default }} />
-            <span style={{ fontSize: typography.fontSize.base, color: colors.dark.text.subtle }}>veya</span>
-            <div style={{ flex: 1, height: "1px", background: colors.dark.border.default }} />
-          </div>
 
           {/* Form */}
           <form
