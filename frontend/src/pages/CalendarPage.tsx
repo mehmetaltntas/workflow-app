@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutDashboard } from "lucide-react";
 import { useBoards } from "../hooks/useBoards";
 import { typography, spacing, radius, cssVars, colors, animation } from "../styles/tokens";
+import { STATUS_LABELS, STATUS_COLORS } from "../constants";
 import type { Board } from "../types";
 
 // Takvim etkinlik tipi
@@ -15,6 +16,7 @@ interface CalendarEvent {
   boardName: string;
   color: string;
   daysRemaining: number;
+  status: string;
 }
 
 // Türkçe ay isimleri
@@ -79,6 +81,7 @@ const CalendarPage = () => {
           boardName: board.name,
           color: deadlineInfo.color,
           daysRemaining: deadlineInfo.days,
+          status: board.status || "PLANLANDI",
         });
       }
     });
@@ -473,13 +476,35 @@ const CalendarPage = () => {
                   >
                     <div
                       style={{
-                        fontSize: typography.fontSize.base,
-                        fontWeight: typography.fontWeight.semibold,
-                        color: cssVars.textMain,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: spacing[2],
                         marginBottom: spacing[1],
                       }}
                     >
-                      {selectedBoard.title}
+                      <span
+                        style={{
+                          fontSize: typography.fontSize.base,
+                          fontWeight: typography.fontWeight.semibold,
+                          color: cssVars.textMain,
+                        }}
+                      >
+                        {selectedBoard.title}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: typography.fontWeight.semibold,
+                          color: STATUS_COLORS[selectedBoard.status] || cssVars.textMuted,
+                          background: `${STATUS_COLORS[selectedBoard.status] || cssVars.textMuted}18`,
+                          border: `1px solid ${STATUS_COLORS[selectedBoard.status] || cssVars.textMuted}30`,
+                          padding: `1px ${spacing[1.5]}`,
+                          borderRadius: radius.full,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {STATUS_LABELS[selectedBoard.status] || selectedBoard.status}
+                      </span>
                     </div>
                     <div
                       style={{
