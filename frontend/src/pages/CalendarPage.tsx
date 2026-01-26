@@ -510,6 +510,34 @@ const CalendarPage = () => {
                     >
                       {getDaysRemainingText(event.daysRemaining)}
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/boards/${event.boardSlug}`);
+                      }}
+                      style={{
+                        marginTop: spacing[3],
+                        width: "100%",
+                        padding: `${spacing[2]} ${spacing[3]}`,
+                        borderRadius: radius.md,
+                        border: "none",
+                        background: event.color,
+                        color: "#fff",
+                        fontSize: typography.fontSize.sm,
+                        fontWeight: typography.fontWeight.semibold,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: spacing[2],
+                        transition: `opacity ${animation.duration.normal}`,
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                    >
+                      <LayoutDashboard size={14} />
+                      Panoya Git
+                    </button>
                   </div>
                 ))}
               </div>
