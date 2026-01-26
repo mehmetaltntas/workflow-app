@@ -183,9 +183,7 @@ const HomePage = () => {
   return (
     <div
       style={{
-        height: "100%",
         background: cssVars.bgBody,
-        overflowY: "auto",
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(10px)",
         transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
