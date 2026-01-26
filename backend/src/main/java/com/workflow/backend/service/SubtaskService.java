@@ -45,6 +45,18 @@ public class SubtaskService {
         subtask.setLink(request.getLink());
 
         Subtask saved = subtaskRepository.save(subtask);
+
+        // Yeni alt görev eklendi → tamamlanmış task ve listeyi geri al
+        if (Boolean.TRUE.equals(task.getIsCompleted())) {
+            task.setIsCompleted(false);
+            taskRepository.save(task);
+        }
+        TaskList parentList = task.getTaskList();
+        if (Boolean.TRUE.equals(parentList.getIsCompleted())) {
+            parentList.setIsCompleted(false);
+            taskListRepository.save(parentList);
+        }
+
         return mapToDto(saved);
     }
 

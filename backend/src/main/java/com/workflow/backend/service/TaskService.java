@@ -101,6 +101,12 @@ public class TaskService {
         Task savedTask = taskRepository.save(task);
         logger.info("Yeni görev oluşturuldu: {} (pozisyon: {})", savedTask.getTitle(), savedTask.getPosition());
 
+        // Yeni görev eklendi → tamamlanmış listeyi geri al
+        if (Boolean.TRUE.equals(taskList.getIsCompleted())) {
+            taskList.setIsCompleted(false);
+            taskListRepository.save(taskList);
+        }
+
         return mapToDto(savedTask);
     }
 
