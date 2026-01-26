@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { LayoutGrid, List, Columns } from "lucide-react";
 import { cssVars, typography, spacing, radius, animation, colors } from "../../styles/tokens";
 
@@ -16,6 +16,15 @@ const viewOptions: { value: ViewMode; icon: React.ReactNode; label: string }[] =
 ];
 
 export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ value, onChange }) => {
+  const [isWide, setIsWide] = useState(() => window.matchMedia("(min-width: 400px)").matches);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 400px)");
+    const handler = (e: MediaQueryListEvent) => setIsWide(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
   return (
     <div
       style={{
@@ -86,12 +95,7 @@ export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({ value, onChange }) =
               title={option.label}
             >
               {option.icon}
-              <span style={{
-                display: "none",
-                "@media (min-width: 400px)": { display: "inline" }
-              } as React.CSSProperties}>
-                {option.label}
-              </span>
+              {isWide && <span>{option.label}</span>}
             </button>
           );
         })}
