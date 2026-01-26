@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   User,
   Camera,
@@ -13,8 +13,9 @@ import {
   Settings,
   ChevronRight,
 } from "lucide-react";
-import { userService } from "../services/api";
+import { userService, authService } from "../services/api";
 import toast from "react-hot-toast";
+import { getUsernameError } from "../utils/validation";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from '../styles/tokens';
 import { useAuthStore } from '../stores/authStore';
 
@@ -31,6 +32,10 @@ const SettingsPage = () => {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [hasProfileChanges, setHasProfileChanges] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Password states
@@ -71,6 +76,54 @@ const SettingsPage = () => {
     setHasProfileChanges(username !== originalUsername);
   }, [username, originalUsername]);
 
+  const checkUsernameAvailability = useCallback(async (value: string) => {
+    try {
+      setCheckingUsername(true);
+      const response = await authService.checkUsername(value);
+      setUsernameAvailable(response.data.available);
+      if (!response.data.available) {
+        setUsernameError("Bu kullanıcı adı zaten alınmış");
+      }
+    } catch {
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  }, []);
+
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    setUsernameAvailable(null);
+    setUsernameError("");
+
+    if (usernameCheckTimer.current) {
+      clearTimeout(usernameCheckTimer.current);
+    }
+
+    // Mevcut kullanıcı adıyla aynıysa kontrol etmeye gerek yok
+    if (value === originalUsername) return;
+
+    if (!value) return;
+
+    const error = getUsernameError(value);
+    if (error) {
+      setUsernameError(error);
+      return;
+    }
+
+    usernameCheckTimer.current = setTimeout(() => {
+      checkUsernameAvailability(value);
+    }, 500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (usernameCheckTimer.current) {
+        clearTimeout(usernameCheckTimer.current);
+      }
+    };
+  }, []);
+
   // Password validation
   const passwordsMatch = newPassword === confirmPassword;
   const isNewPasswordValid = newPassword.length >= 4;
@@ -94,6 +147,19 @@ const SettingsPage = () => {
 
   const handleSaveProfile = async () => {
     if (!userId) return;
+
+    if (username !== originalUsername) {
+      const uError = getUsernameError(username);
+      if (uError) {
+        toast.error(uError);
+        return;
+      }
+      if (usernameAvailable === false) {
+        toast.error("Bu kullanıcı adı zaten alınmış");
+        return;
+      }
+    }
+
     setIsSavingProfile(true);
     const loadingToast = toast.loading("Profil güncelleniyor...");
 
@@ -489,15 +555,43 @@ const SettingsPage = () => {
                   <input
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
                     placeholder="Kullanıcı adınızı girin"
+                    maxLength={30}
                     style={{
                       width: "100%",
                       padding: `${spacing[3]} ${spacing[4]}`,
                       fontSize: typography.fontSize.lg,
                       boxSizing: "border-box",
+                      borderColor: usernameError
+                        ? colors.semantic.danger
+                        : (username !== originalUsername && usernameAvailable === true)
+                        ? colors.semantic.success
+                        : undefined,
                     }}
                   />
+                  {username !== originalUsername && username && (
+                    <div style={{ marginTop: spacing[1], fontSize: typography.fontSize.sm }}>
+                      {checkingUsername && (
+                        <span style={{ color: cssVars.textMuted }}>Kontrol ediliyor...</span>
+                      )}
+                      {usernameError && (
+                        <span style={{ display: "flex", alignItems: "center", gap: spacing[1], color: colors.semantic.danger }}>
+                          <AlertCircle size={13} />
+                          {usernameError}
+                        </span>
+                      )}
+                      {!usernameError && !checkingUsername && usernameAvailable === true && (
+                        <span style={{ display: "flex", alignItems: "center", gap: spacing[1], color: colors.semantic.success }}>
+                          <Check size={13} />
+                          Kullanıcı adı müsait
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <p style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted, marginTop: spacing[1] }}>
+                    3-30 karakter. Harf, rakam, nokta (.) ve alt tire (_) kullanılabilir.
+                  </p>
                 </div>
 
                 {/* Email Field (Read-only) */}
@@ -555,14 +649,14 @@ const SettingsPage = () => {
               }}>
                 <button
                   onClick={handleSaveProfile}
-                  disabled={isSavingProfile || !hasProfileChanges}
+                  disabled={isSavingProfile || !hasProfileChanges || !!usernameError || checkingUsername}
                   className="btn btn-primary"
                   style={{
                     padding: `${spacing[3]} ${spacing[6]}`,
                     fontSize: typography.fontSize.lg,
                     fontWeight: typography.fontWeight.semibold,
-                    opacity: !hasProfileChanges ? 0.5 : 1,
-                    cursor: !hasProfileChanges ? "not-allowed" : "pointer",
+                    opacity: (!hasProfileChanges || !!usernameError || checkingUsername) ? 0.5 : 1,
+                    cursor: (!hasProfileChanges || !!usernameError || checkingUsername) ? "not-allowed" : "pointer",
                     minWidth: "180px",
                   }}
                 >

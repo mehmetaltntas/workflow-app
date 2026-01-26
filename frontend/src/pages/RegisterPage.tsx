@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { authService } from "../services/api";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import { isValidEmail, getPasswordStrength } from "../utils/validation";
+import { isValidEmail, getPasswordStrength, getUsernameError } from "../utils/validation";
 import { typography, spacing, radius, shadows, colors, animation } from '../styles/tokens';
 import { useAuthStore } from "../stores/authStore";
 
@@ -14,6 +14,10 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((state) => state.login);
@@ -21,6 +25,52 @@ const RegisterPage = () => {
   const from = (location.state as { from?: string })?.from || "/home";
 
   const passwordStrength = getPasswordStrength(password);
+
+  const checkUsernameAvailability = useCallback(async (value: string) => {
+    try {
+      setCheckingUsername(true);
+      const response = await authService.checkUsername(value);
+      setUsernameAvailable(response.data.available);
+      if (!response.data.available) {
+        setUsernameError("Bu kullanıcı adı zaten alınmış");
+      }
+    } catch {
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  }, []);
+
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+    setUsernameAvailable(null);
+    setUsernameError("");
+
+    if (usernameCheckTimer.current) {
+      clearTimeout(usernameCheckTimer.current);
+    }
+
+    if (!value) return;
+
+    const error = getUsernameError(value);
+    if (error) {
+      setUsernameError(error);
+      return;
+    }
+
+    // Debounce: kullanıcı yazmayı bıraktıktan sonra kontrol et
+    usernameCheckTimer.current = setTimeout(() => {
+      checkUsernameAvailability(value);
+    }, 500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (usernameCheckTimer.current) {
+        clearTimeout(usernameCheckTimer.current);
+      }
+    };
+  }, []);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -36,6 +86,17 @@ const RegisterPage = () => {
 
     if (!username.trim() || !email.trim() || !password.trim()) {
       toast.error("Tüm alanlar gereklidir");
+      return;
+    }
+
+    const uError = getUsernameError(username);
+    if (uError) {
+      toast.error(uError);
+      return;
+    }
+
+    if (usernameAvailable === false) {
+      toast.error("Bu kullanıcı adı zaten alınmış");
       return;
     }
 
@@ -303,19 +364,49 @@ const RegisterPage = () => {
                 type="text"
                 placeholder="Kullanıcı Adı"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                style={inputStyle}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                maxLength={30}
+                style={{
+                  ...inputStyle,
+                  borderColor: usernameError
+                    ? colors.semantic.danger
+                    : usernameAvailable === true
+                    ? colors.semantic.success
+                    : colors.dark.border.default,
+                }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.brand.primary;
-                  e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                  if (!usernameError) {
+                    e.currentTarget.style.borderColor = usernameAvailable === true ? colors.semantic.success : colors.brand.primary;
+                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                  }
                   e.currentTarget.style.background = colors.dark.bg.input;
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = colors.dark.border.default;
+                  if (!usernameError && usernameAvailable !== true) {
+                    e.currentTarget.style.borderColor = colors.dark.border.default;
+                  }
                   e.currentTarget.style.boxShadow = "none";
                   e.currentTarget.style.background = colors.dark.bg.secondary;
                 }}
               />
+              {username && (
+                <div style={{ marginTop: spacing[1], fontSize: typography.fontSize.md }}>
+                  {checkingUsername && (
+                    <span style={{ color: colors.dark.text.tertiary }}>Kontrol ediliyor...</span>
+                  )}
+                  {usernameError && (
+                    <span style={{ color: colors.semantic.danger }}>{usernameError}</span>
+                  )}
+                  {!usernameError && !checkingUsername && usernameAvailable === true && (
+                    <span style={{ color: colors.semantic.success }}>Kullanıcı adı müsait</span>
+                  )}
+                </div>
+              )}
+              {!username && (
+                <p style={{ fontSize: typography.fontSize.sm, color: colors.dark.text.tertiary, marginTop: spacing[1] }}>
+                  3-30 karakter. Harf, rakam, nokta (.) ve alt tire (_) kullanılabilir.
+                </p>
+              )}
             </div>
 
             <div>

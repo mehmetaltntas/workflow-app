@@ -33,6 +33,18 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final GoogleAuthService googleAuthService;
 
+    @Operation(summary = "Kullanıcı adı müsaitlik kontrolü", description = "Verilen kullanıcı adının kullanılabilir olup olmadığını kontrol eder")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Kontrol başarılı")
+    })
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(
+            @Parameter(description = "Kontrol edilecek kullanıcı adı", required = true)
+            @RequestParam String username) {
+        boolean available = userService.isUsernameAvailable(username);
+        return ResponseEntity.ok(Map.of("available", available));
+    }
+
     @Operation(summary = "Yeni kullanıcı kaydı", description = "Yeni bir kullanıcı hesabı oluşturur ve JWT token döner")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Kayıt başarılı",

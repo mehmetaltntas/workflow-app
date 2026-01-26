@@ -26,6 +26,11 @@ public class UserService {
     private final RefreshTokenService refreshTokenService;
     private final AuthorizationService authorizationService;
 
+    // KULLANICI ADI MÜSAİTLİK KONTROLÜ
+    public boolean isUsernameAvailable(String username) {
+        return userRepository.findByUsername(username) == null;
+    }
+
     // KAYIT OLMA İŞLEMİ
     public UserResponse register(RegisterRequest request) {
         // 1. Kural: Bu kullanıcı adı zaten var mı?

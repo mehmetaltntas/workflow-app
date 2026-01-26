@@ -31,9 +31,42 @@ export const getPasswordStrength = (password: string): {
 
 /**
  * Kullanıcı adı validasyonu
- * En az 3 karakter, sadece harf, rakam ve alt çizgi
+ * 3-30 karakter, sadece harf (a-z), rakam (0-9), nokta (.) ve alt tire (_)
+ * Nokta ile baslayamaz veya bitemez, ardisik nokta kullanilamaz
  */
 export const isValidUsername = (username: string): boolean => {
-  const regex = /^[a-zA-Z0-9_]{3,50}$/;
-  return regex.test(username);
+  return getUsernameError(username) === null;
+};
+
+/**
+ * Kullanıcı adı hata mesajı döner, geçerliyse null döner
+ */
+export const getUsernameError = (username: string): string | null => {
+  if (!username) return null;
+
+  if (username.length < 3) {
+    return "Kullanıcı adı en az 3 karakter olmalıdır";
+  }
+
+  if (username.length > 30) {
+    return "Kullanıcı adı en fazla 30 karakter olabilir";
+  }
+
+  if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+    return "Sadece harf (a-z), rakam, nokta (.) ve alt tire (_) kullanılabilir";
+  }
+
+  if (username.startsWith('.')) {
+    return "Kullanıcı adı nokta ile başlayamaz";
+  }
+
+  if (username.endsWith('.')) {
+    return "Kullanıcı adı nokta ile bitemez";
+  }
+
+  if (/\.{2,}/.test(username)) {
+    return "Ardışık nokta kullanılamaz";
+  }
+
+  return null;
 };

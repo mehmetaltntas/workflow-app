@@ -123,6 +123,10 @@ export const authService = {
   register: (data: { username: string; email: string; password: string }) => {
     return apiClient.post("/auth/register", data);
   },
+  // Kullanıcı adı müsaitlik kontrolü
+  checkUsername: (username: string) => {
+    return apiClient.get<{ available: boolean }>(`/auth/check-username?username=${encodeURIComponent(username)}`);
+  },
   // Refresh token ile yeni access token al
   refreshToken: (refreshToken: string) => {
     return apiClient.post("/auth/refresh", { refreshToken });

@@ -4,6 +4,7 @@ import com.workflow.backend.validation.ValidPassword;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -12,7 +13,9 @@ import lombok.Data;
 public class RegisterRequest {
 
     @NotBlank(message = "Kullanıcı adı boş olamaz")
-    @Size(min = 3, max = 50, message = "Kullanıcı adı 3-50 karakter arasında olmalıdır")
+    @Size(min = 3, max = 30, message = "Kullanıcı adı 3-30 karakter arasında olmalıdır")
+    @Pattern(regexp = "^(?!\\.)(?!.*\\.$)(?!.*\\.\\.)[a-zA-Z0-9._]+$",
+            message = "Kullanıcı adı sadece harf, rakam, nokta ve alt tire içerebilir. Nokta ile başlayamaz/bitemez ve ardışık nokta kullanılamaz")
     @Schema(description = "Kullanıcı adı", example = "johndoe", requiredMode = Schema.RequiredMode.REQUIRED)
     private String username;
 
