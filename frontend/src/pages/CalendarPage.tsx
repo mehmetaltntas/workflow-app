@@ -26,11 +26,20 @@ const MONTH_NAMES = [
 // Türkçe gün isimleri
 const DAY_NAMES = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
+// Yerel tarih formatı (timezone sorunu önlenir)
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const CalendarPage = () => {
   const navigate = useNavigate();
   const { boards, loading } = useBoards();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
 
   // Son tarihe göre renk hesapla
   const getDeadlineColor = (deadline: string) => {
@@ -117,8 +126,15 @@ const CalendarPage = () => {
 
   // Bir güne ait etkinlikleri getir
   const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = formatLocalDate(date);
     return events.filter((event) => event.date === dateStr);
+  };
+
+  // Tarih seçildiğinde ilk panoyu otomatik seç
+  const handleDateSelect = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    const dateEvents = events.filter(e => e.date === dateStr);
+    setSelectedBoardId(dateEvents.length > 0 ? dateEvents[0].id : null);
   };
 
   // Ay değiştir
@@ -132,17 +148,17 @@ const CalendarPage = () => {
 
   // Bugünün tarihi
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = formatLocalDate(today);
 
   // Seçili güne ait etkinlikler
   const selectedEvents = selectedDate
     ? events.filter((event) => event.date === selectedDate)
     : [];
 
-  // Etkinlik tipine göre ikon
-  const getEventIcon = () => {
-    return <LayoutDashboard size={14} />;
-  };
+  // Seçili pano
+  const selectedBoard = selectedBoardId
+    ? selectedEvents.find(e => e.id === selectedBoardId) || selectedEvents[0] || null
+    : selectedEvents[0] || null;
 
   // Kalan güne göre durum metni
   const getDaysRemainingText = (days: number) => {
@@ -315,7 +331,7 @@ const CalendarPage = () => {
             }}
           >
             {calendarDays.map(({ date, isCurrentMonth }, index) => {
-              const dateStr = date.toISOString().split("T")[0];
+              const dateStr = formatLocalDate(date);
               const dayEvents = getEventsForDate(date);
               const isToday = dateStr === todayStr;
               const isSelected = dateStr === selectedDate;
@@ -323,7 +339,7 @@ const CalendarPage = () => {
               return (
                 <div
                   key={index}
-                  onClick={() => setSelectedDate(dateStr)}
+                  onClick={() => handleDateSelect(dateStr)}
                   style={{
                     minHeight: "100px",
                     padding: spacing[2],
@@ -372,26 +388,27 @@ const CalendarPage = () => {
 
                   {/* Etkinlikler */}
                   <div style={{ display: "flex", flexDirection: "column", gap: spacing[0.5] }}>
-                    {dayEvents.slice(0, 3).map((event) => (
+                    {dayEvents.slice(0, 2).map((event) => (
                       <div
                         key={event.id}
                         style={{
-                          padding: `${spacing[1]} ${spacing[1.5]}`,
+                          padding: `${spacing[0.5]} ${spacing[1.5]}`,
                           borderRadius: radius.sm,
                           background: event.color,
                           color: "#fff",
-                          fontSize: typography.fontSize.sm,
+                          fontSize: typography.fontSize.xs,
                           fontWeight: typography.fontWeight.semibold,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
+                          lineHeight: "1.3",
                         }}
                         title={event.title}
                       >
                         {event.title}
                       </div>
                     ))}
-                    {dayEvents.length > 3 && (
+                    {dayEvents.length > 2 && (
                       <div
                         style={{
                           fontSize: typography.fontSize.xs,
@@ -399,7 +416,7 @@ const CalendarPage = () => {
                           textAlign: "center",
                         }}
                       >
-                        +{dayEvents.length - 3} daha
+                        +{dayEvents.length - 2} daha
                       </div>
                     )}
                   </div>
@@ -444,102 +461,185 @@ const CalendarPage = () => {
           {selectedDate ? (
             selectedEvents.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-                {selectedEvents.map((event) => (
+                {/* Seçili pano detayı */}
+                {selectedBoard && (
                   <div
-                    key={event.id}
-                    onClick={() => navigate(`/boards/${event.boardSlug}`)}
                     style={{
-                      padding: spacing[3],
+                      padding: spacing[2],
                       borderRadius: radius.md,
-                      background: `${event.color}15`,
-                      border: `1px solid ${event.color}40`,
-                      cursor: "pointer",
-                      transition: `all ${animation.duration.normal}`,
+                      background: `${selectedBoard.color}15`,
+                      border: `1px solid ${selectedBoard.color}40`,
                     }}
                   >
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: spacing[2],
-                        marginBottom: spacing[2],
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: "24px",
-                          height: "24px",
-                          borderRadius: radius.sm,
-                          background: event.color,
-                          color: "#fff",
-                        }}
-                      >
-                        {getEventIcon()}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: typography.fontSize.xs,
-                          color: event.color,
-                          textTransform: "uppercase",
-                          letterSpacing: typography.letterSpacing.wide,
-                          fontWeight: typography.fontWeight.semibold,
-                        }}
-                      >
-                        Pano
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: typography.fontSize.lg,
+                        fontSize: typography.fontSize.base,
                         fontWeight: typography.fontWeight.semibold,
                         color: cssVars.textMain,
                         marginBottom: spacing[1],
                       }}
                     >
-                      {event.title}
+                      {selectedBoard.title}
                     </div>
                     <div
                       style={{
-                        fontSize: typography.fontSize.sm,
-                        color: event.color,
+                        fontSize: typography.fontSize.xs,
+                        color: selectedBoard.color,
                         fontWeight: typography.fontWeight.medium,
+                        marginBottom: spacing[2],
                       }}
                     >
-                      {getDaysRemainingText(event.daysRemaining)}
+                      {getDaysRemainingText(selectedBoard.daysRemaining)}
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/boards/${event.boardSlug}`);
-                      }}
+                    {/* Panoya Git + Son Tarih Durumu yan yana */}
+                    <div
                       style={{
-                        marginTop: spacing[3],
-                        width: "100%",
-                        padding: `${spacing[2]} ${spacing[3]}`,
-                        borderRadius: radius.md,
-                        border: "none",
-                        background: event.color,
-                        color: "#fff",
-                        fontSize: typography.fontSize.sm,
-                        fontWeight: typography.fontWeight.semibold,
-                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
                         gap: spacing[2],
-                        transition: `opacity ${animation.duration.normal}`,
+                        flexWrap: "wrap",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                     >
-                      <LayoutDashboard size={14} />
-                      Panoya Git
-                    </button>
+                      <button
+                        onClick={() => navigate(`/boards/${selectedBoard.boardSlug}`)}
+                        style={{
+                          padding: `${spacing[1.5]} ${spacing[3]}`,
+                          borderRadius: radius.md,
+                          border: "none",
+                          background: selectedBoard.color,
+                          color: "#fff",
+                          fontSize: typography.fontSize.xs,
+                          fontWeight: typography.fontWeight.semibold,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[1],
+                          transition: `opacity ${animation.duration.normal}`,
+                          whiteSpace: "nowrap",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                      >
+                        <LayoutDashboard size={12} />
+                        Panoya Git
+                      </button>
+                      <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5], flexWrap: "wrap" }}>
+                        {[
+                          { color: '#dc2626', label: "Gecikmiş" },
+                          { color: '#f97316', label: "Acil" },
+                          { color: '#eab308', label: "Yaklaşıyor" },
+                          { color: '#22c55e', label: "Normal" },
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "3px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "2px",
+                                background: item.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: cssVars.textMuted,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {item.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                ))}
+                )}
+
+                {/* Pano listesi (birden fazla pano varsa) */}
+                {selectedEvents.length > 1 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: spacing[1.5],
+                      paddingTop: spacing[2],
+                      borderTop: `1px solid ${cssVars.border}`,
+                    }}
+                  >
+                    <h4
+                      style={{
+                        fontSize: typography.fontSize.xs,
+                        fontWeight: typography.fontWeight.semibold,
+                        color: cssVars.textMuted,
+                        textTransform: "uppercase",
+                        letterSpacing: typography.letterSpacing.wide,
+                        margin: 0,
+                      }}
+                    >
+                      Panolar ({selectedEvents.length})
+                    </h4>
+                    {selectedEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        onClick={() => setSelectedBoardId(event.id)}
+                        style={{
+                          padding: `${spacing[1.5]} ${spacing[2]}`,
+                          borderRadius: radius.sm,
+                          background: event.id === selectedBoard?.id ? `${event.color}20` : "transparent",
+                          border: `1px solid ${event.id === selectedBoard?.id ? event.color + "50" : cssVars.border}`,
+                          cursor: "pointer",
+                          transition: `all ${animation.duration.normal}`,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[2],
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "3px",
+                            background: event.color,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.sm,
+                            fontWeight: event.id === selectedBoard?.id
+                              ? typography.fontWeight.semibold
+                              : typography.fontWeight.medium,
+                            color: cssVars.textMain,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            flex: 1,
+                          }}
+                        >
+                          {event.title}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            color: event.color,
+                            fontWeight: typography.fontWeight.medium,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {getDaysRemainingText(event.daysRemaining)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div
@@ -563,62 +663,6 @@ const CalendarPage = () => {
               Detayları görmek için takvimden bir gün seçin
             </div>
           )}
-
-          {/* Renk Kodları Açıklaması */}
-          <div
-            style={{
-              marginTop: spacing[6],
-              paddingTop: spacing[4],
-              borderTop: `1px solid ${cssVars.border}`,
-            }}
-          >
-            <h4
-              style={{
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.semibold,
-                color: cssVars.textMuted,
-                marginBottom: spacing[3],
-                textTransform: "uppercase",
-                letterSpacing: typography.letterSpacing.wide,
-              }}
-            >
-              Son Tarih Durumu
-            </h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: spacing[2] }}>
-              {[
-                { color: '#dc2626', label: "Gecikmiş" },
-                { color: '#f97316', label: "Acil (3 gün veya daha az)" },
-                { color: '#eab308', label: "Yaklaşıyor (7 gün veya daha az)" },
-                { color: '#22c55e', label: "Normal (7 günden fazla)" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: spacing[2],
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "12px",
-                      height: "12px",
-                      borderRadius: radius.sm,
-                      background: item.color,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: typography.fontSize.sm,
-                      color: cssVars.textMuted,
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
