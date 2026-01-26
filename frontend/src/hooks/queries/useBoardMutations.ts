@@ -102,8 +102,9 @@ export const useUpdateBoard = () => {
           context.previousData
         );
       }
-      console.error('Board update error:', error);
-      toast.error('Pano güncellenemedi');
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      console.error('Board update error:', error, 'Response:', axiosError.response?.data);
+      toast.error(axiosError.response?.data?.message || 'Pano güncellenemedi');
     },
     onSuccess: () => {
       toast.success('Pano güncellendi');
