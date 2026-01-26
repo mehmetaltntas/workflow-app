@@ -5,6 +5,11 @@ import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 import type { Board } from '../../types';
 
+interface BoardListResponse {
+  content: Board[];
+  totalElements: number;
+}
+
 /**
  * Hook for creating a new board
  */
@@ -69,29 +74,32 @@ export const useUpdateBoard = () => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: queryKeys.boards.all });
 
-      // Snapshot the previous value
-      const previousBoards = queryClient.getQueryData<Board[]>(
+      // Snapshot the previous value (raw cache is { content: Board[], totalElements })
+      const previousData = queryClient.getQueryData<BoardListResponse>(
         queryKeys.boards.list(userId || 0)
       );
 
       // Optimistically update the cache
-      if (previousBoards) {
-        queryClient.setQueryData<Board[]>(
+      if (previousData?.content) {
+        queryClient.setQueryData<BoardListResponse>(
           queryKeys.boards.list(userId || 0),
-          previousBoards.map((board) =>
-            board.id === boardId ? { ...board, ...data } : board
-          )
+          {
+            ...previousData,
+            content: previousData.content.map((board) =>
+              board.id === boardId ? { ...board, ...data } : board
+            ),
+          }
         );
       }
 
-      return { previousBoards };
+      return { previousData };
     },
     onError: (error, _variables, context) => {
       // Rollback on error
-      if (context?.previousBoards) {
+      if (context?.previousData) {
         queryClient.setQueryData(
           queryKeys.boards.list(userId || 0),
-          context.previousBoards
+          context.previousData
         );
       }
       console.error('Board update error:', error);
@@ -122,27 +130,31 @@ export const useDeleteBoard = () => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: queryKeys.boards.all });
 
-      // Snapshot the previous value
-      const previousBoards = queryClient.getQueryData<Board[]>(
+      // Snapshot the previous value (raw cache is { content: Board[], totalElements })
+      const previousData = queryClient.getQueryData<BoardListResponse>(
         queryKeys.boards.list(userId || 0)
       );
 
       // Optimistically remove from cache
-      if (previousBoards) {
-        queryClient.setQueryData<Board[]>(
+      if (previousData?.content) {
+        queryClient.setQueryData<BoardListResponse>(
           queryKeys.boards.list(userId || 0),
-          previousBoards.filter((board) => board.id !== boardId)
+          {
+            ...previousData,
+            content: previousData.content.filter((board) => board.id !== boardId),
+            totalElements: previousData.totalElements - 1,
+          }
         );
       }
 
-      return { previousBoards };
+      return { previousData };
     },
     onError: (error, _boardId, context) => {
       // Rollback on error
-      if (context?.previousBoards) {
+      if (context?.previousData) {
         queryClient.setQueryData(
           queryKeys.boards.list(userId || 0),
-          context.previousBoards
+          context.previousData
         );
       }
       console.error('Board deletion error:', error);
@@ -177,26 +189,29 @@ export const useUpdateBoardStatus = () => {
     onMutate: async ({ boardId, status }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.boards.all });
 
-      const previousBoards = queryClient.getQueryData<Board[]>(
+      const previousData = queryClient.getQueryData<BoardListResponse>(
         queryKeys.boards.list(userId || 0)
       );
 
-      if (previousBoards) {
-        queryClient.setQueryData<Board[]>(
+      if (previousData?.content) {
+        queryClient.setQueryData<BoardListResponse>(
           queryKeys.boards.list(userId || 0),
-          previousBoards.map((board) =>
-            board.id === boardId ? { ...board, status } : board
-          )
+          {
+            ...previousData,
+            content: previousData.content.map((board) =>
+              board.id === boardId ? { ...board, status } : board
+            ),
+          }
         );
       }
 
-      return { previousBoards };
+      return { previousData };
     },
     onError: (error, _variables, context) => {
-      if (context?.previousBoards) {
+      if (context?.previousData) {
         queryClient.setQueryData(
           queryKeys.boards.list(userId || 0),
-          context.previousBoards
+          context.previousData
         );
       }
       console.error('Status update error:', error);
