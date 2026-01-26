@@ -288,8 +288,10 @@ const Layout = () => {
       </nav>
 
       {/* Sayfa İçeriği */}
-      <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        <Outlet />
+      <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1 }}>
+          <Outlet />
+        </div>
 
         {/* Footer - Board detay sayfası hariç göster */}
         {!isBoardDetailPage && <Footer />}
