@@ -4,7 +4,9 @@ import com.workflow.backend.dto.CreateSubtaskRequest;
 import com.workflow.backend.dto.SubtaskDto;
 import com.workflow.backend.entity.Subtask;
 import com.workflow.backend.entity.Task;
+import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.repository.SubtaskRepository;
+import com.workflow.backend.repository.TaskListRepository;
 import com.workflow.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ public class SubtaskService {
 
     private final SubtaskRepository subtaskRepository;
     private final TaskRepository taskRepository;
+    private final TaskListRepository taskListRepository;
     private final AuthorizationService authorizationService;
 
     // Alt görev oluştur
@@ -101,6 +104,20 @@ public class SubtaskService {
 
         subtask.setIsCompleted(!subtask.getIsCompleted());
         Subtask saved = subtaskRepository.save(subtask);
+
+        // Cascade: subtask → task → list
+        Task parentTask = subtask.getTask();
+        List<Subtask> siblings = subtaskRepository.findByTaskIdOrderByPositionAsc(parentTask.getId());
+        boolean allSubtasksCompleted = siblings.stream().allMatch(Subtask::getIsCompleted);
+        parentTask.setIsCompleted(allSubtasksCompleted);
+        taskRepository.save(parentTask);
+
+        TaskList parentList = parentTask.getTaskList();
+        List<Task> listTasks = taskRepository.findByTaskListIdOrderByPositionAsc(parentList.getId());
+        boolean allTasksCompleted = listTasks.stream().allMatch(Task::getIsCompleted);
+        parentList.setIsCompleted(allTasksCompleted);
+        taskListRepository.save(parentList);
+
         return mapToDto(saved);
     }
 

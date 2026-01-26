@@ -312,7 +312,18 @@ public class TaskService {
             task.setLabels(new HashSet<>(labels));
         }
 
-        return mapToDto(taskRepository.save(task));
+        Task savedTask = taskRepository.save(task);
+
+        // Cascade: task completion → list completion
+        if (request.getIsCompleted() != null) {
+            TaskList parentList = task.getTaskList();
+            List<Task> listTasks = taskRepository.findByTaskListIdOrderByPositionAsc(parentList.getId());
+            boolean allTasksCompleted = listTasks.stream().allMatch(Task::getIsCompleted);
+            parentList.setIsCompleted(allTasksCompleted);
+            taskListRepository.save(parentList);
+        }
+
+        return mapToDto(savedTask);
     }
 
     // Entity -> DTO Çeviriciler

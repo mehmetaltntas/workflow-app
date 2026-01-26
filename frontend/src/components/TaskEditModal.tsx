@@ -42,6 +42,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
     try {
       const updatedSubtask = await subtaskService.toggleSubtask(subtaskId);
       setSubtasks(subtasks.map(s => s.id === subtaskId ? updatedSubtask : s));
+      onSubtaskChange?.();
     } catch (error) {
       console.error("Alt görev güncellenemedi:", error);
     }

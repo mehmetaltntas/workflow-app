@@ -81,7 +81,11 @@ const calculateBoardStats = (board: Board) => {
     lists: { total: totalLists, completed: completedLists },
     tasks: { total: totalTasks, completed: completedTasks, overdue: overdueTasks },
     subtasks: { total: totalSubtasks, completed: completedSubtasks, overdue: overdueSubtasks },
-    overallProgress: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+    overallProgress: (() => {
+      const totalElements = totalLists + totalTasks + totalSubtasks;
+      const completedElements = completedLists + completedTasks + completedSubtasks;
+      return totalElements > 0 ? Math.round((completedElements / totalElements) * 100) : 0;
+    })(),
   };
 };
 

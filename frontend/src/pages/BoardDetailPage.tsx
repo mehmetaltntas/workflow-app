@@ -314,25 +314,12 @@ const BoardDetailPage = () => {
     }
   }, [newSubtaskTitle, newSubtaskDescription, newSubtaskLink, loadBoardData, slug]);
 
-  const handleTaskCompletionToggle = useCallback(async (task: Task, list: TaskList) => {
+  const handleTaskCompletionToggle = useCallback(async (task: Task, _list: TaskList) => {
     try {
       const newIsCompleted = !task.isCompleted;
       await taskService.updateTask(task.id, { isCompleted: newIsCompleted });
 
-      // Check if all tasks in list will be completed
-      const allTasksCompleted = list.tasks.every(t =>
-        t.id === task.id ? newIsCompleted : t.isCompleted
-      );
-
-      // If all tasks are completed, mark list as completed
-      if (allTasksCompleted && !list.isCompleted) {
-        await taskService.updateTaskList(list.id, { isCompleted: true });
-      }
-      // If uncompleting a task and list is completed, unmark list
-      else if (!newIsCompleted && list.isCompleted) {
-        await taskService.updateTaskList(list.id, { isCompleted: false });
-      }
-
+      // Backend handles cascade: task completion → list completion
       loadBoardData(slug!);
       toast.success(task.isCompleted ? "Devam ediyor" : "Tamamlandı", {
         icon: task.isCompleted ? "⏳" : "✅",

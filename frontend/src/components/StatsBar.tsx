@@ -22,6 +22,33 @@ interface Stats {
   label: string; // "Liste", "Görev", "Alt Görev"
 }
 
+// Always computes overall board progress from all elements (lists + tasks + subtasks)
+const calculateOverallProgress = (board: Board): number => {
+  const lists = board.taskLists || [];
+  const totalLists = lists.length;
+  const completedLists = lists.filter(l => l.isCompleted).length;
+
+  let totalTasks = 0;
+  let completedTasks = 0;
+  let totalSubtasks = 0;
+  let completedSubtasks = 0;
+
+  lists.forEach(list => {
+    const tasks = list.tasks || [];
+    totalTasks += tasks.length;
+    completedTasks += tasks.filter(t => t.isCompleted).length;
+    tasks.forEach(task => {
+      const subs = task.subtasks || [];
+      totalSubtasks += subs.length;
+      completedSubtasks += subs.filter(s => s.isCompleted).length;
+    });
+  });
+
+  const totalElements = totalLists + totalTasks + totalSubtasks;
+  const completedElements = completedLists + completedTasks + completedSubtasks;
+  return totalElements > 0 ? Math.round((completedElements / totalElements) * 100) : 0;
+};
+
 const calculateStats = (
   board: Board,
   selectedList?: TaskList | null,
@@ -56,7 +83,7 @@ const calculateStats = (
       pending,
       overdue,
       today: todayCount,
-      progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      progressPercent: calculateOverallProgress(board),
       label: "Alt Görev",
     };
   }
@@ -86,7 +113,7 @@ const calculateStats = (
       pending,
       overdue,
       today: todayCount,
-      progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      progressPercent: calculateOverallProgress(board),
       label: "Görev",
     };
   }
@@ -115,7 +142,7 @@ const calculateStats = (
     pending,
     overdue,
     today: todayCount,
-    progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+    progressPercent: calculateOverallProgress(board),
     label: "Liste",
   };
 };
