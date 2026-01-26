@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
+import { boardService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import {
@@ -51,6 +52,7 @@ const HomePage = () => {
   });
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
+  const [detailedInfoBoard, setDetailedInfoBoard] = useState<Board | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -68,6 +70,21 @@ const HomePage = () => {
       return () => clearTimeout(timer);
     }
   }, [loading]);
+
+  // Bilgi paneli için pano detaylarını yükle
+  useEffect(() => {
+    if (!selectedInfoBoard) {
+      setDetailedInfoBoard(null);
+      return;
+    }
+    let cancelled = false;
+    boardService.getBoardDetails(selectedInfoBoard.slug).then(board => {
+      if (!cancelled) setDetailedInfoBoard(board);
+    }).catch(() => {
+      if (!cancelled) setDetailedInfoBoard(null);
+    });
+    return () => { cancelled = true; };
+  }, [selectedInfoBoard]);
 
   // Sadece "DEVAM_EDIYOR" statüsündeki panoları filtrele
   const activeBoards = useMemo(() =>
@@ -564,7 +581,7 @@ const HomePage = () => {
         {/* Board Info Section */}
         <div style={{ flex: 1, overflow: "auto" }}>
           <BoardInfoPanel
-            board={selectedInfoBoard}
+            board={detailedInfoBoard}
             onClose={() => setSelectedInfoBoard(null)}
             onTogglePin={selectedInfoBoard ? () => togglePin(selectedInfoBoard.id) : undefined}
             isPinned={selectedInfoBoard ? pinnedBoardIds.includes(selectedInfoBoard.id) : false}
