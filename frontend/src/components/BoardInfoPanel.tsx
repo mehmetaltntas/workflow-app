@@ -430,43 +430,6 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           </div>
         )}
 
-        {/* Açıklama */}
-        {board.description && (
-          <div
-            style={{
-              padding: spacing[4],
-              borderRadius: radius.xl,
-              background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-              border: `1px solid ${themeColors.borderDefault}`,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[2] }}>
-              <FileText size={16} color={cssVars.textMuted} />
-              <span
-                style={{
-                  fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: cssVars.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: typography.letterSpacing.wide,
-                }}
-              >
-                Açıklama
-              </span>
-            </div>
-            <p
-              style={{
-                fontSize: typography.fontSize.base,
-                color: cssVars.textMain,
-                lineHeight: typography.lineHeight.relaxed,
-                margin: 0,
-              }}
-            >
-              {board.description}
-            </p>
-          </div>
-        )}
-
         {/* Son Tarih */}
         {board.deadline && deadlineInfo && (
           <div
@@ -545,7 +508,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           </div>
         )}
 
-        {/* Bağlantı */}
+        {/* Harici Bağlantı */}
         {board.link && (
           <a
             href={board.link}
@@ -603,6 +566,43 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
               </p>
             </div>
           </a>
+        )}
+
+        {/* Açıklama */}
+        {board.description && (
+          <div
+            style={{
+              padding: spacing[4],
+              borderRadius: radius.xl,
+              background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+              border: `1px solid ${themeColors.borderDefault}`,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[2] }}>
+              <FileText size={16} color={cssVars.textMuted} />
+              <span
+                style={{
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: typography.letterSpacing.wide,
+                }}
+              >
+                Açıklama
+              </span>
+            </div>
+            <p
+              style={{
+                fontSize: typography.fontSize.base,
+                color: cssVars.textMain,
+                lineHeight: typography.lineHeight.relaxed,
+                margin: 0,
+              }}
+            >
+              {board.description}
+            </p>
+          </div>
         )}
       </div>
 
