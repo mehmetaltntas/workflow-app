@@ -260,6 +260,7 @@ public class BoardService {
 
     // PANO ADI GÜNCELLE
     // PANO GÜNCELLE
+    @Transactional
     public BoardResponse updateBoard(Long boardId, CreateBoardRequest request) {
         // Kullanıcı sadece kendi panosunu güncelleyebilir
         authorizationService.verifyBoardOwnership(boardId);
@@ -293,6 +294,7 @@ public class BoardService {
     }
 
     // PANO STATÜ GÜNCELLE
+    @Transactional
     public BoardResponse updateBoardStatus(Long boardId, String newStatus) {
         // Kullanıcı sadece kendi panosunun statüsünü güncelleyebilir
         authorizationService.verifyBoardOwnership(boardId);
