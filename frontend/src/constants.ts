@@ -36,5 +36,29 @@ export const PRIORITY_LABELS: Record<string, string> = {
   LOW: 'Düşük',
 };
 
+// Category labels
+export const CATEGORY_LABELS: Record<string, string> = {
+  YAZILIM_GELISTIRME: 'Yazılım Geliştirme',
+  PAZARLAMA: 'Pazarlama',
+  TASARIM_KREATIF: 'Tasarım / Kreatif',
+  URUN_YONETIMI: 'Ürün Yönetimi',
+  SATIS_CRM: 'Satış / CRM',
+  INSAN_KAYNAKLARI: 'İnsan Kaynakları',
+  EGITIM_AKADEMIK: 'Eğitim / Akademik',
+  OPERASYON: 'Operasyon',
+  FINANS_MUHASEBE: 'Finans / Muhasebe',
+  MUSTERI_DESTEK: 'Müşteri Destek',
+  ICERIK_URETIMI: 'İçerik Üretimi',
+  UI_UX_TASARIMI: 'UI/UX Tasarımı',
+  ARGE_ARASTIRMA: 'Ar-Ge / Araştırma',
+  ETKINLIK_YONETIMI: 'Etkinlik Yönetimi',
+  HUKUK_YASAL: 'Hukuk / Yasal',
+  INSAAT_MIMARI: 'İnşaat / Mimari',
+  E_TICARET: 'E-Ticaret',
+  SAGLIK_YASAM: 'Sağlık / Yaşam',
+  KISISEL: 'Kişisel',
+  DIGER: 'Diğer',
+};
+
 // Re-export colors for convenience
 export { colors };

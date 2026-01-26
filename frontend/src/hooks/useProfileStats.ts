@@ -34,12 +34,18 @@ export interface SubtaskStats {
   pending: number;
 }
 
+export interface CategoryStat {
+  category: string;
+  count: number;
+}
+
 export interface ProfileStats {
   boards: BoardStats;
   lists: ListStats;
   tasks: TaskStats;
   subtasks: SubtaskStats;
   overallProgress: number;
+  topCategories: CategoryStat[];
 }
 
 const defaultStats: ProfileStats = {
@@ -71,6 +77,7 @@ const defaultStats: ProfileStats = {
     pending: 0,
   },
   overallProgress: 0,
+  topCategories: [],
 };
 
 export const useProfileStats = () => {
@@ -212,6 +219,19 @@ function calculateStats(boards: Board[]): ProfileStats {
     }
   });
 
+  // Calculate category stats
+  const categoryCounts: Record<string, number> = {};
+  boards.forEach((board) => {
+    if (board.category) {
+      categoryCounts[board.category] = (categoryCounts[board.category] || 0) + 1;
+    }
+  });
+
+  const topCategories: CategoryStat[] = Object.entries(categoryCounts)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
   // Calculate overall progress
   const totalItems = taskStats.total + subtaskStats.total;
   const completedItems = taskStats.completed + subtaskStats.completed;
@@ -223,6 +243,7 @@ function calculateStats(boards: Board[]): ProfileStats {
     tasks: taskStats,
     subtasks: subtaskStats,
     overallProgress,
+    topCategories,
   };
 }
 

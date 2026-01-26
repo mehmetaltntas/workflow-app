@@ -3,17 +3,15 @@ import {
   List,
   CheckSquare,
   ListTodo,
-  Clock,
   AlertCircle,
-  CheckCircle2,
-  Loader,
   TrendingUp,
+  Tag,
 } from "lucide-react";
 import { useProfileStats } from "../hooks/useProfileStats";
 import { StatCard } from "../components/StatCard";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
-import { STATUS_LABELS, STATUS_COLORS } from "../constants";
+import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 
 const ProfilePage = () => {
   const { stats, isLoading, error } = useProfileStats();
@@ -380,7 +378,7 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Task Details */}
+        {/* Top Categories */}
         <div
           style={{
             background: cssVars.bgCard,
@@ -401,145 +399,100 @@ const ProfilePage = () => {
               gap: spacing[2],
             }}
           >
-            <CheckSquare size={20} />
-            Gorev Detaylari
+            <Tag size={20} />
+            Populer Kategoriler
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-            {/* Completed */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: `${spacing[3]} ${spacing[4]}`,
-                background: colors.semantic.successLight,
-                borderRadius: radius.lg,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                <CheckCircle2 size={18} color={colors.semantic.success} />
-                <span
-                  style={{
-                    fontSize: typography.fontSize.lg,
-                    color: colors.semantic.success,
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  Tamamlanan
-                </span>
-              </div>
-              <span
+            {stats.topCategories.length === 0 ? (
+              <p
                 style={{
-                  fontSize: typography.fontSize.xl,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: colors.semantic.success,
+                  fontSize: typography.fontSize.base,
+                  color: cssVars.textMuted,
+                  textAlign: "center",
+                  padding: spacing[4],
+                  margin: 0,
                 }}
               >
-                {stats.tasks.completed}
-              </span>
-            </div>
-
-            {/* Pending */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: `${spacing[3]} ${spacing[4]}`,
-                background: colors.brand.primaryLight,
-                borderRadius: radius.lg,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                <Loader size={18} color={colors.brand.primary} />
-                <span
-                  style={{
-                    fontSize: typography.fontSize.lg,
-                    color: colors.brand.primary,
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  Bekleyen
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: typography.fontSize.xl,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: colors.brand.primary,
-                }}
-              >
-                {stats.tasks.pending}
-              </span>
-            </div>
-
-            {/* Overdue */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: `${spacing[3]} ${spacing[4]}`,
-                background: colors.semantic.dangerLight,
-                borderRadius: radius.lg,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                <AlertCircle size={18} color={colors.semantic.danger} />
-                <span
-                  style={{
-                    fontSize: typography.fontSize.lg,
-                    color: colors.semantic.danger,
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  Gecikmis
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: typography.fontSize.xl,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: colors.semantic.danger,
-                }}
-              >
-                {stats.tasks.overdue}
-              </span>
-            </div>
-
-            {/* Due Today */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: `${spacing[3]} ${spacing[4]}`,
-                background: colors.semantic.warningLight,
-                borderRadius: radius.lg,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                <Clock size={18} color={colors.semantic.warningDark} />
-                <span
-                  style={{
-                    fontSize: typography.fontSize.lg,
-                    color: colors.semantic.warningDark,
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  Bugun Bitmeli
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: typography.fontSize.xl,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: colors.semantic.warningDark,
-                }}
-              >
-                {stats.tasks.dueToday}
-              </span>
-            </div>
+                Henuz kategorili pano bulunmuyor
+              </p>
+            ) : (
+              stats.topCategories.map((item, index) => {
+                const maxCount = stats.topCategories[0].count;
+                const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                return (
+                  <div
+                    key={item.category}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: spacing[3],
+                      padding: `${spacing[3]} ${spacing[4]}`,
+                      background: colors.dark.bg.hover,
+                      borderRadius: radius.lg,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: typography.fontSize.lg,
+                        fontWeight: typography.fontWeight.bold,
+                        color: colors.brand.primary,
+                        minWidth: "24px",
+                      }}
+                    >
+                      {index + 1}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: spacing[1],
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.lg,
+                            color: cssVars.textMain,
+                            fontWeight: typography.fontWeight.medium,
+                          }}
+                        >
+                          {CATEGORY_LABELS[item.category] || item.category}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.base,
+                            fontWeight: typography.fontWeight.semibold,
+                            color: cssVars.textMuted,
+                          }}
+                        >
+                          {item.count} pano
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "6px",
+                          background: colors.brand.primaryLight,
+                          borderRadius: radius.full,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${percentage}%`,
+                            height: "100%",
+                            background: colors.brand.primary,
+                            borderRadius: radius.full,
+                            transition: `width ${animation.duration.slow} ${animation.easing.smooth}`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
