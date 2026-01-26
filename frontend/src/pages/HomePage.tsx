@@ -3,7 +3,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors } from "../utils/themeColors";
 import {
   Home,
   Pin,
@@ -13,10 +12,10 @@ import {
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
 import BoardEditModal from "../components/BoardEditModal";
-import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
-import { SortingOptions, type SortField, type SortDirection } from "../components/ui/SortingOptions";
 import { EmptyState } from "../components/ui/EmptyState";
-import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
+import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
+import { SortDropdown, type SortField, type SortDirection } from "../components/ui/SortDropdown";
+import { typography, spacing, radius, colors, cssVars, animation } from '../styles/tokens';
 import { useUIStore, MAX_PINNED_BOARDS } from '../stores/uiStore';
 
 const HomePage = () => {
@@ -25,14 +24,12 @@ const HomePage = () => {
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
   const { theme } = useTheme();
-  const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
   const unpinBoard = useUIStore((state) => state.unpinBoard);
-  const [isPanelOpen] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -188,20 +185,16 @@ const HomePage = () => {
       style={{
         height: "100%",
         background: cssVars.bgBody,
-        display: "flex",
-        overflow: "hidden",
+        overflowY: "auto",
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(10px)",
         transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
       }}
     >
-      {/* Main Content - scrollable independently */}
+      {/* Main Content */}
       <div
         style={{
-          flex: 1,
           padding: spacing[10],
-          minWidth: 0,
-          overflowY: "auto",
         }}
       >
         {/* Header */}
@@ -304,6 +297,15 @@ const HomePage = () => {
                   </div>
                 </div>
               </div>
+
+              {/* View & Sort Controls */}
+              <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
+              <SortDropdown
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortFieldChange={setSortField}
+                onSortDirectionChange={setSortDirection}
+              />
 
             </div>
           </div>
@@ -463,46 +465,6 @@ const HomePage = () => {
           />
         )}
       </div>
-
-      {/* Right Panel */}
-      <aside
-        style={{
-          width: isPanelOpen ? "340px" : "0px",
-          minWidth: isPanelOpen ? "340px" : "0px",
-          maxWidth: "340px",
-          height: "100%",
-          background: isLight ? colors.light.bg.card : colors.dark.bg.card,
-          borderLeft: isPanelOpen ? `1px solid ${themeColors.borderDefault}` : "none",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-          opacity: isPanelOpen ? 1 : 0,
-          boxShadow: isPanelOpen ? shadows.lg : "none",
-        }}
-      >
-        {/* Panel Header with View Switcher and Sorting */}
-        <div
-          style={{
-            background: isLight ? colors.light.bg.elevated : colors.dark.bg.elevated,
-          }}
-        >
-          {/* View Switcher */}
-          <ViewSwitcher
-            value={viewMode}
-            onChange={setViewMode}
-          />
-
-          {/* Sorting Options */}
-          <SortingOptions
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSortFieldChange={setSortField}
-            onSortDirectionChange={setSortDirection}
-          />
-        </div>
-
-      </aside>
 
       {/* Pano Düzenleme Modalı */}
       {isEditModalOpen && editingBoard && (

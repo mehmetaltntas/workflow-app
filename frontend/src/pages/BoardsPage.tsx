@@ -5,17 +5,15 @@ import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock } fro
 
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useCreateBoard, useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
-import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors } from "../utils/themeColors";
-import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
+import { typography, spacing, radius, colors, cssVars, animation } from '../styles/tokens';
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
 import BoardEditModal from "../components/BoardEditModal";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
-import { VerticalStatusFilter } from "../components/ui/VerticalStatusFilter";
-import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
+import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
+import { StatusFilterDropdown } from "../components/ui/StatusFilterDropdown";
 
 const BoardsPage = () => {
   const navigate = useNavigate();
@@ -23,16 +21,11 @@ const BoardsPage = () => {
   const createBoardMutation = useCreateBoard();
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
-  const { theme } = useTheme();
-  const themeColors = getThemeColors(theme);
-  const isLight = theme === 'light';
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isVisible, setIsVisible] = useState(false);
-  const [isPanelOpen] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   // Animasyon için sayfa yüklendiğinde visible yap
@@ -228,20 +221,16 @@ const BoardsPage = () => {
       style={{
         height: "100%",
         background: cssVars.bgBody,
-        display: "flex",
-        overflow: "hidden",
+        overflowY: "auto",
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(10px)",
         transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
       }}
     >
-      {/* Main Content - scrollable independently */}
+      {/* Main Content */}
       <div
         style={{
-          flex: 1,
           padding: spacing[10],
-          minWidth: 0,
-          overflowY: "auto",
         }}
       >
         {/* Header */}
@@ -392,6 +381,14 @@ const BoardsPage = () => {
                 Yeni Pano
               </button>
 
+              {/* View & Filter Controls */}
+              <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
+              <StatusFilterDropdown
+                value={statusFilter}
+                onChange={setStatusFilter}
+                counts={statusCounts}
+              />
+
             </div>
           </div>
         </div>
@@ -503,48 +500,6 @@ const BoardsPage = () => {
           })}
         </div>
       </div>
-
-      {/* Right Panel */}
-      <aside
-        style={{
-          width: isPanelOpen ? "340px" : "0px",
-          minWidth: isPanelOpen ? "340px" : "0px",
-          maxWidth: "340px",
-          height: "100%",
-          background: isLight ? colors.light.bg.card : colors.dark.bg.card,
-          borderLeft: isPanelOpen ? `1px solid ${themeColors.borderDefault}` : "none",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-          opacity: isPanelOpen ? 1 : 0,
-          boxShadow: isPanelOpen ? shadows.lg : "none",
-        }}
-      >
-        {/* Panel Header with View Switcher and Filters */}
-        <div
-          style={{
-            background: isLight ? colors.light.bg.elevated : colors.dark.bg.elevated,
-          }}
-        >
-          {/* View Switcher */}
-          <ViewSwitcher
-            value={viewMode}
-            onChange={setViewMode}
-          />
-
-          {/* Filters */}
-          <div style={{ padding: spacing[4] }}>
-            <VerticalStatusFilter
-              value={statusFilter}
-              onChange={setStatusFilter}
-              counts={statusCounts}
-              defaultExpanded={false}
-            />
-          </div>
-        </div>
-
-      </aside>
 
       {/* Yeni Pano Oluşturma Modalı */}
       {isModalOpen && (
