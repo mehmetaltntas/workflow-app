@@ -106,7 +106,12 @@ public class GoogleAuthService {
         User existingUser = userRepository.findByEmail(email);
 
         if (existingUser != null) {
-            // Mevcut kullaniciyi Google hesabina bagla
+            // Yerel hesap varsa, Google ile baglamaya izin verme (hesap ele gecirme riski)
+            if (existingUser.getAuthProvider() == AuthProvider.LOCAL) {
+                throw new InvalidCredentialsException(
+                        "Bu e-posta adresi zaten bir yerel hesapla kayıtlı. Lütfen şifrenizle giriş yapın.");
+            }
+            // Sadece Google hesabi ise bagla
             existingUser.setGoogleId(googleId);
             existingUser.setAuthProvider(AuthProvider.GOOGLE);
             if (existingUser.getProfilePicture() == null && picture != null) {

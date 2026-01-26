@@ -7,6 +7,7 @@ import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.repository.SubtaskRepository;
 import com.workflow.backend.repository.TaskListRepository;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class SubtaskService {
         authorizationService.verifyTaskOwnership(request.getTaskId());
 
         Task task = taskRepository.findById(request.getTaskId())
-                .orElseThrow(() -> new RuntimeException("Görev bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", request.getTaskId()));
 
         // Yeni pozisyon hesapla
         Integer maxPosition = subtaskRepository.findMaxPositionByTaskId(task.getId());
@@ -67,7 +68,7 @@ public class SubtaskService {
         authorizationService.verifySubtaskOwnership(subtaskId);
 
         Subtask subtask = subtaskRepository.findById(subtaskId)
-                .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alt görev", "id", subtaskId));
 
         if (request.getTitle() != null) {
             subtask.setTitle(request.getTitle());
@@ -83,6 +84,22 @@ public class SubtaskService {
         }
 
         Subtask saved = subtaskRepository.save(subtask);
+
+        // Cascade: subtask completion → task → list
+        if (request.getIsCompleted() != null) {
+            Task parentTask = subtask.getTask();
+            List<Subtask> siblings = subtaskRepository.findByTaskIdOrderByPositionAsc(parentTask.getId());
+            boolean allSubtasksCompleted = siblings.stream().allMatch(Subtask::getIsCompleted);
+            parentTask.setIsCompleted(allSubtasksCompleted);
+            taskRepository.save(parentTask);
+
+            TaskList parentList = parentTask.getTaskList();
+            List<Task> listTasks = taskRepository.findByTaskListIdOrderByPositionAsc(parentList.getId());
+            boolean allTasksCompleted = listTasks.stream().allMatch(Task::getIsCompleted);
+            parentList.setIsCompleted(allTasksCompleted);
+            taskListRepository.save(parentList);
+        }
+
         return mapToDto(saved);
     }
 
@@ -93,7 +110,7 @@ public class SubtaskService {
         authorizationService.verifySubtaskOwnership(subtaskId);
 
         Subtask subtask = subtaskRepository.findById(subtaskId)
-                .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alt görev", "id", subtaskId));
         Task parentTask = subtask.getTask();
         TaskList parentList = parentTask.getTaskList();
 
@@ -131,7 +148,7 @@ public class SubtaskService {
         authorizationService.verifySubtaskOwnership(subtaskId);
 
         Subtask subtask = subtaskRepository.findById(subtaskId)
-                .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Alt görev", "id", subtaskId));
 
         subtask.setIsCompleted(!subtask.getIsCompleted());
         Subtask saved = subtaskRepository.save(subtask);

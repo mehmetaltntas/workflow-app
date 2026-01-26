@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { X, Tag, Plus, Edit2, Trash2, Check } from "lucide-react";
 import type { Label } from "../types";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
 import { LabelDeleteConfirmModal } from "./LabelDeleteConfirmModal";
 import { labelService } from "../services/api";
 
@@ -44,6 +46,8 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
   onUpdateLabel,
   onDeleteLabel,
 }) => {
+  const { theme } = useTheme();
+  const themeColors = getThemeColors(theme);
   const [isCreating, setIsCreating] = useState(false);
   const [editingLabelId, setEditingLabelId] = useState<number | null>(null);
   const [newLabelName, setNewLabelName] = useState("");
@@ -142,7 +146,7 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: colors.dark.bg.overlay,
+        backgroundColor: themeColors.bgPrimary,
         backdropFilter: "blur(8px)",
         display: "flex",
         alignItems: "center",
@@ -206,7 +210,7 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   gap: spacing[3],
                   padding: spacing[3.5],
                   borderRadius: radius.lg,
-                  background: colors.dark.bg.hover,
+                  background: themeColors.bgHover,
                   border: `1px solid ${cssVars.borderStrong}`,
                 }}
               >
@@ -220,7 +224,7 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                     padding: `${spacing[2.5]} ${spacing[3]}`,
                     borderRadius: radius.md,
                     border: "1px solid var(--border)",
-                    background: colors.dark.glass.bg,
+                    background: themeColors.bgTertiary,
                     color: cssVars.textMain,
                     fontSize: typography.fontSize.base,
                     outline: "none",
@@ -276,8 +280,8 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   gap: spacing[3],
                   padding: `${spacing[3]} ${spacing[3.5]}`,
                   borderRadius: radius.lg,
-                  background: colors.dark.glass.bg,
-                  border: `1px solid ${colors.dark.border.subtle}`,
+                  background: themeColors.bgTertiary,
+                  border: `1px solid ${themeColors.borderSubtle}`,
                   transition: `all ${animation.duration.normal}`,
                 }}
                 onMouseEnter={() => setHoveredLabelId(label.id)}
@@ -373,7 +377,7 @@ export const LabelManager: React.FC<LabelManagerProps> = ({
                   padding: `${spacing[2.5]} ${spacing[3]}`,
                   borderRadius: radius.md,
                   border: "1px solid var(--border)",
-                  background: colors.dark.glass.bg,
+                  background: themeColors.bgTertiary,
                   color: cssVars.textMain,
                   fontSize: typography.fontSize.base,
                   outline: "none",

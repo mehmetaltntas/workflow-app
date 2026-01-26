@@ -17,11 +17,13 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +38,7 @@ public class BoardService {
     private final LabelService labelService;
 
     // PANO OLUŞTURMA
+    @Transactional
     public BoardResponse createBoard(CreateBoardRequest request) {
         // 1. Mevcut kullanıcıyı JWT'den al (request.getUserId() yerine)
         User user = currentUserService.getCurrentUser();
@@ -62,8 +65,16 @@ public class BoardService {
         // 4. İLİŞKİYİ KUR (Kritik Nokta)
         board.setUser(user); // "Bu panonun sahibi bu kullanıcıdır" dedik.
 
-        // 4. Kaydet
-        Board savedBoard = boardRepository.save(board);
+        // 4. Kaydet (race condition koruması: slug çakışırsa rastgele suffix ile tekrar dene)
+        Board savedBoard;
+        try {
+            savedBoard = boardRepository.save(board);
+        } catch (DataIntegrityViolationException e) {
+            // Retry with random suffix
+            String retrySlug = slug + "-" + UUID.randomUUID().toString().substring(0, 6);
+            board.setSlug(retrySlug);
+            savedBoard = boardRepository.save(board);
+        }
 
         // 5. Varsayılan etiketleri oluştur (Kolay, Orta, Zor)
         labelService.createDefaultLabelsForBoard(savedBoard);
@@ -228,10 +239,8 @@ public class BoardService {
 
     // Entity -> DTO Çevirici (Liste sayfası için - nested entity'ler yok, N+1 sorgu yok)
     private BoardResponse mapToResponse(Board board) {
-        // Legacy Data Fix: Slug yoksa oluştur ve kaydet
         if (board.getSlug() == null) {
-            board.setSlug(generateSlug(board.getName()));
-            boardRepository.save(board);
+            logger.warn("Board without slug found: id={}, name={}", board.getId(), board.getName());
         }
 
         BoardResponse response = new BoardResponse();
@@ -280,14 +289,10 @@ public class BoardService {
 
         if (request.getStatus() != null)
             board.setStatus(request.getStatus());
-        if (request.getLink() != null)
-            board.setLink(request.getLink());
-        if (request.getDescription() != null)
-            board.setDescription(request.getDescription());
-        if (request.getDeadline() != null)
-            board.setDeadline(request.getDeadline());
-        if (request.getCategory() != null)
-            board.setCategory(request.getCategory());
+        board.setLink(request.getLink());
+        board.setDescription(request.getDescription());
+        board.setDeadline(request.getDeadline());
+        board.setCategory(request.getCategory());
 
         Board savedBoard = boardRepository.save(board);
         return mapToResponse(savedBoard);

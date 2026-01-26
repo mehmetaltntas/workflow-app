@@ -396,13 +396,9 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // 403 hatası - yetkisiz erişim
+    // 403 hatası - yetkisiz erişim (kaynağa erişim reddi, oturum hala geçerli)
     if (error.response?.status === 403) {
-      console.error("Yetkisiz erişim (403):", error.response.data);
-      if (!window.location.pathname.startsWith("/login")) {
-        useAuthStore.getState().logout();
-        window.location.href = "/login";
-      }
+      console.warn("Erişim reddedildi (403):", error.config?.url);
     }
 
     return Promise.reject(error);

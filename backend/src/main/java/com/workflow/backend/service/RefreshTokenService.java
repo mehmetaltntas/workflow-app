@@ -8,6 +8,7 @@ import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.RefreshTokenRepository;
 import com.workflow.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,6 +82,7 @@ public class RefreshTokenService {
      * Süresi dolmuş tüm refresh token'ları temizler.
      * Periyodik olarak çağrılabilir (Scheduled task ile).
      */
+    @Scheduled(fixedRate = 3600000) // Her saat başı çalışır (1 saat = 3600000 ms)
     @Transactional
     public void deleteExpiredTokens() {
         refreshTokenRepository.deleteExpiredTokens(Instant.now());

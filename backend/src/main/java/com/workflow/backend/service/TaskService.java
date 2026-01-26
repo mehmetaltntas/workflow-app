@@ -61,6 +61,11 @@ public class TaskService {
         // Etiketler
         if (request.getLabelIds() != null && !request.getLabelIds().isEmpty()) {
             List<Label> labels = labelRepository.findAllById(request.getLabelIds());
+            for (Label label : labels) {
+                if (!label.getBoard().getId().equals(board.getId())) {
+                    throw new RuntimeException("Etiket bu panoya ait değil: " + label.getId());
+                }
+            }
             list.setLabels(new HashSet<>(labels));
         }
 
@@ -254,6 +259,12 @@ public class TaskService {
         // Etiketleri güncelle (labelIds gönderildiyse)
         if (request.getLabelIds() != null) {
             List<Label> labels = labelRepository.findAllById(request.getLabelIds());
+            Long boardId = list.getBoard().getId();
+            for (Label label : labels) {
+                if (!label.getBoard().getId().equals(boardId)) {
+                    throw new RuntimeException("Etiket bu panoya ait değil: " + label.getId());
+                }
+            }
             list.setLabels(new HashSet<>(labels));
         }
 
@@ -325,6 +336,12 @@ public class TaskService {
         // Etiketleri güncelle (labelIds gönderildiyse)
         if (request.getLabelIds() != null) {
             List<Label> labels = labelRepository.findAllById(request.getLabelIds());
+            Long boardId = task.getTaskList().getBoard().getId();
+            for (Label label : labels) {
+                if (!label.getBoard().getId().equals(boardId)) {
+                    throw new RuntimeException("Etiket bu panoya ait değil: " + label.getId());
+                }
+            }
             task.setLabels(new HashSet<>(labels));
         }
 

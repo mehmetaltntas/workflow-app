@@ -5,10 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = {UserDetailsServiceAutoConfiguration.class})
 @ConfigurationPropertiesScan("com.workflow.backend.config")
 @EnableAsync
+@EnableScheduling
 public class BackendApplication {
 
 	public static void main(String[] args) {

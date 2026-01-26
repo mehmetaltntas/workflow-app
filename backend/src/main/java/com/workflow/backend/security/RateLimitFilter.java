@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,6 +24,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     // IP bazlı bucket'ları tutan map (endpoint -> IP -> Bucket)
     private final Map<String, Map<String, Bucket>> buckets = new ConcurrentHashMap<>();
+
+    // Endpoint başına maksimum izin verilen benzersiz IP sayısı (Memory DoS koruması)
+    private static final int MAX_BUCKETS_PER_ENDPOINT = 10_000;
 
     // Rate limit konfigürasyonları
     private static final Map<String, RateLimitConfig> RATE_LIMITS = Map.ofEntries(
@@ -82,9 +86,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private Bucket resolveBucket(String endpoint, String clientIp, RateLimitConfig config) {
-        return buckets
-                .computeIfAbsent(endpoint, k -> new ConcurrentHashMap<>())
-                .computeIfAbsent(clientIp, k -> createBucket(config));
+        Map<String, Bucket> endpointBuckets = buckets.computeIfAbsent(endpoint, k -> new ConcurrentHashMap<>());
+
+        // Memory DoS koruması: Endpoint başına bucket sayısı sınırını aşarsa map'i temizle
+        if (endpointBuckets.size() > MAX_BUCKETS_PER_ENDPOINT) {
+            logger.warn("Bucket limit exceeded for endpoint: {}. Clearing all buckets for this endpoint.", endpoint);
+            endpointBuckets.clear();
+        }
+
+        return endpointBuckets.computeIfAbsent(clientIp, k -> createBucket(config));
     }
 
     private Bucket createBucket(RateLimitConfig config) {
@@ -96,11 +106,23 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
+        // Sadece request.getRemoteAddr() kullanılır.
+        // X-Forwarded-For header'ı client tarafından manipüle edilebilir (IP Spoofing).
+        // Reverse proxy arkasındaysa, proxy'nin trusted IP'yi RemoteAddr olarak set etmesi gerekir.
         return request.getRemoteAddr();
+    }
+
+    /**
+     * Her 30 dakikada bir tüm bucket'ları temizler.
+     * Bucket4j bucket'ları zaman bazlı token yenileme yaptığı için,
+     * temizlenen bucket'lar bir sonraki istekte yeniden oluşturulur.
+     * Bu mekanizma bellek sızıntısını önler.
+     */
+    @Scheduled(fixedRate = 30 * 60 * 1000) // 30 dakika
+    public void cleanupBuckets() {
+        int totalEntries = buckets.values().stream().mapToInt(Map::size).sum();
+        buckets.clear();
+        logger.info("Rate limit bucket cleanup completed. Cleared {} entries.", totalEntries);
     }
 
     private record RateLimitConfig(long tokens, Duration duration) {}

@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { AxiosError } from "axios";
-import { boardService, taskService, labelService } from "../services/api";
+import { taskService, labelService } from "../services/api";
+import { useBoardDetailQuery } from "../hooks/queries/useBoards";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../lib/queryClient";
 import type { Board, Task, TaskList, Subtask, Priority, Label } from "../types";
 
 import toast from "react-hot-toast";
@@ -24,13 +27,15 @@ import { colors as tokenColors } from "../styles/tokens";
 const BoardDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backPath = (location.state as { from?: string })?.from || '/boards';
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
 
-  // Data State
-  const [board, setBoard] = useState<Board | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Data State - React Query
+  const queryClient = useQueryClient();
+  const { data: board = null, isLoading: loading, error: boardError } = useBoardDetailQuery(slug);
 
   // UI States
   const [isAddingList, setIsAddingList] = useState(false);
@@ -69,44 +74,37 @@ const BoardDetailPage = () => {
   // Undo state for list completion - using ref to avoid closure issues
   const listCompletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (listCompletionTimeoutRef.current) {
+        clearTimeout(listCompletionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Sorting
   // Default: Date (oldest to newest), down arrow
   const [sortBy, setSortBy] = useState<"name" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const loadBoardData = useCallback(
-    async (boardSlug: string) => {
-      if (!boardSlug || boardSlug === "null" || boardSlug === "undefined") {
-        setLoading(false);
-        toast.error("Geçersiz pano adresi");
-        navigate("/boards");
-        return;
-      }
-      try {
-        setLoading(true);
-        const board = await boardService.getBoardDetails(boardSlug);
-        setBoard(board);
-      } catch (err) {
-        const error = err as AxiosError;
-        console.error(error);
-        if (error.response && error.response.status === 404) {
-          toast.error("Pano bulunamadı");
-          setBoard(null);
-        } else if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-          // Handled by interceptor
-        } else {
-          toast.error("Pano yüklenirken hata oluştu");
-        }
-      } finally {
-        setLoading(false);
-      }
-    },
-    [navigate],
-  );
-
+  // Error handling for board query
   useEffect(() => {
-    if (slug) loadBoardData(slug);
-  }, [slug, loadBoardData]);
+    if (boardError) {
+      const axiosError = boardError as AxiosError;
+      if (axiosError.response?.status === 404) {
+        toast.error("Pano bulunamadı");
+      } else if (axiosError.response?.status !== 401 && axiosError.response?.status !== 403) {
+        toast.error("Pano yüklenirken hata oluştu");
+      }
+    }
+  }, [boardError]);
+
+  // Helper to invalidate board query (replaces loadBoardData)
+  const invalidateBoard = useCallback(() => {
+    if (slug) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
+    }
+  }, [queryClient, slug]);
 
   // URL sync for Miller navigation
   useEffect(() => {
@@ -152,27 +150,27 @@ const BoardDetailPage = () => {
         labelIds: newListLabelIds.length > 0 ? newListLabelIds : undefined,
       });
       resetListForm();
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Liste eklendi");
     } catch (error) {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [newListName, newListDescription, newListLink, newListPriority, newListLabelIds, board, loadBoardData, slug, resetListForm]);
+  }, [newListName, newListDescription, newListLink, newListPriority, newListLabelIds, board, invalidateBoard, resetListForm]);
 
   const handleDeleteList = useCallback(async () => {
     if (deleteListId) {
       try {
         await taskService.deleteTaskList(deleteListId);
         setDeleteListId(null);
-        loadBoardData(slug!);
+        invalidateBoard();
         toast.success("Silindi");
       } catch (error) {
         console.error(error);
         toast.error("Silinemedi");
       }
     }
-  }, [deleteListId, loadBoardData, slug]);
+  }, [deleteListId, invalidateBoard]);
 
   // handleUpdateListName removed - now handled via ListEditModal
 
@@ -186,8 +184,8 @@ const BoardDetailPage = () => {
       toast.dismiss();
     }
 
-    // Update UI optimistically
-    setBoard(prev => {
+    // Update UI optimistically via React Query cache
+    queryClient.setQueryData(queryKeys.boards.detail(slug!), (prev: Board | undefined) => {
       if (!prev) return prev;
       return {
         ...prev,
@@ -211,8 +209,8 @@ const BoardDetailPage = () => {
               }
               toast.dismiss(t.id);
               toast.success("Geri alındı", { icon: "↩️", duration: 1500 });
-              // Revert optimistic update
-              setBoard(prev => {
+              // Revert optimistic update via React Query cache
+              queryClient.setQueryData(queryKeys.boards.detail(slug!), (prev: Board | undefined) => {
                 if (!prev) return prev;
                 return {
                   ...prev,
@@ -249,11 +247,12 @@ const BoardDetailPage = () => {
         await taskService.updateTaskList(list.id, { isCompleted: newState });
         listCompletionTimeoutRef.current = null;
         toast.dismiss(toastId);
+        invalidateBoard();
       } catch (error) {
         console.error(error);
         toast.error("Hata oluştu");
-        // Revert optimistic update on error
-        setBoard(prev => {
+        // Revert optimistic update on error via React Query cache
+        queryClient.setQueryData(queryKeys.boards.detail(slug!), (prev: Board | undefined) => {
           if (!prev) return prev;
           return {
             ...prev,
@@ -264,7 +263,7 @@ const BoardDetailPage = () => {
         });
       }
     }, 5000);
-  }, []);
+  }, [queryClient, slug, invalidateBoard]);
 
   const handleCreateTask = useCallback(async (listId: number) => {
     if (!newTaskTitle) return;
@@ -279,13 +278,13 @@ const BoardDetailPage = () => {
       setNewTaskDescription("");
       setNewTaskLink("");
       setActiveListId(null);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Görev eklendi");
     } catch (error) {
       console.error(error);
       toast.error("Görev eklenemedi");
     }
-  }, [newTaskTitle, newTaskDescription, newTaskLink, loadBoardData, slug]);
+  }, [newTaskTitle, newTaskDescription, newTaskLink, invalidateBoard]);
 
   const handleCreateSubtask = useCallback(async (taskId: number) => {
     if (!newSubtaskTitle) return;
@@ -306,13 +305,13 @@ const BoardDetailPage = () => {
         newCache.delete(taskId);
         return newCache;
       });
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Alt görev eklendi");
     } catch (error) {
       console.error(error);
       toast.error("Alt görev eklenemedi");
     }
-  }, [newSubtaskTitle, newSubtaskDescription, newSubtaskLink, loadBoardData, slug]);
+  }, [newSubtaskTitle, newSubtaskDescription, newSubtaskLink, invalidateBoard]);
 
   const handleTaskCompletionToggle = useCallback(async (task: Task, _list: TaskList) => {
     try {
@@ -320,7 +319,7 @@ const BoardDetailPage = () => {
       await taskService.updateTask(task.id, { isCompleted: newIsCompleted });
 
       // Backend handles cascade: task completion → list completion
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success(task.isCompleted ? "Devam ediyor" : "Tamamlandı", {
         icon: task.isCompleted ? "⏳" : "✅",
         duration: 2000
@@ -329,41 +328,41 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   const handleDeleteTask = useCallback(async (taskId: number) => {
     try {
       await taskService.deleteTask(taskId);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Silindi");
     } catch (error) {
       console.error(error);
       toast.error("Silinemedi");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task>) => {
     try {
       await taskService.updateTask(taskId, updates);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Güncellendi");
     } catch (error) {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   // Handler for updating list from modal
   const handleUpdateList = useCallback(async (listId: number, updates: { name?: string; description?: string; link?: string; dueDate?: string | null; priority?: string; labelIds?: number[] }) => {
     try {
       await taskService.updateTaskList(listId, updates);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Liste güncellendi");
     } catch (error) {
       console.error(error);
       toast.error("Güncellenemedi");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   // Handler for bulk deleting tasks from modal
   const handleBulkDeleteTasks = useCallback(async (taskIds: number[]) => {
@@ -371,47 +370,47 @@ const BoardDetailPage = () => {
       for (const taskId of taskIds) {
         await taskService.deleteTask(taskId);
       }
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success(`${taskIds.length} görev silindi`);
     } catch (error) {
       console.error(error);
       toast.error("Silme işlemi başarısız");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   // Label handlers
   const handleCreateLabel = useCallback(async (data: { name: string; color: string; boardId: number }) => {
     try {
       await labelService.createLabel(data);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Etiket oluşturuldu");
     } catch (error) {
       console.error(error);
       toast.error("Etiket oluşturulamadı");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   const handleUpdateLabel = useCallback(async (labelId: number, data: { name?: string; color?: string }) => {
     try {
       await labelService.updateLabel(labelId, data);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Etiket güncellendi");
     } catch (error) {
       console.error(error);
       toast.error("Etiket güncellenemedi");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   const handleDeleteLabel = useCallback(async (labelId: number) => {
     try {
       await labelService.deleteLabel(labelId);
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Etiket silindi");
     } catch (error) {
       console.error(error);
       toast.error("Etiket silinemedi");
     }
-  }, [loadBoardData, slug]);
+  }, [invalidateBoard]);
 
   // Filter function for tasks
   const filterTask = useCallback((task: Task): boolean => {
@@ -649,7 +648,7 @@ const BoardDetailPage = () => {
         });
         loadSubtasks(selectedTask.id);
       }
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success(subtask.isCompleted ? "Devam ediyor" : "Tamamlandı", {
         icon: subtask.isCompleted ? "⏳" : "✅",
         duration: 2000
@@ -658,7 +657,7 @@ const BoardDetailPage = () => {
       console.error(error);
       toast.error("Hata oluştu");
     }
-  }, [selectedTask, loadSubtasks, loadBoardData, slug]);
+  }, [selectedTask, loadSubtasks, invalidateBoard]);
 
   const handleDeleteSubtask = useCallback(async (subtaskId: number) => {
     try {
@@ -671,13 +670,13 @@ const BoardDetailPage = () => {
           return newCache;
         });
       }
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Alt görev silindi");
     } catch (error) {
       console.error(error);
       toast.error("Alt görev silinemedi");
     }
-  }, [selectedTask, loadBoardData, slug]);
+  }, [selectedTask, invalidateBoard]);
 
   const handleUpdateSubtask = useCallback(async (subtaskId: number, updates: {
     title?: string;
@@ -695,14 +694,14 @@ const BoardDetailPage = () => {
         });
         loadSubtasks(selectedTask.id);
       }
-      loadBoardData(slug!);
+      invalidateBoard();
       toast.success("Alt görev güncellendi");
     } catch (error) {
       console.error(error);
       toast.error("Alt görev güncellenemedi");
       throw error;
     }
-  }, [selectedTask, loadSubtasks, loadBoardData, slug]);
+  }, [selectedTask, loadSubtasks, invalidateBoard]);
 
   const handleBreadcrumbClick = useCallback((level: 'board' | 'list' | 'task') => {
     switch (level) {
@@ -763,7 +762,7 @@ const BoardDetailPage = () => {
               newCache.delete(editingTask.id);
               return newCache;
             });
-            loadBoardData(slug!);
+            invalidateBoard();
           }}
         />
       )}
@@ -800,7 +799,7 @@ const BoardDetailPage = () => {
       {/* Modern Header with Breadcrumb */}
       <div style={{ padding: "16px 24px", background: colors.bgHeader, borderBottom: `1px solid ${colors.borderDefault}`, display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button onClick={() => navigate("/boards")} className="btn btn-ghost" style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", borderRadius: '12px', color: 'var(--text-muted)' }}>
+          <button onClick={() => navigate(backPath)} className="btn btn-ghost" style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", borderRadius: '12px', color: 'var(--text-muted)' }}>
             <ArrowLeft size={16} />
           </button>
 

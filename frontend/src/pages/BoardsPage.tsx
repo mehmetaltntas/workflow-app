@@ -527,7 +527,7 @@ const BoardsPage = () => {
                           >
                             <BoardCard
                                 board={board}
-                                onClick={() => navigate(`/boards/${board.slug}`)}
+                                onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/boards' } })}
                                 onEdit={() => openEditModal(board)}
                                 onShowInfo={() => {
                                   setSelectedInfoBoard(board);

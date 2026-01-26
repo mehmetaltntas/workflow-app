@@ -21,9 +21,7 @@ import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
 import { SortingOptions, type SortField, type SortDirection } from "../components/ui/SortingOptions";
 import { EmptyState } from "../components/ui/EmptyState";
 import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
-
-const PINNED_BOARDS_KEY = 'workflow_pinned_boards';
-const MAX_PINNED_BOARDS = 4;
+import { useUIStore, MAX_PINNED_BOARDS } from '../stores/uiStore';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -36,20 +34,9 @@ const HomePage = () => {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
-  const [pinnedBoardIds, setPinnedBoardIds] = useState<number[]>(() => {
-    const stored = localStorage.getItem(PINNED_BOARDS_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-      } catch {
-        // Invalid JSON, ignore
-      }
-    }
-    return [];
-  });
+  const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
+  const togglePinBoard = useUIStore((state) => state.togglePinBoard);
+  const unpinBoard = useUIStore((state) => state.unpinBoard);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
   const [detailedInfoBoard, setDetailedInfoBoard] = useState<Board | null>(null);
@@ -57,11 +44,6 @@ const HomePage = () => {
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isVisible, setIsVisible] = useState(false);
-
-  // Pinned boards'u localStorage'a kaydet
-  useEffect(() => {
-    localStorage.setItem(PINNED_BOARDS_KEY, JSON.stringify(pinnedBoardIds));
-  }, [pinnedBoardIds]);
 
   // Animasyon için
   useEffect(() => {
@@ -141,17 +123,8 @@ const HomePage = () => {
   }, [activeBoards, pinnedBoards]);
 
   const togglePin = useCallback((boardId: number) => {
-    setPinnedBoardIds(prev => {
-      if (prev.includes(boardId)) {
-        return prev.filter(id => id !== boardId);
-      } else {
-        if (prev.length >= MAX_PINNED_BOARDS) {
-          return prev;
-        }
-        return [...prev, boardId];
-      }
-    });
-  }, []);
+    togglePinBoard(boardId);
+  }, [togglePinBoard]);
 
   const canPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
 
@@ -193,7 +166,7 @@ const HomePage = () => {
   const handleDeleteBoard = () => {
     if (editingBoard) {
       // Pinned listesinden de kaldır
-      setPinnedBoardIds(prev => prev.filter(id => id !== editingBoard.id));
+      unpinBoard(editingBoard.id);
       deleteBoardMutation.mutate(editingBoard.id);
       setIsEditModalOpen(false);
       setEditingBoard(null);
@@ -230,7 +203,7 @@ const HomePage = () => {
       >
         <BoardCard
           board={board}
-          onClick={() => navigate(`/boards/${board.slug}`)}
+          onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
           onEdit={() => handleEdit(board)}
           onShowInfo={() => handleShowInfo(board)}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}

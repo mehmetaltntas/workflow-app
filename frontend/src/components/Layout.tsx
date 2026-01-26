@@ -126,8 +126,8 @@ const Layout = () => {
           {/* Navigation Pills */}
           <div style={{ display: "flex", gap: spacing[2] }}>
             <Link
-              to="/"
-              className={`nav-pill ${isActive("/") ? "active" : ""}`}
+              to="/home"
+              className={`nav-pill ${isActive("/home") ? "active" : ""}`}
             >
               <Home size={16} strokeWidth={2} />
               <span>Ana Sayfa</span>

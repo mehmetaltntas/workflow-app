@@ -103,6 +103,10 @@ public class LabelService {
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Etiket", "id", labelId));
 
+        if (Boolean.TRUE.equals(label.getIsDefault())) {
+            throw new RuntimeException("Varsayılan etiketler silinemez!");
+        }
+
         // Önce tüm görevlerden bu etiketi kaldır
         label.getTasks().forEach(task -> task.getLabels().remove(label));
 

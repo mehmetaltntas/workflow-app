@@ -2,6 +2,7 @@ package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.RefreshToken;
+import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.security.JwtService;
 import com.workflow.backend.service.GoogleAuthService;
 import com.workflow.backend.service.PasswordResetService;
@@ -88,7 +89,7 @@ public class AuthController {
                     String newAccessToken = jwtService.generateAccessToken(user.getUsername());
                     return ResponseEntity.ok(new TokenRefreshResponse(newAccessToken, requestRefreshToken));
                 })
-                .orElseThrow(() -> new RuntimeException("Refresh token bulunamadı!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token", "token", requestRefreshToken));
     }
 
     @Operation(summary = "Çıkış yap", description = "Kullanıcının refresh token'ını siler")

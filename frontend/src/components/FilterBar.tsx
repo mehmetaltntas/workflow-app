@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Search, X, Filter, CheckSquare, Tag, ChevronDown, Flag } from "lucide-react";
 import type { Label, Priority } from "../types";
 import { colors, cssVars, shadows, spacing, radius, typography } from "../styles/tokens";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
 
 export interface FilterState {
   searchText: string;
@@ -22,18 +24,20 @@ const completionOptions = [
   { value: "completed", label: "Tamamlanan" },
 ];
 
-const priorityOptions = [
-  { value: "all", label: "Tümü", color: null },
-  { value: "HIGH", label: "Yüksek", color: colors.priority.high },
-  { value: "MEDIUM", label: "Orta", color: colors.priority.medium },
-  { value: "LOW", label: "Düşük", color: colors.priority.low },
-  { value: "NONE", label: "Önceliksiz", color: colors.dark.text.subtle },
-];
-
 export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterChange }) => {
+  const { theme } = useTheme();
+  const themeColors = getThemeColors(theme);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
   const [showCompletionDropdown, setShowCompletionDropdown] = useState(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
+
+  const priorityOptions = [
+    { value: "all", label: "Tümü", color: null },
+    { value: "HIGH", label: "Yüksek", color: colors.priority.high },
+    { value: "MEDIUM", label: "Orta", color: colors.priority.medium },
+    { value: "LOW", label: "Düşük", color: colors.priority.low },
+    { value: "NONE", label: "Önceliksiz", color: themeColors.textSubtle },
+  ];
 
   const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onFilterChange({ ...filters, [key]: value });
@@ -74,8 +78,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
         alignItems: "center",
         gap: spacing[3],
         padding: `${spacing[3]} ${spacing[6]}`,
-        background: colors.dark.bg.overlay,
-        borderBottom: `1px solid ${colors.dark.border.subtle}`,
+        background: themeColors.bgPrimary,
+        borderBottom: `1px solid ${themeColors.borderSubtle}`,
       }}
     >
       {/* Search Input */}
@@ -92,7 +96,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
             left: spacing[3],
             top: "50%",
             transform: "translateY(-50%)",
-            color: colors.dark.text.subtle,
+            color: themeColors.textSubtle,
           }}
         />
         <input
@@ -105,7 +109,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
             padding: `${spacing[2.5]} ${spacing[3]} ${spacing[2.5]} ${spacing[10]}`,
             borderRadius: radius.lg,
             border: `1px solid ${cssVars.border}`,
-            background: colors.dark.glass.bg,
+            background: themeColors.bgTertiary,
             color: cssVars.textMain,
             fontSize: typography.fontSize.base,
             outline: "none",
@@ -114,11 +118,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
           }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = colors.brand.primary;
-            e.currentTarget.style.background = colors.dark.bg.hover;
+            e.currentTarget.style.background = themeColors.bgHover;
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = cssVars.border;
-            e.currentTarget.style.background = colors.dark.glass.bg;
+            e.currentTarget.style.background = themeColors.bgTertiary;
           }}
         />
         {filters.searchText && (
@@ -132,7 +136,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               background: "none",
               border: "none",
               cursor: "pointer",
-              color: colors.dark.text.subtle,
+              color: themeColors.textSubtle,
               padding: spacing[1],
               display: "flex",
               alignItems: "center",
@@ -140,7 +144,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               borderRadius: radius.sm,
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = cssVars.textMain)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = colors.dark.text.subtle)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = themeColors.textSubtle)}
           >
             <X size={14} />
           </button>
@@ -148,7 +152,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       </div>
 
       {/* Filter Icon */}
-      <div style={{ display: "flex", alignItems: "center", gap: spacing[1], color: colors.dark.text.tertiary, paddingLeft: spacing[2] }}>
+      <div style={{ display: "flex", alignItems: "center", gap: spacing[1], color: themeColors.textTertiary, paddingLeft: spacing[2] }}>
         <Filter size={14} />
         <span style={{ fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.semibold, textTransform: "uppercase", letterSpacing: typography.letterSpacing.wider }}>
           Filtreler
@@ -175,8 +179,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 : `1px solid ${cssVars.border}`,
               background: filters.selectedLabels.length > 0
                 ? colors.brand.primaryLight
-                : colors.dark.glass.bg,
-              color: filters.selectedLabels.length > 0 ? colors.brand.primary : colors.dark.text.secondary,
+                : themeColors.bgTertiary,
+              color: filters.selectedLabels.length > 0 ? colors.brand.primary : themeColors.textSecondary,
               fontSize: typography.fontSize.md,
               fontWeight: typography.fontWeight.semibold,
               cursor: "pointer",
@@ -238,7 +242,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                   }}
                   onMouseEnter={(e) => {
                     if (!filters.selectedLabels.includes(label.id)) {
-                      e.currentTarget.style.background = colors.dark.bg.hover;
+                      e.currentTarget.style.background = themeColors.bgHover;
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -266,7 +270,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                       fontWeight: typography.fontWeight.medium,
                       color: filters.selectedLabels.includes(label.id)
                         ? label.color
-                        : colors.dark.text.secondary,
+                        : themeColors.textSecondary,
                     }}
                   >
                     {label.name}
@@ -319,8 +323,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               : `1px solid ${cssVars.border}`,
             background: filters.completionFilter !== "all"
               ? colors.brand.primaryLight
-              : colors.dark.glass.bg,
-            color: filters.completionFilter !== "all" ? colors.brand.primary : colors.dark.text.secondary,
+              : themeColors.bgTertiary,
+            color: filters.completionFilter !== "all" ? colors.brand.primary : themeColors.textSecondary,
             fontSize: typography.fontSize.md,
             fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
@@ -370,7 +374,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 }}
                 onMouseEnter={(e) => {
                   if (filters.completionFilter !== option.value) {
-                    e.currentTarget.style.background = colors.dark.bg.hover;
+                    e.currentTarget.style.background = themeColors.bgHover;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -385,7 +389,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                     fontWeight: typography.fontWeight.medium,
                     color: filters.completionFilter === option.value
                       ? colors.brand.primary
-                      : colors.dark.text.secondary,
+                      : themeColors.textSecondary,
                   }}
                 >
                   {option.label}
@@ -415,8 +419,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
               : `1px solid ${cssVars.border}`,
             background: filters.priorityFilter !== "all"
               ? colors.brand.primaryLight
-              : colors.dark.glass.bg,
-            color: filters.priorityFilter !== "all" ? colors.brand.primary : colors.dark.text.secondary,
+              : themeColors.bgTertiary,
+            color: filters.priorityFilter !== "all" ? colors.brand.primary : themeColors.textSecondary,
             fontSize: typography.fontSize.md,
             fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
@@ -466,7 +470,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                 }}
                 onMouseEnter={(e) => {
                   if (filters.priorityFilter !== option.value) {
-                    e.currentTarget.style.background = colors.dark.bg.hover;
+                    e.currentTarget.style.background = themeColors.bgHover;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -491,7 +495,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
                     fontWeight: typography.fontWeight.medium,
                     color: filters.priorityFilter === option.value
                       ? colors.brand.primary
-                      : colors.dark.text.secondary,
+                      : themeColors.textSecondary,
                   }}
                 >
                   {option.label}
