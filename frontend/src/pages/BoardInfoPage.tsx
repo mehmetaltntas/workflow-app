@@ -1,7 +1,6 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useBoardDetailQuery } from "../hooks/queries/useBoards";
 import { BoardInfoPanel } from "../components/BoardInfoPanel";
-import { useUIStore, MAX_PINNED_BOARDS } from "../stores/uiStore";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { ArrowLeft } from "lucide-react";
@@ -16,12 +15,6 @@ const BoardInfoPage = () => {
   const isLight = theme === "light";
 
   const { data: board = null, isLoading, error } = useBoardDetailQuery(slug);
-
-  const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
-  const togglePinBoard = useUIStore((state) => state.togglePinBoard);
-
-  const isPinned = board ? pinnedBoardIds.includes(board.id) : false;
-  const canPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
 
   const handleGoBack = () => {
     const from = (location.state as { from?: string })?.from;
@@ -162,9 +155,6 @@ const BoardInfoPage = () => {
           <BoardInfoPanel
             board={board}
             onClose={handleGoBack}
-            onTogglePin={() => togglePinBoard(board.id)}
-            isPinned={isPinned}
-            canPin={canPin}
           />
         </div>
       </div>

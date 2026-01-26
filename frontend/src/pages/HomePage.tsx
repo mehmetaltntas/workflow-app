@@ -30,6 +30,7 @@ const HomePage = () => {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
   const unpinBoard = useUIStore((state) => state.unpinBoard);
+  const togglePinBoard = useUIStore((state) => state.togglePinBoard);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -159,6 +160,8 @@ const HomePage = () => {
 
   // Board kartı render fonksiyonu
   const renderBoardCard = (board: Board, _isPinned: boolean, index: number, groupIndex: number) => {
+    const boardIsPinned = pinnedBoardIds.includes(board.id);
+    const boardCanPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
     return (
       <div
         key={board.id}
@@ -174,6 +177,9 @@ const HomePage = () => {
           onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
           onEdit={() => handleEdit(board)}
           onShowInfo={() => handleShowInfo(board)}
+          onTogglePin={() => togglePinBoard(board.id)}
+          isPinned={boardIsPinned}
+          canPin={boardCanPin}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}
         />
       </div>

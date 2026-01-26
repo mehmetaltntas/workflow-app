@@ -11,8 +11,6 @@ import {
   Clock,
   TrendingUp,
   AlertTriangle,
-  Pin,
-  PinOff,
   FolderOpen
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
@@ -23,9 +21,6 @@ import { typography, spacing, radius, colors, cssVars, animation } from "../styl
 interface BoardInfoPanelProps {
   board: Board | null;
   onClose: () => void;
-  onTogglePin?: () => void;
-  isPinned?: boolean;
-  canPin?: boolean;
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -137,9 +132,6 @@ const getDeadlineInfo = (deadline: string | undefined) => {
 export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   board,
   onClose,
-  onTogglePin,
-  isPinned = false,
-  canPin = true
 }) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
@@ -278,36 +270,6 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
             </div>
           </div>
         </div>
-        {onTogglePin && (
-          <button
-            onClick={onTogglePin}
-            disabled={!isPinned && !canPin}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: spacing[10],
-              height: spacing[10],
-              borderRadius: radius.lg,
-              border: `1px solid ${isPinned
-                ? (isLight ? colors.brand.primary : colors.semantic.warning)
-                : themeColors.borderDefault}`,
-              background: isPinned
-                ? (isLight ? `${colors.brand.primary}20` : `${colors.semantic.warning}20`)
-                : themeColors.bgHover,
-              color: isPinned
-                ? (isLight ? colors.brand.primary : colors.semantic.warning)
-                : cssVars.textMuted,
-              cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
-              opacity: !isPinned && !canPin ? 0.5 : 1,
-              transition: `all ${animation.duration.fast}`,
-              flexShrink: 0,
-            }}
-            title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
-          >
-            {isPinned ? <PinOff size={18} strokeWidth={2.5} /> : <Pin size={18} strokeWidth={2.5} />}
-          </button>
-        )}
       </div>
 
       {/* Overall Progress */}

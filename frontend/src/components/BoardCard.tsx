@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS } from "../constants";
-import { Info, ExternalLink } from "lucide-react";
+import { Info, ExternalLink, Pin, PinOff } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
 import { useTheme } from "../contexts/ThemeContext";
@@ -13,6 +13,9 @@ interface BoardCardProps {
   onClick: () => void;
   onEdit: () => void;
   onShowInfo?: () => void;
+  onTogglePin?: () => void;
+  isPinned?: boolean;
+  canPin?: boolean;
   viewMode?: 'grid' | 'list';
 }
 
@@ -21,6 +24,9 @@ const BoardCard: React.FC<BoardCardProps> = ({
   onClick,
   onEdit,
   onShowInfo,
+  onTogglePin,
+  isPinned = false,
+  canPin = true,
   viewMode = 'grid'
 }) => {
   const { theme } = useTheme();
@@ -28,12 +34,19 @@ const BoardCard: React.FC<BoardCardProps> = ({
   const isLight = theme === 'light';
   const statusColor = STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
-  // Action menu items oluştur - sadece düzenleme seçeneği
+  // Action menu items oluştur
   const menuItems: ActionMenuItem[] = [
+    // Sabitle/Kaldır - sadece onTogglePin varsa ve (zaten sabitliyse VEYA sabitleme kapasitesi varsa) göster
+    ...(onTogglePin && (isPinned || canPin) ? [{
+      label: isPinned ? "Sabitlemeyi Kaldır" : "Sabitle",
+      onClick: onTogglePin,
+      variant: "default" as const,
+      icon: isPinned ? PinOff : Pin,
+    }] : []),
     {
       label: "Düzenle",
       onClick: onEdit,
-      variant: "default",
+      variant: "default" as const,
     },
   ];
 
@@ -99,8 +112,8 @@ const BoardCard: React.FC<BoardCardProps> = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: spacing[7],
-                height: spacing[7],
+                width: spacing[9],
+                height: spacing[9],
                 borderRadius: radius.md,
                 border: `1px solid ${statusColor}30`,
                 background: `${statusColor}15`,
@@ -109,7 +122,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
               }}
               title="Pano Bilgileri"
             >
-              <Info size={14} />
+              <Info size={18} />
             </button>
           )}
 
@@ -124,8 +137,8 @@ const BoardCard: React.FC<BoardCardProps> = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: spacing[7],
-                height: spacing[7],
+                width: spacing[9],
+                height: spacing[9],
                 borderRadius: radius.md,
                 border: `1px solid ${statusColor}30`,
                 background: `${statusColor}15`,
@@ -134,7 +147,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
               }}
               title="Bağlantıya Git"
             >
-              <ExternalLink size={14} />
+              <ExternalLink size={18} />
             </button>
           )}
         </div>
@@ -250,8 +263,8 @@ const BoardCard: React.FC<BoardCardProps> = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: spacing[7],
-              height: spacing[7],
+              width: spacing[9],
+              height: spacing[9],
               borderRadius: radius.md,
               border: `1px solid ${statusColor}30`,
               background: `${statusColor}15`,
@@ -269,7 +282,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
             }}
             title="Pano Bilgileri"
           >
-            <Info size={14} strokeWidth={2.5} />
+            <Info size={18} strokeWidth={2.5} />
           </button>
         )}
 
@@ -284,8 +297,8 @@ const BoardCard: React.FC<BoardCardProps> = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: spacing[7],
-              height: spacing[7],
+              width: spacing[9],
+              height: spacing[9],
               borderRadius: radius.md,
               border: `1px solid ${statusColor}30`,
               background: `${statusColor}15`,
@@ -303,7 +316,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
             }}
             title="Bağlantıya Git"
           >
-            <ExternalLink size={14} strokeWidth={2.5} />
+            <ExternalLink size={18} strokeWidth={2.5} />
           </button>
         )}
       </div>
