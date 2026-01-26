@@ -145,6 +145,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              maxLength={25}
               placeholder="Görev başlığı..."
               autoFocus
               style={{
@@ -169,6 +170,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={100}
               placeholder="Görev açıklaması..."
               style={{
                 width: "100%",
@@ -345,6 +347,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
                   autoFocus
                   value={newSubtaskTitle}
                   onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  maxLength={25}
                   placeholder="Alt görev başlığı..."
                   style={{
                     flex: 1,

@@ -47,7 +47,7 @@ interface UIState {
   unpinBoard: (boardId: number) => void;
 }
 
-const MAX_PINNED_BOARDS = 3;
+const MAX_PINNED_BOARDS = 4;
 
 export const useUIStore = create<UIState>()(
   persist(

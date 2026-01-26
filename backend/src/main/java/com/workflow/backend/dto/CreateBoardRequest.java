@@ -12,7 +12,7 @@ import org.hibernate.validator.constraints.URL;
 public class CreateBoardRequest {
 
     @NotBlank(message = "Pano adı boş olamaz")
-    @Size(min = 1, max = 100, message = "Pano adı 1-100 karakter arasında olmalıdır")
+    @Size(min = 1, max = 25, message = "Pano adı 1-25 karakter arasında olmalıdır")
     @Schema(description = "Pano adı", example = "Proje Yönetimi", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
@@ -23,7 +23,7 @@ public class CreateBoardRequest {
     @Schema(description = "İlgili link", example = "https://github.com/project")
     private String link;
 
-    @Size(max = 105, message = "Açıklama en fazla 105 karakter olabilir")
+    @Size(max = 200, message = "Açıklama en fazla 200 karakter olabilir")
     @Schema(description = "Pano açıklaması", example = "Bu pano proje yönetimi için kullanılacak")
     private String description;
 

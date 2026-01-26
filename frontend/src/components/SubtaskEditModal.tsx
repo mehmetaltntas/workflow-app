@@ -88,6 +88,7 @@ export const SubtaskEditModal: React.FC<SubtaskEditModalProps> = ({ subtask, onC
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              maxLength={25}
               placeholder="Alt görev başlığı..."
               autoFocus
               style={{
@@ -112,6 +113,7 @@ export const SubtaskEditModal: React.FC<SubtaskEditModalProps> = ({ subtask, onC
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={100}
               placeholder="Alt görev açıklaması..."
               style={{
                 width: "100%",

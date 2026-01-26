@@ -20,7 +20,7 @@ public class Task {
 
     private String title;
 
-    @Column(length = 500) // Açıklama biraz uzun olabilir
+    @Column(length = 100)
     private String description;
 
     private String link; // Harici link

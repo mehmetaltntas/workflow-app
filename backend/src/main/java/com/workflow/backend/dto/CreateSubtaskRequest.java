@@ -9,13 +9,13 @@ import lombok.Data;
 public class CreateSubtaskRequest {
 
     @NotBlank(message = "Alt görev başlığı boş olamaz")
-    @Size(min = 1, max = 200, message = "Alt görev başlığı 1-200 karakter arasında olmalıdır")
+    @Size(min = 1, max = 25, message = "Alt görev başlığı 1-25 karakter arasında olmalıdır")
     private String title;
 
     @NotNull(message = "Görev ID boş olamaz")
     private Long taskId;
 
-    @Size(max = 1000, message = "Açıklama en fazla 1000 karakter olabilir")
+    @Size(max = 100, message = "Açıklama en fazla 100 karakter olabilir")
     private String description;
 
     @Size(max = 500, message = "Link en fazla 500 karakter olabilir")

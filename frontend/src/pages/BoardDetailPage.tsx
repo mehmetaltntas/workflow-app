@@ -1220,6 +1220,7 @@ const BoardDetailPage = () => {
                 autoFocus
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
+                maxLength={25}
                 placeholder="Liste adı..."
                 style={{
                   width: "100%",
@@ -1408,6 +1409,7 @@ const BoardDetailPage = () => {
                 autoFocus
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
+                maxLength={25}
                 placeholder="Görev adı..."
                 style={{
                   width: "100%",
@@ -1535,6 +1537,7 @@ const BoardDetailPage = () => {
                 autoFocus
                 value={newSubtaskTitle}
                 onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                maxLength={25}
                 placeholder="Alt görev adı..."
                 style={{
                   width: "100%",

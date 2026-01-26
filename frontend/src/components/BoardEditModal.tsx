@@ -33,13 +33,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
   const [status, setStatus] = useState<BoardStatus>(initialData.status || "PLANLANDI");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Maksimum açıklama karakteri hesabı:
-  // - Kart genişliği min 280px, padding 32px → içerik 248px
-  // - Font 14px, karakter genişliği ~7px → satır başına ~35 karakter
-  // - Panel genişliği 340px, padding 72px → içerik 268px
-  // - Font 16px, karakter genişliği ~8px → satır başına ~33 karakter
-  // - Panel'de 5 satır rahat okunur: 33 × 5 = 165 ≈ 160 karakter
-  const MAX_DESCRIPTION_LENGTH = 160;
+  const MAX_DESCRIPTION_LENGTH = 200;
 
   useEffect(() => {
     if (isOpen) {
@@ -209,6 +203,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
                   autoFocus
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  maxLength={25}
                   placeholder="Pano adını girin..."
                   style={inputStyle}
                   onFocus={(e) => {

@@ -22,7 +22,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const [description, setDescription] = useState(initialData?.description || "");
   const [deadline, setDeadline] = useState(initialData?.deadline || "");
 
-  const MAX_DESCRIPTION_LENGTH = 105; // 35 karakter x 3 satır
+  const MAX_DESCRIPTION_LENGTH = 200;
 
   if (!isOpen) return null;
 
@@ -87,6 +87,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
+              maxLength={25}
               placeholder="Örn: Yeni Web Sitesi"
               style={{
                 width: "100%",

@@ -15,11 +15,11 @@ import java.time.LocalDate;
 public class CreateTaskRequest {
 
     @NotBlank(message = "Görev başlığı boş olamaz")
-    @Size(min = 1, max = 200, message = "Görev başlığı 1-200 karakter arasında olmalıdır")
+    @Size(min = 1, max = 25, message = "Görev başlığı 1-25 karakter arasında olmalıdır")
     @Schema(description = "Görev başlığı", example = "API entegrasyonu yap", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
-    @Size(max = 500, message = "Açıklama en fazla 500 karakter olabilir")
+    @Size(max = 100, message = "Açıklama en fazla 100 karakter olabilir")
     @Schema(description = "Görev açıklaması", example = "REST API ile veri çekme işlemi")
     private String description;
 

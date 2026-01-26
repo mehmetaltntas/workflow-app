@@ -178,6 +178,7 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
+              maxLength={25}
               placeholder="Liste adı..."
               autoFocus
               style={{
@@ -201,6 +202,7 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={100}
               placeholder="Liste açıklaması..."
               style={{
                 width: "100%",

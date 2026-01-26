@@ -24,7 +24,7 @@ public class TaskList {
 
     private String name; // Örn: "To Do", "In Progress"
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 100)
     private String description; // Açıklama
 
     private String link; // Opsiyonel link

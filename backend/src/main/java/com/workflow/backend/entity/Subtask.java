@@ -21,7 +21,7 @@ public class Subtask {
 
     private Integer position = 0; // Sıralama için
 
-    @Column(length = 1000)
+    @Column(length = 100)
     private String description;
 
     @Column(length = 500)
