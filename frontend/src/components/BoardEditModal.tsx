@@ -355,7 +355,6 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
                   })}
                 </div>
               </div>
-            </div>
 
               {/* Kategori */}
               <div style={fieldContainerStyle}>
