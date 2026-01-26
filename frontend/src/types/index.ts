@@ -103,6 +103,7 @@ export interface Board extends HateoasModel {
   link?: string;
   description?: string; // Opsiyonel açıklama (max 500 karakter)
   deadline?: string;
+  createdAt?: string; // Oluşturulma tarihi
   ownerName: string;
   taskLists: TaskList[]; // İçinde listeler dizisi var
   labels?: Label[]; // Panoya ait etiketler

@@ -140,6 +140,7 @@ public class BoardService {
         response.setDescription(board.getDescription());
         response.setCategory(board.getCategory());
         response.setDeadline(board.getDeadline());
+        response.setCreatedAt(board.getCreatedAt());
         response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
 
         // Board Labels (@BatchSize ile batch yüklenir)
@@ -253,6 +254,7 @@ public class BoardService {
         response.setDescription(board.getDescription());
         response.setCategory(board.getCategory());
         response.setDeadline(board.getDeadline());
+        response.setCreatedAt(board.getCreatedAt());
         response.setOwnerName(board.getUser().getUsername()); // User zaten EntityGraph ile fetch edildi
 
         // NOT: Liste sayfası için taskLists, tasks, labels yüklenmez (performans)

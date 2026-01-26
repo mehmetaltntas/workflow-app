@@ -29,6 +29,15 @@ public class Board {
     @Column(unique = true)
     private String slug; // YENİ: URL dostu kimlik
 
+    private java.time.LocalDateTime createdAt; // Oluşturulma tarihi
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = java.time.LocalDateTime.now();
+        }
+    }
+
     // İLİŞKİ: Bir Pano sadece TEK bir kullanıcıya aittir.
     // @ManyToOne: Board (Many) -> User (One)
     // FetchType.LAZY: Mülakat sorusu!

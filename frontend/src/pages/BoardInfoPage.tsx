@@ -129,9 +129,24 @@ const BoardInfoPage = () => {
               fontSize: typography.fontSize.sm,
               color: cssVars.textMuted,
               margin: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: spacing[2],
             }}
           >
-            {board.name}
+            <span>{board.name}</span>
+            {board.createdAt && (
+              <>
+                <span style={{ color: cssVars.textMuted, opacity: 0.4 }}>·</span>
+                <span>
+                  {new Date(board.createdAt).toLocaleDateString("tr-TR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </>
+            )}
           </p>
         </div>
       </div>

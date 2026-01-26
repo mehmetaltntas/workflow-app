@@ -40,6 +40,7 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
         model.setDescription(dto.getDescription());
         model.setCategory(dto.getCategory());
         model.setDeadline(dto.getDeadline());
+        model.setCreatedAt(dto.getCreatedAt());
 
         // Convert nested task lists
         if (dto.getTaskLists() != null) {
