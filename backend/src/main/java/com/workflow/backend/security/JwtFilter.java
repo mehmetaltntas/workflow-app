@@ -31,6 +31,14 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Auth endpoint'lerinde JWT doğrulaması yapma (permitAll zaten var, ama
+        // expired token header'ı gönderilirse filter hata fırlatıp 401 dönüyor)
+        String requestPath = request.getServletPath();
+        if (requestPath.startsWith("/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;

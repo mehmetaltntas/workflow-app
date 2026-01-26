@@ -105,7 +105,7 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
 apiClient.interceptors.request.use(
   (config) => {
     const { token } = useAuthStore.getState();
-    if (token) {
+    if (token && !config.url?.includes("/auth/")) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
