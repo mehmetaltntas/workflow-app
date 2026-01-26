@@ -215,6 +215,44 @@ const CalendarPage = () => {
           >
             Takvim
           </h1>
+          {/* Son Tarih Durumu göstergeleri */}
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[3], marginLeft: spacing[4] }}>
+            {[
+              { color: '#dc2626', label: "Gecikmiş" },
+              { color: '#f97316', label: "Acil" },
+              { color: '#eab308', label: "Yaklaşıyor" },
+              { color: '#22c55e', label: "Normal" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing[1],
+                }}
+              >
+                <div
+                  style={{
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "3px",
+                    background: item.color,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: typography.fontSize.sm,
+                    color: cssVars.textMuted,
+                    fontWeight: typography.fontWeight.medium,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Ay Navigasyonu */}
@@ -399,7 +437,7 @@ const CalendarPage = () => {
                           borderRadius: radius.sm,
                           background: event.color,
                           color: "#fff",
-                          fontSize: typography.fontSize.xs,
+                          fontSize: typography.fontSize.sm,
                           fontWeight: typography.fontWeight.semibold,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -484,7 +522,7 @@ const CalendarPage = () => {
                     >
                       <span
                         style={{
-                          fontSize: typography.fontSize.base,
+                          fontSize: typography.fontSize.lg,
                           fontWeight: typography.fontWeight.semibold,
                           color: cssVars.textMain,
                         }}
@@ -493,12 +531,12 @@ const CalendarPage = () => {
                       </span>
                       <span
                         style={{
-                          fontSize: "10px",
+                          fontSize: typography.fontSize.xs,
                           fontWeight: typography.fontWeight.semibold,
                           color: STATUS_COLORS[selectedBoard.status] || cssVars.textMuted,
                           background: `${STATUS_COLORS[selectedBoard.status] || cssVars.textMuted}18`,
                           border: `1px solid ${STATUS_COLORS[selectedBoard.status] || cssVars.textMuted}30`,
-                          padding: `1px ${spacing[1.5]}`,
+                          padding: `2px ${spacing[2]}`,
                           borderRadius: radius.full,
                           whiteSpace: "nowrap",
                         }}
@@ -508,7 +546,7 @@ const CalendarPage = () => {
                     </div>
                     <div
                       style={{
-                        fontSize: typography.fontSize.xs,
+                        fontSize: typography.fontSize.sm,
                         color: selectedBoard.color,
                         fontWeight: typography.fontWeight.medium,
                         marginBottom: spacing[2],
@@ -516,75 +554,30 @@ const CalendarPage = () => {
                     >
                       {getDaysRemainingText(selectedBoard.daysRemaining)}
                     </div>
-                    {/* Panoya Git + Son Tarih Durumu yan yana */}
-                    <div
+                    {/* Panoya Git */}
+                    <button
+                      onClick={() => navigate(`/boards/${selectedBoard.boardSlug}`)}
                       style={{
+                        padding: `${spacing[1.5]} ${spacing[3]}`,
+                        borderRadius: radius.md,
+                        border: "none",
+                        background: selectedBoard.color,
+                        color: "#fff",
+                        fontSize: typography.fontSize.sm,
+                        fontWeight: typography.fontWeight.semibold,
+                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        gap: spacing[2],
-                        flexWrap: "wrap",
+                        gap: spacing[1],
+                        transition: `opacity ${animation.duration.normal}`,
+                        whiteSpace: "nowrap",
                       }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                     >
-                      <button
-                        onClick={() => navigate(`/boards/${selectedBoard.boardSlug}`)}
-                        style={{
-                          padding: `${spacing[1.5]} ${spacing[3]}`,
-                          borderRadius: radius.md,
-                          border: "none",
-                          background: selectedBoard.color,
-                          color: "#fff",
-                          fontSize: typography.fontSize.xs,
-                          fontWeight: typography.fontWeight.semibold,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: spacing[1],
-                          transition: `opacity ${animation.duration.normal}`,
-                          whiteSpace: "nowrap",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-                        onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                      >
-                        <LayoutDashboard size={12} />
-                        Panoya Git
-                      </button>
-                      <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5], flexWrap: "wrap" }}>
-                        {[
-                          { color: '#dc2626', label: "Gecikmiş" },
-                          { color: '#f97316', label: "Acil" },
-                          { color: '#eab308', label: "Yaklaşıyor" },
-                          { color: '#22c55e', label: "Normal" },
-                        ].map((item) => (
-                          <div
-                            key={item.label}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "3px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "8px",
-                                height: "8px",
-                                borderRadius: "2px",
-                                background: item.color,
-                                flexShrink: 0,
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: "10px",
-                                color: cssVars.textMuted,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {item.label}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                      <LayoutDashboard size={14} />
+                      Panoya Git
+                    </button>
                   </div>
                 )}
 
@@ -638,7 +631,7 @@ const CalendarPage = () => {
                         />
                         <span
                           style={{
-                            fontSize: typography.fontSize.sm,
+                            fontSize: typography.fontSize.base,
                             fontWeight: event.id === selectedBoard?.id
                               ? typography.fontWeight.semibold
                               : typography.fontWeight.medium,
@@ -653,7 +646,7 @@ const CalendarPage = () => {
                         </span>
                         <span
                           style={{
-                            fontSize: "10px",
+                            fontSize: typography.fontSize.xs,
                             color: event.color,
                             fontWeight: typography.fontWeight.medium,
                             whiteSpace: "nowrap",
