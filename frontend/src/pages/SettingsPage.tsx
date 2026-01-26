@@ -44,6 +44,7 @@ const SettingsPage = () => {
 
   const userId = useAuthStore((state) => state.userId);
   const updateAuthUsername = useAuthStore((state) => state.updateUsername);
+  const login = useAuthStore((state) => state.login);
 
   // Fetch user data
   useEffect(() => {
@@ -109,8 +110,19 @@ const SettingsPage = () => {
 
       const updatedUser = await userService.updateProfile(userId, data);
 
-      if (updatedUser.username) {
+      if (updatedUser.token && updatedUser.refreshToken) {
+        // Kullanıcı adı değiştiyse yeni token'larla oturumu güncelle
+        login({
+          token: updatedUser.token,
+          refreshToken: updatedUser.refreshToken,
+          id: userId,
+          username: updatedUser.username,
+        });
+      } else if (updatedUser.username) {
         updateAuthUsername(updatedUser.username);
+      }
+
+      if (updatedUser.username) {
         setOriginalUsername(updatedUser.username);
       }
 

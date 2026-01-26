@@ -112,4 +112,6 @@ export interface User extends HateoasModel {
   id: number;
   username: string;
   email: string;
+  token?: string;
+  refreshToken?: string;
 }

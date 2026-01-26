@@ -101,6 +101,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
 
+        boolean usernameChanged = false;
+
         // Username güncelleme (eğer değiştirildiyse ve başkası kullanmıyorsa)
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
             User existingUser = userRepository.findByUsername(request.getUsername());
@@ -108,6 +110,7 @@ public class UserService {
                 throw new DuplicateResourceException("Kullanıcı adı", "username", request.getUsername());
             }
             user.setUsername(request.getUsername());
+            usernameChanged = true;
         }
 
         // Profil resmi güncelleme
@@ -116,7 +119,17 @@ public class UserService {
         }
 
         User savedUser = userRepository.save(user);
-        return mapToResponse(savedUser);
+        UserResponse response = mapToResponse(savedUser);
+
+        // Kullanıcı adı değiştiyse yeni token'lar üret
+        if (usernameChanged) {
+            String accessToken = jwtService.generateAccessToken(savedUser.getUsername());
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
+            response.setToken(accessToken);
+            response.setRefreshToken(refreshToken.getToken());
+        }
+
+        return response;
     }
 
     // ŞİFRE GÜNCELLEME İŞLEMİ
