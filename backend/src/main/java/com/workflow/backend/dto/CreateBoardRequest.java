@@ -22,7 +22,7 @@ public class CreateBoardRequest {
     @Schema(description = "İlgili link", example = "https://github.com/project")
     private String link;
 
-    @Size(max = 200, message = "Açıklama en fazla 200 karakter olabilir")
+    @Size(max = 500, message = "Açıklama en fazla 500 karakter olabilir")
     @Schema(description = "Pano açıklaması", example = "Bu pano proje yönetimi için kullanılacak")
     private String description;
 
