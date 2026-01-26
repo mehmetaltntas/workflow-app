@@ -91,7 +91,26 @@ public class SubtaskService {
     public void deleteSubtask(Long subtaskId) {
         // Kullanıcı sadece kendi alt görevini silebilir
         authorizationService.verifySubtaskOwnership(subtaskId);
+
+        Subtask subtask = subtaskRepository.findById(subtaskId)
+                .orElseThrow(() -> new RuntimeException("Alt görev bulunamadı!"));
+        Task parentTask = subtask.getTask();
+        TaskList parentList = parentTask.getTaskList();
+
         subtaskRepository.deleteById(subtaskId);
+
+        // Cascade: kalan alt görevler tamamlandıysa → task ve list güncelle
+        List<Subtask> remaining = subtaskRepository.findByTaskIdOrderByPositionAsc(parentTask.getId());
+        if (!remaining.isEmpty()) {
+            boolean allCompleted = remaining.stream().allMatch(Subtask::getIsCompleted);
+            parentTask.setIsCompleted(allCompleted);
+            taskRepository.save(parentTask);
+
+            List<Task> listTasks = taskRepository.findByTaskListIdOrderByPositionAsc(parentList.getId());
+            boolean allTasksCompleted = listTasks.stream().allMatch(Task::getIsCompleted);
+            parentList.setIsCompleted(allTasksCompleted);
+            taskListRepository.save(parentList);
+        }
     }
 
     // Görevin alt görevlerini getir

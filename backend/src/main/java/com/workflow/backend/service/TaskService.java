@@ -283,10 +283,20 @@ public class TaskService {
         Long listId = task.getTaskList().getId();
         Integer position = task.getPosition();
 
+        TaskList parentList = task.getTaskList();
+
         taskRepository.deleteById(taskId);
 
         // Silinen görevden sonraki pozisyonları güncelle
         taskRepository.decrementPositionsFrom(listId, position);
+
+        // Cascade: kalan görevler tamamlandıysa → list güncelle
+        List<Task> remaining = taskRepository.findByTaskListIdOrderByPositionAsc(listId);
+        if (!remaining.isEmpty()) {
+            boolean allCompleted = remaining.stream().allMatch(Task::getIsCompleted);
+            parentList.setIsCompleted(allCompleted);
+            taskListRepository.save(parentList);
+        }
     }
 
     // GÖREV GÜNCELLE
