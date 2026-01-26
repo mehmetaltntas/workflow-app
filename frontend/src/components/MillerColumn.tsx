@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { ChevronRight, Folder, FileText, CheckSquare, Loader2, Plus, MoreHorizontal, Edit2, Trash2, Check, ListTodo } from 'lucide-react';
 import { colors, typography, spacing, radius, shadows, animation } from '../styles/tokens';
 import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors, ThemeColors } from "../utils/themeColors";
+import { getThemeColors, type ThemeColors } from "../utils/themeColors";
 
 // Miller Column item tipi
 export interface MillerColumnItem {
