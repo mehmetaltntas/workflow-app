@@ -30,6 +30,9 @@ public class CreateBoardRequest {
     @Schema(description = "Son tarih", example = "2024-12-31T23:59:59")
     private java.time.LocalDateTime deadline;
 
+    @Schema(description = "Pano kategorisi", example = "YAZILIM_GELISTIRME")
+    private String category;
+
     @NotNull(message = "Kullanıcı ID boş olamaz")
     @Schema(description = "Kullanıcı ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long userId;

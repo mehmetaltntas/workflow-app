@@ -19,6 +19,7 @@ public class BoardModel extends RepresentationModel<BoardModel> {
     private String slug;
     private String link;
     private String description;
+    private String category;
     private LocalDateTime deadline;
     private List<TaskListModel> taskLists;
     private List<LabelModel> labels;

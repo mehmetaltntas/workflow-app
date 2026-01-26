@@ -64,10 +64,10 @@ const BoardsPage = () => {
   }, [boards, statusCounts]);
 
   // Yeni pano oluşturma
-  const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string) => {
+  const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => {
     const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
     createBoardMutation.mutate(
-      { name, status, link, description, deadline: formattedDeadline },
+      { name, status, link, description, deadline: formattedDeadline, category },
       {
         onSuccess: () => {
           setIsModalOpen(false);
@@ -77,7 +77,7 @@ const BoardsPage = () => {
   };
 
   // Pano düzenleme
-  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string }) => {
+  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string }) => {
     if (!editingBoard) return;
     const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
     updateBoardMutation.mutate(
@@ -88,7 +88,8 @@ const BoardsPage = () => {
           status: data.status || editingBoard.status || "PLANLANDI",
           link: data.link,
           description: data.description,
-          deadline: formattedDeadline
+          deadline: formattedDeadline,
+          category: data.category
         }
       },
       {
@@ -600,7 +601,8 @@ const BoardsPage = () => {
                 link: editingBoard.link,
                 description: editingBoard.description,
                 deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
-                status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI"
+                status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
+                category: editingBoard.category
             }}
         />
       )}

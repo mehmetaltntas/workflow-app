@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Calendar, Link2, FileText, Type, Trash2, Activity } from "lucide-react";
+import { X, Calendar, Link2, FileText, Type, Trash2, Activity, FolderOpen } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { colors, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
@@ -10,7 +10,7 @@ type BoardStatus = "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | 
 interface BoardEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; link?: string; description?: string; deadline?: string; status?: BoardStatus }) => void;
+  onSave: (data: { name: string; link?: string; description?: string; deadline?: string; status?: BoardStatus; category?: string }) => void;
   onDelete?: () => void;
   initialData: {
     name: string;
@@ -18,6 +18,7 @@ interface BoardEditModalProps {
     description?: string;
     deadline?: string;
     status?: BoardStatus;
+    category?: string;
   };
 }
 
@@ -31,6 +32,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
   const [description, setDescription] = useState(initialData.description || "");
   const [deadline, setDeadline] = useState(initialData.deadline || "");
   const [status, setStatus] = useState<BoardStatus>(initialData.status || "PLANLANDI");
+  const [category, setCategory] = useState(initialData.category || "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const MAX_DESCRIPTION_LENGTH = 200;
@@ -42,6 +44,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
       setDescription(initialData.description || "");
       setDeadline(initialData.deadline || "");
       setStatus(initialData.status || "PLANLANDI");
+      setCategory(initialData.category || "");
       setShowDeleteConfirm(false);
     }
   }, [isOpen, initialData]);
@@ -57,6 +60,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
         description: description || undefined,
         deadline: deadline || undefined,
         status,
+        category: category || undefined,
       });
       onClose();
     }
@@ -350,6 +354,50 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
                     );
                   })}
                 </div>
+              </div>
+            </div>
+
+              {/* Kategori */}
+              <div style={fieldContainerStyle}>
+                <label style={labelStyle}>
+                  <FolderOpen size={16} />
+                  Kategori
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  style={inputStyle}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = colors.brand.primary;
+                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = themeColors.borderDefault;
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <option value="">Kategori Seçin</option>
+                  <option value="YAZILIM_GELISTIRME">Yazılım Geliştirme</option>
+                  <option value="PAZARLAMA">Pazarlama</option>
+                  <option value="TASARIM_KREATIF">Tasarım / Kreatif</option>
+                  <option value="URUN_YONETIMI">Ürün Yönetimi</option>
+                  <option value="SATIS_CRM">Satış / CRM</option>
+                  <option value="INSAN_KAYNAKLARI">İnsan Kaynakları</option>
+                  <option value="EGITIM_AKADEMIK">Eğitim / Akademik</option>
+                  <option value="OPERASYON">Operasyon</option>
+                  <option value="FINANS_MUHASEBE">Finans / Muhasebe</option>
+                  <option value="MUSTERI_DESTEK">Müşteri Destek</option>
+                  <option value="ICERIK_URETIMI">İçerik Üretimi</option>
+                  <option value="UI_UX_TASARIMI">UI/UX Tasarımı</option>
+                  <option value="ARGE_ARASTIRMA">Ar-Ge / Araştırma</option>
+                  <option value="ETKINLIK_YONETIMI">Etkinlik Yönetimi</option>
+                  <option value="HUKUK_YASAL">Hukuk / Yasal</option>
+                  <option value="INSAAT_MIMARI">İnşaat / Mimari</option>
+                  <option value="E_TICARET">E-Ticaret</option>
+                  <option value="SAGLIK_YASAM">Sağlık / Yaşam</option>
+                  <option value="KISISEL">Kişisel</option>
+                  <option value="DIGER">Diğer</option>
+                </select>
               </div>
             </div>
 

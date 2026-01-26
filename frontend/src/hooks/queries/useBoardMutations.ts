@@ -19,6 +19,7 @@ export const useCreateBoard = () => {
       link?: string;
       description?: string;
       deadline?: string;
+      category?: string;
     }) => {
       if (!userId) throw new Error('User not authenticated');
       return boardService.createBoard({
@@ -58,6 +59,7 @@ export const useUpdateBoard = () => {
         link?: string;
         description?: string;
         deadline?: string;
+        category?: string;
       };
     }) => {
       if (!userId) throw new Error('User not authenticated');

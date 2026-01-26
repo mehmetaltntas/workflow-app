@@ -12,6 +12,7 @@ public class BoardResponse {
     private String slug; // YENİ EKLENDİ
     private String link;
     private String description; // Opsiyonel açıklama
+    private String category; // Pano kategorisi
     private java.time.LocalDateTime deadline;
     private List<TaskListDto> taskLists; // YENİ EKLENDİ: Panodaki listeler
     private List<LabelDto> labels; // Panoya ait etiketler

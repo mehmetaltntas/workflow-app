@@ -13,7 +13,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Pin,
-  PinOff
+  PinOff,
+  FolderOpen
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -367,6 +368,67 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
             themeColors={themeColors}
           />
         </div>
+
+        {/* Kategori */}
+        {board.category && (
+          <div
+            style={{
+              padding: spacing[4],
+              borderRadius: radius.xl,
+              background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+              border: `1px solid ${themeColors.borderDefault}`,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[2] }}>
+              <FolderOpen size={16} color={cssVars.textMuted} />
+              <span
+                style={{
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: typography.letterSpacing.wide,
+                }}
+              >
+                Kategori
+              </span>
+            </div>
+            <span
+              style={{
+                display: "inline-block",
+                fontSize: typography.fontSize.base,
+                fontWeight: typography.fontWeight.medium,
+                color: colors.brand.primary,
+                background: colors.brand.primaryLight,
+                padding: `${spacing[1]} ${spacing[3]}`,
+                borderRadius: radius.lg,
+              }}
+            >
+              {({
+                YAZILIM_GELISTIRME: "Yazılım Geliştirme",
+                PAZARLAMA: "Pazarlama",
+                TASARIM_KREATIF: "Tasarım / Kreatif",
+                URUN_YONETIMI: "Ürün Yönetimi",
+                SATIS_CRM: "Satış / CRM",
+                INSAN_KAYNAKLARI: "İnsan Kaynakları",
+                EGITIM_AKADEMIK: "Eğitim / Akademik",
+                OPERASYON: "Operasyon",
+                FINANS_MUHASEBE: "Finans / Muhasebe",
+                MUSTERI_DESTEK: "Müşteri Destek",
+                ICERIK_URETIMI: "İçerik Üretimi",
+                UI_UX_TASARIMI: "UI/UX Tasarımı",
+                ARGE_ARASTIRMA: "Ar-Ge / Araştırma",
+                ETKINLIK_YONETIMI: "Etkinlik Yönetimi",
+                HUKUK_YASAL: "Hukuk / Yasal",
+                INSAAT_MIMARI: "İnşaat / Mimari",
+                E_TICARET: "E-Ticaret",
+                SAGLIK_YASAM: "Sağlık / Yaşam",
+                KISISEL: "Kişisel",
+                DIGER: "Diğer",
+              } as Record<string, string>)[board.category] || board.category}
+            </span>
+          </div>
+        )}
 
         {/* Açıklama */}
         {board.description && (

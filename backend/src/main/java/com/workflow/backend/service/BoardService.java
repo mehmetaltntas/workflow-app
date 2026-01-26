@@ -53,6 +53,7 @@ public class BoardService {
         board.setLink(request.getLink());
         board.setDescription(request.getDescription());
         board.setDeadline(request.getDeadline());
+        board.setCategory(request.getCategory());
 
         // 3. SLUG OLUŞTURMA (YENİ)
         String slug = generateSlug(request.getName());
@@ -125,6 +126,7 @@ public class BoardService {
         response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");
         response.setLink(board.getLink());
         response.setDescription(board.getDescription());
+        response.setCategory(board.getCategory());
         response.setDeadline(board.getDeadline());
         response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
 
@@ -239,6 +241,7 @@ public class BoardService {
         response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");
         response.setLink(board.getLink());
         response.setDescription(board.getDescription());
+        response.setCategory(board.getCategory());
         response.setDeadline(board.getDeadline());
         response.setOwnerName(board.getUser().getUsername()); // User zaten EntityGraph ile fetch edildi
 
@@ -282,6 +285,8 @@ public class BoardService {
             board.setDescription(request.getDescription());
         if (request.getDeadline() != null)
             board.setDeadline(request.getDeadline());
+        if (request.getCategory() != null)
+            board.setCategory(request.getCategory());
 
         Board savedBoard = boardRepository.save(board);
         return mapToResponse(savedBoard);

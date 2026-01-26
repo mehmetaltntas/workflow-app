@@ -24,6 +24,8 @@ public class Board {
 
     private java.time.LocalDateTime deadline; // Bitiş tarihi
 
+    private String category; // Pano kategorisi
+
     @Column(unique = true)
     private String slug; // YENİ: URL dostu kimlik
 

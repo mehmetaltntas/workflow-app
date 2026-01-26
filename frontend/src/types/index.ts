@@ -99,6 +99,7 @@ export interface Board extends HateoasModel {
   name: string;
   slug: string; // YENİ
   status?: string; // Status (PLANLANDI, DEVAM_EDIYOR, etc.)
+  category?: string; // Pano kategorisi
   link?: string;
   description?: string; // Opsiyonel açıklama (max 50 karakter)
   deadline?: string;

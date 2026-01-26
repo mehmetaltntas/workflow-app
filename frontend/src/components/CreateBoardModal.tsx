@@ -5,13 +5,14 @@ import { colors, typography, spacing, radius, shadows, zIndex } from "../styles/
 interface CreateBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string) => void;
+  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => void;
   initialData?: {
     name: string;
     status: string;
     link?: string;
     description?: string;
     deadline?: string;
+    category?: string;
   };
 }
 
@@ -21,6 +22,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const [link, setLink] = useState(initialData?.link || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [deadline, setDeadline] = useState(initialData?.deadline || "");
+  const [category, setCategory] = useState(initialData?.category || "");
 
   const MAX_DESCRIPTION_LENGTH = 200;
 
@@ -29,13 +31,14 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onCreate(name, status, link || undefined, description || undefined, deadline || undefined);
+      onCreate(name, status, link || undefined, description || undefined, deadline || undefined, category || undefined);
       if (!initialData) {
         setName("");
         setStatus("PLANLANDI");
         setLink("");
         setDescription("");
         setDeadline("");
+        setCategory("");
       }
       onClose();
     }
@@ -123,6 +126,47 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               <option value="TAMAMLANDI">Tamamlandı</option>
               <option value="DURDURULDU">Durduruldu</option>
               <option value="BIRAKILDI">Bırakıldı</option>
+            </select>
+          </div>
+
+          <div>
+             <label style={{ display: "block", marginBottom: spacing[2], color: "var(--text-muted)", fontSize: typography.fontSize.lg }}>
+              Kategori (Opsiyonel)
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              style={{
+                width: "100%",
+                padding: spacing[2.5],
+                borderRadius: radius.md,
+                border: "1px solid var(--border)",
+                background: "var(--bg-input)",
+                color: "var(--text-main)",
+                fontSize: typography.fontSize['2xl']
+              }}
+            >
+              <option value="">Kategori Seçin</option>
+              <option value="YAZILIM_GELISTIRME">Yazılım Geliştirme</option>
+              <option value="PAZARLAMA">Pazarlama</option>
+              <option value="TASARIM_KREATIF">Tasarım / Kreatif</option>
+              <option value="URUN_YONETIMI">Ürün Yönetimi</option>
+              <option value="SATIS_CRM">Satış / CRM</option>
+              <option value="INSAN_KAYNAKLARI">İnsan Kaynakları</option>
+              <option value="EGITIM_AKADEMIK">Eğitim / Akademik</option>
+              <option value="OPERASYON">Operasyon</option>
+              <option value="FINANS_MUHASEBE">Finans / Muhasebe</option>
+              <option value="MUSTERI_DESTEK">Müşteri Destek</option>
+              <option value="ICERIK_URETIMI">İçerik Üretimi</option>
+              <option value="UI_UX_TASARIMI">UI/UX Tasarımı</option>
+              <option value="ARGE_ARASTIRMA">Ar-Ge / Araştırma</option>
+              <option value="ETKINLIK_YONETIMI">Etkinlik Yönetimi</option>
+              <option value="HUKUK_YASAL">Hukuk / Yasal</option>
+              <option value="INSAAT_MIMARI">İnşaat / Mimari</option>
+              <option value="E_TICARET">E-Ticaret</option>
+              <option value="SAGLIK_YASAM">Sağlık / Yaşam</option>
+              <option value="KISISEL">Kişisel</option>
+              <option value="DIGER">Diğer</option>
             </select>
           </div>
 
