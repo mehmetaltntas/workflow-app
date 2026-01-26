@@ -224,20 +224,22 @@ const HomePage = () => {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100%",
         background: cssVars.bgBody,
         display: "flex",
+        overflow: "hidden",
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(10px)",
         transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
       }}
     >
-      {/* Main Content */}
+      {/* Main Content - scrollable independently */}
       <div
         style={{
           flex: 1,
           padding: spacing[10],
           minWidth: 0,
+          overflowY: "auto",
         }}
       >
         {/* Header */}
@@ -526,10 +528,7 @@ const HomePage = () => {
           width: isPanelOpen ? "340px" : "0px",
           minWidth: isPanelOpen ? "340px" : "0px",
           maxWidth: "340px",
-          height: "100vh",
-          position: "sticky",
-          top: 0,
-          alignSelf: "flex-start",
+          height: "100%",
           background: isLight ? colors.light.bg.card : colors.dark.bg.card,
           borderLeft: isPanelOpen ? `1px solid ${themeColors.borderDefault}` : "none",
           display: "flex",
