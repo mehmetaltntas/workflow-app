@@ -28,7 +28,7 @@ const Layout = () => {
   const initials = username.substring(0, 2).toUpperCase();
 
   // Board detay sayfasında mıyız? (/boards/:slug formatında)
-  const isBoardDetailPage = /^\/boards\/[^/]+$/.test(location.pathname);
+  const isBoardDetailPage = /^\/boards\/(info\/)?[^/]+$/.test(location.pathname);
 
   const handleLogout = async () => {
     try {

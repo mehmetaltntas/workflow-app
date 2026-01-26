@@ -1,22 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
-import { boardService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import {
   Home,
   Pin,
-  PanelRightOpen,
-  PanelRightClose,
   Sparkles,
   Clock,
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
 import BoardEditModal from "../components/BoardEditModal";
-import { BoardInfoPanel } from "../components/BoardInfoPanel";
 import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
 import { SortingOptions, type SortField, type SortDirection } from "../components/ui/SortingOptions";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -35,11 +31,8 @@ const HomePage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
-  const togglePinBoard = useUIStore((state) => state.togglePinBoard);
   const unpinBoard = useUIStore((state) => state.unpinBoard);
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
-  const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
-  const [detailedInfoBoard, setDetailedInfoBoard] = useState<Board | null>(null);
+  const [isPanelOpen] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -52,21 +45,6 @@ const HomePage = () => {
       return () => clearTimeout(timer);
     }
   }, [loading]);
-
-  // Bilgi paneli için pano detaylarını yükle
-  useEffect(() => {
-    if (!selectedInfoBoard) {
-      setDetailedInfoBoard(null);
-      return;
-    }
-    let cancelled = false;
-    boardService.getBoardDetails(selectedInfoBoard.slug).then(board => {
-      if (!cancelled) setDetailedInfoBoard(board);
-    }).catch(() => {
-      if (!cancelled) setDetailedInfoBoard(null);
-    });
-    return () => { cancelled = true; };
-  }, [selectedInfoBoard]);
 
   // Sadece "DEVAM_EDIYOR" statüsündeki panoları filtrele
   const activeBoards = useMemo(() =>
@@ -122,20 +100,13 @@ const HomePage = () => {
     return { total, pinned };
   }, [activeBoards, pinnedBoards]);
 
-  const togglePin = useCallback((boardId: number) => {
-    togglePinBoard(boardId);
-  }, [togglePinBoard]);
-
-  const canPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
-
   const handleEdit = (board: Board) => {
     setEditingBoard(board);
     setIsEditModalOpen(true);
   };
 
   const handleShowInfo = (board: Board) => {
-    setSelectedInfoBoard(board);
-    if (!isPanelOpen) setIsPanelOpen(true);
+    navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } });
   };
 
   const handleSaveBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string }) => {
@@ -190,7 +161,7 @@ const HomePage = () => {
   }
 
   // Board kartı render fonksiyonu
-  const renderBoardCard = (board: Board, isPinned: boolean, index: number, groupIndex: number) => {
+  const renderBoardCard = (board: Board, _isPinned: boolean, index: number, groupIndex: number) => {
     return (
       <div
         key={board.id}
@@ -334,26 +305,6 @@ const HomePage = () => {
                 </div>
               </div>
 
-              {/* Panel Toggle Button */}
-              <button
-                onClick={() => setIsPanelOpen(!isPanelOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: spacing[10],
-                  height: spacing[10],
-                  borderRadius: radius.lg,
-                  border: `1px solid ${themeColors.borderDefault}`,
-                  background: isPanelOpen ? colors.brand.primaryLight : themeColors.bgHover,
-                  color: isPanelOpen ? colors.brand.primary : cssVars.textMuted,
-                  cursor: "pointer",
-                  transition: `all ${animation.duration.normal}`,
-                }}
-                title={isPanelOpen ? "Paneli Kapat" : "Paneli Aç"}
-              >
-                {isPanelOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
-              </button>
             </div>
           </div>
         </div>
@@ -551,16 +502,6 @@ const HomePage = () => {
           />
         </div>
 
-        {/* Board Info Section */}
-        <div style={{ flex: 1, overflow: "auto" }}>
-          <BoardInfoPanel
-            board={detailedInfoBoard}
-            onClose={() => setSelectedInfoBoard(null)}
-            onTogglePin={selectedInfoBoard ? () => togglePin(selectedInfoBoard.id) : undefined}
-            isPinned={selectedInfoBoard ? pinnedBoardIds.includes(selectedInfoBoard.id) : false}
-            canPin={canPin}
-          />
-        </div>
       </aside>
 
       {/* Pano Düzenleme Modalı */}

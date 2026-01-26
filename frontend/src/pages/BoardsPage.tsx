@@ -1,11 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Board } from "../types";
-import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock } from "lucide-react";
 
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useCreateBoard, useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
-import { boardService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { typography, spacing, radius, colors, cssVars, animation, shadows } from '../styles/tokens';
@@ -17,7 +16,6 @@ import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
 import { VerticalStatusFilter } from "../components/ui/VerticalStatusFilter";
 import { ViewSwitcher, type ViewMode } from "../components/ui/ViewSwitcher";
-import { BoardInfoPanel } from "../components/BoardInfoPanel";
 
 const BoardsPage = () => {
   const navigate = useNavigate();
@@ -34,9 +32,7 @@ const BoardsPage = () => {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [isVisible, setIsVisible] = useState(false);
-  const [selectedInfoBoard, setSelectedInfoBoard] = useState<Board | null>(null);
-  const [detailedInfoBoard, setDetailedInfoBoard] = useState<Board | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [isPanelOpen] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   // Animasyon için sayfa yüklendiğinde visible yap
@@ -46,21 +42,6 @@ const BoardsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [loading]);
-
-  // Bilgi paneli için pano detaylarını yükle
-  useEffect(() => {
-    if (!selectedInfoBoard) {
-      setDetailedInfoBoard(null);
-      return;
-    }
-    let cancelled = false;
-    boardService.getBoardDetails(selectedInfoBoard.slug).then(board => {
-      if (!cancelled) setDetailedInfoBoard(board);
-    }).catch(() => {
-      if (!cancelled) setDetailedInfoBoard(null);
-    });
-    return () => { cancelled = true; };
-  }, [selectedInfoBoard]);
 
   // Status bazlı sayıları hesapla
   const statusCounts = useMemo(() => {
@@ -411,26 +392,6 @@ const BoardsPage = () => {
                 Yeni Pano
               </button>
 
-              {/* Panel Toggle Button */}
-              <button
-                onClick={() => setIsPanelOpen(!isPanelOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: spacing[10],
-                  height: spacing[10],
-                  borderRadius: radius.lg,
-                  border: `1px solid ${themeColors.borderDefault}`,
-                  background: isPanelOpen ? colors.brand.primaryLight : themeColors.bgHover,
-                  color: isPanelOpen ? colors.brand.primary : cssVars.textMuted,
-                  cursor: "pointer",
-                  transition: `all ${animation.duration.normal}`,
-                }}
-                title={isPanelOpen ? "Paneli Kapat" : "Paneli Aç"}
-              >
-                {isPanelOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
-              </button>
             </div>
           </div>
         </div>
@@ -530,8 +491,7 @@ const BoardsPage = () => {
                                 onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/boards' } })}
                                 onEdit={() => openEditModal(board)}
                                 onShowInfo={() => {
-                                  setSelectedInfoBoard(board);
-                                  if (!isPanelOpen) setIsPanelOpen(true);
+                                  navigate(`/boards/info/${board.slug}`, { state: { from: '/boards' } });
                                 }}
                                 viewMode={viewMode === 'list' ? 'list' : 'grid'}
                             />
@@ -584,13 +544,6 @@ const BoardsPage = () => {
           </div>
         </div>
 
-        {/* Board Info Section */}
-        <div style={{ flex: 1, overflow: "auto" }}>
-          <BoardInfoPanel
-            board={detailedInfoBoard}
-            onClose={() => setSelectedInfoBoard(null)}
-          />
-        </div>
       </aside>
 
       {/* Yeni Pano Oluşturma Modalı */}
