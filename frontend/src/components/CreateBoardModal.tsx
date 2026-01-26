@@ -33,7 +33,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const [deadline, setDeadline] = useState(initialData?.deadline || "");
   const [category, setCategory] = useState(initialData?.category || "");
 
-  const MAX_DESCRIPTION_LENGTH = 200;
+  const MAX_DESCRIPTION_LENGTH = 500;
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

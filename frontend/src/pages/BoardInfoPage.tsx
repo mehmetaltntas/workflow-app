@@ -90,7 +90,7 @@ const BoardInfoPage = () => {
         background: cssVars.bgBody,
       }}
     >
-      {/* Header with Back Button */}
+      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -143,20 +143,20 @@ const BoardInfoPage = () => {
         </div>
       </div>
 
-      {/* Content - centered container */}
+      {/* Content */}
       <div
         style={{
           flex: 1,
           overflow: "auto",
           display: "flex",
           justifyContent: "center",
-          padding: spacing[6],
+          padding: `${spacing[8]} ${spacing[6]}`,
         }}
       >
         <div
           style={{
             width: "100%",
-            maxWidth: "480px",
+            maxWidth: "960px",
           }}
         >
           <BoardInfoPanel

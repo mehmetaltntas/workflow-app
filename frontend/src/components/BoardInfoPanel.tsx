@@ -8,7 +8,6 @@ import {
   ExternalLink,
   FileText,
   BarChart3,
-  X,
   Clock,
   TrendingUp,
   AlertTriangle,
@@ -28,6 +27,29 @@ interface BoardInfoPanelProps {
   isPinned?: boolean;
   canPin?: boolean;
 }
+
+const CATEGORY_MAP: Record<string, string> = {
+  YAZILIM_GELISTIRME: "Yazılım Geliştirme",
+  PAZARLAMA: "Pazarlama",
+  TASARIM_KREATIF: "Tasarım / Kreatif",
+  URUN_YONETIMI: "Ürün Yönetimi",
+  SATIS_CRM: "Satış / CRM",
+  INSAN_KAYNAKLARI: "İnsan Kaynakları",
+  EGITIM_AKADEMIK: "Eğitim / Akademik",
+  OPERASYON: "Operasyon",
+  FINANS_MUHASEBE: "Finans / Muhasebe",
+  MUSTERI_DESTEK: "Müşteri Destek",
+  ICERIK_URETIMI: "İçerik Üretimi",
+  UI_UX_TASARIMI: "UI/UX Tasarımı",
+  ARGE_ARASTIRMA: "Ar-Ge / Araştırma",
+  ETKINLIK_YONETIMI: "Etkinlik Yönetimi",
+  HUKUK_YASAL: "Hukuk / Yasal",
+  INSAAT_MIMARI: "İnşaat / Mimari",
+  E_TICARET: "E-Ticaret",
+  SAGLIK_YASAM: "Sağlık / Yaşam",
+  KISISEL: "Kişisel",
+  DIGER: "Diğer",
+};
 
 // Pano istatistiklerini hesapla
 const calculateBoardStats = (board: Board) => {
@@ -51,7 +73,6 @@ const calculateBoardStats = (board: Board) => {
     completedTasks += tasks.filter(t => t.isCompleted).length;
 
     tasks.forEach(task => {
-      // Gecikmiş görevleri kontrol et
       if (!task.isCompleted && task.dueDate) {
         const dueDate = new Date(task.dueDate);
         dueDate.setHours(0, 0, 0, 0);
@@ -64,7 +85,6 @@ const calculateBoardStats = (board: Board) => {
       totalSubtasks += subtasks.length;
       completedSubtasks += subtasks.filter(s => s.isCompleted).length;
 
-      // Gecikmiş alt görevleri kontrol et
       subtasks.forEach(subtask => {
         if (!subtask.isCompleted && subtask.dueDate) {
           const dueDate = new Date(subtask.dueDate);
@@ -154,411 +174,373 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   }
 
   const statusColor = STATUS_COLORS[board.status || "PLANLANDI"];
+  const hasDeadline = !!(board.deadline && deadlineInfo);
+  const hasLink = !!board.link;
+  const hasDescription = !!board.description;
+  const hasCategory = !!board.category;
+
+  const cardStyle: React.CSSProperties = {
+    padding: spacing[5],
+    borderRadius: radius.xl,
+    background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+    border: `1px solid ${themeColors.borderDefault}`,
+  };
+
+  const sectionLabelStyle: React.CSSProperties = {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: cssVars.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: typography.letterSpacing.wide,
+  };
 
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
-        animation: `slideIn ${animation.duration.slow} ${animation.easing.spring}`,
+        gap: spacing[6],
+        animation: `fadeIn ${animation.duration.slow} ${animation.easing.spring}`,
       }}
     >
-      {/* Header */}
+      {/* Hero Section */}
       <div
         style={{
+          ...cardStyle,
+          padding: spacing[6],
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: `${spacing[4]} ${spacing[5]}`,
-          borderBottom: `1px solid ${themeColors.borderDefault}`,
-          background: `linear-gradient(135deg, ${statusColor}10, transparent)`,
+          background: `linear-gradient(135deg, ${statusColor}08, ${isLight ? colors.light.bg.card : colors.dark.glass.bg})`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[3], flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[4], flex: 1, minWidth: 0 }}>
           <div
             style={{
-              width: spacing[2],
-              height: spacing[8],
+              width: spacing[1.5],
+              height: spacing[14],
               borderRadius: radius.full,
-              background: statusColor,
+              background: `linear-gradient(180deg, ${statusColor}, ${statusColor}60)`,
               flexShrink: 0,
             }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h3
+            <h2
               style={{
-                fontSize: typography.fontSize["2xl"],
+                fontSize: typography.fontSize["4xl"],
                 fontWeight: typography.fontWeight.bold,
                 color: cssVars.textMain,
                 margin: 0,
+                marginBottom: spacing[3],
+                letterSpacing: typography.letterSpacing.tight,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
             >
               {board.name}
-            </h3>
-            <span
-              style={{
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.semibold,
-                color: statusColor,
-                textTransform: "uppercase",
-                letterSpacing: typography.letterSpacing.wider,
-              }}
-            >
-              {STATUS_LABELS[board.status || "PLANLANDI"]}
-            </span>
+            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[3], flexWrap: "wrap" }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.bold,
+                  color: statusColor,
+                  background: `${statusColor}15`,
+                  padding: `${spacing[1]} ${spacing[3]}`,
+                  borderRadius: radius.full,
+                  textTransform: "uppercase",
+                  letterSpacing: typography.letterSpacing.wider,
+                }}
+              >
+                {STATUS_LABELS[board.status || "PLANLANDI"]}
+              </span>
+              {hasCategory && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: spacing[1.5],
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: colors.brand.primary,
+                    background: colors.brand.primaryLight,
+                    padding: `${spacing[1]} ${spacing[3]}`,
+                    borderRadius: radius.full,
+                  }}
+                >
+                  <FolderOpen size={12} />
+                  {CATEGORY_MAP[board.category!] || board.category}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexShrink: 0, marginLeft: spacing[2] }}>
-          {/* Pin Button */}
-          {onTogglePin && (
-            <button
-              onClick={onTogglePin}
-              disabled={!isPinned && !canPin}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[8],
-                height: spacing[8],
-                borderRadius: radius.lg,
-                border: `1px solid ${isPinned
-                  ? (isLight ? colors.brand.primary : colors.semantic.warning)
-                  : themeColors.borderDefault}`,
-                background: isPinned
-                  ? (isLight ? `${colors.brand.primary}20` : `${colors.semantic.warning}20`)
-                  : themeColors.bgHover,
-                color: isPinned
-                  ? (isLight ? colors.brand.primary : colors.semantic.warning)
-                  : cssVars.textMuted,
-                cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
-                opacity: !isPinned && !canPin ? 0.5 : 1,
-                transition: `all ${animation.duration.fast}`,
-              }}
-              title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
-            >
-              {isPinned ? <PinOff size={16} strokeWidth={2.5} /> : <Pin size={16} strokeWidth={2.5} />}
-            </button>
-          )}
-          {/* Close Button */}
+        {onTogglePin && (
           <button
-            onClick={onClose}
+            onClick={onTogglePin}
+            disabled={!isPinned && !canPin}
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: spacing[8],
-              height: spacing[8],
+              width: spacing[10],
+              height: spacing[10],
               borderRadius: radius.lg,
-              border: `1px solid ${themeColors.borderDefault}`,
-              background: themeColors.bgHover,
-              color: cssVars.textMuted,
-              cursor: "pointer",
+              border: `1px solid ${isPinned
+                ? (isLight ? colors.brand.primary : colors.semantic.warning)
+                : themeColors.borderDefault}`,
+              background: isPinned
+                ? (isLight ? `${colors.brand.primary}20` : `${colors.semantic.warning}20`)
+                : themeColors.bgHover,
+              color: isPinned
+                ? (isLight ? colors.brand.primary : colors.semantic.warning)
+                : cssVars.textMuted,
+              cursor: !isPinned && !canPin ? "not-allowed" : "pointer",
+              opacity: !isPinned && !canPin ? 0.5 : 1,
               transition: `all ${animation.duration.fast}`,
+              flexShrink: 0,
+            }}
+            title={isPinned ? "Sabitlemeyi Kaldır" : canPin ? "Sabitle" : "Maksimum sabitleme sayısına ulaşıldı"}
+          >
+            {isPinned ? <PinOff size={18} strokeWidth={2.5} /> : <Pin size={18} strokeWidth={2.5} />}
+          </button>
+        )}
+      </div>
+
+      {/* Overall Progress */}
+      <div style={cardStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[4] }}>
+          <TrendingUp size={16} color={colors.brand.primary} />
+          <span style={sectionLabelStyle}>Genel İlerleme</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[4] }}>
+          <div
+            style={{
+              flex: 1,
+              height: spacing[2.5],
+              background: themeColors.bgActive,
+              borderRadius: radius.full,
+              overflow: "hidden",
             }}
           >
-            <X size={18} />
-          </button>
+            <div
+              style={{
+                height: "100%",
+                width: `${stats.overallProgress}%`,
+                background: stats.overallProgress === 100
+                  ? colors.semantic.success
+                  : `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
+                borderRadius: radius.full,
+                transition: `width ${animation.duration.slow}`,
+              }}
+            />
+          </div>
+          <span
+            style={{
+              fontSize: typography.fontSize["3xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: stats.overallProgress === 100 ? colors.semantic.success : colors.brand.primary,
+              minWidth: spacing[14],
+              textAlign: "right",
+            }}
+          >
+            %{stats.overallProgress}
+          </span>
         </div>
       </div>
 
-      {/* Content */}
+      {/* Stats Grid - 3 columns */}
       <div
         style={{
-          flex: 1,
-          overflow: "auto",
-          padding: spacing[5],
-          display: "flex",
-          flexDirection: "column",
-          gap: spacing[5],
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: spacing[4],
         }}
       >
-        {/* Overall Progress */}
+        <StatCard
+          icon={<ListChecks size={20} />}
+          label="Liste"
+          completed={stats.lists.completed}
+          total={stats.lists.total}
+          color={colors.status.completed}
+          isLight={isLight}
+          themeColors={themeColors}
+        />
+        <StatCard
+          icon={<CheckSquare size={20} />}
+          label="Görev"
+          completed={stats.tasks.completed}
+          total={stats.tasks.total}
+          overdue={stats.tasks.overdue}
+          color={colors.status.inProgress}
+          isLight={isLight}
+          themeColors={themeColors}
+        />
+        <StatCard
+          icon={<Layers size={20} />}
+          label="Alt Görev"
+          completed={stats.subtasks.completed}
+          total={stats.subtasks.total}
+          overdue={stats.subtasks.overdue}
+          color={colors.brand.primary}
+          isLight={isLight}
+          themeColors={themeColors}
+        />
+      </div>
+
+      {/* Details Grid - deadline and link side by side */}
+      {(hasDeadline || hasLink) && (
         <div
           style={{
-            padding: spacing[4],
-            borderRadius: radius.xl,
-            background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-            border: `1px solid ${themeColors.borderDefault}`,
+            display: "grid",
+            gridTemplateColumns: hasDeadline && hasLink ? "1fr 1fr" : "1fr",
+            gap: spacing[4],
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[3] }}>
-            <TrendingUp size={16} color={colors.brand.primary} />
-            <span
-              style={{
-                fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.semibold,
-                color: cssVars.textMuted,
-                textTransform: "uppercase",
-                letterSpacing: typography.letterSpacing.wide,
-              }}
-            >
-              Genel İlerleme
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+          {hasDeadline && deadlineInfo && (
             <div
               style={{
-                flex: 1,
-                height: spacing[2],
-                background: themeColors.bgActive,
-                borderRadius: radius.full,
-                overflow: "hidden",
+                padding: spacing[5],
+                borderRadius: radius.xl,
+                background: deadlineInfo.bg,
+                border: `1px solid ${deadlineInfo.color}30`,
+                display: "flex",
+                flexDirection: "column",
+                gap: spacing[3],
               }}
             >
-              <div
-                style={{
-                  height: "100%",
-                  width: `${stats.overallProgress}%`,
-                  background: stats.overallProgress === 100
-                    ? colors.semantic.success
-                    : `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
-                  borderRadius: radius.full,
-                  transition: `width ${animation.duration.slow}`,
-                }}
-              />
-            </div>
-            <span
-              style={{
-                fontSize: typography.fontSize["2xl"],
-                fontWeight: typography.fontWeight.bold,
-                color: stats.overallProgress === 100 ? colors.semantic.success : colors.brand.primary,
-                minWidth: spacing[12],
-                textAlign: "right",
-              }}
-            >
-              %{stats.overallProgress}
-            </span>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-          {/* Liste İstatistikleri */}
-          <StatCard
-            icon={<ListChecks size={18} />}
-            label="Liste"
-            completed={stats.lists.completed}
-            total={stats.lists.total}
-            color={colors.status.completed}
-            isLight={isLight}
-            themeColors={themeColors}
-          />
-
-          {/* Görev İstatistikleri */}
-          <StatCard
-            icon={<CheckSquare size={18} />}
-            label="Görev"
-            completed={stats.tasks.completed}
-            total={stats.tasks.total}
-            overdue={stats.tasks.overdue}
-            color={colors.status.inProgress}
-            isLight={isLight}
-            themeColors={themeColors}
-          />
-
-          {/* Alt Görev İstatistikleri */}
-          <StatCard
-            icon={<Layers size={18} />}
-            label="Alt Görev"
-            completed={stats.subtasks.completed}
-            total={stats.subtasks.total}
-            overdue={stats.subtasks.overdue}
-            color={colors.brand.primary}
-            isLight={isLight}
-            themeColors={themeColors}
-          />
-        </div>
-
-        {/* Kategori */}
-        {board.category && (
-          <div
-            style={{
-              padding: spacing[4],
-              borderRadius: radius.xl,
-              background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-              border: `1px solid ${themeColors.borderDefault}`,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[2] }}>
-              <FolderOpen size={16} color={cssVars.textMuted} />
-              <span
-                style={{
-                  fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: cssVars.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: typography.letterSpacing.wide,
-                }}
-              >
-                Kategori
-              </span>
-            </div>
-            <span
-              style={{
-                display: "inline-block",
-                fontSize: typography.fontSize.base,
-                fontWeight: typography.fontWeight.medium,
-                color: colors.brand.primary,
-                background: colors.brand.primaryLight,
-                padding: `${spacing[1]} ${spacing[3]}`,
-                borderRadius: radius.lg,
-              }}
-            >
-              {({
-                YAZILIM_GELISTIRME: "Yazılım Geliştirme",
-                PAZARLAMA: "Pazarlama",
-                TASARIM_KREATIF: "Tasarım / Kreatif",
-                URUN_YONETIMI: "Ürün Yönetimi",
-                SATIS_CRM: "Satış / CRM",
-                INSAN_KAYNAKLARI: "İnsan Kaynakları",
-                EGITIM_AKADEMIK: "Eğitim / Akademik",
-                OPERASYON: "Operasyon",
-                FINANS_MUHASEBE: "Finans / Muhasebe",
-                MUSTERI_DESTEK: "Müşteri Destek",
-                ICERIK_URETIMI: "İçerik Üretimi",
-                UI_UX_TASARIMI: "UI/UX Tasarımı",
-                ARGE_ARASTIRMA: "Ar-Ge / Araştırma",
-                ETKINLIK_YONETIMI: "Etkinlik Yönetimi",
-                HUKUK_YASAL: "Hukuk / Yasal",
-                INSAAT_MIMARI: "İnşaat / Mimari",
-                E_TICARET: "E-Ticaret",
-                SAGLIK_YASAM: "Sağlık / Yaşam",
-                KISISEL: "Kişisel",
-                DIGER: "Diğer",
-              } as Record<string, string>)[board.category] || board.category}
-            </span>
-          </div>
-        )}
-
-        {/* Son Tarih */}
-        {board.deadline && deadlineInfo && (
-          <div
-            style={{
-              padding: spacing[4],
-              borderRadius: radius.xl,
-              background: deadlineInfo.bg,
-              border: `1px solid ${deadlineInfo.color}30`,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: spacing[10],
-                    height: spacing[10],
-                    borderRadius: radius.lg,
-                    background: `${deadlineInfo.color}20`,
-                  }}
-                >
-                  {deadlineInfo.label === 'Gecikmiş' ? (
-                    <AlertTriangle size={20} color={deadlineInfo.color} />
-                  ) : (
-                    <Calendar size={20} color={deadlineInfo.color} />
-                  )}
-                </div>
-                <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: spacing[8],
+                      height: spacing[8],
+                      borderRadius: radius.lg,
+                      background: `${deadlineInfo.color}20`,
+                    }}
+                  >
+                    {deadlineInfo.label === 'Gecikmiş' ? (
+                      <AlertTriangle size={16} color={deadlineInfo.color} />
+                    ) : (
+                      <Calendar size={16} color={deadlineInfo.color} />
+                    )}
+                  </div>
                   <span
                     style={{
                       fontSize: typography.fontSize.xs,
-                      fontWeight: typography.fontWeight.semibold,
+                      fontWeight: typography.fontWeight.bold,
                       color: deadlineInfo.color,
                       textTransform: "uppercase",
                       letterSpacing: typography.letterSpacing.wider,
                     }}
                   >
-                    {deadlineInfo.label}
+                    Son Tarih
                   </span>
-                  <p
+                </div>
+                {deadlineInfo.days !== undefined && deadlineInfo.days > 0 && (
+                  <div
                     style={{
-                      fontSize: typography.fontSize.lg,
-                      fontWeight: typography.fontWeight.bold,
-                      color: deadlineInfo.color,
-                      margin: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: spacing[1],
+                      padding: `${spacing[0.5]} ${spacing[2]}`,
+                      borderRadius: radius.md,
+                      background: `${deadlineInfo.color}15`,
                     }}
                   >
-                    {new Date(board.deadline).toLocaleDateString('tr-TR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </p>
-                </div>
+                    <Clock size={11} color={deadlineInfo.color} />
+                    <span style={{ fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.semibold, color: deadlineInfo.color }}>
+                      {deadlineInfo.days} gün
+                    </span>
+                  </div>
+                )}
               </div>
-              {deadlineInfo.days !== undefined && deadlineInfo.days > 0 && (
+              <div>
+                <p
+                  style={{
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.bold,
+                    color: deadlineInfo.color,
+                    margin: 0,
+                    marginBottom: spacing[1],
+                  }}
+                >
+                  {new Date(board.deadline!).toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </p>
+                <span
+                  style={{
+                    display: "inline-block",
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: deadlineInfo.color,
+                    background: `${deadlineInfo.color}15`,
+                    padding: `${spacing[0.5]} ${spacing[2]}`,
+                    borderRadius: radius.sm,
+                  }}
+                >
+                  {deadlineInfo.label}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {hasLink && (
+            <a
+              href={board.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: spacing[3],
+                padding: spacing[5],
+                borderRadius: radius.xl,
+                background: `linear-gradient(135deg, ${colors.brand.primaryLight}, ${colors.brand.primary}10)`,
+                border: `1px solid ${colors.brand.primary}30`,
+                color: colors.brand.primary,
+                textDecoration: "none",
+                transition: `all ${animation.duration.normal}`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: spacing[1],
-                    padding: `${spacing[1]} ${spacing[2]}`,
-                    borderRadius: radius.md,
-                    background: `${deadlineInfo.color}15`,
+                    justifyContent: "center",
+                    width: spacing[8],
+                    height: spacing[8],
+                    borderRadius: radius.lg,
+                    background: `${colors.brand.primary}20`,
                   }}
                 >
-                  <Clock size={12} color={deadlineInfo.color} />
-                  <span style={{ fontSize: typography.fontSize.sm, fontWeight: typography.fontWeight.semibold, color: deadlineInfo.color }}>
-                    {deadlineInfo.days} gün
-                  </span>
+                  <ExternalLink size={16} />
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Harici Bağlantı */}
-        {board.link && (
-          <a
-            href={board.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[3],
-              padding: spacing[4],
-              borderRadius: radius.xl,
-              background: `linear-gradient(135deg, ${colors.brand.primaryLight}, ${colors.brand.primary}10)`,
-              border: `1px solid ${colors.brand.primary}30`,
-              color: colors.brand.primary,
-              textDecoration: "none",
-              transition: `all ${animation.duration.normal}`,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[10],
-                height: spacing[10],
-                borderRadius: radius.lg,
-                background: `${colors.brand.primary}20`,
-              }}
-            >
-              <ExternalLink size={20} />
-            </div>
-            <div style={{ flex: 1, overflow: "hidden" }}>
-              <span
-                style={{
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.semibold,
-                  textTransform: "uppercase",
-                  letterSpacing: typography.letterSpacing.wider,
-                  opacity: 0.8,
-                }}
-              >
-                Harici Bağlantı
-              </span>
+                <span
+                  style={{
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.bold,
+                    textTransform: "uppercase",
+                    letterSpacing: typography.letterSpacing.wider,
+                    opacity: 0.8,
+                  }}
+                >
+                  Harici Bağlantı
+                </span>
+              </div>
               <p
                 style={{
-                  fontSize: typography.fontSize.md,
+                  fontSize: typography.fontSize.base,
                   fontWeight: typography.fontWeight.medium,
                   margin: 0,
                   overflow: "hidden",
@@ -568,58 +550,42 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
               >
                 {board.link}
               </p>
-            </div>
-          </a>
-        )}
+            </a>
+          )}
+        </div>
+      )}
 
-        {/* Açıklama */}
-        {board.description && (
-          <div
+      {/* Description - full width */}
+      {hasDescription && (
+        <div style={cardStyle}>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[3] }}>
+            <FileText size={16} color={cssVars.textMuted} />
+            <span style={sectionLabelStyle}>Açıklama</span>
+          </div>
+          <p
             style={{
-              padding: spacing[4],
-              borderRadius: radius.xl,
-              background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-              border: `1px solid ${themeColors.borderDefault}`,
+              fontSize: typography.fontSize.base,
+              color: cssVars.textMain,
+              lineHeight: typography.lineHeight.relaxed,
+              margin: 0,
+              whiteSpace: "pre-wrap",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[2] }}>
-              <FileText size={16} color={cssVars.textMuted} />
-              <span
-                style={{
-                  fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: cssVars.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: typography.letterSpacing.wide,
-                }}
-              >
-                Açıklama
-              </span>
-            </div>
-            <p
-              style={{
-                fontSize: typography.fontSize.base,
-                color: cssVars.textMain,
-                lineHeight: typography.lineHeight.relaxed,
-                margin: 0,
-              }}
-            >
-              {board.description}
-            </p>
-          </div>
-        )}
-      </div>
+            {board.description}
+          </p>
+        </div>
+      )}
 
       {/* CSS Animation */}
       <style>{`
-        @keyframes slideIn {
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateX(20px);
+            transform: translateY(12px);
           }
           to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
           }
         }
       `}</style>
@@ -627,7 +593,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   );
 };
 
-// Stat Card Component
+// Stat Card Component - vertical layout for grid
 interface StatCardProps {
   icon: React.ReactNode;
   label: string;
@@ -645,88 +611,96 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, completed, total, over
   return (
     <div
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: spacing[3],
-        padding: spacing[3],
-        borderRadius: radius.lg,
+        padding: spacing[5],
+        borderRadius: radius.xl,
         background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
         border: `1px solid ${themeColors.borderDefault}`,
+        display: "flex",
+        flexDirection: "column",
+        gap: spacing[3],
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: spacing[10],
-          height: spacing[10],
-          borderRadius: radius.md,
-          background: `${color}15`,
-          color: color,
-        }}
-      >
-        {icon}
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: spacing[1] }}>
-          <span
-            style={{
-              fontSize: typography.fontSize.sm,
-              fontWeight: typography.fontWeight.medium,
-              color: cssVars.textMuted,
-            }}
-          >
-            {label}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
-            {overdue !== undefined && overdue > 0 && (
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: spacing[1],
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.bold,
-                  color: colors.semantic.danger,
-                  padding: `${spacing[0.5]} ${spacing[1.5]}`,
-                  background: colors.semantic.dangerLight,
-                  borderRadius: radius.sm,
-                }}
-              >
-                <AlertTriangle size={10} />
-                {overdue}
-              </span>
-            )}
-            <span
-              style={{
-                fontSize: typography.fontSize.lg,
-                fontWeight: typography.fontWeight.bold,
-                color: cssVars.textMain,
-              }}
-            >
-              {completed}/{total}
-            </span>
-          </div>
-        </div>
+      {/* Icon & Overdue Badge */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div
           style={{
-            height: spacing[1],
-            background: themeColors.bgActive,
-            borderRadius: radius.full,
-            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: spacing[10],
+            height: spacing[10],
+            borderRadius: radius.lg,
+            background: `${color}15`,
+            color: color,
           }}
         >
-          <div
-            style={{
-              height: "100%",
-              width: `${progress}%`,
-              background: progress === 100 ? colors.semantic.success : color,
-              borderRadius: radius.full,
-              transition: `width ${animation.duration.slow}`,
-            }}
-          />
+          {icon}
         </div>
+        {overdue !== undefined && overdue > 0 && (
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: spacing[1],
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.bold,
+              color: colors.semantic.danger,
+              padding: `${spacing[0.5]} ${spacing[2]}`,
+              background: colors.semantic.dangerLight,
+              borderRadius: radius.sm,
+            }}
+          >
+            <AlertTriangle size={10} />
+            {overdue}
+          </span>
+        )}
+      </div>
+
+      {/* Label & Count */}
+      <div>
+        <span
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.medium,
+            color: cssVars.textMuted,
+            display: "block",
+            marginBottom: spacing[1],
+          }}
+        >
+          {label}
+        </span>
+        <span
+          style={{
+            fontSize: typography.fontSize["2xl"],
+            fontWeight: typography.fontWeight.bold,
+            color: cssVars.textMain,
+          }}
+        >
+          {completed}
+          <span style={{ color: cssVars.textMuted, fontWeight: typography.fontWeight.normal, fontSize: typography.fontSize.lg }}>
+            {" "}/ {total}
+          </span>
+        </span>
+      </div>
+
+      {/* Progress Bar */}
+      <div
+        style={{
+          height: spacing[1.5],
+          background: themeColors.bgActive,
+          borderRadius: radius.full,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${progress}%`,
+            background: progress === 100 ? colors.semantic.success : color,
+            borderRadius: radius.full,
+            transition: `width ${animation.duration.slow}`,
+          }}
+        />
       </div>
     </div>
   );

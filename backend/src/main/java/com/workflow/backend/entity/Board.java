@@ -19,8 +19,8 @@ public class Board {
 
     private String link; // Harici kaynak linki
 
-    @Column(length = 200)
-    private String description; // Opsiyonel açıklama (max 200 karakter)
+    @Column(length = 500)
+    private String description; // Opsiyonel açıklama (max 500 karakter)
 
     private java.time.LocalDateTime deadline; // Bitiş tarihi
 

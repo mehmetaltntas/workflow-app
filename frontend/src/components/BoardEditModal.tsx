@@ -35,7 +35,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
   const [category, setCategory] = useState(initialData.category || "");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const MAX_DESCRIPTION_LENGTH = 200;
+  const MAX_DESCRIPTION_LENGTH = 500;
 
   useEffect(() => {
     if (isOpen) {
