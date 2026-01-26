@@ -1,7 +1,5 @@
 package com.workflow.backend.security;
 
-import com.workflow.backend.entity.User;
-import com.workflow.backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,7 +23,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
     private final JwtService jwtService;
-    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -56,26 +53,26 @@ public class JwtFilter extends OncePerRequestFilter {
             username = jwtService.extractUsername(jwt);
             logger.debug("Processing token for user: {}", username);
 
-            // 3. Kullanıcı doğrulaması
+            // 3. Kullanıcı doğrulaması (DB sorgusu yapmadan JWT'den userId alınır)
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                User user = userRepository.findByUsername(username);
+                if (jwtService.isTokenValid(jwt, username)) {
+                    Long userId = jwtService.extractUserId(jwt);
 
-                if (user != null && jwtService.isTokenValid(jwt, username)) {
-                    // Spring Security'ye "Bu adam güvenli, içeri al" diyoruz
                     UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                            user.getUsername(),
-                            user.getPassword(),
-                            new ArrayList<>() // Yetkiler (Roles) şimdilik boş
+                            username,
+                            "",
+                            new ArrayList<>()
                     );
 
+                    // userId, credentials alanında saklanır (DB sorgusu gereksiz)
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                            userDetails, userId, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    logger.debug("Authenticated user: {}", username);
+                    logger.debug("Authenticated user: {} (id: {})", username, userId);
                 } else {
-                    logger.warn("Token invalid or user not found for username: {}", username);
+                    logger.warn("Token invalid for username: {}", username);
                 }
             }
         } catch (Exception e) {

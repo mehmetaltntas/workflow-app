@@ -2,6 +2,7 @@ package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
+import com.workflow.backend.dto.UpdateBoardRequest;
 import com.workflow.backend.hateoas.assembler.BoardModelAssembler;
 import com.workflow.backend.hateoas.model.BoardModel;
 import com.workflow.backend.service.BoardService;
@@ -155,7 +156,7 @@ public class BoardController {
     @PutMapping("/{id}")
     public ResponseEntity<BoardModel> updateBoard(
             @Parameter(description = "Pano ID") @PathVariable Long id,
-            @Valid @RequestBody CreateBoardRequest request) {
+            @Valid @RequestBody UpdateBoardRequest request) {
         BoardResponse result = boardService.updateBoard(id, request);
         BoardModel model = boardAssembler.toModel(result);
         return ResponseEntity.ok(model);

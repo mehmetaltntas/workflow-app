@@ -3,6 +3,7 @@ package com.workflow.backend.controller;
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.PaginatedResponse;
+import com.workflow.backend.dto.UpdateBoardRequest;
 import com.workflow.backend.hateoas.assembler.BoardModelAssembler;
 import com.workflow.backend.hateoas.model.BoardModel;
 import com.workflow.backend.service.BoardService;
@@ -178,7 +179,7 @@ class BoardControllerTest {
         @DisplayName("Should update board and return 200")
         void updateBoard_ValidRequest_Returns200() {
             // Arrange
-            CreateBoardRequest updateRequest = new CreateBoardRequest();
+            UpdateBoardRequest updateRequest = new UpdateBoardRequest();
             updateRequest.setName("Updated Board");
             updateRequest.setStatus("DEVAM_EDIYOR");
 
@@ -192,7 +193,7 @@ class BoardControllerTest {
             updatedModel.setName("Updated Board");
             updatedModel.setStatus("DEVAM_EDIYOR");
 
-            when(boardService.updateBoard(eq(1L), any(CreateBoardRequest.class))).thenReturn(updatedResponse);
+            when(boardService.updateBoard(eq(1L), any(UpdateBoardRequest.class))).thenReturn(updatedResponse);
             when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(updatedModel);
 
             // Act

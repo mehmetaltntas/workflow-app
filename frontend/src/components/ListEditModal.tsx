@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Save, Link as LinkIcon, Trash2, CheckSquare, Square, Settings, Flag, Tag, Check } from "lucide-react";
 import type { Task, TaskList, Label, Priority } from "../types";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
@@ -30,6 +30,39 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
   const [showUndoBar, setShowUndoBar] = useState(false);
   const [deletedTaskIds, setDeletedTaskIds] = useState<number[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const focusableElements = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    firstElement?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTab);
+    return () => modal.removeEventListener('keydown', handleTab);
+  }, []);
 
   const toggleLabel = (labelId: number) => {
     setSelectedLabelIds(prev => {
@@ -116,7 +149,9 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
   const visibleTasks = list.tasks.filter(t => !deletedTaskIds.includes(t.id));
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{
+    <div className="modal-overlay" onClick={onClose} onKeyDown={(e) => {
+      if (e.key === 'Escape') onClose();
+    }} style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -131,6 +166,10 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
       zIndex: zIndex.modal,
     }}>
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title-list-edit"
         className="modal-content glass"
         style={{
           width: "650px",
@@ -155,9 +194,9 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
             <div style={{ padding: spacing[2.5], backgroundColor: colors.brand.primaryLight, borderRadius: radius.lg }}>
               <Settings size={20} style={{ color: 'var(--primary)' }} />
             </div>
-            <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Listeyi Düzenle</h3>
+            <h3 id="modal-title-list-edit" style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Listeyi Düzenle</h3>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
+          <button onClick={onClose} aria-label="Kapat" className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={24} />
           </button>
         </div>

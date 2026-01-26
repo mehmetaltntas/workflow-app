@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.LabelDto;
+import com.workflow.backend.dto.UpdateBoardRequest;
 import com.workflow.backend.dto.PaginatedResponse;
 import com.workflow.backend.dto.SubtaskDto;
 import com.workflow.backend.dto.TaskDto;
@@ -270,7 +271,7 @@ public class BoardService {
     // PANO ADI GÜNCELLE
     // PANO GÜNCELLE
     @Transactional
-    public BoardResponse updateBoard(Long boardId, CreateBoardRequest request) {
+    public BoardResponse updateBoard(Long boardId, UpdateBoardRequest request) {
         // Kullanıcı sadece kendi panosunu güncelleyebilir
         authorizationService.verifyBoardOwnership(boardId);
 

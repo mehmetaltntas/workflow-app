@@ -34,12 +34,17 @@ public class JwtService {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // 1. Kullanıcı adı ile Access Token Üret
+    // 1. Kullanıcı adı ile Access Token Üret (eski token'lar için geriye uyumluluk)
     public String generateToken(String username) {
         return generateAccessToken(username);
     }
 
-    // Access Token Üret (kısa süreli - 15 dakika)
+    // userId ile Access Token Üret
+    public String generateToken(String username, Long userId) {
+        return generateAccessToken(username, userId);
+    }
+
+    // Access Token Üret - userId olmadan (geriye uyumluluk)
     public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -49,9 +54,25 @@ public class JwtService {
                 .compact();
     }
 
+    // Access Token Üret - userId claim ile (kısa süreli)
+    public String generateAccessToken(String username, Long userId) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("userId", userId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessToken().getExpiration()))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     // 2. Token'dan Kullanıcı Adını Çıkar
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    // 3. Token'dan Kullanıcı ID'sini Çıkar
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
     }
 
     // Token Geçerli mi?

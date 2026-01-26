@@ -184,7 +184,7 @@ describe('useBoards', () => {
     })
 
     expect(success).toBe(true)
-    expect(boardService.updateBoard).toHaveBeenCalledWith(1, { name: 'Updated Name', userId: 1 })
+    expect(boardService.updateBoard).toHaveBeenCalledWith(1, { name: 'Updated Name' })
     expect(toast.success).toHaveBeenCalledWith('Pano güncellendi')
   })
 

@@ -86,7 +86,7 @@ public class AuthController {
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    String newAccessToken = jwtService.generateAccessToken(user.getUsername());
+                    String newAccessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
                     return ResponseEntity.ok(new TokenRefreshResponse(newAccessToken, requestRefreshToken));
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Refresh token", "token", requestRefreshToken));

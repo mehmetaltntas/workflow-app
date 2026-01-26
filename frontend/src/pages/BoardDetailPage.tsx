@@ -70,6 +70,8 @@ const BoardDetailPage = () => {
   const [hoveredSubtask, setHoveredSubtask] = useState<Subtask | null>(null);
   const [subtaskCache, setSubtaskCache] = useState<Map<number, Subtask[]>>(new Map());
   const [isLoadingSubtasks, setIsLoadingSubtasks] = useState(false);
+  const subtaskCacheRef = useRef(subtaskCache);
+  subtaskCacheRef.current = subtaskCache;
 
   // Undo state for list completion - using ref to avoid closure issues
   const listCompletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -116,7 +118,7 @@ const BoardDetailPage = () => {
 
   // Subtasks lazy loading
   const loadSubtasks = useCallback(async (taskId: number) => {
-    if (subtaskCache.has(taskId)) return;
+    if (subtaskCacheRef.current.has(taskId)) return;
 
     try {
       setIsLoadingSubtasks(true);
@@ -127,7 +129,7 @@ const BoardDetailPage = () => {
     } finally {
       setIsLoadingSubtasks(false);
     }
-  }, [subtaskCache]);
+  }, []);
 
   const resetListForm = useCallback(() => {
     setNewListName("");

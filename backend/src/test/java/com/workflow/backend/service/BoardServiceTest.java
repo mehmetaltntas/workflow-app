@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.PaginatedResponse;
+import com.workflow.backend.dto.UpdateBoardRequest;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.repository.BoardRepository;
@@ -201,7 +202,7 @@ class BoardServiceTest {
         @DisplayName("Should update board successfully")
         void updateBoard_Success() {
             // Arrange
-            CreateBoardRequest updateRequest = new CreateBoardRequest();
+            UpdateBoardRequest updateRequest = new UpdateBoardRequest();
             updateRequest.setName("Updated Board");
             updateRequest.setStatus("DEVAM_EDIYOR");
 

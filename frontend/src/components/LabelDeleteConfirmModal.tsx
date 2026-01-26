@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { X, AlertTriangle, Tag, List } from "lucide-react";
 import type { Label } from "../types";
 import { colors, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
@@ -23,10 +23,47 @@ export const LabelDeleteConfirmModal: React.FC<LabelDeleteConfirmModalProps> = (
   onConfirm,
   onCancel,
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const focusableElements = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    firstElement?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTab);
+    return () => modal.removeEventListener('keydown', handleTab);
+  }, []);
+
   return (
     <div
       className="modal-overlay"
       onClick={onCancel}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCancel();
+      }}
       style={{
         position: "fixed",
         top: 0,
@@ -42,6 +79,10 @@ export const LabelDeleteConfirmModal: React.FC<LabelDeleteConfirmModalProps> = (
       }}
     >
       <div
+        ref={modalRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="modal-title-label-delete"
         className="modal-content glass"
         style={{
           width: "420px",
@@ -66,12 +107,12 @@ export const LabelDeleteConfirmModal: React.FC<LabelDeleteConfirmModalProps> = (
               <AlertTriangle size={20} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.bold, color: "var(--text-main)" }}>
+              <h3 id="modal-title-label-delete" style={{ margin: 0, fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.bold, color: "var(--text-main)" }}>
                 Etiketi Sil
               </h3>
             </div>
           </div>
-          <button onClick={onCancel} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
+          <button onClick={onCancel} aria-label="Kapat" className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={20} />
           </button>
         </div>

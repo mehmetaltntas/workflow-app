@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 
@@ -23,6 +23,41 @@ export const ConfirmationModal: React.FC<Props> = ({
   cancelText = "İptal",
   variant = "danger"
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const focusableElements = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    firstElement?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTab);
+    return () => modal.removeEventListener('keydown', handleTab);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const getVariantStyles = () => {
@@ -54,6 +89,9 @@ export const ConfirmationModal: React.FC<Props> = ({
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
       style={{ animation: `fadeIn ${animation.duration.normal} ${animation.easing.smooth}`, zIndex: zIndex.modal }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCancel();
+      }}
     >
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-[8px]"
@@ -61,6 +99,10 @@ export const ConfirmationModal: React.FC<Props> = ({
       />
 
       <div
+        ref={modalRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="modal-title-confirmation"
         className="relative w-full max-w-[400px] border border-white/10 overflow-hidden"
         style={{
           background: cssVars.bgSecondary,
@@ -72,6 +114,7 @@ export const ConfirmationModal: React.FC<Props> = ({
       >
         <button
           onClick={onCancel}
+          aria-label="Kapat"
           className="absolute text-gray-500 hover:bg-white/5 hover:text-white transition-all"
           style={{ top: spacing[5], right: spacing[5], padding: spacing[2], borderRadius: radius.lg }}
         >
@@ -86,7 +129,7 @@ export const ConfirmationModal: React.FC<Props> = ({
               {styles.icon}
             </div>
 
-            <h3 style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, color: cssVars.textMain, marginBottom: spacing[3], letterSpacing: typography.letterSpacing.tight }}>
+            <h3 id="modal-title-confirmation" style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, color: cssVars.textMain, marginBottom: spacing[3], letterSpacing: typography.letterSpacing.tight }}>
               {title}
             </h3>
 

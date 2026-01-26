@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Save, Link as LinkIcon, Type, ListChecks, Plus, Trash2, Square, CheckSquare, Edit3 } from "lucide-react";
 import type { Task, Subtask } from "../types";
 import { subtaskService } from "../services/api";
@@ -21,6 +21,39 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const focusableElements = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    firstElement?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    modal.addEventListener('keydown', handleTab);
+    return () => modal.removeEventListener('keydown', handleTab);
+  }, []);
 
   // Subtask handlers
   const handleAddSubtask = async () => {
@@ -97,7 +130,9 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
         onSave={handleUpdateSubtask}
       />
     )}
-    <div className="modal-overlay" onClick={onClose} style={{
+    <div className="modal-overlay" onClick={onClose} onKeyDown={(e) => {
+      if (e.key === 'Escape') onClose();
+    }} style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -112,6 +147,10 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
       zIndex: zIndex.modal,
     }}>
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title-task-edit"
         className="modal-content glass"
         style={{
           width: "550px",
@@ -133,9 +172,9 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
             <div style={{ padding: spacing[2.5], backgroundColor: 'rgba(var(--primary-rgb), 0.1)', borderRadius: radius.lg }}>
               <Type size={20} className="text-primary" />
             </div>
-            <h3 style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Görevi Düzenle</h3>
+            <h3 id="modal-title-task-edit" style={{ margin: 0, fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, letterSpacing: typography.letterSpacing.tighter }}>Görevi Düzenle</h3>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
+          <button onClick={onClose} aria-label="Kapat" className="p-2 rounded-full hover:bg-white/10 text-gray-400 transition-colors">
             <X size={24} />
           </button>
         </div>

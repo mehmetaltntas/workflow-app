@@ -52,8 +52,8 @@ public class UserService {
         // 3. Kaydet
         User savedUser = userRepository.save(user);
 
-        // 4. Access Token Üret
-        String accessToken = jwtService.generateAccessToken(savedUser.getUsername());
+        // 4. Access Token Üret (userId claim ile)
+        String accessToken = jwtService.generateAccessToken(savedUser.getUsername(), savedUser.getId());
 
         // 5. Refresh Token Üret
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
@@ -75,8 +75,8 @@ public class UserService {
             throw new InvalidCredentialsException("Kullanıcı adı veya şifre hatalı!");
         }
 
-        // 3. Access Token Üret
-        String accessToken = jwtService.generateAccessToken(user.getUsername());
+        // 3. Access Token Üret (userId claim ile)
+        String accessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
 
         // 4. Refresh Token Üret
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
@@ -128,7 +128,7 @@ public class UserService {
 
         // Kullanıcı adı değiştiyse yeni token'lar üret
         if (usernameChanged) {
-            String accessToken = jwtService.generateAccessToken(savedUser.getUsername());
+            String accessToken = jwtService.generateAccessToken(savedUser.getUsername(), savedUser.getId());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
             response.setToken(accessToken);
             response.setRefreshToken(refreshToken.getToken());

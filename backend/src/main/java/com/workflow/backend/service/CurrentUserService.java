@@ -35,9 +35,19 @@ public class CurrentUserService {
 
     /**
      * Mevcut oturum açmış kullanıcının ID'sini döndürür.
+     * JWT'deki userId claim'inden okunur, DB sorgusu yapılmaz.
      * @return User ID
      */
     public Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new InvalidCredentialsException("Oturum açmış kullanıcı bulunamadı!");
+        }
+        Object credentials = authentication.getCredentials();
+        if (credentials instanceof Long) {
+            return (Long) credentials;
+        }
+        // Fallback: JWT'de userId yoksa DB'den al (eski token'lar için)
         return getCurrentUser().getId();
     }
 

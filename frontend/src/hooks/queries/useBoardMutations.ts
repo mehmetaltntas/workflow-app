@@ -29,7 +29,6 @@ export const useCreateBoard = () => {
       if (!userId) throw new Error('User not authenticated');
       return boardService.createBoard({
         ...data,
-        userId,
         status: data.status || 'PLANLANDI',
       });
     },
@@ -68,7 +67,7 @@ export const useUpdateBoard = () => {
       };
     }) => {
       if (!userId) throw new Error('User not authenticated');
-      return boardService.updateBoard(boardId, { ...data, userId });
+      return boardService.updateBoard(boardId, data);
     },
     onMutate: async ({ boardId, data }) => {
       // Cancel outgoing refetches

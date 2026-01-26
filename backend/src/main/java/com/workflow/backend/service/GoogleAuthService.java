@@ -78,8 +78,8 @@ public class GoogleAuthService {
             User user = userRepository.findByGoogleId(googleId)
                     .orElseGet(() -> findOrCreateUser(googleId, email, name, picture));
 
-            // Token'lari olustur
-            String accessToken = jwtService.generateAccessToken(user.getUsername());
+            // Token'lari olustur (userId claim ile)
+            String accessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
             // Response olustur

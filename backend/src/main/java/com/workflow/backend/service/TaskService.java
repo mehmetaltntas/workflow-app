@@ -157,23 +157,23 @@ public class TaskService {
     private void reorderWithinSameList(Task task, Integer oldPosition, Integer newPosition) {
         Long listId = task.getTaskList().getId();
 
+        List<Task> tasksToUpdate;
         if (oldPosition < newPosition) {
             // Aşağı taşınıyor: Aradaki elemanları yukarı kaydır
-            taskRepository.findByTaskListIdOrderByPositionAsc(listId).stream()
+            tasksToUpdate = taskRepository.findByTaskListIdOrderByPositionAsc(listId).stream()
                     .filter(t -> t.getPosition() > oldPosition && t.getPosition() <= newPosition)
-                    .forEach(t -> {
-                        t.setPosition(t.getPosition() - 1);
-                        taskRepository.save(t);
-                    });
+                    .peek(t -> t.setPosition(t.getPosition() - 1))
+                    .toList();
         } else if (oldPosition > newPosition) {
             // Yukarı taşınıyor: Aradaki elemanları aşağı kaydır
-            taskRepository.findByTaskListIdOrderByPositionAsc(listId).stream()
+            tasksToUpdate = taskRepository.findByTaskListIdOrderByPositionAsc(listId).stream()
                     .filter(t -> t.getPosition() >= newPosition && t.getPosition() < oldPosition)
-                    .forEach(t -> {
-                        t.setPosition(t.getPosition() + 1);
-                        taskRepository.save(t);
-                    });
+                    .peek(t -> t.setPosition(t.getPosition() + 1))
+                    .toList();
+        } else {
+            return;
         }
+        taskRepository.saveAll(tasksToUpdate);
     }
 
     private void moveToAnotherList(Task task, Long sourceListId, TaskList targetList, Integer newPosition) {
@@ -197,6 +197,7 @@ public class TaskService {
 
         logger.info("Toplu sıralama başlatıldı: Liste {} için {} görev", list.getName(), request.getTaskPositions().size());
 
+        List<Task> tasksToUpdate = new java.util.ArrayList<>();
         for (BatchReorderRequest.TaskPosition tp : request.getTaskPositions()) {
             Task task = taskRepository.findById(tp.getTaskId())
                     .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", tp.getTaskId()));
@@ -206,8 +207,9 @@ public class TaskService {
             }
 
             task.setPosition(tp.getPosition());
-            taskRepository.save(task);
+            tasksToUpdate.add(task);
         }
+        taskRepository.saveAll(tasksToUpdate);
 
         List<Task> updatedTasks = taskRepository.findByTaskListIdOrderByPositionAsc(request.getListId());
         return updatedTasks.stream().map(this::mapToDto).toList();
@@ -271,10 +273,8 @@ public class TaskService {
         if (request.getIsCompleted() != null) {
             list.setIsCompleted(request.getIsCompleted());
             if (list.getTasks() != null) {
-                for (Task task : list.getTasks()) {
-                    task.setIsCompleted(request.getIsCompleted());
-                    taskRepository.save(task);
-                }
+                list.getTasks().forEach(task -> task.setIsCompleted(request.getIsCompleted()));
+                taskRepository.saveAll(list.getTasks());
             }
         }
 

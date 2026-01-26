@@ -1,21 +1,19 @@
 package com.workflow.backend.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
 @Data
-@Schema(description = "Pano oluşturma isteği")
-public class CreateBoardRequest {
+@Schema(description = "Pano güncelleme isteği")
+public class UpdateBoardRequest {
 
-    @NotBlank(message = "Pano adı boş olamaz")
     @Size(min = 1, max = 25, message = "Pano adı 1-25 karakter arasında olmalıdır")
-    @Schema(description = "Pano adı", example = "Proje Yönetimi", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Pano adı", example = "Proje Yönetimi")
     private String name;
 
-    @Schema(description = "Pano durumu", example = "PLANLANDI", allowableValues = {"PLANLANDI", "DEVAM EDIYOR", "TAMAMLANDI"})
+    @Schema(description = "Pano durumu", example = "PLANLANDI", allowableValues = {"PLANLANDI", "DEVAM EDIYOR", "TAMAMLANDI", "DURDURULDU", "BIRAKILDI"})
     private String status;
 
     @URL(message = "Geçerli bir URL giriniz")

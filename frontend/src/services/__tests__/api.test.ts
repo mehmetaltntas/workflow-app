@@ -143,7 +143,6 @@ describe('API Services', () => {
 
       const result = await boardService.createBoard({
         name: 'New Board',
-        userId: 1,
         status: 'PLANLANDI',
       })
 
