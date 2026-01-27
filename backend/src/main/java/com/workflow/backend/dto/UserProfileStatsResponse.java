@@ -19,6 +19,7 @@ public class UserProfileStatsResponse {
     private int totalSubtasks;
     private int completedSubtasks;
     private int overallProgress; // yuzde olarak
+    private int teamBoardCount;
     private List<CategoryStat> topCategories;
 
     @Getter

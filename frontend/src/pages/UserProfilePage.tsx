@@ -149,11 +149,25 @@ const UserProfilePage = () => {
             fontWeight: typography.fontWeight.bold,
             color: cssVars.textMain,
             margin: 0,
-            marginBottom: spacing[2],
+            marginBottom: spacing[1],
           }}
         >
           {profile.username}
         </h1>
+
+        {/* Full Name */}
+        {profile.firstName && profile.lastName && (
+          <p
+            style={{
+              fontSize: typography.fontSize.lg,
+              color: cssVars.textMuted,
+              margin: 0,
+              marginBottom: spacing[2],
+            }}
+          >
+            {profile.firstName} {profile.lastName}
+          </p>
+        )}
 
         {/* Connection Count */}
         {!isPrivate && profile.connectionCount !== null && (
@@ -442,6 +456,76 @@ const UserProfilePage = () => {
                 ))}
               </div>
             </div>
+
+            {/* Team Board Stats */}
+            {stats.teamBoardCount > 0 && (
+              <div
+                style={{
+                  background: cssVars.bgCard,
+                  borderRadius: radius.xl,
+                  border: `1px solid ${cssVars.border}`,
+                  padding: spacing[6],
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: typography.fontSize.xl,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: cssVars.textMain,
+                    margin: 0,
+                    marginBottom: spacing[5],
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing[2],
+                  }}
+                >
+                  <Users size={20} />
+                  Takim Panosu
+                </h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: `${spacing[3]} ${spacing[4]}`,
+                      background: colors.dark.bg.hover,
+                      borderRadius: radius.lg,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                      <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.brand.primary }} />
+                      <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
+                        Takim Panolari
+                      </span>
+                    </div>
+                    <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>
+                      {stats.teamBoardCount}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: `${spacing[3]} ${spacing[4]}`,
+                      background: colors.dark.bg.hover,
+                      borderRadius: radius.lg,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                      <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.semantic.info }} />
+                      <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
+                        Bireysel Panolar
+                      </span>
+                    </div>
+                    <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>
+                      {stats.totalBoards - stats.teamBoardCount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Top Categories */}
             <div

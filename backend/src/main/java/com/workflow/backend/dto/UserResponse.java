@@ -16,6 +16,12 @@ public class UserResponse {
     @Schema(description = "Email adresi", example = "john@example.com")
     private String email;
 
+    @Schema(description = "Kullanıcının adı", example = "Mehmet")
+    private String firstName;
+
+    @Schema(description = "Kullanıcının soyadı", example = "Altıntaş")
+    private String lastName;
+
     @Schema(description = "Profil resmi (Base64 encoded)")
     private String profilePicture;
 

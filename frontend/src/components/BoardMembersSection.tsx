@@ -148,6 +148,41 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
           )}
         </div>
 
+        {/* Board Creator Card (TEAM only) */}
+        {board.boardType === 'TEAM' && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: spacing[3],
+            padding: spacing[4], borderRadius: radius.lg,
+            border: `1px solid ${colors.brand.primary}30`,
+            background: `${colors.brand.primary}08`,
+            marginBottom: spacing[3],
+          }}>
+            <div style={{
+              width: spacing[9], height: spacing[9], borderRadius: radius.full,
+              background: `linear-gradient(135deg, ${colors.brand.primary}, #7950f2)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.sm,
+            }}>
+              {board.ownerName.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: cssVars.textMain, display: "block" }}>
+                {board.ownerFirstName && board.ownerLastName ? `${board.ownerFirstName} ${board.ownerLastName}` : board.ownerName}
+              </span>
+              <span style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
+                @{board.ownerName}
+              </span>
+            </div>
+            <span style={{
+              fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.bold,
+              color: colors.brand.primary, background: colors.brand.primaryLight,
+              padding: `${spacing[0.5]} ${spacing[2.5]}`, borderRadius: radius.full,
+            }}>
+              Kurucu
+            </span>
+          </div>
+        )}
+
         {/* Member List */}
         {members.length === 0 ? (
           <div
@@ -240,22 +275,35 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                     <div>
                       <span
                         style={{
-                          fontSize: typography.fontSize.base,
-                          fontWeight: typography.fontWeight.semibold,
+                          fontSize: board.boardType === 'TEAM' ? typography.fontSize.lg : typography.fontSize.base,
+                          fontWeight: board.boardType === 'TEAM' ? typography.fontWeight.bold : typography.fontWeight.semibold,
                           color: cssVars.textMain,
                           display: "block",
                         }}
                       >
-                        {member.username}
+                        {board.boardType === 'TEAM' && member.firstName && member.lastName
+                          ? `${member.firstName} ${member.lastName}`
+                          : member.username}
                       </span>
-                      {member.assignments && member.assignments.length > 0 && (
+                      {board.boardType === 'TEAM' && (
                         <span
                           style={{
                             fontSize: typography.fontSize.xs,
                             color: cssVars.textMuted,
                           }}
                         >
-                          {member.assignments.length} atama
+                          @{member.username}
+                        </span>
+                      )}
+                      {member.assignments && member.assignments.length > 0 && (
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.xs,
+                            color: cssVars.textMuted,
+                            marginLeft: board.boardType === 'TEAM' ? spacing[2] : undefined,
+                          }}
+                        >
+                          {board.boardType === 'TEAM' ? `· ${member.assignments.length} atama` : `${member.assignments.length} atama`}
                         </span>
                       )}
                     </div>

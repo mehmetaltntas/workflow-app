@@ -30,6 +30,12 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
     // Google OAuth icin eklenen alanlar
     @Column(unique = true)
     private String googleId;

@@ -113,41 +113,49 @@ const BoardInfoPage = () => {
         >
           <ArrowLeft size={20} />
         </button>
-        <div>
-          <h1
-            style={{
-              fontSize: typography.fontSize["2xl"],
-              fontWeight: typography.fontWeight.bold,
-              color: cssVars.textMain,
-              margin: 0,
-            }}
-          >
-            Pano Bilgileri
-          </h1>
-          <p
-            style={{
-              fontSize: typography.fontSize.sm,
-              color: cssVars.textMuted,
-              margin: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[2],
-            }}
-          >
-            <span>{board.name}</span>
-            {board.createdAt && (
-              <>
-                <span style={{ color: cssVars.textMuted, opacity: 0.4 }}>·</span>
-                <span>
-                  {new Date(board.createdAt).toLocaleDateString("tr-TR", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </span>
-              </>
-            )}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
+          <div>
+            <h1
+              style={{
+                fontSize: typography.fontSize["2xl"],
+                fontWeight: typography.fontWeight.bold,
+                color: cssVars.textMain,
+                margin: 0,
+              }}
+            >
+              Pano Bilgileri
+            </h1>
+            <p
+              style={{
+                fontSize: typography.fontSize.sm,
+                color: cssVars.textMuted,
+                margin: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2],
+              }}
+            >
+              <span>{board.name}</span>
+              {board.createdAt && (
+                <>
+                  <span style={{ color: cssVars.textMuted, opacity: 0.4 }}>·</span>
+                  <span>
+                    {new Date(board.createdAt).toLocaleDateString("tr-TR", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+          {board.boardType === 'TEAM' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: cssVars.textMuted }}>
+              <span style={{ fontSize: '13px' }}>Kurucu:</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: cssVars.textMain }}>{board.ownerName}</span>
+            </div>
+          )}
         </div>
       </div>
 

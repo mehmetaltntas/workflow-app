@@ -13,6 +13,12 @@ public class UserProfileResponse {
     @Schema(description = "Kullanici adi", example = "johndoe")
     private String username;
 
+    @Schema(description = "Kullanicinin adi", example = "Mehmet")
+    private String firstName;
+
+    @Schema(description = "Kullanicinin soyadi", example = "Altintas")
+    private String lastName;
+
     @Schema(description = "Profil resmi (Base64 encoded)")
     private String profilePicture;
 

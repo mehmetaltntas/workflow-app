@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useUserProfileStats } from "../hooks/queries/useUserProfileStats";
+import { useUserProfile } from "../hooks/queries/useUserProfile";
 import { StatCard } from "../components/StatCard";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
@@ -21,6 +22,10 @@ import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 const ProfilePage = () => {
   const username = useAuthStore((state) => state.username) || "Kullanici";
   const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", true);
+  const { data: profile } = useUserProfile(username);
+  const fullName = profile?.firstName && profile?.lastName
+    ? `${profile.firstName} ${profile.lastName}`
+    : null;
   const initials = username.substring(0, 2).toUpperCase();
 
   const { data: connectionCount = 0 } = useQuery({
@@ -160,6 +165,18 @@ const ProfilePage = () => {
             >
               {username}
             </h1>
+            {fullName && (
+              <p
+                style={{
+                  fontSize: typography.fontSize.xl,
+                  color: cssVars.textMuted,
+                  margin: 0,
+                  marginTop: spacing[1],
+                }}
+              >
+                {fullName}
+              </p>
+            )}
             <p
               style={{
                 fontSize: typography.fontSize.lg,
@@ -406,6 +423,76 @@ const ProfilePage = () => {
             ))}
           </div>
         </div>
+
+        {/* Team Board Stats */}
+        {stats.teamBoardCount > 0 && (
+          <div
+            style={{
+              background: cssVars.bgCard,
+              borderRadius: radius.xl,
+              border: `1px solid ${cssVars.border}`,
+              padding: spacing[6],
+            }}
+          >
+            <h3
+              style={{
+                fontSize: typography.fontSize.xl,
+                fontWeight: typography.fontWeight.semibold,
+                color: cssVars.textMain,
+                margin: 0,
+                marginBottom: spacing[5],
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2],
+              }}
+            >
+              <Users size={20} />
+              Takim Panosu
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: `${spacing[3]} ${spacing[4]}`,
+                  background: colors.dark.bg.hover,
+                  borderRadius: radius.lg,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                  <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.brand.primary }} />
+                  <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
+                    Takim Panolari
+                  </span>
+                </div>
+                <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>
+                  {stats.teamBoardCount}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: `${spacing[3]} ${spacing[4]}`,
+                  background: colors.dark.bg.hover,
+                  borderRadius: radius.lg,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                  <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.semantic.info }} />
+                  <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
+                    Bireysel Panolar
+                  </span>
+                </div>
+                <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>
+                  {stats.totalBoards - stats.teamBoardCount}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Top Categories */}
         <div

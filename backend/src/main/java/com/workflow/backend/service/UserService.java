@@ -74,6 +74,8 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // BCrypt ile şifrele
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
 
         // 3. Kaydet
         User savedUser = userRepository.save(user);
@@ -244,6 +246,8 @@ public class UserService {
         UserProfileResponse response = new UserProfileResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
         response.setIsProfilePublic(user.getIsProfilePublic());
         response.setConnectionStatus(connectionStatus);
         response.setConnectionId(connectionId);
@@ -301,6 +305,9 @@ public class UserService {
         // Board istatistikleri
         long totalBoards = boardRepository.countByUserId(targetUserId);
         response.setTotalBoards((int) totalBoards);
+
+        long teamBoardCount = boardRepository.countTeamBoardsByUserId(targetUserId);
+        response.setTeamBoardCount((int) teamBoardCount);
 
         Map<String, Integer> boardsByStatus = new LinkedHashMap<>();
         boardsByStatus.put("PLANLANDI", 0);
@@ -395,6 +402,8 @@ public class UserService {
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
         response.setProfilePicture(pictureData);
         // Token burada set edilmiyor, yukarida metot icinde ediliyor.
         return response;

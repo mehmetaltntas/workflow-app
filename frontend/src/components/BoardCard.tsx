@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS } from "../constants";
-import { Info, ExternalLink, Pin, PinOff } from "lucide-react";
+import { Info, ExternalLink, Pin, PinOff, User, Users } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
 import "./BoardCard.css";
@@ -34,6 +34,29 @@ const BoardCard: React.FC<BoardCardProps> = ({
   // CSS custom property for dynamic status color
   const statusStyle = { '--board-status-color': statusColor } as React.CSSProperties;
 
+  const isTeam = board.boardType === 'TEAM';
+  const boardTypeBadge = (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        fontSize: '11px',
+        fontWeight: 600,
+        padding: '2px 8px',
+        borderRadius: '9999px',
+        lineHeight: 1,
+        whiteSpace: 'nowrap' as const,
+        color: isTeam ? '#3b82f6' : '#8b5cf6',
+        background: isTeam ? 'rgba(59,130,246,0.12)' : 'rgba(139,92,246,0.12)',
+        border: `1px solid ${isTeam ? 'rgba(59,130,246,0.25)' : 'rgba(139,92,246,0.25)'}`,
+      }}
+    >
+      {isTeam ? <Users size={12} strokeWidth={2.5} /> : <User size={12} strokeWidth={2.5} />}
+      {isTeam ? 'Takim' : 'Bireysel'}
+    </span>
+  );
+
   // Action menu items olustur
   const menuItems: ActionMenuItem[] = [
     ...(onTogglePin && (isPinned || canPin) ? [{
@@ -64,6 +87,9 @@ const BoardCard: React.FC<BoardCardProps> = ({
         <h3 className="board-card__name--list">
           {board.name}
         </h3>
+
+        {/* Board Type Badge */}
+        {boardTypeBadge}
 
         {/* Actions */}
         <div className="board-card__actions" onClick={(e) => e.stopPropagation()}>
@@ -115,11 +141,16 @@ const BoardCard: React.FC<BoardCardProps> = ({
           {board.name}
         </h3>
 
-        <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
-          <ActionMenu
-            items={menuItems}
-            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
-          />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+          {/* Board Type Badge */}
+          {boardTypeBadge}
+
+          <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
+            <ActionMenu
+              items={menuItems}
+              triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
+            />
+          </div>
         </div>
       </div>
 

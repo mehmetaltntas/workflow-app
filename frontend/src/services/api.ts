@@ -120,7 +120,7 @@ export const authService = {
   login: (data: { username: string; password: string }) => {
     return apiClient.post("/auth/login", data);
   },
-  register: (data: { username: string; email: string; password: string; code: string }) => {
+  register: (data: { username: string; email: string; password: string; code: string; firstName: string; lastName: string }) => {
     return apiClient.post("/auth/register", data);
   },
   sendRegistrationCode: (data: { username: string; email: string }) => {

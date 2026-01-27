@@ -12,6 +12,18 @@ import lombok.Data;
 @Schema(description = "Kullanıcı kayıt isteği")
 public class RegisterRequest {
 
+    @NotBlank(message = "Ad boş olamaz")
+    @Size(min = 1, max = 50, message = "Ad 1-50 karakter arasında olmalıdır")
+    @Pattern(regexp = "^[a-zA-ZçÇğĞıİöÖşŞüÜâÂêÊîÎôÔûÛ\\s]+$", message = "Ad sadece harf içerebilir, sayı ve noktalama işareti kullanılamaz")
+    @Schema(description = "Kullanıcının adı", example = "Mehmet", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String firstName;
+
+    @NotBlank(message = "Soyad boş olamaz")
+    @Size(min = 1, max = 50, message = "Soyad 1-50 karakter arasında olmalıdır")
+    @Pattern(regexp = "^[a-zA-ZçÇğĞıİöÖşŞüÜâÂêÊîÎôÔûÛ\\s]+$", message = "Soyad sadece harf içerebilir, sayı ve noktalama işareti kullanılamaz")
+    @Schema(description = "Kullanıcının soyadı", example = "Altıntaş", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String lastName;
+
     @NotBlank(message = "Kullanıcı adı boş olamaz")
     @Size(min = 3, max = 30, message = "Kullanıcı adı 3-30 karakter arasında olmalıdır")
     @Pattern(regexp = "^(?!\\.)(?!.*\\.$)(?!.*\\.\\.)[a-zA-Z0-9._]+$",

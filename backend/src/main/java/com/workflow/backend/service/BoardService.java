@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.BoardMember;
+import com.workflow.backend.entity.BoardType;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
@@ -57,6 +58,9 @@ public class BoardService {
         board.setDescription(request.getDescription());
         board.setDeadline(request.getDeadline());
         board.setCategory(request.getCategory());
+        if (request.getBoardType() != null) {
+            board.setBoardType(BoardType.valueOf(request.getBoardType()));
+        }
 
         // 3. SLUG OLUŞTURMA (YENİ)
         String slug = generateSlug(request.getName());
@@ -130,12 +134,12 @@ public class BoardService {
         logger.debug("Board fetched, @BatchSize will handle lazy collections efficiently");
 
         // DTO'ya dönüştür (@BatchSize sayesinde N+1 yerine batch sorgular çalışır)
-        return mapToResponseWithDetails(board);
+        return mapToResponseWithDetails(board, isOwner, currentUserId);
     }
 
     // Entity -> DTO Çevirici (Detay sayfası için - @BatchSize ile optimize edilmiş)
     // @BatchSize sayesinde lazy koleksiyonlar batch halinde yüklenir (N+1 yerine ~5-6 sorgu)
-    private BoardResponse mapToResponseWithDetails(Board board) {
+    private BoardResponse mapToResponseWithDetails(Board board, boolean isOwner, Long currentUserId) {
         BoardResponse response = new BoardResponse();
         response.setId(board.getId());
         response.setVersion(board.getVersion());
@@ -148,6 +152,11 @@ public class BoardService {
         response.setDeadline(board.getDeadline());
         response.setCreatedAt(board.getCreatedAt());
         response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
+        response.setOwnerFirstName(board.getUser().getFirstName());
+        response.setOwnerLastName(board.getUser().getLastName());
+        response.setBoardType(board.getBoardType().name());
+        response.setIsOwner(isOwner);
+        response.setCurrentUserId(currentUserId);
 
         // Board Members (sadece ACCEPTED)
         List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(board.getId());
@@ -296,6 +305,9 @@ public class BoardService {
         response.setDeadline(board.getDeadline());
         response.setCreatedAt(board.getCreatedAt());
         response.setOwnerName(board.getUser().getUsername()); // User zaten EntityGraph ile fetch edildi
+        response.setOwnerFirstName(board.getUser().getFirstName());
+        response.setOwnerLastName(board.getUser().getLastName());
+        response.setBoardType(board.getBoardType().name());
 
         // NOT: Liste sayfası için taskLists, tasks, labels yüklenmez (performans)
         // Detay sayfası için getBoardDetails() ve mapToResponseOptimized() kullanılır

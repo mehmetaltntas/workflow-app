@@ -37,6 +37,50 @@ const BoardDetailPage = () => {
   const queryClient = useQueryClient();
   const { data: board = null, isLoading: loading, error: boardError } = useBoardDetailQuery(slug);
 
+  // Board ownership & member assignment logic
+  const isOwner = board?.isOwner ?? true; // default to true for backward compat
+
+  // Find current user's assignments if they are a member
+  const currentUserAssignments = useMemo(() => {
+    if (isOwner || !board?.members || !board?.currentUserId) return null;
+    const memberEntry = board.members.find(m => m.userId === board.currentUserId);
+    return memberEntry?.assignments || [];
+  }, [board, isOwner]);
+
+  // Helper to check if current user is assigned to a target
+  const isAssignedTo = useCallback((targetType: string, targetId: number): boolean => {
+    if (isOwner) return true; // Owner can do everything
+    if (!currentUserAssignments) return false;
+
+    // Direct assignment check
+    if (currentUserAssignments.some(a => a.targetType === targetType && a.targetId === targetId)) {
+      return true;
+    }
+
+    // Inheritance: if assigned to LIST, can access TASKs and SUBTASKs under it
+    if (targetType === 'TASK' && board) {
+      const task = board.taskLists?.flatMap(l => l.tasks.map(t => ({ ...t, listId: l.id }))).find(t => t.id === targetId);
+      if (task && currentUserAssignments.some(a => a.targetType === 'LIST' && a.targetId === task.listId)) {
+        return true;
+      }
+    }
+
+    if (targetType === 'SUBTASK' && board) {
+      // Find the task that contains this subtask, then check list assignment
+      for (const list of board.taskLists || []) {
+        for (const task of list.tasks || []) {
+          const subtask = task.subtasks?.find(s => s.id === targetId);
+          if (subtask) {
+            if (currentUserAssignments.some(a => a.targetType === 'TASK' && a.targetId === task.id)) return true;
+            if (currentUserAssignments.some(a => a.targetType === 'LIST' && a.targetId === list.id)) return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }, [isOwner, currentUserAssignments, board]);
+
   // UI States
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListName, setNewListName] = useState("");
@@ -972,133 +1016,138 @@ const BoardDetailPage = () => {
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          {/* Labels Button */}
-          <button
-            onClick={() => setShowLabelManager(true)}
-            className="header-btn"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '12px',
-              border: `1px solid ${colors.borderDefault}`,
-              background: colors.bgElevated,
-              color: colors.textSecondary,
-              fontSize: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <Tag size={14} />
-            Etiketler
-            {board.labels && board.labels.length > 0 && (
-              <span style={{
-                background: 'var(--primary)',
-                color: tokenColors.dark.text.primary,
-                fontSize: '10px',
-                fontWeight: '700',
-                padding: '2px 6px',
-                borderRadius: '8px',
-                minWidth: '18px',
-                textAlign: 'center',
-              }}>
-                {board.labels.length}
-              </span>
-            )}
-          </button>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: colors.bgElevated,
-            padding: '4px',
-            borderRadius: '14px',
-            border: `1px solid ${colors.borderDefault}`,
-            backdropFilter: 'blur(10px)',
-            boxShadow: 'var(--shadow-md)',
-          }}>
-            {/* Sort Type Buttons */}
-            <div style={{ display: 'flex', gap: '2px' }}>
-              <button
-                onClick={() => setSortBy("name")}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  borderRadius: '10px',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  letterSpacing: '0.03em',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  background: sortBy === "name" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
-                  color: sortBy === "name" ? 'var(--primary)' : colors.textMuted,
-                  boxShadow: sortBy === "name" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
-                }}
-              >
-                Alfabetik
-              </button>
-              <button
-                onClick={() => setSortBy("date")}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 14px',
-                  borderRadius: '10px',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  letterSpacing: '0.03em',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  background: sortBy === "date" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
-                  color: sortBy === "date" ? 'var(--primary)' : colors.textMuted,
-                  boxShadow: sortBy === "date" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
-                }}
-              >
-                Tarih
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div style={{
-              width: '1px',
-              height: '20px',
-              background: colors.divider,
-              margin: '0 6px'
-            }} />
-
-            {/* Direction Toggle Arrow */}
+          {/* Labels Button - only visible to owner */}
+          {isOwner && (
             <button
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              onClick={() => setShowLabelManager(true)}
+              className="header-btn"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                border: 'none',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '12px',
+                border: `1px solid ${colors.borderDefault}`,
+                background: colors.bgElevated,
+                color: colors.textSecondary,
+                fontSize: '12px',
+                fontWeight: '600',
                 cursor: 'pointer',
-                background: colors.bgHover,
-                color: 'var(--primary)',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.2s',
+                backdropFilter: 'blur(10px)',
               }}
-              title={
-                sortBy === "name"
-                  ? (sortOrder === "asc" ? "A'dan Z'ye" : "Z'den A'ya")
-                  : (sortOrder === "asc" ? "Eskiden Yeniye" : "Yeniden Eskiye")
-              }
             >
-              {sortOrder === "asc" ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+              <Tag size={14} />
+              Etiketler
+              {board.labels && board.labels.length > 0 && (
+                <span style={{
+                  background: 'var(--primary)',
+                  color: tokenColors.dark.text.primary,
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  padding: '2px 6px',
+                  borderRadius: '8px',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                }}>
+                  {board.labels.length}
+                </span>
+              )}
             </button>
-          </div>
+          )}
+
+          {/* Sort Controls - only visible to owner */}
+          {isOwner && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: colors.bgElevated,
+              padding: '4px',
+              borderRadius: '14px',
+              border: `1px solid ${colors.borderDefault}`,
+              backdropFilter: 'blur(10px)',
+              boxShadow: 'var(--shadow-md)',
+            }}>
+              {/* Sort Type Buttons */}
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <button
+                  onClick={() => setSortBy("name")}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: '10px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    letterSpacing: '0.03em',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: sortBy === "name" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
+                    color: sortBy === "name" ? 'var(--primary)' : colors.textMuted,
+                    boxShadow: sortBy === "name" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
+                  }}
+                >
+                  Alfabetik
+                </button>
+                <button
+                  onClick={() => setSortBy("date")}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    borderRadius: '10px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    letterSpacing: '0.03em',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: sortBy === "date" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
+                    color: sortBy === "date" ? 'var(--primary)' : colors.textMuted,
+                    boxShadow: sortBy === "date" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
+                  }}
+                >
+                  Tarih
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div style={{
+                width: '1px',
+                height: '20px',
+                background: colors.divider,
+                margin: '0 6px'
+              }} />
+
+              {/* Direction Toggle Arrow */}
+              <button
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: colors.bgHover,
+                  color: 'var(--primary)',
+                  transition: 'all 0.2s ease',
+                }}
+                title={
+                  sortBy === "name"
+                    ? (sortOrder === "asc" ? "A'dan Z'ye" : "Z'den A'ya")
+                    : (sortOrder === "asc" ? "Eskiden Yeniye" : "Yeniden Eskiye")
+                }
+              >
+                {sortOrder === "asc" ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1131,13 +1180,14 @@ const BoardDetailPage = () => {
             onHover={handleListHover}
             columnIndex={0}
             emptyMessage="Bu panoda liste yok"
-            onAddItem={() => setIsAddingList(true)}
-            onItemEdit={(item) => {
+            onAddItem={isOwner ? () => setIsAddingList(true) : undefined}
+            onItemEdit={isOwner ? (item) => {
               const list = sortedTaskLists.find(l => l.id === item.id);
               if (list) setEditingList(list);
-            }}
-            onItemDelete={(item) => setDeleteListId(item.id)}
+            } : undefined}
+            onItemDelete={isOwner ? (item) => setDeleteListId(item.id) : undefined}
             onItemToggle={(item) => {
+              if (!isOwner && !isAssignedTo('LIST', item.id)) return;
               const list = sortedTaskLists.find(l => l.id === item.id);
               if (list) handleListCompletionToggle(list);
             }}
@@ -1154,13 +1204,14 @@ const BoardDetailPage = () => {
               onHover={handleTaskHover}
               columnIndex={1}
               emptyMessage="Bu listede görev yok"
-              onAddItem={() => setActiveListId(selectedListId)}
-              onItemEdit={(item) => {
+              onAddItem={isOwner ? () => setActiveListId(selectedListId) : undefined}
+              onItemEdit={isOwner ? (item) => {
                 const task = selectedList.tasks.find(t => t.id === item.id);
                 if (task) setEditingTask(task);
-              }}
-              onItemDelete={(item) => setDeleteTaskId(item.id)}
+              } : undefined}
+              onItemDelete={isOwner ? (item) => setDeleteTaskId(item.id) : undefined}
               onItemToggle={(item) => {
+                if (!isOwner && !isAssignedTo('TASK', item.id)) return;
                 const task = selectedList.tasks.find(t => t.id === item.id);
                 if (task) handleTaskCompletionToggle(task, selectedList);
               }}
@@ -1179,18 +1230,19 @@ const BoardDetailPage = () => {
               columnIndex={2}
               isLoading={isLoadingSubtasks}
               emptyMessage="Alt görev yok"
-              onAddItem={() => setActiveTaskIdForSubtask(selectedTask.id)}
-              onItemEdit={(item) => {
+              onAddItem={isOwner ? () => setActiveTaskIdForSubtask(selectedTask.id) : undefined}
+              onItemEdit={isOwner ? (item) => {
                 const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
                 const subtask = subtasks.find(s => s.id === item.id);
                 if (subtask) setEditingSubtask(subtask);
-              }}
+              } : undefined}
               onItemToggle={(item) => {
+                if (!isOwner && !isAssignedTo('SUBTASK', item.id)) return;
                 const subtasks = subtaskCache.get(selectedTask.id) || selectedTask.subtasks || [];
                 const subtask = subtasks.find(s => s.id === item.id);
                 if (subtask) handleSubtaskToggle(subtask);
               }}
-              onItemDelete={(item) => setDeleteSubtaskId(item.id)}
+              onItemDelete={isOwner ? (item) => setDeleteSubtaskId(item.id) : undefined}
             />
           )}
         </div>
@@ -1211,17 +1263,24 @@ const BoardDetailPage = () => {
             tasks={previewTasks}
             subtasks={previewSubtasks}
             isLoading={isLoadingSubtasks && previewType === 'task'}
-            onEditTask={(task) => setEditingTask(task)}
-            onEditList={(list) => setEditingList(list)}
-            onEditSubtask={(subtask) => setEditingSubtask(subtask)}
+            onEditTask={isOwner ? (task) => setEditingTask(task) : undefined}
+            onEditList={isOwner ? (list) => setEditingList(list) : undefined}
+            onEditSubtask={isOwner ? (subtask) => setEditingSubtask(subtask) : undefined}
             onToggleTask={(task) => {
+              if (!isOwner && !isAssignedTo('TASK', task.id)) return;
               if (selectedList) handleTaskCompletionToggle(task, selectedList);
             }}
-            onToggleList={(list) => handleListCompletionToggle(list)}
-            onToggleSubtask={(subtask) => handleSubtaskToggle(subtask)}
-            onDeleteTask={(taskId) => setDeleteTaskId(taskId)}
-            onDeleteList={(listId) => setDeleteListId(listId)}
-            onDeleteSubtask={(subtaskId) => setDeleteSubtaskId(subtaskId)}
+            onToggleList={(list) => {
+              if (!isOwner && !isAssignedTo('LIST', list.id)) return;
+              handleListCompletionToggle(list);
+            }}
+            onToggleSubtask={(subtask) => {
+              if (!isOwner && !isAssignedTo('SUBTASK', subtask.id)) return;
+              handleSubtaskToggle(subtask);
+            }}
+            onDeleteTask={isOwner ? (taskId) => setDeleteTaskId(taskId) : undefined}
+            onDeleteList={isOwner ? (listId) => setDeleteListId(listId) : undefined}
+            onDeleteSubtask={isOwner ? (subtaskId) => setDeleteSubtaskId(subtaskId) : undefined}
           />
         </div>
       </div>

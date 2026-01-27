@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Calendar, Link2, FileText, Type, Activity, FolderOpen } from "lucide-react";
+import { X, Calendar, Link2, FileText, Type, Activity, FolderOpen, Users } from "lucide-react";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import "./BoardEditModal.css";
 
@@ -9,7 +9,7 @@ type BoardStatus = "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | 
 interface CreateBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => Promise<void>;
+  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string, boardType?: 'INDIVIDUAL' | 'TEAM') => Promise<void>;
   initialData?: {
     name: string;
     status: string;
@@ -27,6 +27,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const [description, setDescription] = useState(initialData?.description || "");
   const [deadline, setDeadline] = useState(initialData?.deadline || "");
   const [category, setCategory] = useState(initialData?.category || "");
+  const [boardType, setBoardType] = useState<'INDIVIDUAL' | 'TEAM'>('INDIVIDUAL');
 
   const MAX_DESCRIPTION_LENGTH = 500;
   const modalRef = useRef<HTMLDivElement>(null);
@@ -84,7 +85,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
     e.preventDefault();
     if (name.trim()) {
       try {
-        await onCreate(name, status, link || undefined, description || undefined, deadline || undefined, category || undefined);
+        await onCreate(name, status, link || undefined, description || undefined, deadline || undefined, category || undefined, boardType);
         if (!initialData) {
           setName("");
           setStatus("PLANLANDI");
@@ -92,6 +93,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
           setDescription("");
           setDeadline("");
           setCategory("");
+          setBoardType("INDIVIDUAL");
         }
         onClose();
       } catch {
@@ -136,6 +138,40 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
           <div className="board-edit-modal__form-grid">
             {/* Sol Kolon */}
             <div className="board-edit-modal__left-col">
+              {/* Pano Tipi */}
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
+                  <Users size={16} />
+                  Pano Tipi
+                </label>
+                <div className="board-edit-modal__status-group">
+                  <button
+                    type="button"
+                    onClick={() => setBoardType('INDIVIDUAL')}
+                    className={`board-edit-modal__status-btn ${boardType === 'INDIVIDUAL' ? "board-edit-modal__status-btn--active" : ""}`}
+                    style={{
+                      borderColor: boardType === 'INDIVIDUAL' ? '#8b5cf6' : undefined,
+                      background: boardType === 'INDIVIDUAL' ? '#8b5cf620' : undefined,
+                      color: boardType === 'INDIVIDUAL' ? '#8b5cf6' : undefined,
+                    }}
+                  >
+                    Bireysel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBoardType('TEAM')}
+                    className={`board-edit-modal__status-btn ${boardType === 'TEAM' ? "board-edit-modal__status-btn--active" : ""}`}
+                    style={{
+                      borderColor: boardType === 'TEAM' ? '#3b82f6' : undefined,
+                      background: boardType === 'TEAM' ? '#3b82f620' : undefined,
+                      color: boardType === 'TEAM' ? '#3b82f6' : undefined,
+                    }}
+                  >
+                    Takım
+                  </button>
+                </div>
+              </div>
+
               {/* Isim */}
               <div className="board-edit-modal__field">
                 <label className="board-edit-modal__label">

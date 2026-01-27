@@ -37,6 +37,10 @@ public class Board {
 
     private String category; // Pano kategorisi
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BoardType boardType = BoardType.INDIVIDUAL;
+
     @Column(unique = true)
     private String slug; // YENİ: URL dostu kimlik
 

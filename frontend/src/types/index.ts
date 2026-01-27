@@ -107,6 +107,8 @@ export interface BoardMember extends HateoasModel {
   id: number;
   userId: number;
   username: string;
+  firstName?: string;
+  lastName?: string;
   profilePicture?: string | null;
   status?: 'PENDING' | 'ACCEPTED';
   createdAt: string;
@@ -125,9 +127,14 @@ export interface Board extends HateoasModel {
   deadline?: string;
   createdAt?: string; // Oluşturulma tarihi
   ownerName: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+  isOwner?: boolean; // Mevcut kullanıcı pano sahibi mi
+  currentUserId?: number; // Mevcut kullanıcının ID'si
   taskLists: TaskList[]; // İçinde listeler dizisi var
   labels?: Label[]; // Panoya ait etiketler
   members?: BoardMember[]; // Pano üyeleri (sorumlu kişiler)
+  boardType?: 'INDIVIDUAL' | 'TEAM';
 }
 
 // Kullanıcı (Login olunca dönen veri)
@@ -135,6 +142,8 @@ export interface User extends HateoasModel {
   id: number;
   username: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   token?: string;
   refreshToken?: string;
 }
@@ -156,6 +165,8 @@ export interface UserSearchResult extends HateoasModel {
 export interface UserProfile extends HateoasModel {
   id: number;
   username: string;
+  firstName?: string;
+  lastName?: string;
   profilePicture?: string | null;
   isProfilePublic: boolean;
   connectionCount: number | null;
@@ -194,6 +205,7 @@ export interface UserProfileStats {
   completedSubtasks: number;
   overallProgress: number;
   topCategories: { category: string; count: number }[];
+  teamBoardCount: number;
 }
 
 // Bildirim

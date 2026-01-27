@@ -265,6 +265,21 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
                   {CATEGORY_MAP[board.category!] || board.category}
                 </span>
               )}
+              {board.boardType === 'TEAM' && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: spacing[1.5],
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: cssVars.textMuted,
+                  }}
+                >
+                  Kurucu:
+                  <span style={{ fontWeight: typography.fontWeight.bold, color: cssVars.textMain }}>{board.ownerName}</span>
+                </span>
+              )}
             </div>
           </div>
         </div>

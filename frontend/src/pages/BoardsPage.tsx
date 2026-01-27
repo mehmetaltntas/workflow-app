@@ -55,10 +55,10 @@ const BoardsPage = () => {
   }, [boards, statusCounts]);
 
   // Yeni pano olusturma
-  const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => {
+  const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string, boardType?: 'INDIVIDUAL' | 'TEAM') => {
     const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
     await createBoardMutation.mutateAsync(
-      { name, status, link, description, deadline: formattedDeadline, category }
+      { name, status, link, description, deadline: formattedDeadline, category, boardType }
     );
   };
 

@@ -9,6 +9,8 @@ public class BoardResponse {
     private Long version;
     private String name;
     private String ownerName;
+    private String ownerFirstName;
+    private String ownerLastName;
     private String status;
     private String slug; // YENİ EKLENDİ
     private String link;
@@ -19,4 +21,7 @@ public class BoardResponse {
     private List<TaskListDto> taskLists; // YENİ EKLENDİ: Panodaki listeler
     private List<LabelDto> labels; // Panoya ait etiketler
     private List<BoardMemberDto> members; // Pano üyeleri (sorumlu kişiler)
+    private String boardType;
+    private Boolean isOwner; // Mevcut kullanıcı pano sahibi mi?
+    private Long currentUserId; // Mevcut kullanıcı ID'si
 }

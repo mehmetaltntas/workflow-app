@@ -44,6 +44,10 @@ public class BoardMemberService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", boardId));
 
+        if (board.getBoardType() == BoardType.INDIVIDUAL) {
+            throw new IllegalStateException("Bireysel panolara sorumlu kişi eklenemez");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", userId));
 
@@ -322,6 +326,8 @@ public class BoardMemberService {
         dto.setId(member.getId());
         dto.setUserId(member.getUser().getId());
         dto.setUsername(member.getUser().getUsername());
+        dto.setFirstName(member.getUser().getFirstName());
+        dto.setLastName(member.getUser().getLastName());
         dto.setProfilePicture(
                 profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
         dto.setStatus(member.getStatus().name());

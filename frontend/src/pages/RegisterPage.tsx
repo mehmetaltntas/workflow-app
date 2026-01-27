@@ -11,6 +11,10 @@ import "./RegisterPage.css";
 type Step = "form" | "code";
 
 const RegisterPage = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,6 +88,33 @@ const RegisterPage = () => {
     }
   }, [step]);
 
+  const nameRegex = /^[a-zA-ZçÇğĞıİöÖşŞüÜâÂêÊîÎôÔûÛ\s]+$/;
+
+  const getNameError = (value: string, label: string): string => {
+    if (!value.trim()) return `${label} boş olamaz`;
+    if (value.length > 50) return `${label} en fazla 50 karakter olabilir`;
+    if (!nameRegex.test(value)) return `${label} sadece harf içerebilir`;
+    return "";
+  };
+
+  const handleFirstNameChange = (value: string) => {
+    setFirstName(value);
+    if (value) {
+      setFirstNameError(getNameError(value, "Ad"));
+    } else {
+      setFirstNameError("");
+    }
+  };
+
+  const handleLastNameChange = (value: string) => {
+    setLastName(value);
+    if (value) {
+      setLastNameError(getNameError(value, "Soyad"));
+    } else {
+      setLastNameError("");
+    }
+  };
+
   const handleEmailChange = (value: string) => {
     setEmail(value);
     if (value && !isValidEmail(value)) {
@@ -117,8 +148,20 @@ const RegisterPage = () => {
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username.trim() || !email.trim() || !password.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !username.trim() || !email.trim() || !password.trim()) {
       toast.error("Tüm alanlar gereklidir");
+      return;
+    }
+
+    const fnError = getNameError(firstName, "Ad");
+    if (fnError) {
+      toast.error(fnError);
+      return;
+    }
+
+    const lnError = getNameError(lastName, "Soyad");
+    if (lnError) {
+      toast.error(lnError);
       return;
     }
 
@@ -173,6 +216,8 @@ const RegisterPage = () => {
         email,
         password,
         code: fullCode,
+        firstName,
+        lastName,
       });
 
       login({
@@ -268,6 +313,55 @@ const RegisterPage = () => {
           {/* Step: Form */}
           {step === "form" && (
             <form onSubmit={handleSendCode} aria-label="Kayıt formu" className="login-page__form">
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label htmlFor="register-firstname" className="login-page__label">
+                    Ad
+                  </label>
+                  <input
+                    id="register-firstname"
+                    type="text"
+                    placeholder="Ad"
+                    autoComplete="given-name"
+                    aria-required="true"
+                    aria-describedby={firstNameError ? "register-firstname-error" : undefined}
+                    aria-invalid={!!firstNameError}
+                    value={firstName}
+                    onChange={(e) => handleFirstNameChange(e.target.value)}
+                    maxLength={50}
+                    className={`login-page__input ${firstNameError ? "register-page__input--error" : ""}`}
+                  />
+                  {firstNameError && (
+                    <p id="register-firstname-error" role="alert" className="register-page__email-error">
+                      {firstNameError}
+                    </p>
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label htmlFor="register-lastname" className="login-page__label">
+                    Soyad
+                  </label>
+                  <input
+                    id="register-lastname"
+                    type="text"
+                    placeholder="Soyad"
+                    autoComplete="family-name"
+                    aria-required="true"
+                    aria-describedby={lastNameError ? "register-lastname-error" : undefined}
+                    aria-invalid={!!lastNameError}
+                    value={lastName}
+                    onChange={(e) => handleLastNameChange(e.target.value)}
+                    maxLength={50}
+                    className={`login-page__input ${lastNameError ? "register-page__input--error" : ""}`}
+                  />
+                  {lastNameError && (
+                    <p id="register-lastname-error" role="alert" className="register-page__email-error">
+                      {lastNameError}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="register-username" className="login-page__label">
                   Kullanıcı Adı
