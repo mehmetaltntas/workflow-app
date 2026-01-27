@@ -102,6 +102,9 @@ public class ConnectionService {
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", currentUserId));
 
+        // Baglanti istegi bildirimini sil
+        notificationService.deleteByReference(connectionId, NotificationType.CONNECTION_REQUEST);
+
         notificationService.createNotification(
                 connection.getSender(), currentUser,
                 NotificationType.CONNECTION_ACCEPTED,
@@ -128,6 +131,10 @@ public class ConnectionService {
 
         connection.setStatus(ConnectionStatus.REJECTED);
         Connection saved = connectionRepository.save(connection);
+
+        // Baglanti istegi bildirimini sil
+        notificationService.deleteByReference(connectionId, NotificationType.CONNECTION_REQUEST);
+
         return mapToResponse(saved);
     }
 

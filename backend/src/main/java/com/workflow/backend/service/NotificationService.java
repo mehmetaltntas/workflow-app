@@ -63,6 +63,11 @@ public class NotificationService {
         notificationRepository.markAllAsReadByRecipientId(currentUserId);
     }
 
+    @Transactional
+    public void deleteByReference(Long referenceId, NotificationType type) {
+        notificationRepository.deleteByReferenceIdAndType(referenceId, type);
+    }
+
     private NotificationResponse mapToResponse(Notification notification) {
         NotificationResponse response = new NotificationResponse();
         response.setId(notification.getId());

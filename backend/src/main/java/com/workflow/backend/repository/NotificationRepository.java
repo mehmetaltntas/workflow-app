@@ -1,6 +1,7 @@
 package com.workflow.backend.repository;
 
 import com.workflow.backend.entity.Notification;
+import com.workflow.backend.entity.NotificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,4 +20,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.id = :recipientId AND n.isRead = false")
     void markAllAsReadByRecipientId(@Param("recipientId") Long recipientId);
+
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.referenceId = :referenceId AND n.type = :type")
+    void deleteByReferenceIdAndType(@Param("referenceId") Long referenceId, @Param("type") NotificationType type);
 }

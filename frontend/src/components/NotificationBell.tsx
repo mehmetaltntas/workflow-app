@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
-import { useUnreadNotificationCount } from "../hooks/queries/useNotifications";
+import { useUnreadNotificationCount, useMarkAllNotificationsAsRead } from "../hooks/queries/useNotifications";
 import NotificationDropdown from "./NotificationDropdown";
 import "./NotificationBell.css";
 
@@ -8,25 +8,33 @@ const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
+  const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
+
+  const handleClose = () => {
+    if (unreadCount > 0) {
+      markAllAsRead();
+    }
+    setIsOpen(false);
+  };
 
   // Disina tiklaninca kapat
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        handleClose();
       }
     };
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, unreadCount]);
 
   return (
     <div className="notification-bell" ref={wrapperRef}>
       <button
         className="notification-bell__btn"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => isOpen ? handleClose() : setIsOpen(true)}
         title="Bildirimler"
       >
         <Bell size={20} />
@@ -37,7 +45,7 @@ const NotificationBell = () => {
         )}
       </button>
 
-      {isOpen && <NotificationDropdown onClose={() => setIsOpen(false)} />}
+      {isOpen && <NotificationDropdown onClose={handleClose} />}
     </div>
   );
 };
