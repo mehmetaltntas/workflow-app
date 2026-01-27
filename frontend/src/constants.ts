@@ -60,5 +60,19 @@ export const CATEGORY_LABELS: Record<string, string> = {
   DIGER: 'Diğer',
 };
 
+// Status slug mappings for URL routing
+export const STATUS_SLUGS: Record<string, string> = {
+  PLANLANDI: 'planlandi',
+  DEVAM_EDIYOR: 'devam-ediyor',
+  TAMAMLANDI: 'tamamlandi',
+  DURDURULDU: 'durduruldu',
+  BIRAKILDI: 'birakildi',
+};
+
+// Reverse mapping: slug -> status key
+export const SLUG_TO_STATUS: Record<string, string> = Object.fromEntries(
+  Object.entries(STATUS_SLUGS).map(([key, slug]) => [slug, key])
+);
+
 // Re-export colors for convenience
 export { colors };

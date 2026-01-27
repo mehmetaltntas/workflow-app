@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Board } from "../types";
-import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock } from "lucide-react";
+import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useCreateBoard, useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
@@ -9,7 +9,7 @@ import { typography, spacing, radius, colors, cssVars, animation } from '../styl
 import BoardCard from "../components/BoardCard";
 import CreateBoardModal from "../components/CreateBoardModal";
 import BoardEditModal from "../components/BoardEditModal";
-import { STATUS_COLORS, STATUS_LABELS } from "../constants";
+import { STATUS_COLORS, STATUS_LABELS, STATUS_SLUGS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
@@ -412,6 +412,10 @@ const BoardsPage = () => {
 
              if (boardsInStatus.length === 0) return null;
 
+             const MAX_VISIBLE = 8;
+             const hasMore = boardsInStatus.length > MAX_VISIBLE;
+             const visibleBoards = hasMore ? boardsInStatus.slice(0, MAX_VISIBLE) : boardsInStatus;
+
              return (
                <div
                  key={statusKey}
@@ -456,6 +460,39 @@ const BoardsPage = () => {
                       }}>
                         {boardsInStatus.length}
                       </span>
+
+                      {/* Tümünü Gör linki */}
+                      {hasMore && (
+                        <button
+                          onClick={() => navigate(`/boards/status/${STATUS_SLUGS[statusKey]}`)}
+                          style={{
+                            marginLeft: "auto",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: spacing[1.5],
+                            padding: `${spacing[1.5]} ${spacing[3]}`,
+                            borderRadius: radius.lg,
+                            border: `1px solid ${STATUS_COLORS[statusKey]}30`,
+                            background: `${STATUS_COLORS[statusKey]}10`,
+                            color: STATUS_COLORS[statusKey],
+                            cursor: "pointer",
+                            transition: `all ${animation.duration.normal}`,
+                            fontWeight: typography.fontWeight.semibold,
+                            fontSize: typography.fontSize.sm,
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = `${STATUS_COLORS[statusKey]}20`;
+                            e.currentTarget.style.borderColor = `${STATUS_COLORS[statusKey]}50`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = `${STATUS_COLORS[statusKey]}10`;
+                            e.currentTarget.style.borderColor = `${STATUS_COLORS[statusKey]}30`;
+                          }}
+                        >
+                          Tümünü Gör ({boardsInStatus.length})
+                          <ArrowRight size={16} />
+                        </button>
+                      )}
                   </div>
 
                   {/* Cards Grid/List */}
@@ -471,7 +508,7 @@ const BoardsPage = () => {
                         gap: viewMode === 'list' ? spacing[2] : spacing[4],
                       }}
                   >
-                      {boardsInStatus.map((board, cardIndex) => (
+                      {visibleBoards.map((board, cardIndex) => (
                           <div
                             key={board.id}
                             style={{

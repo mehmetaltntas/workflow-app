@@ -17,6 +17,7 @@ import SettingsPage from "./pages/SettingsPage";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import BoardInfoPage from "./pages/BoardInfoPage";
+import BoardStatusPage from "./pages/BoardStatusPage";
 
 // Miller route redirect helper
 const MillerRedirect = () => {
@@ -86,6 +87,7 @@ function App() {
             >
               <Route path="/home" element={<HomePage />} />
               <Route path="/boards" element={<BoardsPage />} />
+              <Route path="/boards/status/:statusSlug" element={<BoardStatusPage />} />
               <Route path="/boards/info/:slug" element={<BoardInfoPage />} />
               <Route
                 path="/boards/:slug"
