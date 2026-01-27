@@ -23,4 +23,8 @@ public interface SubtaskRepository extends JpaRepository<Subtask, Long> {
     // Authorization: Subtask'ın belirli bir kullanıcıya ait olup olmadığını kontrol et
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Subtask s WHERE s.id = :subtaskId AND s.task.taskList.board.user.id = :userId")
     boolean existsByIdAndTaskTaskListBoardUserId(@Param("subtaskId") Long subtaskId, @Param("userId") Long userId);
+
+    // Profil istatistikleri: Toplam ve tamamlanan alt gorev sayilari
+    @Query("SELECT COUNT(s), SUM(CASE WHEN s.isCompleted = true THEN 1 ELSE 0 END) FROM Subtask s WHERE s.task.taskList.board.user.id = :userId")
+    Object[] countStatsForUser(@Param("userId") Long userId);
 }

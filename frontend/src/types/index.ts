@@ -176,6 +176,26 @@ export interface Connection extends HateoasModel {
   createdAt: string;
 }
 
+// Kullanici profil istatistikleri
+export interface UserProfileStats {
+  totalBoards: number;
+  boardsByStatus: {
+    PLANLANDI: number;
+    DEVAM_EDIYOR: number;
+    TAMAMLANDI: number;
+    DURDURULDU: number;
+    BIRAKILDI: number;
+  };
+  totalLists: number;
+  completedLists: number;
+  totalTasks: number;
+  completedTasks: number;
+  totalSubtasks: number;
+  completedSubtasks: number;
+  overallProgress: number;
+  topCategories: { category: string; count: number }[];
+}
+
 // Bildirim
 export interface Notification extends HateoasModel {
   id: number;

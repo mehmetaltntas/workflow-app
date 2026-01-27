@@ -1,12 +1,35 @@
 import { useParams } from "react-router-dom";
-import { Users, Lock, AlertCircle } from "lucide-react";
+import {
+  Users,
+  Lock,
+  AlertCircle,
+  LayoutDashboard,
+  List,
+  CheckSquare,
+  ListTodo,
+  TrendingUp,
+  Tag,
+} from "lucide-react";
 import { useUserProfile } from "../hooks/queries/useUserProfile";
+import { useUserProfileStats } from "../hooks/queries/useUserProfileStats";
 import ConnectionButton from "../components/ConnectionButton";
-import { typography, spacing, radius, colors, cssVars, shadows } from "../styles/tokens";
+import { StatCard } from "../components/StatCard";
+import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
+import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 
 const UserProfilePage = () => {
   const { username } = useParams<{ username: string }>();
   const { data: profile, isLoading, error } = useUserProfile(username);
+
+  const isPrivate = profile
+    ? !profile.isProfilePublic && profile.connectionStatus !== "SELF" && profile.connectionStatus !== "ACCEPTED"
+    : true;
+
+  const { data: stats, isLoading: statsLoading } = useUserProfileStats(
+    username,
+    profile?.connectionStatus,
+    profile?.isProfilePublic
+  );
 
   if (isLoading) {
     return (
@@ -76,12 +99,11 @@ const UserProfilePage = () => {
   }
 
   const initials = profile.username.substring(0, 2).toUpperCase();
-  const isPrivate = !profile.isProfilePublic && profile.connectionStatus !== "SELF" && profile.connectionStatus !== "ACCEPTED";
 
   return (
     <div
       style={{
-        maxWidth: "700px",
+        maxWidth: "1000px",
         margin: "0 auto",
         padding: `${spacing[8]} ${spacing[6]}`,
       }}
@@ -94,6 +116,7 @@ const UserProfilePage = () => {
           border: `1px solid ${cssVars.border}`,
           padding: spacing[8],
           textAlign: "center",
+          marginBottom: spacing[6],
         }}
       >
         {/* Avatar */}
@@ -185,6 +208,384 @@ const UserProfilePage = () => {
           />
         </div>
       </div>
+
+      {/* Stats Sections - only shown when profile is not private */}
+      {!isPrivate && stats && (
+        <>
+          {/* Section Title */}
+          <h2
+            style={{
+              fontSize: typography.fontSize["2xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
+              margin: 0,
+              marginBottom: spacing[6],
+            }}
+          >
+            {profile.username} kullanicisinin istatistikleri
+          </h2>
+
+          {/* Overall Progress Section */}
+          <div
+            style={{
+              background: cssVars.bgCard,
+              borderRadius: radius.xl,
+              border: `1px solid ${cssVars.border}`,
+              padding: spacing[6],
+              marginBottom: spacing[6],
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: spacing[4],
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                <div
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: radius.lg,
+                    background: colors.brand.primaryLight,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <TrendingUp size={22} color={colors.brand.primary} strokeWidth={2} />
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      fontSize: typography.fontSize.xl,
+                      fontWeight: typography.fontWeight.semibold,
+                      color: cssVars.textMain,
+                      margin: 0,
+                    }}
+                  >
+                    Genel Ilerleme
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: typography.fontSize.base,
+                      color: cssVars.textMuted,
+                      margin: 0,
+                    }}
+                  >
+                    Tum gorevler ve alt gorevler
+                  </p>
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: typography.fontSize["4xl"],
+                  fontWeight: typography.fontWeight.bold,
+                  color: colors.brand.primary,
+                }}
+              >
+                %{stats.overallProgress}
+              </div>
+            </div>
+            {/* Progress Bar */}
+            <div
+              style={{
+                width: "100%",
+                height: "12px",
+                background: colors.dark.bg.hover,
+                borderRadius: radius.full,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${stats.overallProgress}%`,
+                  height: "100%",
+                  background: `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
+                  borderRadius: radius.full,
+                  transition: `width ${animation.duration.slow} ${animation.easing.smooth}`,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: spacing[2],
+                fontSize: typography.fontSize.base,
+                color: cssVars.textMuted,
+              }}
+            >
+              <span>{stats.completedTasks + stats.completedSubtasks} tamamlandi</span>
+              <span>{stats.totalTasks + stats.totalSubtasks} toplam</span>
+            </div>
+          </div>
+
+          {/* Summary Cards Grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: spacing[4],
+              marginBottom: spacing[8],
+            }}
+          >
+            <StatCard
+              icon={LayoutDashboard}
+              title="Panolar"
+              value={stats.totalBoards}
+              subtitle={`${stats.boardsByStatus.DEVAM_EDIYOR} devam ediyor`}
+              color={colors.brand.primary}
+              bgColor={colors.brand.primaryLight}
+            />
+            <StatCard
+              icon={List}
+              title="Listeler"
+              value={stats.totalLists}
+              subtitle={`${stats.completedLists} tamamlandi`}
+              color={colors.semantic.info}
+              bgColor={colors.semantic.infoLight}
+            />
+            <StatCard
+              icon={CheckSquare}
+              title="Gorevler"
+              value={stats.totalTasks}
+              subtitle={`${stats.completedTasks} tamamlandi`}
+              color={colors.semantic.success}
+              bgColor={colors.semantic.successLight}
+            />
+            <StatCard
+              icon={ListTodo}
+              title="Alt Gorevler"
+              value={stats.totalSubtasks}
+              subtitle={`${stats.completedSubtasks} tamamlandi`}
+              color={colors.semantic.warning}
+              bgColor={colors.semantic.warningLight}
+            />
+          </div>
+
+          {/* Detailed Sections */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: spacing[6],
+            }}
+          >
+            {/* Board Status Distribution */}
+            <div
+              style={{
+                background: cssVars.bgCard,
+                borderRadius: radius.xl,
+                border: `1px solid ${cssVars.border}`,
+                padding: spacing[6],
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMain,
+                  margin: 0,
+                  marginBottom: spacing[5],
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing[2],
+                }}
+              >
+                <LayoutDashboard size={20} />
+                Pano Durumlari
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+                {Object.entries(stats.boardsByStatus).map(([status, count]) => (
+                  <div
+                    key={status}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: `${spacing[3]} ${spacing[4]}`,
+                      background: colors.dark.bg.hover,
+                      borderRadius: radius.lg,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                      <div
+                        style={{
+                          width: "10px",
+                          height: "10px",
+                          borderRadius: radius.full,
+                          background: STATUS_COLORS[status],
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: typography.fontSize.lg,
+                          color: cssVars.textMain,
+                        }}
+                      >
+                        {STATUS_LABELS[status]}
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: typography.fontSize.xl,
+                        fontWeight: typography.fontWeight.semibold,
+                        color: cssVars.textMain,
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Categories */}
+            <div
+              style={{
+                background: cssVars.bgCard,
+                borderRadius: radius.xl,
+                border: `1px solid ${cssVars.border}`,
+                padding: spacing[6],
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMain,
+                  margin: 0,
+                  marginBottom: spacing[5],
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing[2],
+                }}
+              >
+                <Tag size={20} />
+                Populer Kategoriler
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+                {stats.topCategories.length === 0 ? (
+                  <p
+                    style={{
+                      fontSize: typography.fontSize.base,
+                      color: cssVars.textMuted,
+                      textAlign: "center",
+                      padding: spacing[4],
+                      margin: 0,
+                    }}
+                  >
+                    Henuz kategorili pano bulunmuyor
+                  </p>
+                ) : (
+                  stats.topCategories.map((item, index) => {
+                    const maxCount = stats.topCategories[0].count;
+                    const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+                    return (
+                      <div
+                        key={item.category}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[3],
+                          padding: `${spacing[3]} ${spacing[4]}`,
+                          background: colors.dark.bg.hover,
+                          borderRadius: radius.lg,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.lg,
+                            fontWeight: typography.fontWeight.bold,
+                            color: colors.brand.primary,
+                            minWidth: "24px",
+                          }}
+                        >
+                          {index + 1}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              marginBottom: spacing[1],
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: typography.fontSize.lg,
+                                color: cssVars.textMain,
+                                fontWeight: typography.fontWeight.medium,
+                              }}
+                            >
+                              {CATEGORY_LABELS[item.category] || item.category}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: typography.fontSize.base,
+                                fontWeight: typography.fontWeight.semibold,
+                                color: cssVars.textMuted,
+                              }}
+                            >
+                              {item.count} pano
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "6px",
+                              background: colors.brand.primaryLight,
+                              borderRadius: radius.full,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${percentage}%`,
+                                height: "100%",
+                                background: colors.brand.primary,
+                                borderRadius: radius.full,
+                                transition: `width ${animation.duration.slow} ${animation.easing.smooth}`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Stats Loading Indicator */}
+      {!isPrivate && statsLoading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: spacing[8],
+          }}
+        >
+          <div
+            style={{
+              width: spacing[8],
+              height: spacing[8],
+              border: `3px solid ${colors.brand.primaryLight}`,
+              borderTopColor: colors.brand.primary,
+              borderRadius: radius.full,
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        </div>
+      )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

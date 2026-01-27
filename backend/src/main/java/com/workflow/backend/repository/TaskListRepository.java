@@ -21,4 +21,8 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long> {
     // Belirli bir etiketi kullanan listeleri getir
     @Query("SELECT tl FROM TaskList tl JOIN tl.labels l WHERE l = :label")
     List<TaskList> findByLabelsContaining(@Param("label") Label label);
+
+    // Profil istatistikleri: Toplam ve tamamlanan liste sayilari
+    @Query("SELECT COUNT(tl), SUM(CASE WHEN tl.isCompleted = true THEN 1 ELSE 0 END) FROM TaskList tl WHERE tl.board.user.id = :userId")
+    Object[] countStatsForUser(@Param("userId") Long userId);
 }

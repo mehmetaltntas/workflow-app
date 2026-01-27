@@ -127,6 +127,21 @@ public class UserController {
         return ResponseEntity.ok(model);
     }
 
+    @Operation(summary = "Kullanici profil istatistiklerini getir", description = "Bagli veya herkese acik profildeki kullanicinin istatistiklerini getirir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Istatistikler basariyla getirildi",
+                    content = @Content(schema = @Schema(implementation = UserProfileStatsResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Kimlik dogrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Bu kullanicinin istatistiklerine erisim yetkiniz yok"),
+            @ApiResponse(responseCode = "404", description = "Kullanici bulunamadi")
+    })
+    @GetMapping("/profile/{username}/stats")
+    public ResponseEntity<UserProfileStatsResponse> getUserProfileStats(
+            @Parameter(description = "Kullanici adi") @PathVariable String username) {
+        UserProfileStatsResponse stats = userService.getUserProfileStats(username);
+        return ResponseEntity.ok(stats);
+    }
+
     @Operation(summary = "Gizlilik ayarini guncelle", description = "Kullanicinin profil gizlilik ayarini gunceller")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Gizlilik ayari guncellendi"),

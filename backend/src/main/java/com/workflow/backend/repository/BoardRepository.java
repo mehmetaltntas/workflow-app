@@ -33,4 +33,15 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     // Authorization: Board'un belirli bir kullanıcıya ait olup olmadığını kontrol et
     boolean existsByIdAndUserId(Long boardId, Long userId);
+
+    // Profil istatistikleri: Status bazinda board sayilari
+    @Query("SELECT b.status, COUNT(b) FROM Board b WHERE b.user.id = :userId GROUP BY b.status")
+    List<Object[]> countByStatusForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Kategori bazinda board sayilari
+    @Query("SELECT b.category, COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.category IS NOT NULL GROUP BY b.category ORDER BY COUNT(b) DESC")
+    List<Object[]> countByCategoryForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Toplam board sayisi
+    long countByUserId(Long userId);
 }

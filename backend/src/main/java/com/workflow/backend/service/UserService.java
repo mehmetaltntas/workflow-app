@@ -9,15 +9,16 @@ import com.workflow.backend.entity.UserProfilePicture;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.exception.ResourceNotFoundException;
-import com.workflow.backend.repository.UserProfilePictureRepository;
-import com.workflow.backend.repository.UserRepository;
+import com.workflow.backend.repository.*;
 import com.workflow.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,10 @@ public class UserService {
     private final EmailVerificationService emailVerificationService;
     private final CurrentUserService currentUserService;
     private final ConnectionService connectionService;
+    private final BoardRepository boardRepository;
+    private final TaskListRepository taskListRepository;
+    private final TaskRepository taskRepository;
+    private final SubtaskRepository subtaskRepository;
 
     // KULLANICI ADI MÜSAİTLİK KONTROLÜ
     public boolean isUsernameAvailable(String username) {
@@ -265,6 +270,115 @@ public class UserService {
 
         user.setIsProfilePublic(request.getIsProfilePublic());
         userRepository.save(user);
+    }
+
+    // KULLANICI PROFIL ISTATISTIKLERINI GETIR
+    @Transactional(readOnly = true)
+    public UserProfileStatsResponse getUserProfileStats(String username) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+
+        User targetUser = userRepository.findByUsername(username);
+        if (targetUser == null) {
+            throw new ResourceNotFoundException("Kullanici", "username", username);
+        }
+
+        Long targetUserId = targetUser.getId();
+
+        // Erisim kontrolu: SELF, ACCEPTED baglanti veya herkese acik profil
+        String connectionStatus = connectionService.getConnectionStatus(currentUserId, targetUserId);
+        boolean isSelf = "SELF".equals(connectionStatus);
+        boolean isConnected = "ACCEPTED".equals(connectionStatus);
+        boolean isPublic = Boolean.TRUE.equals(targetUser.getIsProfilePublic());
+
+        if (!isSelf && !isConnected && !isPublic) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu kullanicinin istatistiklerine erisim yetkiniz yok.");
+        }
+
+        UserProfileStatsResponse response = new UserProfileStatsResponse();
+
+        // Board istatistikleri
+        long totalBoards = boardRepository.countByUserId(targetUserId);
+        response.setTotalBoards((int) totalBoards);
+
+        Map<String, Integer> boardsByStatus = new LinkedHashMap<>();
+        boardsByStatus.put("PLANLANDI", 0);
+        boardsByStatus.put("DEVAM_EDIYOR", 0);
+        boardsByStatus.put("TAMAMLANDI", 0);
+        boardsByStatus.put("DURDURULDU", 0);
+        boardsByStatus.put("BIRAKILDI", 0);
+        for (Object[] row : boardRepository.countByStatusForUser(targetUserId)) {
+            String status = (String) row[0];
+            int count = ((Long) row[1]).intValue();
+            boardsByStatus.put(status, count);
+        }
+        response.setBoardsByStatus(boardsByStatus);
+
+        // Liste istatistikleri
+        Object[] listStats = taskListRepository.countStatsForUser(targetUserId);
+        int totalLists = listStats[0] != null ? ((Long) listStats[0]).intValue() : 0;
+        int completedLists = listStats[1] != null ? ((Long) listStats[1]).intValue() : 0;
+        response.setTotalLists(totalLists);
+        response.setCompletedLists(completedLists);
+
+        // Gorev istatistikleri
+        Object[] taskStats = taskRepository.countStatsForUser(targetUserId);
+        int totalTasks = taskStats[0] != null ? ((Long) taskStats[0]).intValue() : 0;
+        int completedTasks = taskStats[1] != null ? ((Long) taskStats[1]).intValue() : 0;
+        response.setTotalTasks(totalTasks);
+        response.setCompletedTasks(completedTasks);
+
+        // Alt gorev istatistikleri
+        Object[] subtaskStats = subtaskRepository.countStatsForUser(targetUserId);
+        int totalSubtasks = subtaskStats[0] != null ? ((Long) subtaskStats[0]).intValue() : 0;
+        int completedSubtasks = subtaskStats[1] != null ? ((Long) subtaskStats[1]).intValue() : 0;
+        response.setTotalSubtasks(totalSubtasks);
+        response.setCompletedSubtasks(completedSubtasks);
+
+        // Leaf-node progress hesaplamasi
+        // Alt gorevi olan gorevlerde: alt gorevleri say
+        // Alt gorevi olmayan gorevlerde: gorevi say
+        List<Object[]> taskSubtaskInfo = taskRepository.findTaskSubtaskInfoForUser(targetUserId);
+        int leafTotal = 0;
+        int leafCompleted = 0;
+        int tasksWithSubtasks = 0;
+
+        for (Object[] row : taskSubtaskInfo) {
+            Boolean isCompleted = (Boolean) row[0];
+            int subtaskCount = (Integer) row[1];
+
+            if (subtaskCount > 0) {
+                tasksWithSubtasks++;
+            } else {
+                // Leaf node: gorev kendisi
+                leafTotal++;
+                if (Boolean.TRUE.equals(isCompleted)) {
+                    leafCompleted++;
+                }
+            }
+        }
+
+        // Alt gorevi olan gorevlerin alt gorevlerini ekle
+        if (tasksWithSubtasks > 0) {
+            leafTotal += totalSubtasks;
+            leafCompleted += completedSubtasks;
+        }
+
+        int overallProgress = leafTotal > 0 ? Math.round((float) leafCompleted / leafTotal * 100) : 0;
+        response.setOverallProgress(overallProgress);
+
+        // Kategori istatistikleri (top 5)
+        List<Object[]> categoryData = boardRepository.countByCategoryForUser(targetUserId);
+        List<UserProfileStatsResponse.CategoryStat> topCategories = new ArrayList<>();
+        int limit = Math.min(categoryData.size(), 5);
+        for (int i = 0; i < limit; i++) {
+            Object[] row = categoryData.get(i);
+            String category = (String) row[0];
+            int count = ((Long) row[1]).intValue();
+            topCategories.add(new UserProfileStatsResponse.CategoryStat(category, count));
+        }
+        response.setTopCategories(topCategories);
+
+        return response;
     }
 
     // Yardimci Metot: Entity -> DTO Cevirici
