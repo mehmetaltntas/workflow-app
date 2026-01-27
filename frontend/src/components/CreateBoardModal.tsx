@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X, Calendar, Link2, FileText, Type, Activity, FolderOpen } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -35,6 +36,20 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
 
   const MAX_DESCRIPTION_LENGTH = 500;
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Modal açıkken arka plan scroll'unu kilitle
+  useEffect(() => {
+    if (!isOpen) return;
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.style.overflow = 'hidden';
+    }
+    return () => {
+      if (mainEl) {
+        mainEl.style.overflow = '';
+      }
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,7 +131,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
     gap: spacing[1],
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: "fixed",
@@ -551,7 +566,8 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 };
 
