@@ -181,6 +181,7 @@ const UserProfilePage = () => {
           <ConnectionButton
             userId={profile.id}
             connectionStatus={profile.connectionStatus}
+            referenceId={profile.connectionId}
           />
         </div>
       </div>

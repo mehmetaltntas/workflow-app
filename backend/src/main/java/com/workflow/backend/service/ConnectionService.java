@@ -164,6 +164,15 @@ public class ConnectionService {
         return "PENDING_RECEIVED";
     }
 
+    public Long getConnectionId(Long userId1, Long userId2) {
+        if (userId1.equals(userId2)) {
+            return null;
+        }
+        return connectionRepository.findBetweenUsers(userId1, userId2)
+                .map(Connection::getId)
+                .orElse(null);
+    }
+
     public long getConnectionCount(Long userId) {
         return connectionRepository.countAcceptedByUserId(userId);
     }

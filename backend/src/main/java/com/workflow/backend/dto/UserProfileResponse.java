@@ -24,4 +24,7 @@ public class UserProfileResponse {
 
     @Schema(description = "Baglanti durumu (null/PENDING/PENDING_RECEIVED/ACCEPTED/REJECTED/SELF)")
     private String connectionStatus;
+
+    @Schema(description = "Baglanti ID (kabul/red islemleri icin)")
+    private Long connectionId;
 }

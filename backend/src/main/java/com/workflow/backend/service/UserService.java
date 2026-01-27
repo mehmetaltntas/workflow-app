@@ -233,12 +233,14 @@ public class UserService {
 
         String connectionStatus = connectionService.getConnectionStatus(currentUserId, user.getId());
         long connectionCount = connectionService.getConnectionCount(user.getId());
+        Long connectionId = connectionService.getConnectionId(currentUserId, user.getId());
 
         UserProfileResponse response = new UserProfileResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setIsProfilePublic(user.getIsProfilePublic());
         response.setConnectionStatus(connectionStatus);
+        response.setConnectionId(connectionId);
 
         // Gizli profilde baglanti sayisi ve profil resmi gosterilmez (kendi profili haricinde)
         if (Boolean.TRUE.equals(user.getIsProfilePublic()) || "SELF".equals(connectionStatus) || "ACCEPTED".equals(connectionStatus)) {

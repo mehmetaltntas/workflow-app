@@ -45,7 +45,7 @@ public class User {
     private UserProfilePicture profilePicture;
 
     @Column(nullable = false)
-    private Boolean isProfilePublic = true;
+    private Boolean isProfilePublic = false;
 
     // ILISKI: Bir kullanicinin birden fazla panosu olabilir.
     // "mappedBy": Board tablosundaki 'user' degiskeni bu iliskiyi yonetiyor demek.

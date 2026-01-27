@@ -49,7 +49,7 @@ const SettingsPage = () => {
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   // Privacy states
-  const [isProfilePublic, setIsProfilePublic] = useState(true);
+  const [isProfilePublic, setIsProfilePublic] = useState(false);
   const [isSavingPrivacy, setIsSavingPrivacy] = useState(false);
 
   const userId = useAuthStore((state) => state.userId);

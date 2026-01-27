@@ -24,6 +24,7 @@ public class UserProfileModelAssembler extends RepresentationModelAssemblerSuppo
         model.setIsProfilePublic(dto.getIsProfilePublic());
         model.setConnectionCount(dto.getConnectionCount());
         model.setConnectionStatus(dto.getConnectionStatus());
+        model.setConnectionId(dto.getConnectionId());
 
         model.add(linkTo(methodOn(UserController.class).getUserProfile(dto.getUsername()))
                 .withSelfRel());

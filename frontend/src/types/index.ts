@@ -139,6 +139,7 @@ export interface UserProfile extends HateoasModel {
   isProfilePublic: boolean;
   connectionCount: number | null;
   connectionStatus: ConnectionStatus;
+  connectionId: number | null;
 }
 
 // Baglanti

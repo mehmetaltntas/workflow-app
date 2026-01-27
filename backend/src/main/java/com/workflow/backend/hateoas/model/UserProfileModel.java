@@ -15,4 +15,5 @@ public class UserProfileModel extends RepresentationModel<UserProfileModel> {
     private Boolean isProfilePublic;
     private Long connectionCount;
     private String connectionStatus;
+    private Long connectionId;
 }
