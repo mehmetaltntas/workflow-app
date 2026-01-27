@@ -84,6 +84,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const columnRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLDivElement>(null);
   const [actionMenuId, setActionMenuId] = useState<number | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; bottom: number; right: number; openUp: boolean }>({ top: 0, bottom: 0, right: 0, openUp: false });
@@ -97,6 +98,16 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
       });
     }
   }, [selectedId]);
+
+  // Scroll sırasında açık menüyü kapat
+  useEffect(() => {
+    if (actionMenuId === null) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    const handleScroll = () => setActionMenuId(null);
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [actionMenuId]);
 
   // Column background colors based on depth - improved for better visual hierarchy
   const getColumnBackground = (index: number) => {
@@ -231,6 +242,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
 
       {/* Sütun İçeriği */}
       <div
+        ref={scrollRef}
         style={{
           flex: 1,
           overflowY: 'auto',
