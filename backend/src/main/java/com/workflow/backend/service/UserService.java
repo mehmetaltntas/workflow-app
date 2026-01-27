@@ -12,6 +12,7 @@ import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.*;
 import com.workflow.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -273,6 +274,7 @@ public class UserService {
     }
 
     // KULLANICI PROFIL ISTATISTIKLERINI GETIR
+    @Cacheable(value = "profileStats", key = "#username")
     @Transactional(readOnly = true)
     public UserProfileStatsResponse getUserProfileStats(String username) {
         Long currentUserId = currentUserService.getCurrentUserId();
@@ -335,7 +337,7 @@ public class UserService {
         response.setCompletedSubtasks(completedSubtasks);
 
         // Leaf-node progress hesaplamasi
-        // Alt gorevi olan gorevlerde: alt gorevleri say
+        // Alt gorevi olan gorevlerde: alt gorevleri + parent gorevi say
         // Alt gorevi olmayan gorevlerde: gorevi say
         List<Object[]> taskSubtaskInfo = taskRepository.findTaskSubtaskInfoForUser(targetUserId);
         int leafTotal = 0;
@@ -348,6 +350,11 @@ public class UserService {
 
             if (subtaskCount > 0) {
                 tasksWithSubtasks++;
+                // Parent gorevi de say - tum subtask'lar bitse bile parent tamamlanmadiysa %100 olmaz
+                leafTotal++;
+                if (Boolean.TRUE.equals(isCompleted)) {
+                    leafCompleted++;
+                }
             } else {
                 // Leaf node: gorev kendisi
                 leafTotal++;

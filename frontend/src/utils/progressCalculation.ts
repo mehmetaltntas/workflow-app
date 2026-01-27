@@ -18,9 +18,10 @@ export function calculateLeafNodeCounts(board: Board): { total: number; complete
     tasks.forEach(task => {
       const subtasks = task.subtasks || [];
       if (subtasks.length > 0) {
-        // Task has subtasks -> subtasks are the leaf nodes
-        total += subtasks.length;
-        completed += subtasks.filter(s => s.isCompleted).length;
+        // Task has subtasks -> count subtasks + parent task itself
+        // This ensures 100% only when both subtasks AND parent task are completed
+        total += subtasks.length + 1;
+        completed += subtasks.filter(s => s.isCompleted).length + (task.isCompleted ? 1 : 0);
       } else {
         // Task has no subtasks -> task itself is the leaf node
         total += 1;

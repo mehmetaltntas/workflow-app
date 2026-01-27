@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useProfileStats } from "../hooks/useProfileStats";
+import { useUserProfileStats } from "../hooks/queries/useUserProfileStats";
 import { StatCard } from "../components/StatCard";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
@@ -19,8 +19,8 @@ import { queryKeys } from "../lib/queryClient";
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 
 const ProfilePage = () => {
-  const { stats, isLoading, error } = useProfileStats();
   const username = useAuthStore((state) => state.username) || "Kullanici";
+  const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", true);
   const initials = username.substring(0, 2).toUpperCase();
 
   const { data: connectionCount = 0 } = useQuery({
@@ -98,10 +98,14 @@ const ProfilePage = () => {
             color: cssVars.textMuted,
           }}
         >
-          {error}
+          Istatistikler yuklenemedi
         </p>
       </div>
     );
+  }
+
+  if (!stats) {
+    return null;
   }
 
   return (
@@ -278,8 +282,8 @@ const ProfilePage = () => {
             color: cssVars.textMuted,
           }}
         >
-          <span>{stats.tasks.completed + stats.subtasks.completed} tamamlandi</span>
-          <span>{stats.tasks.total + stats.subtasks.total} toplam</span>
+          <span>{stats.completedTasks + stats.completedSubtasks} tamamlandi</span>
+          <span>{stats.totalTasks + stats.totalSubtasks} toplam</span>
         </div>
       </div>
 
@@ -295,32 +299,32 @@ const ProfilePage = () => {
         <StatCard
           icon={LayoutDashboard}
           title="Panolar"
-          value={stats.boards.total}
-          subtitle={`${stats.boards.byStatus.DEVAM_EDIYOR} devam ediyor`}
+          value={stats.totalBoards}
+          subtitle={`${stats.boardsByStatus.DEVAM_EDIYOR} devam ediyor`}
           color={colors.brand.primary}
           bgColor={colors.brand.primaryLight}
         />
         <StatCard
           icon={List}
           title="Listeler"
-          value={stats.lists.total}
-          subtitle={`${stats.lists.completed} tamamlandi`}
+          value={stats.totalLists}
+          subtitle={`${stats.completedLists} tamamlandi`}
           color={colors.semantic.info}
           bgColor={colors.semantic.infoLight}
         />
         <StatCard
           icon={CheckSquare}
           title="Gorevler"
-          value={stats.tasks.total}
-          subtitle={`${stats.tasks.completed} tamamlandi`}
+          value={stats.totalTasks}
+          subtitle={`${stats.completedTasks} tamamlandi`}
           color={colors.semantic.success}
           bgColor={colors.semantic.successLight}
         />
         <StatCard
           icon={ListTodo}
           title="Alt Gorevler"
-          value={stats.subtasks.total}
-          subtitle={`${stats.subtasks.completed} tamamlandi`}
+          value={stats.totalSubtasks}
+          subtitle={`${stats.completedSubtasks} tamamlandi`}
           color={colors.semantic.warning}
           bgColor={colors.semantic.warningLight}
         />
@@ -359,7 +363,7 @@ const ProfilePage = () => {
             Pano Durumlari
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-            {Object.entries(stats.boards.byStatus).map(([status, count]) => (
+            {Object.entries(stats.boardsByStatus).map(([status, count]) => (
               <div
                 key={status}
                 style={{
