@@ -4,6 +4,7 @@ import type { Board, TaskList, Task, Subtask } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { colors as tokenColors } from "../styles/tokens";
+import { calculateBoardProgress, calculateLeafNodeCounts } from "../utils/progressCalculation";
 
 interface StatsBarProps {
   board: Board;
@@ -21,33 +22,6 @@ interface Stats {
   progressPercent: number;
   label: string; // "Liste", "Görev", "Alt Görev"
 }
-
-// Always computes overall board progress from all elements (lists + tasks + subtasks)
-const calculateOverallProgress = (board: Board): number => {
-  const lists = board.taskLists || [];
-  const totalLists = lists.length;
-  const completedLists = lists.filter(l => l.isCompleted).length;
-
-  let totalTasks = 0;
-  let completedTasks = 0;
-  let totalSubtasks = 0;
-  let completedSubtasks = 0;
-
-  lists.forEach(list => {
-    const tasks = list.tasks || [];
-    totalTasks += tasks.length;
-    completedTasks += tasks.filter(t => t.isCompleted).length;
-    tasks.forEach(task => {
-      const subs = task.subtasks || [];
-      totalSubtasks += subs.length;
-      completedSubtasks += subs.filter(s => s.isCompleted).length;
-    });
-  });
-
-  const totalElements = totalLists + totalTasks + totalSubtasks;
-  const completedElements = completedLists + completedTasks + completedSubtasks;
-  return totalElements > 0 ? Math.round((completedElements / totalElements) * 100) : 0;
-};
 
 const calculateStats = (
   board: Board,
@@ -83,7 +57,7 @@ const calculateStats = (
       pending,
       overdue,
       today: todayCount,
-      progressPercent: calculateOverallProgress(board),
+      progressPercent: calculateBoardProgress(board),
       label: "Alt Görev",
     };
   }
@@ -113,7 +87,7 @@ const calculateStats = (
       pending,
       overdue,
       today: todayCount,
-      progressPercent: calculateOverallProgress(board),
+      progressPercent: calculateBoardProgress(board),
       label: "Görev",
     };
   }
@@ -142,7 +116,7 @@ const calculateStats = (
     pending,
     overdue,
     today: todayCount,
-    progressPercent: calculateOverallProgress(board),
+    progressPercent: calculateBoardProgress(board),
     label: "Liste",
   };
 };
@@ -304,10 +278,9 @@ const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color, labelCol
   </div>
 );
 
-// Separate stats calculation for MiniStats (board cards - shows all tasks)
+// Separate stats calculation for MiniStats (board cards - uses leaf-node progress)
 const calculateBoardTaskStats = (board: Board) => {
-  let totalTasks = 0;
-  let completedTasks = 0;
+  const leafCounts = calculateLeafNodeCounts(board);
   let overdueTasks = 0;
 
   const today = new Date();
@@ -315,10 +288,7 @@ const calculateBoardTaskStats = (board: Board) => {
 
   board.taskLists?.forEach(list => {
     list.tasks?.forEach(task => {
-      totalTasks++;
-      if (task.isCompleted) {
-        completedTasks++;
-      } else if (task.dueDate) {
+      if (!task.isCompleted && task.dueDate) {
         const dueDate = new Date(task.dueDate);
         dueDate.setHours(0, 0, 0, 0);
         if (dueDate.getTime() < today.getTime()) {
@@ -329,10 +299,10 @@ const calculateBoardTaskStats = (board: Board) => {
   });
 
   return {
-    totalTasks,
-    completedTasks,
+    totalTasks: leafCounts.total,
+    completedTasks: leafCounts.completed,
     overdueTasks,
-    progressPercent: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+    progressPercent: leafCounts.total > 0 ? Math.round((leafCounts.completed / leafCounts.total) * 100) : 0,
   };
 };
 

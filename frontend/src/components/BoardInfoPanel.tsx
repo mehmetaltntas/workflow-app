@@ -17,6 +17,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { typography, spacing, radius, colors, cssVars, animation } from "../styles/tokens";
+import { calculateBoardProgress } from "../utils/progressCalculation";
 
 interface BoardInfoPanelProps {
   board: Board | null;
@@ -96,11 +97,7 @@ const calculateBoardStats = (board: Board) => {
     lists: { total: totalLists, completed: completedLists },
     tasks: { total: totalTasks, completed: completedTasks, overdue: overdueTasks },
     subtasks: { total: totalSubtasks, completed: completedSubtasks, overdue: overdueSubtasks },
-    overallProgress: (() => {
-      const totalElements = totalLists + totalTasks + totalSubtasks;
-      const completedElements = completedLists + completedTasks + completedSubtasks;
-      return totalElements > 0 ? Math.round((completedElements / totalElements) * 100) : 0;
-    })(),
+    overallProgress: calculateBoardProgress(board),
   };
 };
 

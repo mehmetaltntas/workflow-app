@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { boardService } from "../services/api";
 import type { Board, TaskList, Task, Subtask } from "../types";
 import { useAuthStore } from "../stores/authStore";
+import { calculateMultiBoardLeafNodeCounts } from "../utils/progressCalculation";
 
 export interface BoardStats {
   total: number;
@@ -232,10 +233,9 @@ function calculateStats(boards: Board[]): ProfileStats {
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  // Calculate overall progress
-  const totalItems = taskStats.total + subtaskStats.total;
-  const completedItems = taskStats.completed + subtaskStats.completed;
-  const overallProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  // Calculate overall progress using leaf-node approach
+  const leafCounts = calculateMultiBoardLeafNodeCounts(boards);
+  const overallProgress = leafCounts.total > 0 ? Math.round((leafCounts.completed / leafCounts.total) * 100) : 0;
 
   return {
     boards: boardStats,
