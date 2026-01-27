@@ -267,8 +267,8 @@ const BoardStatusPage = () => {
               <SortDropdown
                 sortField={sortField}
                 sortDirection={sortDirection}
-                onSortFieldChange={setSortField}
-                onSortDirectionChange={setSortDirection}
+                onSortFieldChange={(field) => { setSortField(field); setSearchParams({}); }}
+                onSortDirectionChange={(dir) => { setSortDirection(dir); setSearchParams({}); }}
               />
             </div>
           </div>
