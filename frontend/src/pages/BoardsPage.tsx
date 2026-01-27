@@ -412,7 +412,7 @@ const BoardsPage = () => {
 
              if (boardsInStatus.length === 0) return null;
 
-             const MAX_VISIBLE = 8;
+             const MAX_VISIBLE = 5;
              const hasMore = boardsInStatus.length > MAX_VISIBLE;
              const visibleBoards = hasMore ? boardsInStatus.slice(0, MAX_VISIBLE) : boardsInStatus;
 

@@ -1,27 +1,27 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import type { Board } from "../types";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useBoardsQuery } from "../hooks/queries/useBoards";
-import { useCreateBoard, useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
-import { typography, spacing, radius, colors, cssVars, animation } from '../styles/tokens';
+import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
+import { typography, spacing, radius, cssVars, animation } from '../styles/tokens';
 import BoardCard from "../components/BoardCard";
-import CreateBoardModal from "../components/CreateBoardModal";
 import BoardEditModal from "../components/BoardEditModal";
 import { STATUS_COLORS, STATUS_LABELS, SLUG_TO_STATUS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
 
+const BOARDS_PER_PAGE = 25;
+
 const BoardStatusPage = () => {
   const { statusSlug } = useParams<{ statusSlug: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { data: boards = [], isLoading: loading } = useBoardsQuery();
-  const createBoardMutation = useCreateBoard();
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -31,12 +31,15 @@ const BoardStatusPage = () => {
   const statusLabel = statusKey ? STATUS_LABELS[statusKey] : undefined;
   const statusColor = statusKey ? STATUS_COLORS[statusKey] : undefined;
 
+  const currentPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+
   useEffect(() => {
     if (!loading) {
+      setIsVisible(false);
       const timer = setTimeout(() => setIsVisible(true), 50);
       return () => clearTimeout(timer);
     }
-  }, [loading]);
+  }, [loading, currentPage]);
 
   // Geçersiz status slug kontrolü
   if (!statusKey || !statusLabel) {
@@ -64,16 +67,19 @@ const BoardStatusPage = () => {
 
   const filteredBoards = boards.filter(b => (b.status || "PLANLANDI") === statusKey);
 
-  const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => {
-    const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
-    createBoardMutation.mutate(
-      { name, status, link, description, deadline: formattedDeadline, category },
-      {
-        onSuccess: () => {
-          setIsModalOpen(false);
-        },
-      }
-    );
+  // Sayfalama hesaplamaları
+  const totalPages = Math.max(1, Math.ceil(filteredBoards.length / BOARDS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * BOARDS_PER_PAGE;
+  const paginatedBoards = filteredBoards.slice(startIndex, startIndex + BOARDS_PER_PAGE);
+
+  const goToPage = (page: number) => {
+    if (page === 1) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ page: String(page) });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string }) => {
@@ -223,6 +229,7 @@ const BoardStatusPage = () => {
                   margin: 0
                 }}>
                   {filteredBoards.length} pano
+                  {totalPages > 1 && ` · Sayfa ${safePage} / ${totalPages}`}
                 </p>
               </div>
             </div>
@@ -248,7 +255,7 @@ const BoardStatusPage = () => {
         )}
 
         {/* Cards Grid/List */}
-        {filteredBoards.length > 0 && (
+        {paginatedBoards.length > 0 && (
           <div
             style={{
               display: viewMode === 'list' ? "flex" : "grid",
@@ -261,7 +268,7 @@ const BoardStatusPage = () => {
               gap: viewMode === 'list' ? spacing[2] : spacing[4],
             }}
           >
-            {filteredBoards.map((board, cardIndex) => (
+            {paginatedBoards.map((board, cardIndex) => (
               <div
                 key={board.id}
                 style={{
@@ -284,17 +291,137 @@ const BoardStatusPage = () => {
             ))}
           </div>
         )}
-      </div>
 
-      {/* Yeni Pano Oluşturma Modalı */}
-      {isModalOpen && (
-        <CreateBoardModal
-          key="create-new"
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onCreate={handleCreateBoard}
-        />
-      )}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: spacing[2],
+            marginTop: spacing[10],
+            paddingTop: spacing[6],
+            borderTop: `1px solid ${cssVars.border}`,
+          }}>
+            {/* Önceki */}
+            <button
+              onClick={() => goToPage(safePage - 1)}
+              disabled={safePage <= 1}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[1],
+                padding: `${spacing[2]} ${spacing[3]}`,
+                borderRadius: radius.lg,
+                border: `1px solid ${cssVars.border}`,
+                background: safePage <= 1 ? cssVars.bgSecondary : cssVars.bgCard,
+                color: safePage <= 1 ? cssVars.textMuted : cssVars.textMain,
+                cursor: safePage <= 1 ? "not-allowed" : "pointer",
+                transition: `all ${animation.duration.normal}`,
+                fontWeight: typography.fontWeight.medium,
+                fontSize: typography.fontSize.sm,
+                opacity: safePage <= 1 ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (safePage > 1) {
+                  e.currentTarget.style.background = cssVars.bgSecondary;
+                  e.currentTarget.style.borderColor = statusColor || cssVars.border;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (safePage > 1) {
+                  e.currentTarget.style.background = cssVars.bgCard;
+                  e.currentTarget.style.borderColor = cssVars.border;
+                }
+              }}
+            >
+              <ChevronLeft size={16} />
+              Önceki
+            </button>
+
+            {/* Sayfa numaraları */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => goToPage(page)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: radius.lg,
+                  border: page === safePage
+                    ? `1px solid ${statusColor}`
+                    : `1px solid ${cssVars.border}`,
+                  background: page === safePage
+                    ? `${statusColor}15`
+                    : cssVars.bgCard,
+                  color: page === safePage
+                    ? statusColor
+                    : cssVars.textMain,
+                  cursor: "pointer",
+                  transition: `all ${animation.duration.normal}`,
+                  fontWeight: page === safePage
+                    ? typography.fontWeight.bold
+                    : typography.fontWeight.medium,
+                  fontSize: typography.fontSize.sm,
+                }}
+                onMouseEnter={(e) => {
+                  if (page !== safePage) {
+                    e.currentTarget.style.background = cssVars.bgSecondary;
+                    e.currentTarget.style.borderColor = statusColor || cssVars.border;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (page !== safePage) {
+                    e.currentTarget.style.background = cssVars.bgCard;
+                    e.currentTarget.style.borderColor = cssVars.border;
+                  }
+                }}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* Sonraki */}
+            <button
+              onClick={() => goToPage(safePage + 1)}
+              disabled={safePage >= totalPages}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[1],
+                padding: `${spacing[2]} ${spacing[3]}`,
+                borderRadius: radius.lg,
+                border: `1px solid ${cssVars.border}`,
+                background: safePage >= totalPages ? cssVars.bgSecondary : cssVars.bgCard,
+                color: safePage >= totalPages ? cssVars.textMuted : cssVars.textMain,
+                cursor: safePage >= totalPages ? "not-allowed" : "pointer",
+                transition: `all ${animation.duration.normal}`,
+                fontWeight: typography.fontWeight.medium,
+                fontSize: typography.fontSize.sm,
+                opacity: safePage >= totalPages ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (safePage < totalPages) {
+                  e.currentTarget.style.background = cssVars.bgSecondary;
+                  e.currentTarget.style.borderColor = statusColor || cssVars.border;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (safePage < totalPages) {
+                  e.currentTarget.style.background = cssVars.bgCard;
+                  e.currentTarget.style.borderColor = cssVars.border;
+                }
+              }}
+            >
+              Sonraki
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Pano Düzenleme Modalı */}
       {isEditModalOpen && editingBoard && (

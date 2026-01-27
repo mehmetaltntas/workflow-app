@@ -159,7 +159,7 @@ export const authService = {
 // 4. Board (Pano) İşlemleri
 export const boardService = {
   getUserBoards: async (userId: number): Promise<ExtractedPagedData<Board>> => {
-    const response = await apiClient.get<PagedResponse<Board>>(`/boards/user/${userId}`);
+    const response = await apiClient.get<PagedResponse<Board>>(`/boards/user/${userId}?size=200`);
     return extractPagedData<Board>(response);
   },
   createBoard: async (data: { name: string; status?: string; link?: string; description?: string; deadline?: string; category?: string }): Promise<Board> => {
