@@ -154,7 +154,7 @@ public class BoardService {
         response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
         response.setOwnerFirstName(board.getUser().getFirstName());
         response.setOwnerLastName(board.getUser().getLastName());
-        response.setBoardType(board.getBoardType().name());
+        response.setBoardType(board.getBoardType() != null ? board.getBoardType().name() : "INDIVIDUAL");
         response.setIsOwner(isOwner);
         response.setCurrentUserId(currentUserId);
 
@@ -307,7 +307,7 @@ public class BoardService {
         response.setOwnerName(board.getUser().getUsername()); // User zaten EntityGraph ile fetch edildi
         response.setOwnerFirstName(board.getUser().getFirstName());
         response.setOwnerLastName(board.getUser().getLastName());
-        response.setBoardType(board.getBoardType().name());
+        response.setBoardType(board.getBoardType() != null ? board.getBoardType().name() : "INDIVIDUAL");
 
         // NOT: Liste sayfası için taskLists, tasks, labels yüklenmez (performans)
         // Detay sayfası için getBoardDetails() ve mapToResponseOptimized() kullanılır

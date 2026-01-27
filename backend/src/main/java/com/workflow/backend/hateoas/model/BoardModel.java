@@ -26,4 +26,9 @@ public class BoardModel extends RepresentationModel<BoardModel> {
     private List<TaskListModel> taskLists;
     private List<LabelModel> labels;
     private List<BoardMemberModel> members;
+    private String ownerFirstName;
+    private String ownerLastName;
+    private String boardType;
+    private Boolean isOwner;
+    private Long currentUserId;
 }

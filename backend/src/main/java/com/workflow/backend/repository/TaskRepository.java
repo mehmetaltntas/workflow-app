@@ -52,7 +52,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Profil istatistikleri: Toplam ve tamamlanan gorev sayilari
     @Query("SELECT COUNT(t), SUM(CASE WHEN t.isCompleted = true THEN 1 ELSE 0 END) FROM Task t WHERE t.taskList.board.user.id = :userId")
-    Object[] countStatsForUser(@Param("userId") Long userId);
+    List<Object[]> countStatsForUser(@Param("userId") Long userId);
 
     // Profil istatistikleri: Leaf-node progress icin alt gorevi olan/olmayan gorevler
     @Query("SELECT t.isCompleted, SIZE(t.subtasks) FROM Task t WHERE t.taskList.board.user.id = :userId")

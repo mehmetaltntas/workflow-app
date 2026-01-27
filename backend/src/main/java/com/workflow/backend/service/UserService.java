@@ -9,15 +9,14 @@ import com.workflow.backend.entity.UserProfilePicture;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.exception.ResourceNotFoundException;
+import com.workflow.backend.exception.UnauthorizedAccessException;
 import com.workflow.backend.repository.*;
 import com.workflow.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -297,7 +296,7 @@ public class UserService {
         boolean isPublic = Boolean.TRUE.equals(targetUser.getIsProfilePublic());
 
         if (!isSelf && !isConnected && !isPublic) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu kullanicinin istatistiklerine erisim yetkiniz yok.");
+            throw new UnauthorizedAccessException("kullanıcı istatistikleri", targetUserId);
         }
 
         UserProfileStatsResponse response = new UserProfileStatsResponse();
@@ -323,23 +322,26 @@ public class UserService {
         response.setBoardsByStatus(boardsByStatus);
 
         // Liste istatistikleri
-        Object[] listStats = taskListRepository.countStatsForUser(targetUserId);
-        int totalLists = listStats[0] != null ? ((Long) listStats[0]).intValue() : 0;
-        int completedLists = listStats[1] != null ? ((Long) listStats[1]).intValue() : 0;
+        List<Object[]> listStatsResult = taskListRepository.countStatsForUser(targetUserId);
+        Object[] listStats = listStatsResult.isEmpty() ? new Object[]{0L, 0L} : listStatsResult.get(0);
+        int totalLists = listStats[0] != null ? ((Number) listStats[0]).intValue() : 0;
+        int completedLists = listStats[1] != null ? ((Number) listStats[1]).intValue() : 0;
         response.setTotalLists(totalLists);
         response.setCompletedLists(completedLists);
 
         // Gorev istatistikleri
-        Object[] taskStats = taskRepository.countStatsForUser(targetUserId);
-        int totalTasks = taskStats[0] != null ? ((Long) taskStats[0]).intValue() : 0;
-        int completedTasks = taskStats[1] != null ? ((Long) taskStats[1]).intValue() : 0;
+        List<Object[]> taskStatsResult = taskRepository.countStatsForUser(targetUserId);
+        Object[] taskStats = taskStatsResult.isEmpty() ? new Object[]{0L, 0L} : taskStatsResult.get(0);
+        int totalTasks = taskStats[0] != null ? ((Number) taskStats[0]).intValue() : 0;
+        int completedTasks = taskStats[1] != null ? ((Number) taskStats[1]).intValue() : 0;
         response.setTotalTasks(totalTasks);
         response.setCompletedTasks(completedTasks);
 
         // Alt gorev istatistikleri
-        Object[] subtaskStats = subtaskRepository.countStatsForUser(targetUserId);
-        int totalSubtasks = subtaskStats[0] != null ? ((Long) subtaskStats[0]).intValue() : 0;
-        int completedSubtasks = subtaskStats[1] != null ? ((Long) subtaskStats[1]).intValue() : 0;
+        List<Object[]> subtaskStatsResult = subtaskRepository.countStatsForUser(targetUserId);
+        Object[] subtaskStats = subtaskStatsResult.isEmpty() ? new Object[]{0L, 0L} : subtaskStatsResult.get(0);
+        int totalSubtasks = subtaskStats[0] != null ? ((Number) subtaskStats[0]).intValue() : 0;
+        int completedSubtasks = subtaskStats[1] != null ? ((Number) subtaskStats[1]).intValue() : 0;
         response.setTotalSubtasks(totalSubtasks);
         response.setCompletedSubtasks(completedSubtasks);
 

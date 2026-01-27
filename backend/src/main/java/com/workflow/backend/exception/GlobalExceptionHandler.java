@@ -208,16 +208,16 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
-        logger.error("Runtime hatası: {}", ex.getMessage());
+        logger.error("Runtime hatası: ", ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "İşlem Hatası",
-                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Sunucu Hatası",
+                "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
                 null
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     /**

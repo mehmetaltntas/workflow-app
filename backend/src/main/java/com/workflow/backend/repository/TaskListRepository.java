@@ -24,5 +24,5 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long> {
 
     // Profil istatistikleri: Toplam ve tamamlanan liste sayilari
     @Query("SELECT COUNT(tl), SUM(CASE WHEN tl.isCompleted = true THEN 1 ELSE 0 END) FROM TaskList tl WHERE tl.board.user.id = :userId")
-    Object[] countStatsForUser(@Param("userId") Long userId);
+    List<Object[]> countStatsForUser(@Param("userId") Long userId);
 }

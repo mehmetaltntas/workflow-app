@@ -45,6 +45,11 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
         model.setCategory(dto.getCategory());
         model.setDeadline(dto.getDeadline());
         model.setCreatedAt(dto.getCreatedAt());
+        model.setOwnerFirstName(dto.getOwnerFirstName());
+        model.setOwnerLastName(dto.getOwnerLastName());
+        model.setBoardType(dto.getBoardType());
+        model.setIsOwner(dto.getIsOwner());
+        model.setCurrentUserId(dto.getCurrentUserId());
 
         // Convert nested task lists
         if (dto.getTaskLists() != null) {

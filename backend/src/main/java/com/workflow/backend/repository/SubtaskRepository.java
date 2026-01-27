@@ -26,5 +26,5 @@ public interface SubtaskRepository extends JpaRepository<Subtask, Long> {
 
     // Profil istatistikleri: Toplam ve tamamlanan alt gorev sayilari
     @Query("SELECT COUNT(s), SUM(CASE WHEN s.isCompleted = true THEN 1 ELSE 0 END) FROM Subtask s WHERE s.task.taskList.board.user.id = :userId")
-    Object[] countStatsForUser(@Param("userId") Long userId);
+    List<Object[]> countStatsForUser(@Param("userId") Long userId);
 }
