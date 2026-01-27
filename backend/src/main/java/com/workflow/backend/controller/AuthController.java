@@ -106,14 +106,14 @@ public class AuthController {
     public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         String requestRefreshToken = request.getRefreshToken();
 
-        return refreshTokenService.findByToken(requestRefreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    String newAccessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
-                    return ResponseEntity.ok(new TokenRefreshResponse(newAccessToken, requestRefreshToken));
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token", "token", requestRefreshToken));
+        RefreshToken refreshToken = refreshTokenService.findAndVerifyToken(requestRefreshToken);
+        if (refreshToken == null) {
+            throw new ResourceNotFoundException("Refresh token", "token", requestRefreshToken);
+        }
+
+        String newAccessToken = jwtService.generateAccessToken(
+                refreshToken.getUser().getUsername(), refreshToken.getUser().getId());
+        return ResponseEntity.ok(new TokenRefreshResponse(newAccessToken, requestRefreshToken));
     }
 
     @Operation(summary = "Çıkış yap", description = "Kullanıcının refresh token'ını siler")

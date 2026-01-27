@@ -50,8 +50,26 @@ public class RefreshTokenService {
     /**
      * Refresh token'ı doğrular ve döner.
      */
+    @Transactional(readOnly = true)
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
+    }
+
+    /**
+     * Refresh token'ı bulur, süresini doğrular ve ilişkili kullanıcıyı yükler.
+     * Tek bir transaction içinde çalışır, böylece lazy-loaded User proxy'si başarılı şekilde yüklenir.
+     */
+    @Transactional
+    public RefreshToken findAndVerifyToken(String token) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
+                .orElse(null);
+        if (refreshToken == null) {
+            return null;
+        }
+        refreshToken = verifyExpiration(refreshToken);
+        // Lazy proxy'yi transaction içinde initialize et
+        refreshToken.getUser().getId();
+        return refreshToken;
     }
 
     /**
