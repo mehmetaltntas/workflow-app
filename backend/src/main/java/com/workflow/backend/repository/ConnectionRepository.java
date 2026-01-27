@@ -3,8 +3,11 @@ package com.workflow.backend.repository;
 import com.workflow.backend.entity.Connection;
 import com.workflow.backend.entity.ConnectionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +31,13 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE c.receiver.id = :receiverId AND c.status = :status ORDER BY c.createdAt DESC")
     List<Connection> findByReceiverIdAndStatus(@Param("receiverId") Long receiverId, @Param("status") ConnectionStatus status);
 
+    @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE c.sender.id = :senderId AND c.status = :status ORDER BY c.createdAt DESC")
+    List<Connection> findBySenderIdAndStatus(@Param("senderId") Long senderId, @Param("status") ConnectionStatus status);
+
     @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE (c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED' ORDER BY c.updatedAt DESC")
     List<Connection> findAcceptedByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM Connection c WHERE c.status = 'PENDING' AND c.createdAt < :expireDate")
+    int deleteExpiredPendingConnections(@Param("expireDate") LocalDateTime expireDate);
 }

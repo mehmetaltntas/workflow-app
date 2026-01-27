@@ -83,6 +83,16 @@ public class ConnectionController {
         return ResponseEntity.ok(CollectionModel.of(models));
     }
 
+    @Operation(summary = "Gonderilen baglanti isteklerini getir")
+    @GetMapping("/sent")
+    public ResponseEntity<CollectionModel<ConnectionModel>> getSentRequests() {
+        List<ConnectionResponse> results = connectionService.getSentRequests();
+        List<ConnectionModel> models = results.stream()
+                .map(connectionAssembler::toModel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(CollectionModel.of(models));
+    }
+
     @Operation(summary = "Kabul edilmis baglantiları getir")
     @GetMapping("/accepted")
     public ResponseEntity<CollectionModel<ConnectionModel>> getAcceptedConnections() {

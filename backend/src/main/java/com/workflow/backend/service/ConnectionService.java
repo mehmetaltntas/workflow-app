@@ -8,9 +8,12 @@ import com.workflow.backend.repository.ConnectionRepository;
 import com.workflow.backend.repository.UserProfilePictureRepository;
 import com.workflow.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,7 +55,12 @@ public class ConnectionService {
             conn.setSender(currentUser);
             conn.setReceiver(targetUser);
             conn.setStatus(ConnectionStatus.PENDING);
-            Connection saved = connectionRepository.save(conn);
+            Connection saved;
+            try {
+                saved = connectionRepository.save(conn);
+            } catch (DataIntegrityViolationException e) {
+                throw new BadRequestException("Zaten bekleyen bir baglanti istegi var.");
+            }
 
             notificationService.createNotification(
                     targetUser, currentUser,
@@ -68,7 +76,13 @@ public class ConnectionService {
         connection.setSender(currentUser);
         connection.setReceiver(targetUser);
         connection.setStatus(ConnectionStatus.PENDING);
-        Connection saved = connectionRepository.save(connection);
+
+        Connection saved;
+        try {
+            saved = connectionRepository.save(connection);
+        } catch (DataIntegrityViolationException e) {
+            throw new BadRequestException("Zaten bekleyen bir baglanti istegi var.");
+        }
 
         // Bildirim olustur
         notificationService.createNotification(
@@ -135,6 +149,16 @@ public class ConnectionService {
         // Baglanti istegi bildirimini sil
         notificationService.deleteByReference(connectionId, NotificationType.CONNECTION_REQUEST);
 
+        // Gondericiye red bildirimi gonder
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", currentUserId));
+
+        notificationService.createNotification(
+                connection.getSender(), currentUser,
+                NotificationType.CONNECTION_REJECTED,
+                currentUser.getUsername() + " baglanti isteginizi reddetti",
+                saved.getId());
+
         return mapToResponse(saved);
     }
 
@@ -195,6 +219,12 @@ public class ConnectionService {
         return pending.stream().map(this::mapToResponse).toList();
     }
 
+    public List<ConnectionResponse> getSentRequests() {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<Connection> sent = connectionRepository.findBySenderIdAndStatus(currentUserId, ConnectionStatus.PENDING);
+        return sent.stream().map(this::mapToResponse).toList();
+    }
+
     public List<ConnectionResponse> getAcceptedConnections() {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<Connection> accepted = connectionRepository.findAcceptedByUserId(currentUserId);
@@ -233,5 +263,15 @@ public class ConnectionService {
         response.setStatus(connection.getStatus().name());
         response.setCreatedAt(connection.getCreatedAt());
         return response;
+    }
+
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void expirePendingConnections() {
+        LocalDateTime expireDate = LocalDateTime.now().minusDays(30);
+        int deleted = connectionRepository.deleteExpiredPendingConnections(expireDate);
+        if (deleted > 0) {
+            System.out.println("Suresi dolmus " + deleted + " baglanti istegi silindi.");
+        }
     }
 }
