@@ -16,4 +16,5 @@ public class SubtaskModel extends RepresentationModel<SubtaskModel> {
     private Integer position;
     private String description;
     private String link;
+    private java.time.LocalDateTime createdAt;
 }

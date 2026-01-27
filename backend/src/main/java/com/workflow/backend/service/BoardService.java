@@ -224,6 +224,7 @@ public class BoardService {
                                 subtaskDto.setPosition(subtask.getPosition());
                                 subtaskDto.setDescription(subtask.getDescription());
                                 subtaskDto.setLink(subtask.getLink());
+                                subtaskDto.setCreatedAt(subtask.getCreatedAt());
                                 return subtaskDto;
                             }).collect(Collectors.toList()));
                         }

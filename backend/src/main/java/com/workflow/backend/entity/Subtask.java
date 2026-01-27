@@ -30,8 +30,15 @@ public class Subtask {
     @Column(length = 500)
     private String link;
 
+    private java.time.LocalDateTime createdAt;
+
     // İLİŞKİ: Hangi göreve ait?
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = java.time.LocalDateTime.now();
+    }
 }

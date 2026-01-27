@@ -25,6 +25,7 @@ public class SubtaskModelAssembler extends RepresentationModelAssemblerSupport<S
         model.setPosition(dto.getPosition());
         model.setDescription(dto.getDescription());
         model.setLink(dto.getLink());
+        model.setCreatedAt(dto.getCreatedAt());
 
         // Self link
         model.add(linkTo(methodOn(SubtaskController.class).updateSubtask(dto.getId(), null))

@@ -22,4 +22,6 @@ public class SubtaskDto {
 
     @Size(max = 500, message = "Link en fazla 500 karakter olabilir")
     private String link;
+
+    private java.time.LocalDateTime createdAt;
 }

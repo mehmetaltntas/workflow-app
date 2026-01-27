@@ -179,6 +179,7 @@ public class SubtaskService {
         dto.setPosition(subtask.getPosition());
         dto.setDescription(subtask.getDescription());
         dto.setLink(subtask.getLink());
+        dto.setCreatedAt(subtask.getCreatedAt());
         return dto;
     }
 }
