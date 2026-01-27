@@ -24,4 +24,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.referenceId = :referenceId AND n.type = :type")
     void deleteByReferenceIdAndType(@Param("referenceId") Long referenceId, @Param("type") NotificationType type);
+
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.type = 'CONNECTION_REQUEST' " +
+            "AND n.referenceId IS NOT NULL " +
+            "AND n.referenceId NOT IN (SELECT c.id FROM Connection c WHERE c.status = 'PENDING')")
+    void deleteStaleConnectionRequestNotifications();
 }

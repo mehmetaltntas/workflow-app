@@ -1,23 +1,32 @@
 package com.workflow.backend.service;
 
 import com.workflow.backend.dto.NotificationResponse;
+import com.workflow.backend.entity.ConnectionStatus;
 import com.workflow.backend.entity.Notification;
 import com.workflow.backend.entity.NotificationType;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.exception.ResourceNotFoundException;
+import com.workflow.backend.repository.ConnectionRepository;
 import com.workflow.backend.repository.NotificationRepository;
 import com.workflow.backend.repository.UserProfilePictureRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final ConnectionRepository connectionRepository;
     private final UserProfilePictureRepository profilePictureRepository;
     private final CurrentUserService currentUserService;
 
@@ -34,6 +43,29 @@ public class NotificationService {
     public List<NotificationResponse> getNotifications() {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<Notification> notifications = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(currentUserId);
+
+        // Artik PENDING olmayan baglanti isteklerinin bildirimlerini filtrele
+        List<Long> connectionRequestRefIds = notifications.stream()
+                .filter(n -> n.getType() == NotificationType.CONNECTION_REQUEST && n.getReferenceId() != null)
+                .map(Notification::getReferenceId)
+                .toList();
+
+        if (!connectionRequestRefIds.isEmpty()) {
+            Set<Long> pendingConnectionIds = connectionRepository.findAllById(connectionRequestRefIds).stream()
+                    .filter(c -> c.getStatus() == ConnectionStatus.PENDING)
+                    .map(c -> c.getId())
+                    .collect(Collectors.toSet());
+
+            notifications = notifications.stream()
+                    .filter(n -> {
+                        if (n.getType() == NotificationType.CONNECTION_REQUEST && n.getReferenceId() != null) {
+                            return pendingConnectionIds.contains(n.getReferenceId());
+                        }
+                        return true;
+                    })
+                    .toList();
+        }
+
         return notifications.stream().map(this::mapToResponse).toList();
     }
 
@@ -66,6 +98,13 @@ public class NotificationService {
     @Transactional
     public void deleteByReference(Long referenceId, NotificationType type) {
         notificationRepository.deleteByReferenceIdAndType(referenceId, type);
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void cleanupStaleNotifications() {
+        notificationRepository.deleteStaleConnectionRequestNotifications();
+        log.info("Eski CONNECTION_REQUEST bildirimleri temizlendi");
     }
 
     private NotificationResponse mapToResponse(Notification notification) {
