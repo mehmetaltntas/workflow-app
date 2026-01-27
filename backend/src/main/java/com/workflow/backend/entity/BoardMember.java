@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class BoardMember {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @ColumnDefault("'ACCEPTED'")
     private BoardMemberStatus status = BoardMemberStatus.ACCEPTED;
 
     @OneToMany(mappedBy = "boardMember", cascade = CascadeType.ALL, orphanRemoval = true)
