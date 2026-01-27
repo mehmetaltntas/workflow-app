@@ -86,6 +86,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
   const columnRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLDivElement>(null);
   const [actionMenuId, setActionMenuId] = useState<number | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; bottom: number; right: number; openUp: boolean }>({ top: 0, bottom: 0, right: 0, openUp: false });
 
   // Seçili öğeyi görünür yap
   useEffect(() => {
@@ -484,7 +485,20 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActionMenuId(actionMenuId === item.id ? null : item.id);
+                          if (actionMenuId === item.id) {
+                            setActionMenuId(null);
+                          } else {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const spaceBelow = window.innerHeight - rect.bottom;
+                            const openUp = spaceBelow < 160;
+                            setMenuPos({
+                              top: rect.bottom + 4,
+                              bottom: window.innerHeight - rect.top + 4,
+                              right: window.innerWidth - rect.right,
+                              openUp,
+                            });
+                            setActionMenuId(item.id);
+                          }
                         }}
                         style={{
                           display: 'flex',
@@ -525,10 +539,11 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                           />
                           <div
                             style={{
-                              position: 'absolute',
-                              top: '100%',
-                              right: 0,
-                              marginTop: spacing[1],
+                              position: 'fixed',
+                              ...(menuPos.openUp
+                                ? { bottom: `${menuPos.bottom}px` }
+                                : { top: `${menuPos.top}px` }),
+                              right: `${menuPos.right}px`,
                               background: themeColors.bgCard,
                               border: `1px solid ${themeColors.borderDefault}`,
                               borderRadius: radius.lg,

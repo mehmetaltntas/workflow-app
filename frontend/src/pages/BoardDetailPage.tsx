@@ -55,6 +55,8 @@ const BoardDetailPage = () => {
   const [newSubtaskDescription, setNewSubtaskDescription] = useState("");
   const [newSubtaskLink, setNewSubtaskLink] = useState("");
   const [deleteListId, setDeleteListId] = useState<number | null>(null);
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
+  const [deleteSubtaskId, setDeleteSubtaskId] = useState<number | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingList, setEditingList] = useState<TaskList | null>(null);
   const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
@@ -332,16 +334,19 @@ const BoardDetailPage = () => {
     }
   }, [invalidateBoard]);
 
-  const handleDeleteTask = useCallback(async (taskId: number) => {
-    try {
-      await taskService.deleteTask(taskId);
-      invalidateBoard();
-      toast.success("Silindi");
-    } catch (error) {
-      console.error(error);
-      toast.error("Silinemedi");
+  const handleDeleteTaskConfirm = useCallback(async () => {
+    if (deleteTaskId) {
+      try {
+        await taskService.deleteTask(deleteTaskId);
+        setDeleteTaskId(null);
+        invalidateBoard();
+        toast.success("Görev silindi");
+      } catch (error) {
+        console.error(error);
+        toast.error("Görev silinemedi");
+      }
     }
-  }, [invalidateBoard]);
+  }, [deleteTaskId, invalidateBoard]);
 
   const handleUpdateTask = useCallback(async (taskId: number, updates: Partial<Task>) => {
     try {
@@ -661,24 +666,27 @@ const BoardDetailPage = () => {
     }
   }, [selectedTask, loadSubtasks, invalidateBoard]);
 
-  const handleDeleteSubtask = useCallback(async (subtaskId: number) => {
-    try {
-      await subtaskService.deleteSubtask(subtaskId);
-      // Subtask cache'i temizle
-      if (selectedTask) {
-        setSubtaskCache(prev => {
-          const newCache = new Map(prev);
-          newCache.delete(selectedTask.id);
-          return newCache;
-        });
+  const handleDeleteSubtaskConfirm = useCallback(async () => {
+    if (deleteSubtaskId) {
+      try {
+        await subtaskService.deleteSubtask(deleteSubtaskId);
+        // Subtask cache'i temizle
+        if (selectedTask) {
+          setSubtaskCache(prev => {
+            const newCache = new Map(prev);
+            newCache.delete(selectedTask.id);
+            return newCache;
+          });
+        }
+        setDeleteSubtaskId(null);
+        invalidateBoard();
+        toast.success("Alt görev silindi");
+      } catch (error) {
+        console.error(error);
+        toast.error("Alt görev silinemedi");
       }
-      invalidateBoard();
-      toast.success("Alt görev silindi");
-    } catch (error) {
-      console.error(error);
-      toast.error("Alt görev silinemedi");
     }
-  }, [selectedTask, invalidateBoard]);
+  }, [deleteSubtaskId, selectedTask, invalidateBoard]);
 
   const handleUpdateSubtask = useCallback(async (subtaskId: number, updates: {
     title?: string;
@@ -747,6 +755,28 @@ const BoardDetailPage = () => {
         message="Bu liste ve içindeki tüm görevler kalıcı olarak silinecek."
         onConfirm={handleDeleteList}
         onCancel={() => setDeleteListId(null)}
+        confirmText="Evet, Sil"
+        variant="danger"
+        autoCloseDelay={6000}
+      />
+
+      <DeleteConfirmation
+        isOpen={!!deleteTaskId}
+        title="Görevi silmek istiyor musun?"
+        message="Bu görev ve tüm alt görevleri kalıcı olarak silinecek."
+        onConfirm={handleDeleteTaskConfirm}
+        onCancel={() => setDeleteTaskId(null)}
+        confirmText="Evet, Sil"
+        variant="danger"
+        autoCloseDelay={6000}
+      />
+
+      <DeleteConfirmation
+        isOpen={!!deleteSubtaskId}
+        title="Alt görevi silmek istiyor musun?"
+        message="Bu alt görev kalıcı olarak silinecek."
+        onConfirm={handleDeleteSubtaskConfirm}
+        onCancel={() => setDeleteSubtaskId(null)}
         confirmText="Evet, Sil"
         variant="danger"
         autoCloseDelay={6000}
@@ -1097,7 +1127,7 @@ const BoardDetailPage = () => {
                 const task = selectedList.tasks.find(t => t.id === item.id);
                 if (task) setEditingTask(task);
               }}
-              onItemDelete={(item) => handleDeleteTask(item.id)}
+              onItemDelete={(item) => setDeleteTaskId(item.id)}
               onItemToggle={(item) => {
                 const task = selectedList.tasks.find(t => t.id === item.id);
                 if (task) handleTaskCompletionToggle(task, selectedList);
@@ -1128,7 +1158,7 @@ const BoardDetailPage = () => {
                 const subtask = subtasks.find(s => s.id === item.id);
                 if (subtask) handleSubtaskToggle(subtask);
               }}
-              onItemDelete={(item) => handleDeleteSubtask(item.id)}
+              onItemDelete={(item) => setDeleteSubtaskId(item.id)}
             />
           )}
         </div>
@@ -1157,9 +1187,9 @@ const BoardDetailPage = () => {
             }}
             onToggleList={(list) => handleListCompletionToggle(list)}
             onToggleSubtask={(subtask) => handleSubtaskToggle(subtask)}
-            onDeleteTask={(taskId) => handleDeleteTask(taskId)}
+            onDeleteTask={(taskId) => setDeleteTaskId(taskId)}
             onDeleteList={(listId) => setDeleteListId(listId)}
-            onDeleteSubtask={(subtaskId) => handleDeleteSubtask(subtaskId)}
+            onDeleteSubtask={(subtaskId) => setDeleteSubtaskId(subtaskId)}
           />
         </div>
       </div>
