@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { User, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../hooks/queries/useNotifications";
@@ -14,10 +15,12 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
   const { data: notifications = [], isLoading } = useNotifications();
   const { mutate: acceptConnection } = useAcceptConnectionRequest();
   const { mutate: rejectConnection } = useRejectConnectionRequest();
+  const [dismissedReferenceIds, setDismissedReferenceIds] = useState<Set<number>>(new Set());
 
   const handleAccept = (e: React.MouseEvent, referenceId: number | null) => {
     e.stopPropagation();
     if (referenceId) {
+      setDismissedReferenceIds(prev => new Set(prev).add(referenceId));
       acceptConnection(referenceId);
     }
   };
@@ -25,6 +28,7 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
   const handleReject = (e: React.MouseEvent, referenceId: number | null) => {
     e.stopPropagation();
     if (referenceId) {
+      setDismissedReferenceIds(prev => new Set(prev).add(referenceId));
       rejectConnection(referenceId);
     }
   };
@@ -51,6 +55,10 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
     return date.toLocaleDateString("tr-TR");
   };
 
+  const visibleNotifications = notifications.filter(n =>
+    !(n.type === "CONNECTION_REQUEST" && n.referenceId && dismissedReferenceIds.has(n.referenceId))
+  );
+
   return (
     <div className="notification-dropdown">
       <div className="notification-dropdown__header">
@@ -61,10 +69,10 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
         {isLoading && (
           <div className="notification-dropdown__empty">Yukleniyor...</div>
         )}
-        {!isLoading && notifications.length === 0 && (
+        {!isLoading && visibleNotifications.length === 0 && (
           <div className="notification-dropdown__empty">Bildirim yok</div>
         )}
-        {!isLoading && notifications.map((notification) => (
+        {!isLoading && visibleNotifications.map((notification) => (
           <div
             key={notification.id}
             className={`notification-dropdown__item ${!notification.isRead ? "notification-dropdown__item--unread" : ""}`}
