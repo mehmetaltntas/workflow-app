@@ -29,7 +29,7 @@ public class TaskList {
     private Long id;
 
     @Version
-    private Long version;
+    private Long version = 0L;
 
     private String name; // Örn: "To Do", "In Progress"
 
