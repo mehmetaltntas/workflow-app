@@ -308,7 +308,7 @@ const UserProfilePage = () => {
               style={{
                 width: "100%",
                 height: "12px",
-                background: colors.dark.bg.hover,
+                background: cssVars.bgHover,
                 borderRadius: radius.full,
                 overflow: "hidden",
               }}
@@ -421,7 +421,7 @@ const UserProfilePage = () => {
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: `${spacing[3]} ${spacing[4]}`,
-                      background: colors.dark.bg.hover,
+                      background: cssVars.bgHover,
                       borderRadius: radius.lg,
                     }}
                   >
@@ -489,7 +489,7 @@ const UserProfilePage = () => {
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: `${spacing[3]} ${spacing[4]}`,
-                      background: colors.dark.bg.hover,
+                      background: cssVars.bgHover,
                       borderRadius: radius.lg,
                     }}
                   >
@@ -509,7 +509,7 @@ const UserProfilePage = () => {
                       alignItems: "center",
                       justifyContent: "space-between",
                       padding: `${spacing[3]} ${spacing[4]}`,
-                      background: colors.dark.bg.hover,
+                      background: cssVars.bgHover,
                       borderRadius: radius.lg,
                     }}
                   >
@@ -576,7 +576,7 @@ const UserProfilePage = () => {
                           alignItems: "center",
                           gap: spacing[3],
                           padding: `${spacing[3]} ${spacing[4]}`,
-                          background: colors.dark.bg.hover,
+                          background: cssVars.bgHover,
                           borderRadius: radius.lg,
                         }}
                       >

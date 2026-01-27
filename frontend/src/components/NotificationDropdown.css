@@ -154,6 +154,6 @@
 }
 
 .notification-dropdown__reject:hover {
-  border-color: #ef4444;
-  color: #ef4444;
+  border-color: var(--danger);
+  color: var(--danger);
 }

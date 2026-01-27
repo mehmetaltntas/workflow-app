@@ -12,8 +12,6 @@ const BoardInfoPage = () => {
   const location = useLocation();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
-  const isLight = theme === "light";
-
   const { data: board = null, isLoading, error } = useBoardDetailQuery(slug);
 
   const handleGoBack = () => {
@@ -91,7 +89,7 @@ const BoardInfoPage = () => {
           gap: spacing[3],
           padding: `${spacing[4]} ${spacing[6]}`,
           borderBottom: `1px solid ${themeColors.borderDefault}`,
-          background: isLight ? colors.light.bg.elevated : colors.dark.bg.elevated,
+          background: cssVars.bgElevated,
         }}
       >
         <button

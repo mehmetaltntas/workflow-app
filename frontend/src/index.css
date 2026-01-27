@@ -2,12 +2,9 @@
 /* Import centralized design tokens */
 @import './styles/design-tokens.css';
 
-/* Legacy variable aliases for backward compatibility */
+/* Legacy variable alias for backward compatibility */
 :root {
   --overlay-bg: var(--bg-overlay);
-  --radius-lg: var(--radius-xl);
-  --radius-md: var(--radius-lg);
-  --radius-sm: var(--radius-md);
 }
 
 /* Smooth theme transitions */
@@ -57,7 +54,7 @@ input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+  box-shadow: var(--shadow-focus-primary);
 }
 
 /* Butonlar */
@@ -87,7 +84,7 @@ select:focus {
 
 .btn-primary:hover {
   background: var(--primary-hover);
-  box-shadow: 0 0 15px rgba(77, 171, 247, 0.3);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.3);
 }
 
 .btn-danger {
@@ -106,7 +103,7 @@ select:focus {
 }
 
 .btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
   color: var(--text-main);
 }
 
@@ -117,7 +114,7 @@ select:focus {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -158,7 +155,7 @@ select:focus {
 .task-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-strong);
 }
 
 /* Scrollbar */
@@ -179,7 +176,7 @@ select:focus {
 
 /* Dropdown Item Custom Styles */
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: var(--bg-hover) !important;
 }
 
 /* ===== Modern Menu System ===== */
@@ -207,7 +204,7 @@ select:focus {
 
 .menu-trigger.active {
   background: var(--menu-active);
-  border-color: rgba(77, 171, 247, 0.2);
+  border-color: rgba(var(--primary-rgb), 0.2);
   color: var(--primary);
 }
 
@@ -277,7 +274,7 @@ select:focus {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
   flex-shrink: 0;
 }
 
@@ -347,7 +344,7 @@ select:focus {
 
 .user-avatar:hover {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+  box-shadow: var(--shadow-focus-primary);
 }
 
 /* Menu Animations */
@@ -428,7 +425,7 @@ select:focus {
   padding-bottom: 8px;
 }
 
-/* Scroll Indicator - artık sticky, en alt kart ile birlikte hareket eder */
+/* Scroll Indicator */
 .list-scroll-indicator {
   position: sticky;
   bottom: 0;
@@ -436,7 +433,7 @@ select:focus {
   right: 0;
   height: 36px;
   margin-top: auto;
-  background: linear-gradient(transparent, rgba(20, 21, 24, 0.98));
+  background: var(--scroll-gradient);
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -446,7 +443,7 @@ select:focus {
 }
 
 .list-scroll-indicator svg {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-tertiary);
   transition: transform 0.3s ease;
 }
 
@@ -489,38 +486,27 @@ select:focus {
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-subtle);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .list-header-add-btn:hover {
-  background: rgba(77, 171, 247, 0.15);
+  background: rgba(var(--primary-rgb), 0.15);
   color: var(--primary);
 }
 
 /* Task Completed State (no strikethrough) */
 .task-completed {
-  background: rgba(81, 207, 102, 0.06) !important;
-  border-color: rgba(81, 207, 102, 0.12) !important;
+  background: var(--task-completed-bg) !important;
+  border-color: var(--task-completed-border) !important;
 }
 
 .task-completed .task-title {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-subtle);
 }
 
-/* ===== Light Theme Specific Overrides ===== */
-[data-theme="light"] .task-completed .task-title {
-  color: rgba(0, 0, 0, 0.4);
-}
-
-[data-theme="light"] .list-scroll-indicator {
-  background: linear-gradient(transparent, rgba(248, 249, 250, 0.98));
-}
-
-[data-theme="light"] .list-scroll-indicator svg {
-  color: rgba(0, 0, 0, 0.4);
-}
+/* ===== Light Theme Specific Overrides (class-based only) ===== */
 
 [data-theme="light"] .user-avatar {
   color: white;
@@ -532,54 +518,27 @@ select:focus {
   color: rgba(0, 0, 0, 0.4);
 }
 
-/* Light theme dropdown hover */
-[data-theme="light"] .dropdown-item:hover {
-  background: rgba(0, 0, 0, 0.04) !important;
-}
-
-/* ===== Comprehensive Light Theme Overrides ===== */
-
-/* Ghost button hover in light mode */
-[data-theme="light"] .btn-ghost:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-/* List header add button */
-[data-theme="light"] .list-header-add-btn {
-  color: rgba(0, 0, 0, 0.4);
-}
-
-[data-theme="light"] .list-header-add-btn:hover {
-  background: rgba(34, 139, 230, 0.1);
-  color: var(--primary);
-}
-
-/* Menu item icon background */
-[data-theme="light"] .menu-item-icon {
-  background: rgba(0, 0, 0, 0.05);
-}
-
 /* Task card border hover */
 [data-theme="light"] .task-card:hover {
-  border-color: rgba(0, 0, 0, 0.15);
+  border-color: var(--border-strong);
 }
 
 /* Board Detail Page - List Cards */
 [data-theme="light"] .board-grid > div {
   background: rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
+  border-color: var(--border) !important;
 }
 
 /* Board Detail Page - List Header */
 [data-theme="light"] .group\/list > div:first-child {
   background: rgba(0, 0, 0, 0.03) !important;
-  border-color: rgba(0, 0, 0, 0.05) !important;
+  border-color: var(--border-subtle) !important;
 }
 
 /* Task items in light mode */
 [data-theme="light"] .group\/task {
-  background: rgba(0, 0, 0, 0.02) !important;
-  border-color: rgba(0, 0, 0, 0.06) !important;
+  background: var(--task-bg) !important;
+  border-color: var(--task-border) !important;
 }
 
 [data-theme="light"] .group\/task:hover {
@@ -592,166 +551,9 @@ select:focus {
 }
 
 /* Completed task styling in light mode */
-[data-theme="light"] .task-completed,
-[data-theme="light"] [style*="rgba(81, 207, 102"] {
-  background: rgba(64, 192, 87, 0.08) !important;
-  border-color: rgba(64, 192, 87, 0.15) !important;
-}
-
-/* Stats bar in light mode */
-[data-theme="light"] [style*="rgba(20, 21, 24"],
-[data-theme="light"] [style*="rgba(13, 14, 16"] {
-  background: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* Filter bar and other dark backgrounds */
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.4)"] {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Input fields in add task section */
-[data-theme="light"] [style*="rgba(255,255,255,0.03)"],
-[data-theme="light"] [style*="rgba(255, 255, 255, 0.03)"] {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-[data-theme="light"] [style*="rgba(255,255,255,0.04)"],
-[data-theme="light"] [style*="rgba(255, 255, 255, 0.04)"] {
-  background: rgba(0, 0, 0, 0.03) !important;
-}
-
-[data-theme="light"] [style*="rgba(255,255,255,0.05)"],
-[data-theme="light"] [style*="rgba(255, 255, 255, 0.05)"] {
-  background: rgba(0, 0, 0, 0.04) !important;
-}
-
-[data-theme="light"] [style*="rgba(255,255,255,0.06)"],
-[data-theme="light"] [style*="rgba(255, 255, 255, 0.06)"] {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-[data-theme="light"] [style*="rgba(255,255,255,0.08)"],
-[data-theme="light"] [style*="rgba(255, 255, 255, 0.08)"] {
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Text color overrides for light mode */
-[data-theme="light"] [style*="color: rgba(255,255,255,0.9)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.9)"] {
-  color: var(--text-main) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.7)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.7)"] {
-  color: rgba(0, 0, 0, 0.7) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.6)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.6)"] {
-  color: rgba(0, 0, 0, 0.6) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.5)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.5)"] {
-  color: rgba(0, 0, 0, 0.5) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.45)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.45)"] {
-  color: rgba(0, 0, 0, 0.45) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.4)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.4)"] {
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.35)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.35)"] {
-  color: rgba(0, 0, 0, 0.35) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.3)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.3)"] {
-  color: rgba(0, 0, 0, 0.3) !important;
-}
-
-[data-theme="light"] [style*="color: rgba(255,255,255,0.2)"],
-[data-theme="light"] [style*="color: rgba(255, 255, 255, 0.2)"] {
-  color: rgba(0, 0, 0, 0.2) !important;
-}
-
-/* White text override */
-[data-theme="light"] [style*="color: white"]:not(.btn-primary):not(.user-avatar):not([style*="background: var(--primary)"]):not([style*="background: var(--danger)"]) {
-  color: var(--text-main) !important;
-}
-
-/* Dashed border buttons in light mode */
-[data-theme="light"] [style*="border: 1px dashed rgba(255,255,255"],
-[data-theme="light"] [style*="border: 1px dashed rgba(255, 255, 255"] {
-  border-color: rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Modal backgrounds in light mode */
-[data-theme="light"] [style*="background: rgba(25, 27, 31"],
-[data-theme="light"] [style*="background: rgba(20, 21, 24"],
-[data-theme="light"] [style*="background: #191b1f"],
-[data-theme="light"] [style*="background: #141518"] {
-  background: #ffffff !important;
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Calendar and other components */
-[data-theme="light"] [style*="background: rgba(0,0,0,0.25)"],
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.25)"] {
-  background: rgba(0, 0, 0, 0.03) !important;
-}
-
-[data-theme="light"] [style*="background: rgba(0,0,0,0.4)"],
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.4)"] {
-  background: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Dividers in light mode */
-[data-theme="light"] [style*="background: rgba(255,255,255,0.1)"],
-[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.1)"] {
-  background: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Header background fix */
-[data-theme="light"] [style*="background: rgba(13, 14, 16, 0.8)"] {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* New list column */
-[data-theme="light"] [style*="background: rgba(255,255,255,0.02)"] {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Sort buttons and toggles */
-[data-theme="light"] [style*="background: transparent"][style*="color: rgba(255,255,255,0.4)"] {
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Profile page and settings */
-[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.02)"] {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Board cards in boards page */
-[data-theme="light"] .board-card,
-[data-theme="light"] [class*="BoardCard"] {
-  background: #ffffff !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Stats numbers and labels */
-[data-theme="light"] [style*="fontSize: \"24px\""][style*="fontWeight: \"700\""],
-[data-theme="light"] [style*="font-size: 24px"][style*="font-weight: 700"] {
-  color: var(--text-main) !important;
+[data-theme="light"] .task-completed {
+  background: var(--task-completed-bg) !important;
+  border-color: var(--task-completed-border) !important;
 }
 
 /* Fix specific component overrides */
@@ -759,62 +561,11 @@ select:focus {
   background: transparent;
 }
 
-/* Action menu fixes */
-[data-theme="light"] .menu-dropdown {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Checkbox and icon colors */
-[data-theme="light"] [style*="color: rgba(255,255,255,0.5)"] button,
-[data-theme="light"] button[style*="color: rgba(255,255,255,0.5)"] {
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Label badges - keep their colors but ensure visibility */
-[data-theme="light"] [style*="fontSize: '9px'"][style*="fontWeight: '600'"] {
-  border-width: 1px !important;
-}
-
-/* Filter bar chips */
-[data-theme="light"] [style*="background: rgba(77, 171, 247, 0.15)"] {
-  background: rgba(34, 139, 230, 0.12) !important;
-}
-
-/* Priority and date badges - ensure text is readable */
-[data-theme="light"] [style*="background: rgba(239, 68, 68, 0.15)"] {
-  background: rgba(250, 82, 82, 0.12) !important;
-}
-
-[data-theme="light"] [style*="background: rgba(245, 158, 11, 0.15)"] {
-  background: rgba(250, 176, 5, 0.12) !important;
-}
-
-[data-theme="light"] [style*="background: rgba(34, 197, 94, 0.15)"] {
-  background: rgba(64, 192, 87, 0.12) !important;
-}
-
 /* Header buttons hover state */
 [data-theme="light"] .header-btn:hover {
   border-color: rgba(var(--primary-rgb), 0.3) !important;
   color: var(--primary) !important;
   background: rgba(var(--primary-rgb), 0.1) !important;
-}
-
-/* Sort buttons in light mode */
-[data-theme="light"] button[style*="borderRadius: '10px'"][style*="fontWeight: '700'"]:hover {
-  background: rgba(0, 0, 0, 0.04) !important;
-  color: rgba(0, 0, 0, 0.6) !important;
-}
-
-/* Link buttons hover in light mode */
-[data-theme="light"] a[style*="color: \"var(--primary)\""]:hover {
-  background: rgba(var(--primary-rgb), 0.1) !important;
-}
-
-/* Light mode specific fixes for stats bar */
-[data-theme="light"] [style*="backdropFilter: \"blur"] {
-  background: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* ===== Miller Columns Layout ===== */
@@ -829,26 +580,4 @@ select:focus {
     opacity: 1;
     transform: translateX(0);
   }
-}
-
-/* Miller column light theme overrides */
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.2)"] {
-  background: rgba(0, 0, 0, 0.03) !important;
-}
-
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.15)"] {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.1)"] {
-  background: rgba(0, 0, 0, 0.01) !important;
-}
-
-[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.05)"] {
-  background: rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Miller column item hover in light mode */
-[data-theme="light"] [style*="background: var(--card-hover-bg)"] {
-  background: rgba(0, 0, 0, 0.04) !important;
 }

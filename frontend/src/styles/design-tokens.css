@@ -169,6 +169,7 @@
   --bg-hover: rgba(255, 255, 255, 0.05);
   --bg-active: rgba(255, 255, 255, 0.08);
   --bg-overlay: rgba(0, 0, 0, 0.6);
+  --bg-modal-overlay: rgba(0, 0, 0, 0.85);
 
   /* Text Colors */
   --text-main: #f3f5f7;
@@ -254,6 +255,7 @@
   --bg-hover: rgba(0, 0, 0, 0.04);
   --bg-active: rgba(0, 0, 0, 0.06);
   --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-modal-overlay: rgba(0, 0, 0, 0.7);
 
   /* Text Colors */
   --text-main: #1a1b1e;

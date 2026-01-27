@@ -347,21 +347,38 @@ export const getThemeTokens = (theme: ThemeMode) => {
 export const cssVar = (name: string) => `var(--${name})`;
 
 export const cssVars = {
-  // Colors
+  // Colors - Background
   bgBody: cssVar('bg-body'),
   bgCard: cssVar('bg-card'),
   bgInput: cssVar('bg-input'),
   bgSecondary: cssVar('bg-secondary'),
+  bgHover: cssVar('bg-hover'),
+  bgActive: cssVar('bg-active'),
+  bgElevated: cssVar('bg-elevated'),
+  bgOverlay: cssVar('bg-overlay'),
+  bgModalOverlay: cssVar('bg-modal-overlay'),
+
+  // Colors - Text
   textMain: cssVar('text-main'),
+  textSecondary: cssVar('text-secondary'),
+  textTertiary: cssVar('text-tertiary'),
   textMuted: cssVar('text-muted'),
+  textSubtle: cssVar('text-subtle'),
+  textDisabled: cssVar('text-disabled'),
   textInverse: cssVar('text-inverse'),
+
+  // Colors - Brand & Semantic
   primary: cssVar('primary'),
   primaryHover: cssVar('primary-hover'),
   danger: cssVar('danger'),
   success: cssVar('success'),
   warning: cssVar('warning'),
+
+  // Colors - Border
   border: cssVar('border'),
+  borderSubtle: cssVar('border-subtle'),
   borderStrong: cssVar('border-strong'),
+  borderFocus: cssVar('border-focus'),
 
   // Radius
   radiusSm: cssVar('radius-sm'),

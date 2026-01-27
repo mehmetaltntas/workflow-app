@@ -29,26 +29,26 @@
 }
 
 .register-page__field-feedback--checking {
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  color: var(--text-tertiary);
 }
 
 .register-page__field-feedback--error {
-  color: #ff6b6b;
+  color: var(--danger);
 }
 
 .register-page__field-feedback--success {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .register-page__field-hint {
   font-size: 11px;
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  color: var(--text-tertiary);
   margin-top: 4px;
 }
 
 .register-page__email-error {
   font-size: 12px;
-  color: #ff6b6b;
+  color: var(--danger);
   margin-top: 4px;
 }
 
@@ -125,13 +125,13 @@
 }
 
 .register-page__code-separator {
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  color: var(--text-tertiary);
 }
 
 .register-page__back-btn {
   background: none;
   border: none;
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  color: var(--text-tertiary);
   font-size: 14px;
   cursor: pointer;
   transition: opacity 100ms;
@@ -146,7 +146,7 @@
   margin-top: 24px;
   text-align: center;
   font-size: 14px;
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  color: var(--text-tertiary);
 }
 
 .register-page__login-link {
@@ -163,9 +163,9 @@
 
 /* Input state modifiers */
 .register-page__input--error {
-  border-color: #ff6b6b !important;
+  border-color: var(--danger) !important;
 }
 
 .register-page__input--success {
-  border-color: #16a34a !important;
+  border-color: var(--success) !important;
 }

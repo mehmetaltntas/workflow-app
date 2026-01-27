@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { typography, spacing, radius, colors, animation } from '../styles/tokens';
+import { typography, spacing, radius, colors, animation, cssVars } from '../styles/tokens';
 import { useAuthStore } from '../stores/authStore';
 
 const LandingPage = () => {
@@ -78,7 +78,7 @@ const LandingPage = () => {
     <div
       style={{
         minHeight: "100vh",
-        background: colors.dark.bg.body,
+        background: cssVars.bgBody,
         position: "relative",
         overflow: "hidden",
       }}
@@ -146,7 +146,7 @@ const LandingPage = () => {
               width="24"
               height="24"
               viewBox="0 0 24 24"
-              fill={colors.dark.text.inverse}
+              fill={cssVars.textInverse}
             >
               <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
@@ -155,7 +155,7 @@ const LandingPage = () => {
             style={{
               fontSize: typography.fontSize["4xl"],
               fontWeight: typography.fontWeight.bold,
-              color: colors.dark.text.primary,
+              color: cssVars.textMain,
               letterSpacing: typography.letterSpacing.tight,
             }}
           >
@@ -169,21 +169,21 @@ const LandingPage = () => {
             style={{
               padding: `${spacing[2.5]} ${spacing[6]}`,
               borderRadius: radius.md,
-              border: `1px solid ${colors.dark.border.strong}`,
+              border: `1px solid ${cssVars.borderStrong}`,
               background: "transparent",
-              color: colors.dark.text.primary,
+              color: cssVars.textMain,
               fontSize: typography.fontSize.xl,
               fontWeight: typography.fontWeight.medium,
               cursor: "pointer",
               transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = colors.dark.bg.hover;
-              e.currentTarget.style.borderColor = colors.dark.text.tertiary;
+              e.currentTarget.style.background = cssVars.bgHover;
+              e.currentTarget.style.borderColor = cssVars.textTertiary;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.borderColor = colors.dark.border.strong;
+              e.currentTarget.style.borderColor = cssVars.borderStrong;
             }}
           >
             Giriş Yap
@@ -195,7 +195,7 @@ const LandingPage = () => {
               borderRadius: radius.md,
               border: "none",
               background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
-              color: colors.dark.text.primary,
+              color: cssVars.textMain,
               fontSize: typography.fontSize.xl,
               fontWeight: typography.fontWeight.semibold,
               cursor: "pointer",
@@ -230,7 +230,7 @@ const LandingPage = () => {
           style={{
             fontSize: "clamp(36px, 5vw, 64px)",
             fontWeight: typography.fontWeight.extrabold,
-            color: colors.dark.text.primary,
+            color: cssVars.textMain,
             lineHeight: typography.lineHeight.tight,
             marginBottom: spacing[6],
             letterSpacing: typography.letterSpacing.tighter,
@@ -254,7 +254,7 @@ const LandingPage = () => {
         <p
           style={{
             fontSize: "clamp(16px, 2vw, 20px)",
-            color: colors.dark.text.secondary,
+            color: cssVars.textSecondary,
             maxWidth: "600px",
             margin: `0 auto ${spacing[12]}`,
             lineHeight: typography.lineHeight.relaxed,
@@ -271,7 +271,7 @@ const LandingPage = () => {
             borderRadius: radius.lg,
             border: "none",
             background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
-            color: colors.dark.text.primary,
+            color: cssVars.textMain,
             fontSize: typography.fontSize["2xl"],
             fontWeight: typography.fontWeight.semibold,
             cursor: "pointer",
@@ -305,26 +305,26 @@ const LandingPage = () => {
             <div
               key={index}
               style={{
-                background: colors.dark.glass.bg,
+                background: cssVars.glassBg,
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
                 borderRadius: radius.xl,
                 padding: `${spacing[10]} ${spacing[8]}`,
-                border: `1px solid ${colors.dark.border.default}`,
+                border: `1px solid ${cssVars.border}`,
                 transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
                 position: "relative",
                 overflow: "hidden",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-8px)";
-                e.currentTarget.style.background = colors.dark.bg.hover;
-                e.currentTarget.style.borderColor = colors.dark.border.strong;
-                e.currentTarget.style.boxShadow = `0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px ${colors.dark.border.subtle}`;
+                e.currentTarget.style.background = cssVars.bgHover;
+                e.currentTarget.style.borderColor = cssVars.borderStrong;
+                e.currentTarget.style.boxShadow = `0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px ${cssVars.borderSubtle}`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = colors.dark.glass.bg;
-                e.currentTarget.style.borderColor = colors.dark.border.default;
+                e.currentTarget.style.background = cssVars.glassBg;
+                e.currentTarget.style.borderColor = cssVars.border;
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
@@ -354,7 +354,7 @@ const LandingPage = () => {
                 style={{
                   fontSize: typography.fontSize["3xl"],
                   fontWeight: typography.fontWeight.bold,
-                  color: colors.dark.text.primary,
+                  color: cssVars.textMain,
                   marginBottom: spacing[3],
                 }}
               >
@@ -363,7 +363,7 @@ const LandingPage = () => {
               <p
                 style={{
                   fontSize: typography.fontSize.xl,
-                  color: colors.dark.text.secondary,
+                  color: cssVars.textSecondary,
                   lineHeight: typography.lineHeight.relaxed,
                 }}
               >
@@ -380,9 +380,9 @@ const LandingPage = () => {
           position: "relative",
           padding: spacing[10],
           textAlign: "center",
-          color: colors.dark.text.subtle,
+          color: cssVars.textSubtle,
           fontSize: typography.fontSize.lg,
-          borderTop: `1px solid ${colors.dark.border.subtle}`,
+          borderTop: `1px solid ${cssVars.borderSubtle}`,
           marginTop: spacing[20],
         }}
       >

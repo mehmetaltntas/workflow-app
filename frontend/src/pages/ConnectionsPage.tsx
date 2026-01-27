@@ -24,7 +24,7 @@ const ConnectionsPage = () => {
       <div className="connections-page">
         <div className="connections-page__error">
           <div className="connections-page__error-icon">
-            <AlertCircle size={32} color="#ef4444" />
+            <AlertCircle size={32} color="var(--danger)" />
           </div>
           <h2 className="connections-page__error-title">Bir Hata Olustu</h2>
           <p className="connections-page__error-text">Baglantilar yuklenirken bir hata olustu.</p>
@@ -38,7 +38,7 @@ const ConnectionsPage = () => {
       {/* Header */}
       <div className="connections-page__header">
         <div className="connections-page__header-icon">
-          <Users size={22} color="#4dabf7" strokeWidth={2} />
+          <Users size={22} color="var(--primary)" strokeWidth={2} />
         </div>
         <h1 className="connections-page__title">Agim</h1>
         <span className="connections-page__count">{connections?.length ?? 0}</span>

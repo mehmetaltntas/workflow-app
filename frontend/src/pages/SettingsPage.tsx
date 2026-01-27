@@ -368,7 +368,7 @@ const SettingsPage = () => {
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = colors.dark.bg.hover;
+                    e.currentTarget.style.background = cssVars.bgHover;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -381,7 +381,7 @@ const SettingsPage = () => {
                   width: "40px",
                   height: "40px",
                   borderRadius: radius.md,
-                  background: isActive ? colors.brand.primary : colors.dark.bg.hover,
+                  background: isActive ? colors.brand.primary : cssVars.bgHover,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -658,7 +658,7 @@ const SettingsPage = () => {
                       transform: "translateY(-50%)",
                       fontSize: typography.fontSize.xs,
                       color: cssVars.textMuted,
-                      background: colors.dark.bg.hover,
+                      background: cssVars.bgHover,
                       padding: `${spacing[1]} ${spacing[2]}`,
                       borderRadius: radius.sm,
                     }}>
@@ -694,7 +694,7 @@ const SettingsPage = () => {
                       <div style={{
                         width: "16px",
                         height: "16px",
-                        border: `2px solid ${colors.dark.border.subtle}`,
+                        border: `2px solid ${cssVars.borderSubtle}`,
                         borderTopColor: cssVars.textInverse,
                         borderRadius: radius.full,
                         animation: "spin 1s linear infinite",
@@ -750,7 +750,7 @@ const SettingsPage = () => {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: spacing[5],
-                background: colors.dark.bg.hover,
+                background: cssVars.bgHover,
                 borderRadius: radius.lg,
               }}>
                 <div>
@@ -779,7 +779,7 @@ const SettingsPage = () => {
                     height: "28px",
                     borderRadius: "14px",
                     border: "none",
-                    background: isProfilePublic ? colors.brand.primary : colors.dark.bg.hover,
+                    background: isProfilePublic ? colors.brand.primary : cssVars.bgHover,
                     cursor: isSavingPrivacy ? "not-allowed" : "pointer",
                     position: "relative",
                     transition: `background ${animation.duration.normal} ${animation.easing.smooth}`,
@@ -1057,7 +1057,7 @@ const SettingsPage = () => {
                         <div style={{
                           width: "16px",
                           height: "16px",
-                          border: `2px solid ${colors.dark.border.subtle}`,
+                          border: `2px solid ${cssVars.borderSubtle}`,
                           borderTopColor: cssVars.textInverse,
                           borderRadius: radius.full,
                           animation: "spin 1s linear infinite",
@@ -1080,7 +1080,7 @@ const SettingsPage = () => {
                 padding: spacing[4],
                 background: colors.brand.primaryLight,
                 borderRadius: radius.md,
-                border: `1px solid ${colors.dark.border.focus}`,
+                border: `1px solid ${cssVars.borderFocus}`,
               }}>
                 <p style={{
                   display: "flex",

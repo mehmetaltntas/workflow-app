@@ -175,7 +175,7 @@ const ForgotPasswordPage = () => {
         <p
           style={{
             fontSize: typography.fontSize.xl,
-            color: colors.dark.text.secondary,
+            color: cssVars.textSecondary,
             textAlign: "center",
             maxWidth: "300px",
           }}
@@ -198,7 +198,7 @@ const ForgotPasswordPage = () => {
           style={{
             width: "100%",
             maxWidth: "400px",
-            background: colors.dark.glass.bg,
+            background: cssVars.glassBg,
             backdropFilter: "blur(20px)",
             borderRadius: radius["2xl"],
             padding: spacing[10],
@@ -250,7 +250,7 @@ const ForgotPasswordPage = () => {
           <p
             style={{
               fontSize: typography.fontSize.lg,
-              color: colors.dark.text.tertiary,
+              color: cssVars.textTertiary,
               marginBottom: spacing[8],
               textAlign: "center",
             }}
@@ -270,7 +270,7 @@ const ForgotPasswordPage = () => {
                     display: "block",
                     fontSize: typography.fontSize.lg,
                     fontWeight: typography.fontWeight.medium,
-                    color: colors.dark.text.secondary,
+                    color: cssVars.textSecondary,
                     marginBottom: spacing[2],
                   }}
                 >
@@ -290,7 +290,7 @@ const ForgotPasswordPage = () => {
                     padding: `${spacing[3.5]} ${spacing[4]}`,
                     borderRadius: radius.md,
                     border: `1px solid ${cssVars.border}`,
-                    background: colors.dark.bg.hover,
+                    background: cssVars.bgHover,
                     color: cssVars.textMain,
                     fontSize: typography.fontSize.xl,
                     outline: "none",
@@ -344,7 +344,7 @@ const ForgotPasswordPage = () => {
                       fontWeight: typography.fontWeight.semibold,
                       borderRadius: radius.md,
                       border: `1px solid ${cssVars.border}`,
-                      background: colors.dark.bg.hover,
+                      background: cssVars.bgHover,
                       color: cssVars.textMain,
                       outline: "none",
                       transition: "all 0.2s",
@@ -379,7 +379,7 @@ const ForgotPasswordPage = () => {
                 style={{
                   background: "none",
                   border: "none",
-                  color: colors.dark.text.tertiary,
+                  color: cssVars.textTertiary,
                   fontSize: typography.fontSize.lg,
                   cursor: "pointer",
                 }}
@@ -399,7 +399,7 @@ const ForgotPasswordPage = () => {
                     display: "block",
                     fontSize: typography.fontSize.lg,
                     fontWeight: typography.fontWeight.medium,
-                    color: colors.dark.text.secondary,
+                    color: cssVars.textSecondary,
                     marginBottom: spacing[2],
                   }}
                 >
@@ -420,7 +420,7 @@ const ForgotPasswordPage = () => {
                       padding: `${spacing[3.5]} ${spacing[12]} ${spacing[3.5]} ${spacing[4]}`,
                       borderRadius: radius.md,
                       border: `1px solid ${cssVars.border}`,
-                      background: colors.dark.bg.hover,
+                      background: cssVars.bgHover,
                       color: cssVars.textMain,
                       fontSize: typography.fontSize.xl,
                       outline: "none",
@@ -437,7 +437,7 @@ const ForgotPasswordPage = () => {
                       transform: "translateY(-50%)",
                       background: "none",
                       border: "none",
-                      color: colors.dark.text.tertiary,
+                      color: cssVars.textTertiary,
                       cursor: "pointer",
                       padding: spacing[1],
                     }}
@@ -488,7 +488,7 @@ const ForgotPasswordPage = () => {
                     display: "block",
                     fontSize: typography.fontSize.lg,
                     fontWeight: typography.fontWeight.medium,
-                    color: colors.dark.text.secondary,
+                    color: cssVars.textSecondary,
                     marginBottom: spacing[2],
                   }}
                 >
@@ -508,7 +508,7 @@ const ForgotPasswordPage = () => {
                     padding: `${spacing[3.5]} ${spacing[4]}`,
                     borderRadius: radius.md,
                     border: `1px solid ${cssVars.border}`,
-                    background: colors.dark.bg.hover,
+                    background: cssVars.bgHover,
                     color: cssVars.textMain,
                     fontSize: typography.fontSize.xl,
                     outline: "none",
@@ -544,7 +544,7 @@ const ForgotPasswordPage = () => {
               marginTop: spacing[6],
               textAlign: "center",
               fontSize: typography.fontSize.lg,
-              color: colors.dark.text.tertiary,
+              color: cssVars.textTertiary,
             }}
           >
             Şifrenizi hatırladınız mı?{" "}
