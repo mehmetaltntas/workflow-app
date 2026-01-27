@@ -5,7 +5,10 @@ import lombok.Data;
 import java.time.Instant;
 
 @Entity
-@Table(name = "refresh_tokens")
+@Table(name = "refresh_tokens", indexes = {
+    @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id"),
+    @Index(name = "idx_refresh_tokens_token", columnList = "token")
+})
 @Data
 public class RefreshToken {
 

@@ -28,16 +28,27 @@ public class RateLimitFilter extends OncePerRequestFilter {
     // Endpoint başına maksimum izin verilen benzersiz IP sayısı (Memory DoS koruması)
     private static final int MAX_BUCKETS_PER_ENDPOINT = 10_000;
 
-    // Rate limit konfigürasyonları
-    private static final Map<String, RateLimitConfig> RATE_LIMITS = Map.ofEntries(
+    // Auth endpoint'leri için rate limit konfigürasyonları (düşük limitler — brute-force koruması)
+    private static final Map<String, RateLimitConfig> AUTH_RATE_LIMITS = Map.ofEntries(
             Map.entry("/auth/login", new RateLimitConfig(5, Duration.ofMinutes(5))),
+            Map.entry("/auth/register/send-code", new RateLimitConfig(5, Duration.ofMinutes(15))),
             Map.entry("/auth/register", new RateLimitConfig(3, Duration.ofMinutes(15))),
             Map.entry("/auth/refresh", new RateLimitConfig(10, Duration.ofMinutes(5))),
             Map.entry("/auth/forgot-password", new RateLimitConfig(3, Duration.ofMinutes(15))),
             Map.entry("/auth/verify-code", new RateLimitConfig(5, Duration.ofMinutes(5))),
             Map.entry("/auth/reset-password", new RateLimitConfig(3, Duration.ofMinutes(15))),
-            Map.entry("/auth/google", new RateLimitConfig(10, Duration.ofMinutes(5)))
+            Map.entry("/auth/check-username", new RateLimitConfig(15, Duration.ofMinutes(5))),
+            Map.entry("/auth/google", new RateLimitConfig(10, Duration.ofMinutes(5))),
+            Map.entry("/auth/logout", new RateLimitConfig(10, Duration.ofMinutes(5)))
     );
+
+    // Authenticated (CRUD) endpoint'ler için genel rate limit (dakikada 60 istek)
+    private static final RateLimitConfig AUTHENTICATED_RATE_LIMIT = new RateLimitConfig(60, Duration.ofMinutes(1));
+
+    // Rate limiting dışında tutulacak path'ler (statik kaynaklar, swagger, error)
+    private static final String[] EXCLUDED_PATHS = {
+            "/swagger-ui", "/v3/api-docs", "/swagger-resources", "/error"
+    };
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -45,44 +56,78 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Sadece /auth/** endpoint'lerine uygula
-        if (!path.startsWith("/auth/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Rate limit konfigürasyonunu bul
-        RateLimitConfig config = findRateLimitConfig(path);
-        if (config == null) {
+        // Statik kaynaklar ve swagger için rate limiting uygulanmaz
+        if (isExcludedPath(path)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String clientIp = getClientIp(request);
-        Bucket bucket = resolveBucket(path, clientIp, config);
 
-        if (bucket.tryConsume(1)) {
+        // Auth endpoint'leri: endpoint bazlı rate limiting
+        if (path.startsWith("/auth/")) {
+            RateLimitConfig config = findAuthRateLimitConfig(path);
+            if (config == null) {
+                // Auth altında tanımsız bir endpoint — güvenlik için genel auth limiti uygula
+                config = new RateLimitConfig(10, Duration.ofMinutes(5));
+            }
+            if (!tryConsume(path, clientIp, config, response)) {
+                return;
+            }
             filterChain.doFilter(request, response);
-        } else {
-            logger.warn("Rate limit exceeded for IP: {} on endpoint: {}", clientIp, path);
-            response.setStatus(429); // Too Many Requests
-            response.setContentType("application/json");
-            response.getWriter().write("{\"status\":429,\"error\":\"Too Many Requests\",\"message\":\"İstek limiti aşıldı. Lütfen daha sonra tekrar deneyin.\"}");
+            return;
         }
+
+        // Authenticated endpoint'ler (boards, tasks, lists, subtasks, labels, users):
+        // IP bazlı genel rate limiting — dakikada 60 istek
+        String bucketKey = "authenticated_global";
+        if (!tryConsume(bucketKey, clientIp, AUTHENTICATED_RATE_LIMIT, response)) {
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
 
-    private RateLimitConfig findRateLimitConfig(String path) {
-        // Tam eşleşme kontrolü
-        if (RATE_LIMITS.containsKey(path)) {
-            return RATE_LIMITS.get(path);
+    /**
+     * Rate limit kontrolü yapar. Limit aşılmışsa 429 yanıtı döner ve false döner.
+     */
+    private boolean tryConsume(String bucketKey, String clientIp, RateLimitConfig config, HttpServletResponse response)
+            throws IOException {
+        Bucket bucket = resolveBucket(bucketKey, clientIp, config);
+        if (bucket.tryConsume(1)) {
+            return true;
         }
-        // Prefix eşleşmesi için kontrol
-        for (Map.Entry<String, RateLimitConfig> entry : RATE_LIMITS.entrySet()) {
-            if (path.startsWith(entry.getKey())) {
-                return entry.getValue();
+        logger.warn("Rate limit exceeded for IP: {} on endpoint: {}", clientIp, bucketKey);
+        response.setStatus(429); // Too Many Requests
+        response.setContentType("application/json");
+        response.getWriter().write("{\"status\":429,\"error\":\"Too Many Requests\",\"message\":\"İstek limiti aşıldı. Lütfen daha sonra tekrar deneyin.\"}");
+        return false;
+    }
+
+    private boolean isExcludedPath(String path) {
+        for (String excluded : EXCLUDED_PATHS) {
+            if (path.startsWith(excluded)) {
+                return true;
             }
         }
-        return null;
+        return false;
+    }
+
+    private RateLimitConfig findAuthRateLimitConfig(String path) {
+        // Tam eşleşme kontrolü (öncelikli — /auth/register/send-code gibi daha spesifik path'ler)
+        if (AUTH_RATE_LIMITS.containsKey(path)) {
+            return AUTH_RATE_LIMITS.get(path);
+        }
+        // Prefix eşleşmesi için kontrol (en uzun eşleşmeyi bul)
+        RateLimitConfig bestMatch = null;
+        int bestLength = 0;
+        for (Map.Entry<String, RateLimitConfig> entry : AUTH_RATE_LIMITS.entrySet()) {
+            if (path.startsWith(entry.getKey()) && entry.getKey().length() > bestLength) {
+                bestMatch = entry.getValue();
+                bestLength = entry.getKey().length();
+            }
+        }
+        return bestMatch;
     }
 
     private Bucket resolveBucket(String endpoint, String clientIp, RateLimitConfig config) {

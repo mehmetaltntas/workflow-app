@@ -6,6 +6,7 @@ import com.workflow.backend.dto.UpdatePasswordRequest;
 import com.workflow.backend.dto.UpdateProfileRequest;
 import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.exception.InvalidVerificationCodeException;
+import com.workflow.backend.entity.AuthProvider;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.exception.DuplicateResourceException;
@@ -85,8 +86,19 @@ public class UserService {
         // 1. Kullanıcıyı bul
         User user = userRepository.findByUsername(request.getUsername());
 
-        // 2. Kullanıcı yoksa veya şifre yanlışsa hata ver
-        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        // 2. Kullanıcı yoksa hata ver
+        if (user == null) {
+            throw new InvalidCredentialsException("Kullanıcı adı veya şifre hatalı!");
+        }
+
+        // 3. Google OAuth kullanıcısı şifre ile giriş yapamaz (password null)
+        if (user.getAuthProvider() == AuthProvider.GOOGLE) {
+            throw new InvalidCredentialsException(
+                    "Bu hesap Google ile oluşturulmuş, lütfen Google ile giriş yapın.");
+        }
+
+        // 4. Şifre kontrolü
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException("Kullanıcı adı veya şifre hatalı!");
         }
 
@@ -159,6 +171,12 @@ public class UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
+
+        // Google OAuth kullanıcısı şifre güncelleyemez (password null)
+        if (user.getAuthProvider() == AuthProvider.GOOGLE) {
+            throw new InvalidCredentialsException(
+                    "Bu hesap Google ile oluşturulmuş, şifre işlemleri kullanılamaz.");
+        }
 
         // Mevcut şifre kontrolü
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {

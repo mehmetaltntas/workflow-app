@@ -9,7 +9,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "tasks", indexes = {
+    @Index(name = "idx_tasks_task_list_id", columnList = "task_list_id"),
+    @Index(name = "idx_tasks_position", columnList = "position")
+})
 @Data
 @EqualsAndHashCode(exclude = {"labels", "taskList", "assignee"})
 public class Task {

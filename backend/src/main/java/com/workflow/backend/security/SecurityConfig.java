@@ -4,6 +4,7 @@ import com.workflow.backend.config.CorsProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,6 +27,7 @@ public class SecurityConfig {
         private final JwtFilter jwtFilter;
         private final RateLimitFilter rateLimitFilter;
         private final CorsProperties corsProperties;
+        private final Environment environment;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,10 +46,13 @@ public class SecurityConfig {
                                                                                 "font-src 'self' data:;"))
                                                 .xssProtection(xss -> xss.disable())
                                                 .contentTypeOptions(contentType -> {}))
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/auth/**", "/error").permitAll()
-                                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
-                                                .anyRequest().authenticated())
+                                .authorizeHttpRequests(auth -> {
+                                        auth.requestMatchers("/auth/**", "/error").permitAll();
+                                        if (isDevProfile()) {
+                                                auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll();
+                                        }
+                                        auth.anyRequest().authenticated();
+                                })
                                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -77,6 +82,10 @@ public class SecurityConfig {
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder(12); // Güvenlik için strength artırıldı
+        }
+
+        private boolean isDevProfile() {
+                return Arrays.asList(environment.getActiveProfiles()).contains("dev");
         }
 
         private String getAllowedOriginsForCSP() {

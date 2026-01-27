@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
@@ -38,6 +39,17 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 public class BoardController {
 
     private static final Logger logger = LoggerFactory.getLogger(BoardController.class);
+
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "name", "status", "createdAt", "deadline", "category", "slug"
+    );
+    private static final String DEFAULT_SORT_FIELD = "createdAt";
+    private static final int MAX_PAGE_SIZE = 50;
+
+    private static final Set<String> VALID_BOARD_STATUSES = Set.of(
+            "PLANLANDI", "DEVAM_EDIYOR", "TAMAMLANDI", "DURDURULDU", "BIRAKILDI"
+    );
+
     private final BoardService boardService;
     private final BoardModelAssembler boardAssembler;
 
@@ -68,8 +80,12 @@ public class BoardController {
             @Parameter(description = "Sayfa başına kayıt sayısı") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sıralama alanı") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Sıralama yönü (asc/desc)") @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        // Güvenlik: sortBy alanını whitelist ile doğrula
+        String safeSortBy = ALLOWED_SORT_FIELDS.contains(sortBy) ? sortBy : DEFAULT_SORT_FIELD;
+        // Güvenlik: size üst sınırını uygula (DoS koruması)
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(safeSortBy).ascending() : Sort.by(safeSortBy).descending();
+        Pageable pageable = PageRequest.of(page, safeSize, sort);
         var paginatedResult = boardService.getAllBoards(userId, pageable);
 
         List<BoardModel> boardModels = paginatedResult.content().stream()
@@ -174,7 +190,12 @@ public class BoardController {
     public ResponseEntity<BoardModel> updateBoardStatus(
             @Parameter(description = "Pano ID") @PathVariable Long id,
             @Parameter(description = "Yeni durum") @RequestBody String newStatus) {
-        BoardResponse result = boardService.updateBoardStatus(id, newStatus);
+        // Güvenlik: Status değerini whitelist ile doğrula
+        String trimmedStatus = newStatus != null ? newStatus.trim().replace("\"", "") : "";
+        if (!VALID_BOARD_STATUSES.contains(trimmedStatus)) {
+            return ResponseEntity.badRequest().build();
+        }
+        BoardResponse result = boardService.updateBoardStatus(id, trimmedStatus);
         BoardModel model = boardAssembler.toModel(result);
         return ResponseEntity.ok(model);
     }

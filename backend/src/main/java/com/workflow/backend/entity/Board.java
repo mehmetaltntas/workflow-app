@@ -5,7 +5,9 @@ import lombok.Data;
 import org.hibernate.annotations.BatchSize;
 
 @Entity
-@Table(name = "boards")
+@Table(name = "boards", indexes = {
+    @Index(name = "idx_boards_user_id", columnList = "user_id")
+})
 @Data
 public class Board {
 

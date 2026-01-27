@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "task_lists") // 'lists' SQL'de özel kelime olabilir, o yüzden 'task_lists' dedik
+@Table(name = "task_lists", indexes = {
+    @Index(name = "idx_task_lists_board_id", columnList = "board_id")
+}) // 'lists' SQL'de özel kelime olabilir, o yüzden 'task_lists' dedik
 @Data
 @EqualsAndHashCode(exclude = {"labels", "board", "tasks"})
 public class TaskList {
