@@ -1,16 +1,13 @@
 package com.workflow.backend.service;
 
 import com.workflow.backend.dto.*;
-import com.workflow.backend.entity.Board;
-import com.workflow.backend.entity.Label;
-import com.workflow.backend.entity.Priority;
-import com.workflow.backend.entity.Task;
-import com.workflow.backend.entity.TaskList;
+import com.workflow.backend.entity.*;
 import com.workflow.backend.exception.BadRequestException;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
+import com.workflow.backend.repository.SubtaskRepository;
 import com.workflow.backend.repository.TaskListRepository;
 import com.workflow.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +31,11 @@ public class TaskService {
 
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
+    private final SubtaskRepository subtaskRepository;
     private final BoardRepository boardRepository;
     private final LabelRepository labelRepository;
     private final AuthorizationService authorizationService;
+    private final BoardMemberService boardMemberService;
 
     // 1. YENİ LİSTE (SÜTUN) OLUŞTURMA
     @Transactional
@@ -385,6 +384,61 @@ public class TaskService {
         }
 
         return mapToDto(savedTask);
+    }
+
+    // GÖREV TAMAMLANMA TOGGLE (sahip + atanmış üye)
+    @Transactional
+    public TaskDto toggleTaskComplete(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
+
+        Long boardId = task.getTaskList().getBoard().getId();
+        boardMemberService.verifyBoardOwnerOrAssignedMember(boardId, AssignmentTargetType.TASK, taskId);
+
+        task.setIsCompleted(!task.getIsCompleted());
+
+        // Alt görevleri de güncelle
+        if (task.getSubtasks() != null) {
+            task.getSubtasks().forEach(subtask -> subtask.setIsCompleted(task.getIsCompleted()));
+        }
+
+        Task saved = taskRepository.save(task);
+
+        // Cascade: task → list
+        TaskList parentList = task.getTaskList();
+        List<Task> listTasks = taskRepository.findByTaskListIdOrderByPositionAsc(parentList.getId());
+        boolean allTasksCompleted = listTasks.stream().allMatch(Task::getIsCompleted);
+        parentList.setIsCompleted(allTasksCompleted);
+        taskListRepository.save(parentList);
+
+        return mapToDto(saved);
+    }
+
+    // LİSTE TAMAMLANMA TOGGLE (sahip + atanmış üye)
+    @Transactional
+    public TaskListDto toggleListComplete(Long listId) {
+        TaskList list = taskListRepository.findById(listId)
+                .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", listId));
+
+        Long boardId = list.getBoard().getId();
+        boardMemberService.verifyBoardOwnerOrAssignedMember(boardId, AssignmentTargetType.LIST, listId);
+
+        boolean newState = !Boolean.TRUE.equals(list.getIsCompleted());
+        list.setIsCompleted(newState);
+
+        // İçindeki tüm görevleri ve alt görevleri de güncelle
+        if (list.getTasks() != null) {
+            list.getTasks().forEach(task -> {
+                task.setIsCompleted(newState);
+                if (task.getSubtasks() != null) {
+                    task.getSubtasks().forEach(subtask -> subtask.setIsCompleted(newState));
+                }
+            });
+            taskRepository.saveAll(list.getTasks());
+        }
+
+        TaskList saved = taskListRepository.save(list);
+        return mapToListDto(saved);
     }
 
     // Entity -> DTO Çeviriciler

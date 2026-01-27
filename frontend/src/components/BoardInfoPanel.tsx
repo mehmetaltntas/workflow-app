@@ -18,6 +18,7 @@ import { getThemeColors } from "../utils/themeColors";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { typography, spacing, radius, colors, cssVars, animation } from "../styles/tokens";
 import { calculateBoardProgress } from "../utils/progressCalculation";
+import BoardMembersSection from "./BoardMembersSection";
 
 interface BoardInfoPanelProps {
   board: Board | null;
@@ -534,6 +535,9 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           </p>
         </div>
       )}
+
+      {/* Board Members Section */}
+      <BoardMembersSection board={board} />
 
       {/* CSS Animation */}
       <style>{`

@@ -1,0 +1,359 @@
+import React, { useState } from "react";
+import {
+  Users,
+  UserPlus,
+  X,
+  Target,
+  ListChecks,
+  CheckSquare,
+  Layers,
+} from "lucide-react";
+import type { Board, BoardMember } from "../types";
+import { useAuthStore } from "../stores/authStore";
+import { useTheme } from "../contexts/ThemeContext";
+import { getThemeColors } from "../utils/themeColors";
+import { typography, spacing, radius, colors, cssVars, animation } from "../styles/tokens";
+import {
+  useAddBoardMember,
+  useRemoveBoardMember,
+  useCreateAssignment,
+  useRemoveAssignment,
+} from "../hooks/queries/useBoardMembers";
+import AddBoardMemberModal from "./AddBoardMemberModal";
+import AssignMemberModal from "./AssignMemberModal";
+
+interface BoardMembersSectionProps {
+  board: Board;
+}
+
+const TARGET_TYPE_ICONS: Record<string, React.ReactNode> = {
+  LIST: <ListChecks size={12} />,
+  TASK: <CheckSquare size={12} />,
+  SUBTASK: <Layers size={12} />,
+};
+
+const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
+  const { theme } = useTheme();
+  const themeColors = getThemeColors(theme);
+  const isLight = theme === "light";
+  const currentUsername = useAuthStore((s) => s.username);
+  const isOwner = board.ownerName === currentUsername;
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<BoardMember | null>(null);
+
+  const addMemberMutation = useAddBoardMember(board.id, board.slug);
+  const removeMemberMutation = useRemoveBoardMember(board.id, board.slug);
+  const createAssignmentMutation = useCreateAssignment(board.id, board.slug);
+  const removeAssignmentMutation = useRemoveAssignment(board.id, board.slug);
+
+  const members = board.members || [];
+
+  const handleAddMember = (userId: number) => {
+    addMemberMutation.mutate(userId, {
+      onSuccess: () => setShowAddModal(false),
+    });
+  };
+
+  const handleRemoveMember = (memberId: number) => {
+    removeMemberMutation.mutate(memberId);
+  };
+
+  const handleOpenAssign = (member: BoardMember) => {
+    setSelectedMember(member);
+    setShowAssignModal(true);
+  };
+
+  const handleCreateAssignment = (memberId: number, targetType: string, targetId: number) => {
+    createAssignmentMutation.mutate({ memberId, targetType, targetId });
+  };
+
+  const handleRemoveAssignment = (memberId: number, assignmentId: number) => {
+    removeAssignmentMutation.mutate({ memberId, assignmentId });
+  };
+
+  const sectionLabelStyle: React.CSSProperties = {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: cssVars.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: typography.letterSpacing.wide,
+  };
+
+  const cardStyle: React.CSSProperties = {
+    padding: spacing[5],
+    borderRadius: radius.xl,
+    background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+    border: `1px solid ${themeColors.borderDefault}`,
+  };
+
+  return (
+    <>
+      <div style={cardStyle}>
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: spacing[4],
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+            <Users size={16} color={colors.brand.primary} />
+            <span style={sectionLabelStyle}>Sorumlu Kisiler</span>
+            {members.length > 0 && (
+              <span
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.bold,
+                  color: colors.brand.primary,
+                  background: colors.brand.primaryLight,
+                  padding: `${spacing[0.5]} ${spacing[2]}`,
+                  borderRadius: radius.full,
+                }}
+              >
+                {members.length}
+              </span>
+            )}
+          </div>
+          {isOwner && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[1.5],
+                padding: `${spacing[1.5]} ${spacing[3]}`,
+                borderRadius: radius.lg,
+                border: "none",
+                background: colors.brand.primary,
+                color: "#fff",
+                cursor: "pointer",
+                fontWeight: typography.fontWeight.semibold,
+                fontSize: typography.fontSize.xs,
+                transition: `background ${animation.duration.fast}`,
+              }}
+            >
+              <UserPlus size={14} />
+              Ekle
+            </button>
+          )}
+        </div>
+
+        {/* Member List */}
+        {members.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: `${spacing[6]} ${spacing[4]}`,
+              color: cssVars.textMuted,
+            }}
+          >
+            <Users size={32} style={{ opacity: 0.3, marginBottom: spacing[2] }} />
+            <p
+              style={{
+                fontSize: typography.fontSize.sm,
+                margin: 0,
+              }}
+            >
+              Henüz sorumlu kisi eklenmemis
+            </p>
+            {isOwner && (
+              <p
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  marginTop: spacing[1],
+                  opacity: 0.7,
+                }}
+              >
+                Baglantilarinizdan sorumlu kisi ekleyin
+              </p>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+            {members.map((member) => (
+              <div
+                key={member.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: spacing[2],
+                  padding: spacing[4],
+                  borderRadius: radius.lg,
+                  border: `1px solid ${themeColors.borderDefault}`,
+                  background: isLight ? "transparent" : "rgba(255,255,255,0.02)",
+                }}
+              >
+                {/* Member row */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: spacing[3],
+                    }}
+                  >
+                    {member.profilePicture ? (
+                      <img
+                        src={member.profilePicture}
+                        alt={member.username}
+                        style={{
+                          width: spacing[9],
+                          height: spacing[9],
+                          borderRadius: radius.full,
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: spacing[9],
+                          height: spacing[9],
+                          borderRadius: radius.full,
+                          background: colors.brand.primaryLight,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: colors.brand.primary,
+                          fontWeight: typography.fontWeight.bold,
+                          fontSize: typography.fontSize.sm,
+                        }}
+                      >
+                        {member.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <span
+                        style={{
+                          fontSize: typography.fontSize.base,
+                          fontWeight: typography.fontWeight.semibold,
+                          color: cssVars.textMain,
+                          display: "block",
+                        }}
+                      >
+                        {member.username}
+                      </span>
+                      {member.assignments && member.assignments.length > 0 && (
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.xs,
+                            color: cssVars.textMuted,
+                          }}
+                        >
+                          {member.assignments.length} atama
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {isOwner && (
+                    <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+                      <button
+                        onClick={() => handleOpenAssign(member)}
+                        title="Atama yap"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: spacing[8],
+                          height: spacing[8],
+                          borderRadius: radius.lg,
+                          border: `1px solid ${themeColors.borderDefault}`,
+                          background: "transparent",
+                          color: colors.brand.primary,
+                          cursor: "pointer",
+                          transition: `all ${animation.duration.fast}`,
+                        }}
+                      >
+                        <Target size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveMember(member.id)}
+                        title="Üyeyi kaldir"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: spacing[8],
+                          height: spacing[8],
+                          borderRadius: radius.lg,
+                          border: `1px solid ${colors.semantic.danger}30`,
+                          background: "transparent",
+                          color: colors.semantic.danger,
+                          cursor: "pointer",
+                          transition: `all ${animation.duration.fast}`,
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Assignments badges */}
+                {member.assignments && member.assignments.length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: spacing[1.5],
+                      paddingTop: spacing[1],
+                    }}
+                  >
+                    {member.assignments.map((a) => (
+                      <span
+                        key={a.id}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: spacing[1],
+                          fontSize: typography.fontSize.xs,
+                          fontWeight: typography.fontWeight.medium,
+                          color: colors.brand.primary,
+                          background: colors.brand.primaryLight,
+                          padding: `${spacing[0.5]} ${spacing[2.5]}`,
+                          borderRadius: radius.full,
+                        }}
+                      >
+                        {TARGET_TYPE_ICONS[a.targetType]}
+                        {a.targetName || `#${a.targetId}`}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <AddBoardMemberModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAddMember={handleAddMember}
+        existingMembers={members}
+      />
+
+      <AssignMemberModal
+        isOpen={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        member={selectedMember}
+        board={board}
+        onCreateAssignment={handleCreateAssignment}
+        onRemoveAssignment={handleRemoveAssignment}
+      />
+    </>
+  );
+};
+
+export default BoardMembersSection;

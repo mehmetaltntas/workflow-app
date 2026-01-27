@@ -93,6 +93,25 @@ export interface TaskList extends HateoasModel {
   tasks: Task[]; // İçinde görevler dizisi var
 }
 
+// Pano üye atama
+export interface BoardMemberAssignment {
+  id: number;
+  targetType: 'LIST' | 'TASK' | 'SUBTASK';
+  targetId: number;
+  targetName?: string;
+  createdAt: string;
+}
+
+// Pano üyesi (sorumlu kişi)
+export interface BoardMember extends HateoasModel {
+  id: number;
+  userId: number;
+  username: string;
+  profilePicture?: string | null;
+  createdAt: string;
+  assignments?: BoardMemberAssignment[];
+}
+
 // Pano (Dashboard)
 export interface Board extends HateoasModel {
   id: number;
@@ -107,6 +126,7 @@ export interface Board extends HateoasModel {
   ownerName: string;
   taskLists: TaskList[]; // İçinde listeler dizisi var
   labels?: Label[]; // Panoya ait etiketler
+  members?: BoardMember[]; // Pano üyeleri (sorumlu kişiler)
 }
 
 // Kullanıcı (Login olunca dönen veri)

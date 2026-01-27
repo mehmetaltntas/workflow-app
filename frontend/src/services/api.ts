@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
-import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata, UserSearchResult, UserProfile, Connection, Notification } from "../types";
+import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata, UserSearchResult, UserProfile, Connection, Notification, BoardMember } from "../types";
 import { useAuthStore } from "../stores/authStore";
 
 // 1. Temel Ayarlar
@@ -378,7 +378,37 @@ export const connectionService = {
   },
 };
 
-// 11. Bildirim İşlemleri
+// 11. Pano Üye İşlemleri
+export const boardMemberService = {
+  getMembers: async (boardId: number): Promise<BoardMember[]> => {
+    const response = await apiClient.get<PagedResponse<BoardMember>>(`/boards/${boardId}/members`);
+    return extractCollection<BoardMember>(response);
+  },
+  addMember: async (boardId: number, userId: number): Promise<BoardMember> => {
+    const response = await apiClient.post<BoardMember>(`/boards/${boardId}/members`, { userId });
+    return extractEntity<BoardMember>(response);
+  },
+  removeMember: async (boardId: number, memberId: number): Promise<void> => {
+    await apiClient.delete(`/boards/${boardId}/members/${memberId}`);
+  },
+  createAssignment: async (boardId: number, memberId: number, data: { targetType: string; targetId: number }): Promise<BoardMember> => {
+    const response = await apiClient.post<BoardMember>(`/boards/${boardId}/members/${memberId}/assignments`, data);
+    return extractEntity<BoardMember>(response);
+  },
+  removeAssignment: async (boardId: number, memberId: number, assignmentId: number): Promise<void> => {
+    await apiClient.delete(`/boards/${boardId}/members/${memberId}/assignments/${assignmentId}`);
+  },
+  toggleListComplete: async (listId: number): Promise<TaskList> => {
+    const response = await apiClient.patch<TaskList>(`/lists/${listId}/toggle`);
+    return extractEntity<TaskList>(response);
+  },
+  toggleTaskComplete: async (taskId: number): Promise<Task> => {
+    const response = await apiClient.patch<Task>(`/tasks/${taskId}/toggle`);
+    return extractEntity<Task>(response);
+  },
+};
+
+// 12. Bildirim İşlemleri
 export const notificationService = {
   getNotifications: async (): Promise<Notification[]> => {
     const response = await apiClient.get<PagedResponse<Notification>>("/notifications");

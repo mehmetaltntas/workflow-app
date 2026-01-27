@@ -178,4 +178,36 @@ public class TaskController {
 
         return ResponseEntity.ok(collectionModel);
     }
+
+    // ==================== TOGGLE İŞLEMLERİ ====================
+
+    @Operation(summary = "Liste tamamlanma durumunu değiştir", description = "Listenin tamamlanma durumunu tersine çevirir (sahip + atanmış üye)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Durum değiştirildi"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Bu listenin durumunu değiştirme yetkiniz yok"),
+            @ApiResponse(responseCode = "404", description = "Liste bulunamadı")
+    })
+    @PatchMapping("/lists/{id}/toggle")
+    public ResponseEntity<TaskListModel> toggleListComplete(
+            @Parameter(description = "Liste ID") @PathVariable Long id) {
+        TaskListDto result = taskService.toggleListComplete(id);
+        TaskListModel model = taskListAssembler.toModel(result);
+        return ResponseEntity.ok(model);
+    }
+
+    @Operation(summary = "Görev tamamlanma durumunu değiştir", description = "Görevin tamamlanma durumunu tersine çevirir (sahip + atanmış üye)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Durum değiştirildi"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Bu görevin durumunu değiştirme yetkiniz yok"),
+            @ApiResponse(responseCode = "404", description = "Görev bulunamadı")
+    })
+    @PatchMapping("/tasks/{id}/toggle")
+    public ResponseEntity<TaskModel> toggleTaskComplete(
+            @Parameter(description = "Görev ID") @PathVariable Long id) {
+        TaskDto result = taskService.toggleTaskComplete(id);
+        TaskModel model = taskAssembler.toModel(result);
+        return ResponseEntity.ok(model);
+    }
 }

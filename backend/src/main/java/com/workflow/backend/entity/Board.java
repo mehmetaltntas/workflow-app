@@ -13,8 +13,8 @@ import org.hibernate.annotations.BatchSize;
 })
 @Getter
 @Setter
-@ToString(exclude = {"user", "taskLists", "labels"})
-@EqualsAndHashCode(exclude = {"user", "taskLists", "labels"})
+@ToString(exclude = {"user", "taskLists", "labels", "boardMembers"})
+@EqualsAndHashCode(exclude = {"user", "taskLists", "labels", "boardMembers"})
 public class Board {
 
     @Id
@@ -68,4 +68,9 @@ public class Board {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 50)
     private java.util.List<Label> labels;
+
+    // Pano üyeleri (sorumlu kişiler)
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private java.util.List<BoardMember> boardMembers;
 }

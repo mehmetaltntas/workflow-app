@@ -1,18 +1,14 @@
 package com.workflow.backend.service;
 
-import com.workflow.backend.dto.BoardResponse;
-import com.workflow.backend.dto.CreateBoardRequest;
-import com.workflow.backend.dto.LabelDto;
-import com.workflow.backend.dto.UpdateBoardRequest;
-import com.workflow.backend.dto.PaginatedResponse;
-import com.workflow.backend.dto.SubtaskDto;
-import com.workflow.backend.dto.TaskDto;
-import com.workflow.backend.dto.TaskListDto;
+import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.Board;
+import com.workflow.backend.entity.BoardMember;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
+import com.workflow.backend.repository.BoardMemberRepository;
 import com.workflow.backend.repository.BoardRepository;
+import com.workflow.backend.repository.UserProfilePictureRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +31,8 @@ public class BoardService {
     private static final Logger logger = LoggerFactory.getLogger(BoardService.class);
 
     private final BoardRepository boardRepository;
+    private final BoardMemberRepository boardMemberRepository;
+    private final UserProfilePictureRepository profilePictureRepository;
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
     private final LabelService labelService;
@@ -119,8 +118,14 @@ public class BoardService {
         Board board = boardRepository.findBySlugWithUser(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Pano", "slug", slug));
 
-        // Kullanıcı sadece kendi panosuna erişebilir
-        authorizationService.verifyBoardOwnership(board.getId());
+        // Pano sahibi VEYA üye erişebilir
+        Long currentUserId = currentUserService.getCurrentUserId();
+        boolean isOwner = board.getUser().getId().equals(currentUserId);
+        boolean isMember = !isOwner && boardMemberRepository.existsByBoardIdAndUserId(board.getId(), currentUserId);
+
+        if (!isOwner && !isMember) {
+            authorizationService.verifyBoardOwnership(board.getId()); // Bu exception fırlatır
+        }
 
         logger.debug("Board fetched, @BatchSize will handle lazy collections efficiently");
 
@@ -143,6 +148,35 @@ public class BoardService {
         response.setDeadline(board.getDeadline());
         response.setCreatedAt(board.getCreatedAt());
         response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
+
+        // Board Members
+        List<BoardMember> boardMembers = boardMemberRepository.findByBoardIdWithUser(board.getId());
+        if (boardMembers != null && !boardMembers.isEmpty()) {
+            List<BoardMemberDto> memberDtos = boardMembers.stream().map(member -> {
+                BoardMemberDto memberDto = new BoardMemberDto();
+                memberDto.setId(member.getId());
+                memberDto.setUserId(member.getUser().getId());
+                memberDto.setUsername(member.getUser().getUsername());
+                memberDto.setProfilePicture(
+                        profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
+                memberDto.setCreatedAt(member.getCreatedAt());
+
+                if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
+                    memberDto.setAssignments(member.getAssignments().stream().map(assignment -> {
+                        BoardMemberAssignmentDto aDto = new BoardMemberAssignmentDto();
+                        aDto.setId(assignment.getId());
+                        aDto.setTargetType(assignment.getTargetType().name());
+                        aDto.setTargetId(assignment.getTargetId());
+                        aDto.setCreatedAt(assignment.getCreatedAt());
+                        return aDto;
+                    }).collect(Collectors.toList()));
+                }
+                return memberDto;
+            }).collect(Collectors.toList());
+            response.setMembers(memberDtos);
+        } else {
+            response.setMembers(Collections.emptyList());
+        }
 
         // Board Labels (@BatchSize ile batch yüklenir)
         if (board.getLabels() != null && !board.getLabels().isEmpty()) {

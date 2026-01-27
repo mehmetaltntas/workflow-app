@@ -25,4 +25,5 @@ public class BoardModel extends RepresentationModel<BoardModel> {
     private LocalDateTime createdAt;
     private List<TaskListModel> taskLists;
     private List<LabelModel> labels;
+    private List<BoardMemberModel> members;
 }

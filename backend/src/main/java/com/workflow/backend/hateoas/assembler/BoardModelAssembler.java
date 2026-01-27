@@ -4,6 +4,7 @@ import com.workflow.backend.controller.BoardController;
 import com.workflow.backend.controller.LabelController;
 import com.workflow.backend.controller.TaskController;
 import com.workflow.backend.dto.BoardResponse;
+import com.workflow.backend.hateoas.model.BoardMemberModel;
 import com.workflow.backend.hateoas.model.BoardModel;
 import com.workflow.backend.hateoas.model.LabelModel;
 import com.workflow.backend.hateoas.model.TaskListModel;
@@ -21,11 +22,13 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
 
     private final TaskListModelAssembler taskListAssembler;
     private final LabelModelAssembler labelAssembler;
+    private final BoardMemberModelAssembler boardMemberAssembler;
 
-    public BoardModelAssembler(TaskListModelAssembler taskListAssembler, LabelModelAssembler labelAssembler) {
+    public BoardModelAssembler(TaskListModelAssembler taskListAssembler, LabelModelAssembler labelAssembler, BoardMemberModelAssembler boardMemberAssembler) {
         super(BoardController.class, BoardModel.class);
         this.taskListAssembler = taskListAssembler;
         this.labelAssembler = labelAssembler;
+        this.boardMemberAssembler = boardMemberAssembler;
     }
 
     @Override
@@ -61,6 +64,16 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
             model.setLabels(labelModels);
         } else {
             model.setLabels(Collections.emptyList());
+        }
+
+        // Convert nested members
+        if (dto.getMembers() != null) {
+            List<BoardMemberModel> memberModels = dto.getMembers().stream()
+                    .map(boardMemberAssembler::toModel)
+                    .collect(Collectors.toList());
+            model.setMembers(memberModels);
+        } else {
+            model.setMembers(Collections.emptyList());
         }
 
         // Self link (by slug)

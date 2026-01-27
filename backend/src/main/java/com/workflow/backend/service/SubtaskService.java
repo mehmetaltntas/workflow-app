@@ -2,6 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.CreateSubtaskRequest;
 import com.workflow.backend.dto.SubtaskDto;
+import com.workflow.backend.entity.AssignmentTargetType;
 import com.workflow.backend.entity.Subtask;
 import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
@@ -24,6 +25,7 @@ public class SubtaskService {
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
     private final AuthorizationService authorizationService;
+    private final BoardMemberService boardMemberService;
 
     // Alt görev oluştur
     @Transactional
@@ -152,11 +154,12 @@ public class SubtaskService {
     // Tamamlanma/tamamlanmama toggle
     @Transactional
     public SubtaskDto toggleComplete(Long subtaskId) {
-        // Kullanıcı sadece kendi alt görevini toggle edebilir
-        authorizationService.verifySubtaskOwnership(subtaskId);
-
         Subtask subtask = subtaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alt görev", "id", subtaskId));
+
+        // Pano sahibi VEYA atanmış üye toggle edebilir
+        Long boardId = subtask.getTask().getTaskList().getBoard().getId();
+        boardMemberService.verifyBoardOwnerOrAssignedMember(boardId, AssignmentTargetType.SUBTASK, subtaskId);
 
         subtask.setIsCompleted(!subtask.getIsCompleted());
         Subtask saved = subtaskRepository.save(subtask);

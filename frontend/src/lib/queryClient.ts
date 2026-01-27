@@ -23,6 +23,9 @@ export const queryKeys = {
   },
   userSearch: (query: string) => ['userSearch', query] as const,
   userProfile: (username: string) => ['userProfile', username] as const,
+  boardMembers: {
+    list: (boardId: number) => ['boardMembers', boardId] as const,
+  },
   connections: {
     pending: ['connections', 'pending'] as const,
     count: ['connections', 'count'] as const,
