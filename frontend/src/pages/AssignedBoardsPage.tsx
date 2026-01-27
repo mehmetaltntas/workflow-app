@@ -238,6 +238,7 @@ const AssignedBoardsPage = () => {
                         onEdit={() => {}}
                         onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/assigned-boards' } })}
                         viewMode={viewMode === 'list' ? 'list' : 'grid'}
+                        accentColor={colors.assigned.primary}
                       />
                     </div>
                   ))}

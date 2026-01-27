@@ -15,6 +15,7 @@ interface BoardCardProps {
   isPinned?: boolean;
   canPin?: boolean;
   viewMode?: 'grid' | 'list';
+  accentColor?: string;
 }
 
 const BoardCard: React.FC<BoardCardProps> = ({
@@ -25,9 +26,10 @@ const BoardCard: React.FC<BoardCardProps> = ({
   onTogglePin,
   isPinned = false,
   canPin = true,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  accentColor,
 }) => {
-  const statusColor = STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
+  const statusColor = accentColor || STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
   // CSS custom property for dynamic status color
   const statusStyle = { '--board-status-color': statusColor } as React.CSSProperties;
