@@ -26,6 +26,7 @@ export const queryKeys = {
   connections: {
     pending: ['connections', 'pending'] as const,
     count: ['connections', 'count'] as const,
+    accepted: ['connections', 'accepted'] as const,
   },
   notifications: {
     all: ['notifications'] as const,

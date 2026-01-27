@@ -19,6 +19,7 @@ import HomePage from "./pages/HomePage";
 import BoardInfoPage from "./pages/BoardInfoPage";
 import BoardStatusPage from "./pages/BoardStatusPage";
 import UserProfilePage from "./pages/UserProfilePage";
+import ConnectionsPage from "./pages/ConnectionsPage";
 
 // Miller route redirect helper
 const MillerRedirect = () => {
@@ -105,6 +106,7 @@ function App() {
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:username" element={<UserProfilePage />} />
+              <Route path="/connections" element={<ConnectionsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
 

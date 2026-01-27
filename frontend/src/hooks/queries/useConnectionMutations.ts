@@ -1,8 +1,33 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { connectionService } from '../../services/api';
 import { queryKeys } from '../../lib/queryClient';
 import type { Notification } from '../../types';
 import toast from 'react-hot-toast';
+
+export const useAcceptedConnections = () => {
+  return useQuery({
+    queryKey: queryKeys.connections.accepted,
+    queryFn: () => connectionService.getAcceptedConnections(),
+  });
+};
+
+export const useRemoveConnection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (connectionId: number) => connectionService.removeConnection(connectionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.connections.accepted });
+      queryClient.invalidateQueries({ queryKey: queryKeys.connections.count });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      toast.success('Baglanti kaldirildi');
+    },
+    onError: (error) => {
+      const err = error as { response?: { data?: string } };
+      toast.error(err.response?.data || 'Baglanti kaldirilamadi');
+    },
+  });
+};
 
 export const useSendConnectionRequest = () => {
   const queryClient = useQueryClient();

@@ -83,6 +83,29 @@ public class ConnectionController {
         return ResponseEntity.ok(CollectionModel.of(models));
     }
 
+    @Operation(summary = "Kabul edilmis baglantiları getir")
+    @GetMapping("/accepted")
+    public ResponseEntity<CollectionModel<ConnectionModel>> getAcceptedConnections() {
+        List<ConnectionResponse> results = connectionService.getAcceptedConnections();
+        List<ConnectionModel> models = results.stream()
+                .map(connectionAssembler::toModel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(CollectionModel.of(models));
+    }
+
+    @Operation(summary = "Baglantiyi kaldir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Baglanti kaldirildi"),
+            @ApiResponse(responseCode = "400", description = "Gecersiz istek"),
+            @ApiResponse(responseCode = "404", description = "Baglanti bulunamadi")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> removeConnection(
+            @Parameter(description = "Baglanti ID") @PathVariable Long id) {
+        connectionService.removeConnection(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Kendi baglanti sayisini getir")
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> getConnectionCount() {

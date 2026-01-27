@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   LayoutDashboard,
   List,
@@ -165,19 +166,21 @@ const ProfilePage = () => {
             >
               Calisma alani istatistikleriniz
             </p>
-            <div
+            <Link
+              to="/connections"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: spacing[2],
                 marginTop: spacing[2],
+                textDecoration: "none",
               }}
             >
               <Users size={16} color={cssVars.textMuted} />
               <span style={{ fontSize: typography.fontSize.base, color: cssVars.textMuted }}>
                 <strong style={{ color: cssVars.textMain }}>{connectionCount}</strong> baglanti
               </span>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

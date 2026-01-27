@@ -195,6 +195,30 @@ public class ConnectionService {
         return pending.stream().map(this::mapToResponse).toList();
     }
 
+    public List<ConnectionResponse> getAcceptedConnections() {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<Connection> accepted = connectionRepository.findAcceptedByUserId(currentUserId);
+        return accepted.stream().map(this::mapToResponse).toList();
+    }
+
+    @Transactional
+    public void removeConnection(Long connectionId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+
+        Connection connection = connectionRepository.findById(connectionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Baglanti", "id", connectionId));
+
+        if (!connection.getSender().getId().equals(currentUserId) && !connection.getReceiver().getId().equals(currentUserId)) {
+            throw new BadRequestException("Bu baglantiyi sadece taraflardan biri kaldirabilir.");
+        }
+
+        if (connection.getStatus() != ConnectionStatus.ACCEPTED) {
+            throw new BadRequestException("Sadece kabul edilmis baglantilar kaldirılabilir.");
+        }
+
+        connectionRepository.delete(connection);
+    }
+
     private ConnectionResponse mapToResponse(Connection connection) {
         ConnectionResponse response = new ConnectionResponse();
         response.setId(connection.getId());

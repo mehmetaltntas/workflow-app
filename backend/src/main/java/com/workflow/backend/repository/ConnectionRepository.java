@@ -27,4 +27,7 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
 
     @Query("SELECT c FROM Connection c WHERE c.receiver.id = :receiverId AND c.status = :status ORDER BY c.createdAt DESC")
     List<Connection> findByReceiverIdAndStatus(@Param("receiverId") Long receiverId, @Param("status") ConnectionStatus status);
+
+    @Query("SELECT c FROM Connection c WHERE (c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED' ORDER BY c.updatedAt DESC")
+    List<Connection> findAcceptedByUserId(@Param("userId") Long userId);
 }
