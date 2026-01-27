@@ -43,6 +43,16 @@ export const colors = {
     abandoned: '#ef4444',
   },
 
+  // Assigned (Atama) Colors - Purple/Violet theme
+  assigned: {
+    primary: '#8b5cf6',
+    primaryHover: '#7c3aed',
+    light: 'rgba(139, 92, 246, 0.15)',
+    dark: '#6d28d9',
+    bg: 'rgba(139, 92, 246, 0.08)',
+    border: 'rgba(139, 92, 246, 0.19)',
+  },
+
   // Priority Colors
   priority: {
     high: '#ef4444',

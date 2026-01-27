@@ -308,17 +308,28 @@ const HomePage = () => {
                 {/* Section Header */}
                 <div className="home-page__section-header">
                   <div className="home-page__section-icon home-page__section-icon--assigned">
-                    <Users size={16} color={colors.semantic.success} />
+                    <Users size={16} color={colors.assigned.primary} />
                   </div>
                   <h2 className="home-page__section-title">Atandığım Panolar</h2>
-                  <span className="home-page__section-count home-page__section-count--default">
+                  <span className="home-page__section-count home-page__section-count--assigned">
                     {activeAssignedBoards.length}
                   </span>
+
+                  {/* Daha Fazlasi linki - 5'ten fazlaysa goster */}
+                  {activeAssignedBoards.length > 5 && (
+                    <button
+                      onClick={() => navigate('/assigned-boards')}
+                      className="home-page__view-all-btn home-page__view-all-btn--assigned"
+                    >
+                      Tümünü Gör ({activeAssignedBoards.length})
+                      <ArrowRight size={16} />
+                    </button>
+                  )}
                 </div>
 
-                {/* Assigned Cards */}
+                {/* Assigned Cards - max 5 goster */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {activeAssignedBoards.map((board, index) => (
+                  {activeAssignedBoards.slice(0, 5).map((board, index) => (
                     <div
                       key={board.id}
                       className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}

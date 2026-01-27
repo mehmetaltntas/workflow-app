@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Home, Settings, LogOut, ChevronDown, Sun, Moon, Calendar, User, Users, Github, Twitter, Mail, Heart } from "lucide-react";
+import { LayoutDashboard, Home, Settings, LogOut, ChevronDown, Sun, Moon, Calendar, User, Users, UserCheck, Github, Twitter, Mail, Heart } from "lucide-react";
 import toast from "react-hot-toast";
 import { authService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
@@ -100,6 +100,10 @@ const Layout = () => {
             <Link to="/connections" className={`nav-pill ${isActive("/connections") ? "active" : ""}`}>
               <Users size={16} strokeWidth={2} />
               <span>Agim</span>
+            </Link>
+            <Link to="/assigned-boards" className={`nav-pill ${isActive("/assigned-boards") ? "active" : ""}`}>
+              <UserCheck size={16} strokeWidth={2} />
+              <span>Atama</span>
             </Link>
           </div>
         </div>
@@ -220,6 +224,7 @@ const Footer = () => {
               <Link to="/calendar" className="layout__footer-link">Takvim</Link>
               <Link to="/profile" className="layout__footer-link">Profil</Link>
               <Link to="/connections" className="layout__footer-link">Agim</Link>
+              <Link to="/assigned-boards" className="layout__footer-link">Atama</Link>
             </div>
           </div>
 

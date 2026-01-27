@@ -185,8 +185,8 @@
 }
 
 .home-page__section-icon--assigned {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(34, 197, 94, 0.08));
-  border: 1px solid rgba(34, 197, 94, 0.19);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(139, 92, 246, 0.19);
 }
 
 .home-page__section-dot {
@@ -226,6 +226,11 @@
   background: var(--bg-secondary);
 }
 
+.home-page__section-count--assigned {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.08);
+}
+
 /* View All button */
 .home-page__view-all-btn {
   margin-left: auto;
@@ -246,6 +251,17 @@
 .home-page__view-all-btn:hover {
   background: rgba(34, 139, 230, 0.13);
   border-color: rgba(34, 139, 230, 0.31);
+}
+
+.home-page__view-all-btn--assigned {
+  border: 1px solid rgba(139, 92, 246, 0.19);
+  background: rgba(139, 92, 246, 0.06);
+  color: #8b5cf6;
+}
+
+.home-page__view-all-btn--assigned:hover {
+  background: rgba(139, 92, 246, 0.13);
+  border-color: rgba(139, 92, 246, 0.31);
 }
 
 /* Card Grid */
