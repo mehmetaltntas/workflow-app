@@ -44,6 +44,9 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UserProfilePicture profilePicture;
 
+    @Column(nullable = false)
+    private Boolean isProfilePublic = true;
+
     // ILISKI: Bir kullanicinin birden fazla panosu olabilir.
     // "mappedBy": Board tablosundaki 'user' degiskeni bu iliskiyi yonetiyor demek.
     // cascade = CascadeType.ALL: Kullaniciyi silersem, ona ait panolari da sil.

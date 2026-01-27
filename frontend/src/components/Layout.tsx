@@ -6,6 +6,8 @@ import { authService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { sizes } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
+import UserSearchBar from "./UserSearchBar";
+import NotificationBell from "./NotificationBell";
 import "./Layout.css";
 
 const Layout = () => {
@@ -98,8 +100,14 @@ const Layout = () => {
           </div>
         </div>
 
-        {/* Sag Taraf: Theme Toggle ve Kullanici Profili */}
+        {/* Sag Taraf: Arama, Bildirim, Theme Toggle ve Kullanici Profili */}
         <div className="layout__nav-right">
+          {/* User Search Bar */}
+          <UserSearchBar />
+
+          {/* Notification Bell */}
+          <NotificationBell />
+
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}

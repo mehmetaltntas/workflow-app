@@ -117,3 +117,52 @@ export interface User extends HateoasModel {
   token?: string;
   refreshToken?: string;
 }
+
+// Baglanti durumu
+export type ConnectionStatus = 'PENDING' | 'PENDING_RECEIVED' | 'ACCEPTED' | 'REJECTED' | 'SELF' | null;
+
+// Bildirim tipi
+export type NotificationType = 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED';
+
+// Kullanici arama sonucu
+export interface UserSearchResult extends HateoasModel {
+  id: number;
+  username: string;
+  profilePicture?: string | null;
+}
+
+// Kullanici profil bilgileri
+export interface UserProfile extends HateoasModel {
+  id: number;
+  username: string;
+  profilePicture?: string | null;
+  isProfilePublic: boolean;
+  connectionCount: number | null;
+  connectionStatus: ConnectionStatus;
+}
+
+// Baglanti
+export interface Connection extends HateoasModel {
+  id: number;
+  senderId: number;
+  senderUsername: string;
+  senderProfilePicture?: string | null;
+  receiverId: number;
+  receiverUsername: string;
+  receiverProfilePicture?: string | null;
+  status: string;
+  createdAt: string;
+}
+
+// Bildirim
+export interface Notification extends HateoasModel {
+  id: number;
+  type: NotificationType;
+  message: string;
+  isRead: boolean;
+  actorId: number;
+  actorUsername: string;
+  actorProfilePicture?: string | null;
+  referenceId: number | null;
+  createdAt: string;
+}

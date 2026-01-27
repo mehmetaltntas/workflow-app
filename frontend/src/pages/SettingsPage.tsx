@@ -12,6 +12,7 @@ import {
   Save,
   Settings,
   ChevronRight,
+  Globe,
 } from "lucide-react";
 import { userService, authService } from "../services/api";
 import toast from "react-hot-toast";
@@ -19,7 +20,7 @@ import { getUsernameError } from "../utils/validation";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from '../styles/tokens';
 import { useAuthStore } from '../stores/authStore';
 
-type SettingsSection = 'profile' | 'security';
+type SettingsSection = 'profile' | 'security' | 'privacy';
 
 const SettingsPage = () => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
@@ -47,6 +48,10 @@ const SettingsPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
+  // Privacy states
+  const [isProfilePublic, setIsProfilePublic] = useState(true);
+  const [isSavingPrivacy, setIsSavingPrivacy] = useState(false);
+
   const userId = useAuthStore((state) => state.userId);
   const updateAuthUsername = useAuthStore((state) => state.updateUsername);
   const login = useAuthStore((state) => state.login);
@@ -61,6 +66,14 @@ const SettingsPage = () => {
         setOriginalUsername(user.username);
         setEmail(user.email);
         setProfilePicture((user as { profilePicture?: string }).profilePicture || null);
+
+        // Gizlilik ayarini profil endpointinden al
+        try {
+          const profile = await userService.getUserProfile(user.username);
+          setIsProfilePublic(profile.isProfilePublic);
+        } catch {
+          // Profil gizlilik bilgisi alinamazsa varsayilan deger kullanilir
+        }
       } catch (error) {
         console.error("Kullanıcı bilgileri alınamadı:", error);
         toast.error("Kullanıcı bilgileri alınamadı");
@@ -231,8 +244,24 @@ const SettingsPage = () => {
 
   const initials = username.substring(0, 2).toUpperCase();
 
+  const handleTogglePrivacy = async () => {
+    if (!userId) return;
+    setIsSavingPrivacy(true);
+    try {
+      const newValue = !isProfilePublic;
+      await userService.updatePrivacy(userId, { isProfilePublic: newValue });
+      setIsProfilePublic(newValue);
+      toast.success(newValue ? "Profil herkese acik yapildi" : "Profil gizli yapildi");
+    } catch {
+      toast.error("Gizlilik ayari guncellenemedi");
+    } finally {
+      setIsSavingPrivacy(false);
+    }
+  };
+
   const menuItems = [
     { id: 'profile' as const, label: 'Profil', icon: User, description: 'Profil bilgilerinizi düzenleyin' },
+    { id: 'privacy' as const, label: 'Gizlilik', icon: Globe, description: 'Profil gizlilik ayarlari' },
     { id: 'security' as const, label: 'Güvenlik', icon: Shield, description: 'Şifre ve güvenlik ayarları' },
   ];
 
@@ -683,6 +712,95 @@ const SettingsPage = () => {
                       Kaydedildi
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Privacy Section */}
+          {activeSection === 'privacy' && (
+            <div style={{ padding: spacing[8] }}>
+              {/* Section Header */}
+              <div style={{
+                marginBottom: spacing[8],
+                paddingBottom: spacing[6],
+                borderBottom: `1px solid ${cssVars.border}`,
+              }}>
+                <h2 style={{
+                  fontSize: typography.fontSize["2xl"],
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMain,
+                  margin: 0,
+                  marginBottom: spacing[1],
+                }}>
+                  Gizlilik Ayarlari
+                </h2>
+                <p style={{
+                  fontSize: typography.fontSize.base,
+                  color: cssVars.textMuted,
+                  margin: 0,
+                }}>
+                  Profilinizin gorunurlugunu yonetin
+                </p>
+              </div>
+
+              {/* Privacy Toggle */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: spacing[5],
+                background: colors.dark.bg.hover,
+                borderRadius: radius.lg,
+              }}>
+                <div>
+                  <div style={{
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: cssVars.textMain,
+                    marginBottom: spacing[1],
+                  }}>
+                    Profil herkese acik
+                  </div>
+                  <div style={{
+                    fontSize: typography.fontSize.base,
+                    color: cssVars.textMuted,
+                  }}>
+                    {isProfilePublic
+                      ? "Profiliniz tum kullanicilar tarafindan gorulebilir."
+                      : "Profiliniz gizli. Sadece baglantilariniz gorebilir."}
+                  </div>
+                </div>
+                <button
+                  onClick={handleTogglePrivacy}
+                  disabled={isSavingPrivacy}
+                  style={{
+                    width: "52px",
+                    height: "28px",
+                    borderRadius: "14px",
+                    border: "none",
+                    background: isProfilePublic ? colors.brand.primary : colors.dark.bg.hover,
+                    cursor: isSavingPrivacy ? "not-allowed" : "pointer",
+                    position: "relative",
+                    transition: `background ${animation.duration.normal} ${animation.easing.smooth}`,
+                    boxShadow: isProfilePublic ? "none" : `inset 0 0 0 1px ${cssVars.border}`,
+                    flexShrink: 0,
+                    opacity: isSavingPrivacy ? 0.6 : 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "22px",
+                      height: "22px",
+                      borderRadius: "50%",
+                      background: "white",
+                      position: "absolute",
+                      top: "3px",
+                      left: isProfilePublic ? "27px" : "3px",
+                      transition: `left ${animation.duration.normal} ${animation.easing.smooth}`,
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                    }}
+                  />
                 </button>
               </div>
             </div>

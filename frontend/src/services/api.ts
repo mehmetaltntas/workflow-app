@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
-import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata } from "../types";
+import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata, UserSearchResult, UserProfile, Connection, Notification } from "../types";
 import { useAuthStore } from "../stores/authStore";
 
 // 1. Temel Ayarlar
@@ -329,6 +329,64 @@ export const userService = {
   },
   updatePassword: async (userId: number, data: { currentPassword: string; newPassword: string }): Promise<void> => {
     await apiClient.put(`/users/${userId}/password`, data);
+  },
+  getUserProfile: async (username: string): Promise<UserProfile> => {
+    const response = await apiClient.get<UserProfile>(`/users/profile/${encodeURIComponent(username)}`);
+    return extractEntity<UserProfile>(response);
+  },
+  updatePrivacy: async (userId: number, data: { isProfilePublic: boolean }): Promise<void> => {
+    await apiClient.put(`/users/${userId}/privacy`, data);
+  },
+};
+
+// 9. Arama İşlemleri
+export const searchService = {
+  searchUsers: async (query: string): Promise<UserSearchResult[]> => {
+    const response = await apiClient.get<PagedResponse<UserSearchResult>>(`/users/search?q=${encodeURIComponent(query)}`);
+    return extractCollection<UserSearchResult>(response);
+  },
+};
+
+// 10. Baglanti İşlemleri
+export const connectionService = {
+  sendRequest: async (targetUserId: number): Promise<Connection> => {
+    const response = await apiClient.post<Connection>("/connections", { targetUserId });
+    return extractEntity<Connection>(response);
+  },
+  acceptRequest: async (connectionId: number): Promise<Connection> => {
+    const response = await apiClient.put<Connection>(`/connections/${connectionId}/accept`);
+    return extractEntity<Connection>(response);
+  },
+  rejectRequest: async (connectionId: number): Promise<Connection> => {
+    const response = await apiClient.put<Connection>(`/connections/${connectionId}/reject`);
+    return extractEntity<Connection>(response);
+  },
+  getPendingRequests: async (): Promise<Connection[]> => {
+    const response = await apiClient.get<PagedResponse<Connection>>("/connections/pending");
+    return extractCollection<Connection>(response);
+  },
+  getCount: async (): Promise<number> => {
+    const response = await apiClient.get<{ count: number }>("/connections/count");
+    return response.data.count;
+  },
+};
+
+// 11. Bildirim İşlemleri
+export const notificationService = {
+  getNotifications: async (): Promise<Notification[]> => {
+    const response = await apiClient.get<PagedResponse<Notification>>("/notifications");
+    return extractCollection<Notification>(response);
+  },
+  getUnreadCount: async (): Promise<number> => {
+    const response = await apiClient.get<{ count: number }>("/notifications/unread-count");
+    return response.data.count;
+  },
+  markAsRead: async (notificationId: number): Promise<Notification> => {
+    const response = await apiClient.put<Notification>(`/notifications/${notificationId}/read`);
+    return extractEntity<Notification>(response);
+  },
+  markAllAsRead: async (): Promise<void> => {
+    await apiClient.put("/notifications/read-all");
   },
 };
 

@@ -21,4 +21,14 @@ export const queryKeys = {
   profile: {
     stats: (userId: number) => ['profile', 'stats', userId] as const,
   },
+  userSearch: (query: string) => ['userSearch', query] as const,
+  userProfile: (username: string) => ['userProfile', username] as const,
+  connections: {
+    pending: ['connections', 'pending'] as const,
+    count: ['connections', 'count'] as const,
+  },
+  notifications: {
+    all: ['notifications'] as const,
+    unreadCount: ['notifications', 'unreadCount'] as const,
+  },
 };

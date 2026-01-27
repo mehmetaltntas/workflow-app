@@ -1,10 +1,12 @@
 package com.workflow.backend.controller;
 
-import com.workflow.backend.dto.UpdatePasswordRequest;
-import com.workflow.backend.dto.UpdateProfileRequest;
-import com.workflow.backend.dto.UserResponse;
+import com.workflow.backend.dto.*;
 import com.workflow.backend.hateoas.assembler.UserModelAssembler;
+import com.workflow.backend.hateoas.assembler.UserProfileModelAssembler;
+import com.workflow.backend.hateoas.assembler.UserSearchModelAssembler;
 import com.workflow.backend.hateoas.model.UserModel;
+import com.workflow.backend.hateoas.model.UserProfileModel;
+import com.workflow.backend.hateoas.model.UserSearchModel;
 import com.workflow.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,9 +18,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
@@ -31,6 +37,8 @@ public class UserController {
 
     private final UserService userService;
     private final UserModelAssembler userAssembler;
+    private final UserSearchModelAssembler userSearchAssembler;
+    private final UserProfileModelAssembler userProfileAssembler;
 
     @Operation(summary = "Kullanıcı bilgilerini getir", description = "Belirtilen kullanıcının profil bilgilerini getirir")
     @ApiResponses(value = {
@@ -85,5 +93,51 @@ public class UserController {
         response.add(linkTo(methodOn(UserController.class).updateProfile(id, null)).withRel("update-profile"));
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Kullanici ara", description = "Username ile kullanici arar (min 2 karakter)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Arama sonuclari"),
+            @ApiResponse(responseCode = "401", description = "Kimlik dogrulama gerekli")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<CollectionModel<UserSearchModel>> searchUsers(
+            @Parameter(description = "Arama sorgusu") @RequestParam("q") String query) {
+        if (query == null || query.trim().length() < 2) {
+            return ResponseEntity.ok(CollectionModel.empty());
+        }
+        List<UserSearchResponse> results = userService.searchUsers(query.trim());
+        List<UserSearchModel> models = results.stream()
+                .map(userSearchAssembler::toModel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(CollectionModel.of(models));
+    }
+
+    @Operation(summary = "Kullanici profilini goruntule", description = "Username ile baska bir kullanicinin profilini getirir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profil bilgileri"),
+            @ApiResponse(responseCode = "401", description = "Kimlik dogrulama gerekli"),
+            @ApiResponse(responseCode = "404", description = "Kullanici bulunamadi")
+    })
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<UserProfileModel> getUserProfile(
+            @Parameter(description = "Kullanici adi") @PathVariable String username) {
+        UserProfileResponse result = userService.getUserProfile(username);
+        UserProfileModel model = userProfileAssembler.toModel(result);
+        return ResponseEntity.ok(model);
+    }
+
+    @Operation(summary = "Gizlilik ayarini guncelle", description = "Kullanicinin profil gizlilik ayarini gunceller")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Gizlilik ayari guncellendi"),
+            @ApiResponse(responseCode = "401", description = "Kimlik dogrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Yetki yok")
+    })
+    @PutMapping("/{id}/privacy")
+    public ResponseEntity<Void> updatePrivacy(
+            @Parameter(description = "Kullanici ID") @PathVariable Long id,
+            @Valid @RequestBody UpdatePrivacyRequest request) {
+        userService.updatePrivacy(id, request);
+        return ResponseEntity.ok().build();
     }
 }

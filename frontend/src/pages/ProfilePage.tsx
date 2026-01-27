@@ -6,17 +6,26 @@ import {
   AlertCircle,
   TrendingUp,
   Tag,
+  Users,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useProfileStats } from "../hooks/useProfileStats";
 import { StatCard } from "../components/StatCard";
 import { typography, spacing, radius, colors, cssVars, shadows, animation } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
+import { connectionService } from "../services/api";
+import { queryKeys } from "../lib/queryClient";
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 
 const ProfilePage = () => {
   const { stats, isLoading, error } = useProfileStats();
   const username = useAuthStore((state) => state.username) || "Kullanici";
   const initials = username.substring(0, 2).toUpperCase();
+
+  const { data: connectionCount = 0 } = useQuery({
+    queryKey: queryKeys.connections.count,
+    queryFn: () => connectionService.getCount(),
+  });
 
   if (isLoading) {
     return (
@@ -156,6 +165,19 @@ const ProfilePage = () => {
             >
               Calisma alani istatistikleriniz
             </p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2],
+                marginTop: spacing[2],
+              }}
+            >
+              <Users size={16} color={cssVars.textMuted} />
+              <span style={{ fontSize: typography.fontSize.base, color: cssVars.textMuted }}>
+                <strong style={{ color: cssVars.textMain }}>{connectionCount}</strong> baglanti
+              </span>
+            </div>
           </div>
         </div>
       </div>

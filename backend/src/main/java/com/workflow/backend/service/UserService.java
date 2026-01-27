@@ -1,10 +1,6 @@
 package com.workflow.backend.service;
 
-import com.workflow.backend.dto.LoginRequest;
-import com.workflow.backend.dto.RegisterRequest;
-import com.workflow.backend.dto.UpdatePasswordRequest;
-import com.workflow.backend.dto.UpdateProfileRequest;
-import com.workflow.backend.dto.UserResponse;
+import com.workflow.backend.dto.*;
 import com.workflow.backend.exception.InvalidVerificationCodeException;
 import com.workflow.backend.entity.AuthProvider;
 import com.workflow.backend.entity.RefreshToken;
@@ -21,6 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -32,6 +30,8 @@ public class UserService {
     private final RefreshTokenService refreshTokenService;
     private final AuthorizationService authorizationService;
     private final EmailVerificationService emailVerificationService;
+    private final CurrentUserService currentUserService;
+    private final ConnectionService connectionService;
 
     // KULLANICI ADI MÜSAİTLİK KONTROLÜ
     public boolean isUsernameAvailable(String username) {
@@ -201,6 +201,67 @@ public class UserService {
 
         // Yeni şifre güncelle
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    // KULLANICI ARAMA
+    public List<UserSearchResponse> searchUsers(String query) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<User> users = userRepository.searchByUsername(query, currentUserId);
+
+        // Max 10 sonuc
+        List<User> limited = users.size() > 10 ? users.subList(0, 10) : users;
+
+        return limited.stream().map(user -> {
+            UserSearchResponse response = new UserSearchResponse();
+            response.setId(user.getId());
+            response.setUsername(user.getUsername());
+            response.setProfilePicture(
+                    profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null));
+            return response;
+        }).toList();
+    }
+
+    // BASKA KULLANICININ PROFILINI GORUNTULE
+    public UserProfileResponse getUserProfile(String username) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new ResourceNotFoundException("Kullanici", "username", username);
+        }
+
+        String connectionStatus = connectionService.getConnectionStatus(currentUserId, user.getId());
+        long connectionCount = connectionService.getConnectionCount(user.getId());
+
+        UserProfileResponse response = new UserProfileResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setIsProfilePublic(user.getIsProfilePublic());
+        response.setConnectionStatus(connectionStatus);
+
+        // Gizli profilde baglanti sayisi ve profil resmi gosterilmez (kendi profili haricinde)
+        if (Boolean.TRUE.equals(user.getIsProfilePublic()) || "SELF".equals(connectionStatus) || "ACCEPTED".equals(connectionStatus)) {
+            response.setConnectionCount(connectionCount);
+            response.setProfilePicture(
+                    profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null));
+        } else {
+            response.setConnectionCount(null);
+            response.setProfilePicture(null);
+        }
+
+        return response;
+    }
+
+    // GIZLILIK AYARI GUNCELLE
+    @Transactional
+    public void updatePrivacy(Long userId, UpdatePrivacyRequest request) {
+        authorizationService.verifyUserOwnership(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", userId));
+
+        user.setIsProfilePublic(request.getIsProfilePublic());
         userRepository.save(user);
     }
 
