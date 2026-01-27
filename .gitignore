@@ -5,6 +5,8 @@ frontend/.env
 frontend/.DS_Store
 
 # --- BACKEND ---
+backend/.env
+backend/src/main/resources/application-dev.properties
 backend/target/
 backend/.mvn/
 backend/mvnw
