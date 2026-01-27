@@ -2,6 +2,7 @@ package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.AddBoardMemberRequest;
 import com.workflow.backend.dto.BoardMemberDto;
+import com.workflow.backend.dto.BulkCreateAssignmentRequest;
 import com.workflow.backend.dto.CreateAssignmentRequest;
 import com.workflow.backend.hateoas.assembler.BoardMemberModelAssembler;
 import com.workflow.backend.hateoas.model.BoardMemberModel;
@@ -100,6 +101,27 @@ public class BoardMemberController {
             @Valid @RequestBody CreateAssignmentRequest request) {
         boardMemberService.createAssignment(boardId, memberId, request);
         // Güncel üye bilgilerini döndür
+        BoardMemberDto updatedMember = boardMemberService.getMembers(boardId).stream()
+                .filter(m -> m.getId().equals(memberId))
+                .findFirst()
+                .orElseThrow();
+        BoardMemberModel model = boardMemberAssembler.toModel(updatedMember);
+        return ResponseEntity.ok(model);
+    }
+
+    @Operation(summary = "Toplu atama yap", description = "Üyeye birden fazla liste/görev/alt görev atama yapar")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Atamalar yapıldı"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz istek"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Bu panoda atama yapma yetkiniz yok")
+    })
+    @PostMapping("/{memberId}/assignments/bulk")
+    public ResponseEntity<BoardMemberModel> createBulkAssignment(
+            @Parameter(description = "Pano ID") @PathVariable Long boardId,
+            @Parameter(description = "Üye ID") @PathVariable Long memberId,
+            @Valid @RequestBody BulkCreateAssignmentRequest request) {
+        boardMemberService.createBulkAssignment(boardId, memberId, request);
         BoardMemberDto updatedMember = boardMemberService.getMembers(boardId).stream()
                 .filter(m -> m.getId().equals(memberId))
                 .findFirst()

@@ -2,6 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.BoardMemberAssignmentDto;
 import com.workflow.backend.dto.BoardMemberDto;
+import com.workflow.backend.dto.BulkCreateAssignmentRequest;
 import com.workflow.backend.dto.CreateAssignmentRequest;
 import com.workflow.backend.entity.*;
 import com.workflow.backend.exception.BadRequestException;
@@ -126,10 +127,8 @@ public class BoardMemberService {
         // Hedef doğrulama - hedefin bu panoya ait olduğunu kontrol et
         validateTargetBelongsToBoard(boardId, targetType, request.getTargetId());
 
-        // Aynı atama zaten var mı?
-        boolean exists = member.getAssignments().stream()
-                .anyMatch(a -> a.getTargetType() == targetType && a.getTargetId().equals(request.getTargetId()));
-        if (exists) {
+        // Aynı atama zaten var mı? (veritabanı sorgusu ile kontrol)
+        if (assignmentRepository.existsByBoardMemberIdAndTargetTypeAndTargetId(memberId, targetType, request.getTargetId())) {
             throw new DuplicateResourceException("Atama", "target", request.getTargetType() + ":" + request.getTargetId());
         }
 
@@ -140,6 +139,14 @@ public class BoardMemberService {
 
         BoardMemberAssignment saved = assignmentRepository.save(assignment);
         return mapAssignmentToDto(saved);
+    }
+
+    // Toplu atama oluştur
+    @Transactional
+    public List<BoardMemberAssignmentDto> createBulkAssignment(Long boardId, Long memberId, BulkCreateAssignmentRequest request) {
+        return request.getAssignments().stream()
+                .map(assignmentRequest -> createAssignment(boardId, memberId, assignmentRequest))
+                .collect(Collectors.toList());
     }
 
     // Atama kaldır
@@ -299,6 +306,14 @@ public class BoardMemberService {
 
         // BoardMember kaydını sil
         boardMemberRepository.delete(member);
+    }
+
+    // Bekleyen davetleri getir
+    @Transactional(readOnly = true)
+    public List<BoardMemberDto> getPendingInvitations() {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<BoardMember> pendingMembers = boardMemberRepository.findPendingByUserId(currentUserId);
+        return pendingMembers.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     // Entity -> DTO

@@ -17,6 +17,7 @@ import {
   useAddBoardMember,
   useRemoveBoardMember,
   useCreateAssignment,
+  useCreateBulkAssignment,
   useRemoveAssignment,
 } from "../hooks/queries/useBoardMembers";
 import AddBoardMemberModal from "./AddBoardMemberModal";
@@ -46,6 +47,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const addMemberMutation = useAddBoardMember(board.id, board.slug);
   const removeMemberMutation = useRemoveBoardMember(board.id, board.slug);
   const createAssignmentMutation = useCreateAssignment(board.id, board.slug);
+  const createBulkAssignmentMutation = useCreateBulkAssignment(board.id, board.slug);
   const removeAssignmentMutation = useRemoveAssignment(board.id, board.slug);
 
   const members = board.members || [];
@@ -71,6 +73,10 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
 
   const handleRemoveAssignment = (memberId: number, assignmentId: number) => {
     removeAssignmentMutation.mutate({ memberId, assignmentId });
+  };
+
+  const handleCreateBulkAssignment = (memberId: number, assignments: { targetType: string; targetId: number }[]) => {
+    createBulkAssignmentMutation.mutate({ memberId, assignments });
   };
 
   const sectionLabelStyle: React.CSSProperties = {
@@ -351,6 +357,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         board={board}
         onCreateAssignment={handleCreateAssignment}
         onRemoveAssignment={handleRemoveAssignment}
+        onCreateBulkAssignment={handleCreateBulkAssignment}
       />
     </>
   );

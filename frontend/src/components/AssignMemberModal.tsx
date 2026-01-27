@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -9,6 +9,8 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 import type { Board, BoardMember, BoardMemberAssignment } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
@@ -22,12 +24,13 @@ interface AssignMemberModalProps {
   board: Board;
   onCreateAssignment: (memberId: number, targetType: string, targetId: number) => void;
   onRemoveAssignment: (memberId: number, assignmentId: number) => void;
+  onCreateBulkAssignment?: (memberId: number, assignments: { targetType: string; targetId: number }[]) => void;
 }
 
 const TARGET_TYPE_LABELS: Record<string, string> = {
   LIST: "Liste",
-  TASK: "Görev",
-  SUBTASK: "Alt Görev",
+  TASK: "Gorev",
+  SUBTASK: "Alt Gorev",
 };
 
 const TARGET_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -43,6 +46,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
   board,
   onCreateAssignment,
   onRemoveAssignment,
+  onCreateBulkAssignment,
 }) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
@@ -50,6 +54,14 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const [expandedLists, setExpandedLists] = useState<Set<number>>(new Set());
   const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
+  const [selectedTargets, setSelectedTargets] = useState<{ targetType: string; targetId: number }[]>([]);
+  const [bulkMode, setBulkMode] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setSelectedTargets([]);
+    setBulkMode(false);
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -63,11 +75,11 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen || !member) return null;
 
@@ -81,6 +93,32 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 
   const getAssignment = (targetType: string, targetId: number): BoardMemberAssignment | undefined =>
     assignments.find((a) => a.targetType === targetType && a.targetId === targetId);
+
+  const isSelected = (targetType: string, targetId: number) =>
+    selectedTargets.some((t) => t.targetType === targetType && t.targetId === targetId);
+
+  const toggleSelection = (targetType: string, targetId: number) => {
+    if (isAssigned(targetType, targetId)) return;
+    setSelectedTargets((prev) => {
+      const exists = prev.some((t) => t.targetType === targetType && t.targetId === targetId);
+      if (exists) {
+        return prev.filter((t) => !(t.targetType === targetType && t.targetId === targetId));
+      }
+      return [...prev, { targetType, targetId }];
+    });
+  };
+
+  const handleToggleBulkMode = () => {
+    setSelectedTargets([]);
+    setBulkMode((prev) => !prev);
+  };
+
+  const handleBulkAssign = () => {
+    if (selectedTargets.length === 0 || !onCreateBulkAssignment) return;
+    onCreateBulkAssignment(member.id, selectedTargets);
+    setSelectedTargets([]);
+    setBulkMode(false);
+  };
 
   const toggleList = (listId: number) => {
     setExpandedLists((prev) => {
@@ -100,7 +138,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
     });
   };
 
-  const itemStyle = (isActive: boolean): React.CSSProperties => ({
+  const itemStyle = (isActive: boolean, isChecked?: boolean): React.CSSProperties => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -110,8 +148,12 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
       ? isLight
         ? colors.brand.primaryLight
         : `${colors.brand.primary}15`
-      : "transparent",
-    border: `1px solid ${isActive ? `${colors.brand.primary}40` : "transparent"}`,
+      : isChecked
+        ? isLight
+          ? `${colors.brand.primary}08`
+          : `${colors.brand.primary}10`
+        : "transparent",
+    border: `1px solid ${isActive ? `${colors.brand.primary}40` : isChecked ? `${colors.brand.primary}25` : "transparent"}`,
     transition: `all ${animation.duration.fast}`,
   });
 
@@ -143,6 +185,76 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
     fontWeight: typography.fontWeight.semibold,
   };
 
+  const checkboxStyle = (checked: boolean, disabled: boolean): React.CSSProperties => ({
+    width: "18px",
+    height: "18px",
+    borderRadius: radius.sm,
+    border: `2px solid ${disabled ? themeColors.borderDefault : checked ? colors.brand.primary : cssVars.textMuted}`,
+    background: disabled
+      ? isLight ? "#f0f0f0" : "#333"
+      : checked
+        ? colors.brand.primary
+        : "transparent",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: disabled ? "not-allowed" : "pointer",
+    transition: `all ${animation.duration.fast}`,
+    flexShrink: 0,
+  });
+
+  const renderCheckbox = (targetType: string, targetId: number) => {
+    const assigned = isAssigned(targetType, targetId);
+    const checked = assigned || isSelected(targetType, targetId);
+    return (
+      <div
+        style={checkboxStyle(checked, assigned)}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!assigned) toggleSelection(targetType, targetId);
+        }}
+      >
+        {checked && (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M2.5 6L5 8.5L9.5 3.5"
+              stroke={assigned ? (isLight ? "#999" : "#666") : "#fff"}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+      </div>
+    );
+  };
+
+  const renderActionButton = (targetType: string, targetId: number) => {
+    const assigned = isAssigned(targetType, targetId);
+    const assignment = getAssignment(targetType, targetId);
+
+    if (assigned && assignment) {
+      return (
+        <button
+          onClick={() => onRemoveAssignment(member.id, assignment.id)}
+          style={removeBtnStyle}
+        >
+          <Trash2 size={12} />
+          Kaldir
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={() => onCreateAssignment(member.id, targetType, targetId)}
+        style={assignBtnStyle}
+      >
+        <Target size={12} />
+        Ata
+      </button>
+    );
+  };
+
   return createPortal(
     <div
       style={{
@@ -154,7 +266,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
         justifyContent: "center",
         background: isLight ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.75)",
       }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         ref={modalRef}
@@ -210,24 +322,51 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Kapat"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: spacing[8],
-              height: spacing[8],
-              borderRadius: radius.lg,
-              border: "none",
-              background: "transparent",
-              color: cssVars.textMuted,
-              cursor: "pointer",
-            }}
-          >
-            <X size={18} />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+            {onCreateBulkAssignment && (
+              <button
+                onClick={handleToggleBulkMode}
+                title={bulkMode ? "Tekli moda gec" : "Toplu moda gec"}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing[1.5],
+                  padding: `${spacing[1.5]} ${spacing[3]}`,
+                  borderRadius: radius.lg,
+                  border: `1px solid ${bulkMode ? colors.brand.primary : themeColors.borderDefault}`,
+                  background: bulkMode
+                    ? isLight ? colors.brand.primaryLight : `${colors.brand.primary}15`
+                    : "transparent",
+                  color: bulkMode ? colors.brand.primary : cssVars.textMuted,
+                  cursor: "pointer",
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.semibold,
+                  transition: `all ${animation.duration.fast}`,
+                }}
+              >
+                {bulkMode ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                Toplu
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              aria-label="Kapat"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: spacing[8],
+                height: spacing[8],
+                borderRadius: radius.lg,
+                border: "none",
+                background: "transparent",
+                color: cssVars.textMuted,
+                cursor: "pointer",
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Current Assignments */}
@@ -280,19 +419,19 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
         <div style={{ flex: 1, overflow: "auto", padding: spacing[4] }}>
           {(!board.taskLists || board.taskLists.length === 0) ? (
             <p style={{ color: cssVars.textMuted, textAlign: "center", padding: spacing[8] }}>
-              Bu panoda henüz liste bulunmamaktadir
+              Bu panoda henuz liste bulunmamaktadir
             </p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: spacing[1] }}>
               {board.taskLists.map((list) => {
                 const listAssigned = isAssigned("LIST", list.id);
                 const listExpanded = expandedLists.has(list.id);
-                const listAssignment = getAssignment("LIST", list.id);
+                const listSelected = isSelected("LIST", list.id);
 
                 return (
                   <div key={list.id}>
                     {/* List item */}
-                    <div style={itemStyle(listAssigned)}>
+                    <div style={itemStyle(listAssigned, listSelected)}>
                       <div
                         style={{
                           display: "flex",
@@ -303,6 +442,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                         }}
                         onClick={() => toggleList(list.id)}
                       >
+                        {bulkMode && renderCheckbox("LIST", list.id)}
                         {list.tasks && list.tasks.length > 0 ? (
                           listExpanded ? (
                             <ChevronDown size={16} color={cssVars.textMuted} />
@@ -323,23 +463,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                           {list.name}
                         </span>
                       </div>
-                      {listAssigned && listAssignment ? (
-                        <button
-                          onClick={() => onRemoveAssignment(member.id, listAssignment.id)}
-                          style={removeBtnStyle}
-                        >
-                          <Trash2 size={12} />
-                          Kaldir
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => onCreateAssignment(member.id, "LIST", list.id)}
-                          style={assignBtnStyle}
-                        >
-                          <Target size={12} />
-                          Ata
-                        </button>
-                      )}
+                      {!bulkMode && renderActionButton("LIST", list.id)}
                     </div>
 
                     {/* Tasks */}
@@ -348,11 +472,11 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                       list.tasks.map((task) => {
                         const taskAssigned = isAssigned("TASK", task.id);
                         const taskExpanded = expandedTasks.has(task.id);
-                        const taskAssignment = getAssignment("TASK", task.id);
+                        const taskSelected = isSelected("TASK", task.id);
 
                         return (
                           <div key={task.id} style={{ paddingLeft: spacing[6] }}>
-                            <div style={itemStyle(taskAssigned)}>
+                            <div style={itemStyle(taskAssigned, taskSelected)}>
                               <div
                                 style={{
                                   display: "flex",
@@ -363,6 +487,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                                 }}
                                 onClick={() => toggleTask(task.id)}
                               >
+                                {bulkMode && renderCheckbox("TASK", task.id)}
                                 {task.subtasks && task.subtasks.length > 0 ? (
                                   taskExpanded ? (
                                     <ChevronDown size={14} color={cssVars.textMuted} />
@@ -386,27 +511,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                                   {task.title}
                                 </span>
                               </div>
-                              {taskAssigned && taskAssignment ? (
-                                <button
-                                  onClick={() =>
-                                    onRemoveAssignment(member.id, taskAssignment.id)
-                                  }
-                                  style={removeBtnStyle}
-                                >
-                                  <Trash2 size={12} />
-                                  Kaldir
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() =>
-                                    onCreateAssignment(member.id, "TASK", task.id)
-                                  }
-                                  style={assignBtnStyle}
-                                >
-                                  <Target size={12} />
-                                  Ata
-                                </button>
-                              )}
+                              {!bulkMode && renderActionButton("TASK", task.id)}
                             </div>
 
                             {/* Subtasks */}
@@ -414,22 +519,27 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                               task.subtasks &&
                               task.subtasks.map((subtask) => {
                                 const subtaskAssigned = isAssigned("SUBTASK", subtask.id);
-                                const subtaskAssignment = getAssignment("SUBTASK", subtask.id);
+                                const subtaskSelected = isSelected("SUBTASK", subtask.id);
 
                                 return (
                                   <div
                                     key={subtask.id}
                                     style={{ paddingLeft: spacing[6] }}
                                   >
-                                    <div style={itemStyle(subtaskAssigned)}>
+                                    <div style={itemStyle(subtaskAssigned, subtaskSelected)}>
                                       <div
                                         style={{
                                           display: "flex",
                                           alignItems: "center",
                                           gap: spacing[2],
                                           flex: 1,
+                                          cursor: bulkMode && !subtaskAssigned ? "pointer" : "default",
+                                        }}
+                                        onClick={() => {
+                                          if (bulkMode) toggleSelection("SUBTASK", subtask.id);
                                         }}
                                       >
+                                        {bulkMode && renderCheckbox("SUBTASK", subtask.id)}
                                         <span style={{ width: 14 }} />
                                         <Layers
                                           size={14}
@@ -450,34 +560,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                                           {subtask.title}
                                         </span>
                                       </div>
-                                      {subtaskAssigned && subtaskAssignment ? (
-                                        <button
-                                          onClick={() =>
-                                            onRemoveAssignment(
-                                              member.id,
-                                              subtaskAssignment.id
-                                            )
-                                          }
-                                          style={removeBtnStyle}
-                                        >
-                                          <Trash2 size={12} />
-                                          Kaldir
-                                        </button>
-                                      ) : (
-                                        <button
-                                          onClick={() =>
-                                            onCreateAssignment(
-                                              member.id,
-                                              "SUBTASK",
-                                              subtask.id
-                                            )
-                                          }
-                                          style={assignBtnStyle}
-                                        >
-                                          <Target size={12} />
-                                          Ata
-                                        </button>
-                                      )}
+                                      {!bulkMode && renderActionButton("SUBTASK", subtask.id)}
                                     </div>
                                   </div>
                                 );
@@ -491,6 +574,49 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* Bulk Mode Footer */}
+        {bulkMode && selectedTargets.length > 0 && (
+          <div
+            style={{
+              padding: `${spacing[4]} ${spacing[6]}`,
+              borderTop: `1px solid ${themeColors.borderDefault}`,
+              background: isLight ? colors.light.bg.card : colors.dark.bg.card,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <span
+              style={{
+                fontSize: typography.fontSize.sm,
+                color: cssVars.textMuted,
+              }}
+            >
+              {selectedTargets.length} hedef secildi
+            </span>
+            <button
+              onClick={handleBulkAssign}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2],
+                padding: `${spacing[2.5]} ${spacing[5]}`,
+                borderRadius: radius.lg,
+                border: "none",
+                background: colors.brand.primary,
+                color: "#fff",
+                cursor: "pointer",
+                fontSize: typography.fontSize.sm,
+                fontWeight: typography.fontWeight.bold,
+                transition: `all ${animation.duration.fast}`,
+              }}
+            >
+              <Target size={16} />
+              Secilenleri Ata ({selectedTargets.length})
+            </button>
+          </div>
+        )}
       </div>
     </div>,
     document.body

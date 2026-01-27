@@ -22,5 +22,7 @@ public interface BoardMemberAssignmentRepository extends JpaRepository<BoardMemb
            "WHERE bm.board.id = :boardId")
     List<BoardMemberAssignment> findByBoardIdWithMemberAndUser(@Param("boardId") Long boardId);
 
+    boolean existsByBoardMemberIdAndTargetTypeAndTargetId(Long boardMemberId, AssignmentTargetType targetType, Long targetId);
+
     void deleteByTargetTypeAndTargetId(AssignmentTargetType targetType, Long targetId);
 }

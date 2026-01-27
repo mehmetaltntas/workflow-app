@@ -403,6 +403,10 @@ export const boardMemberService = {
     const response = await apiClient.post<BoardMember>(`/boards/${boardId}/members/${memberId}/assignments`, data);
     return extractEntity<BoardMember>(response);
   },
+  createBulkAssignment: async (boardId: number, memberId: number, assignments: { targetType: string; targetId: number }[]): Promise<BoardMember> => {
+    const response = await apiClient.post<BoardMember>(`/boards/${boardId}/members/${memberId}/assignments/bulk`, { assignments });
+    return extractEntity<BoardMember>(response);
+  },
   removeAssignment: async (boardId: number, memberId: number, assignmentId: number): Promise<void> => {
     await apiClient.delete(`/boards/${boardId}/members/${memberId}/assignments/${assignmentId}`);
   },
@@ -413,13 +417,9 @@ export const boardMemberService = {
   rejectInvitation: async (memberId: number): Promise<void> => {
     await apiClient.put(`/board-members/invitations/${memberId}/reject`);
   },
-  toggleListComplete: async (listId: number): Promise<TaskList> => {
-    const response = await apiClient.patch<TaskList>(`/lists/${listId}/toggle`);
-    return extractEntity<TaskList>(response);
-  },
-  toggleTaskComplete: async (taskId: number): Promise<Task> => {
-    const response = await apiClient.patch<Task>(`/tasks/${taskId}/toggle`);
-    return extractEntity<Task>(response);
+  getPendingInvitations: async (): Promise<BoardMember[]> => {
+    const response = await apiClient.get<PagedResponse<BoardMember>>("/board-members/invitations");
+    return extractCollection<BoardMember>(response);
   },
 };
 

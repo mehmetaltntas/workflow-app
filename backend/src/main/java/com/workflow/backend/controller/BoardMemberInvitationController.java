@@ -11,8 +11,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/board-members/invitations")
@@ -23,6 +27,20 @@ public class BoardMemberInvitationController {
 
     private final BoardMemberService boardMemberService;
     private final BoardMemberModelAssembler boardMemberAssembler;
+
+    @Operation(summary = "Bekleyen davetleri getir", description = "Giriş yapan kullanıcının bekleyen pano üyelik davetlerini listeler")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Bekleyen davetler getirildi"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli")
+    })
+    @GetMapping
+    public ResponseEntity<CollectionModel<BoardMemberModel>> getPendingInvitations() {
+        List<BoardMemberDto> pendingInvitations = boardMemberService.getPendingInvitations();
+        List<BoardMemberModel> models = pendingInvitations.stream()
+                .map(boardMemberAssembler::toModel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(CollectionModel.of(models));
+    }
 
     @Operation(summary = "Daveti kabul et", description = "Pano üyelik davetini kabul eder")
     @ApiResponses(value = {

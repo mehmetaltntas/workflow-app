@@ -63,6 +63,28 @@ export const useCreateAssignment = (boardId: number, slug: string) => {
   });
 };
 
+export const useCreateBulkAssignment = (boardId: number, slug: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ memberId, assignments }: { memberId: number; assignments: { targetType: string; targetId: number }[] }) =>
+      boardMemberService.createBulkAssignment(boardId, memberId, assignments),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.boardMembers.list(boardId) });
+      toast.success('Toplu atama yapıldı');
+    },
+    onError: (error) => {
+      const err = error as { response?: { status?: number; data?: string } };
+      if (err.response?.status === 409) {
+        toast.error('Bazı atamalar zaten mevcut');
+      } else {
+        toast.error(err.response?.data || 'Toplu atama yapılamadı');
+      }
+    },
+  });
+};
+
 export const useRemoveAssignment = (boardId: number, slug: string) => {
   const queryClient = useQueryClient();
 
