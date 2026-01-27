@@ -262,9 +262,7 @@ const BoardStatusPage = () => {
               flexDirection: viewMode === 'list' ? "column" : undefined,
               gridTemplateColumns: viewMode === 'grid'
                 ? "repeat(auto-fill, minmax(280px, 1fr))"
-                : viewMode === 'compact'
-                  ? "repeat(auto-fill, minmax(220px, 1fr))"
-                  : undefined,
+                : undefined,
               gap: viewMode === 'list' ? spacing[2] : spacing[4],
             }}
           >

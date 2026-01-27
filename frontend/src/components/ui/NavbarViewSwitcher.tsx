@@ -1,8 +1,8 @@
 import React from "react";
-import { LayoutGrid, List, Columns } from "lucide-react";
+import { LayoutGrid, List } from "lucide-react";
 import { cssVars, spacing, radius, animation, colors } from "../../styles/tokens";
 
-export type ViewMode = 'grid' | 'list' | 'compact';
+export type ViewMode = 'grid' | 'list';
 
 interface NavbarViewSwitcherProps {
   value: ViewMode;
@@ -12,7 +12,6 @@ interface NavbarViewSwitcherProps {
 const viewOptions: { value: ViewMode; icon: React.ReactNode; label: string }[] = [
   { value: 'grid', icon: <LayoutGrid size={16} />, label: 'Izgara' },
   { value: 'list', icon: <List size={16} />, label: 'Liste' },
-  { value: 'compact', icon: <Columns size={16} />, label: 'Kompakt' },
 ];
 
 export const NavbarViewSwitcher: React.FC<NavbarViewSwitcherProps> = ({ value, onChange }) => {

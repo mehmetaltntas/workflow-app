@@ -8,6 +8,7 @@ import {
   Pin,
   Sparkles,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
@@ -382,9 +383,7 @@ const HomePage = () => {
                     flexDirection: viewMode === 'list' ? "column" : undefined,
                     gridTemplateColumns: viewMode === 'grid'
                       ? "repeat(auto-fill, minmax(280px, 1fr))"
-                      : viewMode === 'compact'
-                        ? "repeat(auto-fill, minmax(220px, 1fr))"
-                        : undefined,
+                      : undefined,
                     gap: viewMode === 'list' ? spacing[2] : spacing[4],
                   }}
                 >
@@ -437,6 +436,39 @@ const HomePage = () => {
                   }}>
                     {sortedUnpinnedBoards.length}
                   </span>
+
+                  {/* Tümünü Gör linki - 15+ pano varsa göster */}
+                  {sortedUnpinnedBoards.length >= 15 && (
+                    <button
+                      onClick={() => navigate('/boards/status/devam-ediyor')}
+                      style={{
+                        marginLeft: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: spacing[1.5],
+                        padding: `${spacing[1.5]} ${spacing[3]}`,
+                        borderRadius: radius.lg,
+                        border: `1px solid ${colors.status.inProgress}30`,
+                        background: `${colors.status.inProgress}10`,
+                        color: colors.status.inProgress,
+                        cursor: "pointer",
+                        transition: `all ${animation.duration.normal}`,
+                        fontWeight: typography.fontWeight.semibold,
+                        fontSize: typography.fontSize.sm,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = `${colors.status.inProgress}20`;
+                        e.currentTarget.style.borderColor = `${colors.status.inProgress}50`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = `${colors.status.inProgress}10`;
+                        e.currentTarget.style.borderColor = `${colors.status.inProgress}30`;
+                      }}
+                    >
+                      Tümünü Gör ({sortedUnpinnedBoards.length})
+                      <ArrowRight size={16} />
+                    </button>
+                  )}
                 </div>
 
                 {/* Cards */}
@@ -446,9 +478,7 @@ const HomePage = () => {
                     flexDirection: viewMode === 'list' ? "column" : undefined,
                     gridTemplateColumns: viewMode === 'grid'
                       ? "repeat(auto-fill, minmax(280px, 1fr))"
-                      : viewMode === 'compact'
-                        ? "repeat(auto-fill, minmax(220px, 1fr))"
-                        : undefined,
+                      : undefined,
                     gap: viewMode === 'list' ? spacing[2] : spacing[4],
                   }}
                 >

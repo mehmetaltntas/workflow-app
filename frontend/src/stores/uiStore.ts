@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type ViewMode = 'grid' | 'list' | 'compact';
+export type ViewMode = 'grid' | 'list';
 export type SortField = 'alphabetic' | 'date' | 'deadline';
 export type SortDirection = 'asc' | 'desc';
 
@@ -47,7 +47,7 @@ interface UIState {
   unpinBoard: (boardId: number) => void;
 }
 
-export const MAX_PINNED_BOARDS = 4;
+export const MAX_PINNED_BOARDS = 5;
 
 export const useUIStore = create<UIState>()(
   persist(
