@@ -341,6 +341,7 @@ const HomePage = () => {
                         onEdit={() => {}}
                         onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })}
                         viewMode={viewMode === 'list' ? 'list' : 'grid'}
+                        accentColor={colors.assigned.primary}
                       />
                     </div>
                   ))}
