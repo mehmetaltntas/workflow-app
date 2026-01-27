@@ -39,6 +39,10 @@ public class BoardMember {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private BoardMemberStatus status = BoardMemberStatus.ACCEPTED;
+
     @OneToMany(mappedBy = "boardMember", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 20)
     private List<BoardMemberAssignment> assignments = new ArrayList<>();

@@ -129,6 +129,20 @@ public class BoardController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @Operation(summary = "Atandığım panoları getir", description = "Kullanıcının sorumlu olarak atandığı panoları getirir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Atandığım panolar başarıyla getirildi"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli")
+    })
+    @GetMapping("/assigned")
+    public ResponseEntity<List<BoardModel>> getAssignedBoards() {
+        List<BoardResponse> boards = boardService.getAssignedBoards();
+        List<BoardModel> models = boards.stream()
+                .map(boardAssembler::toModel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(models);
+    }
+
     @Operation(summary = "Pano detaylarını getir", description = "Slug ile belirtilen panonun tüm detaylarını (listeler, görevler, etiketler) getirir")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pano detayları başarıyla getirildi",

@@ -181,6 +181,10 @@ export const boardService = {
     });
     return extractEntity<Board>(response);
   },
+  getAssignedBoards: async (): Promise<Board[]> => {
+    const response = await apiClient.get<Board[]>("/boards/assigned");
+    return response.data;
+  },
 };
 
 // 5. Görev ve Liste İşlemleri
@@ -397,6 +401,13 @@ export const boardMemberService = {
   },
   removeAssignment: async (boardId: number, memberId: number, assignmentId: number): Promise<void> => {
     await apiClient.delete(`/boards/${boardId}/members/${memberId}/assignments/${assignmentId}`);
+  },
+  acceptInvitation: async (memberId: number): Promise<BoardMember> => {
+    const response = await apiClient.put<BoardMember>(`/board-members/invitations/${memberId}/accept`);
+    return extractEntity<BoardMember>(response);
+  },
+  rejectInvitation: async (memberId: number): Promise<void> => {
+    await apiClient.put(`/board-members/invitations/${memberId}/reject`);
   },
   toggleListComplete: async (listId: number): Promise<TaskList> => {
     const response = await apiClient.patch<TaskList>(`/lists/${listId}/toggle`);

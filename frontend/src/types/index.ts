@@ -108,6 +108,7 @@ export interface BoardMember extends HateoasModel {
   userId: number;
   username: string;
   profilePicture?: string | null;
+  status?: 'PENDING' | 'ACCEPTED';
   createdAt: string;
   assignments?: BoardMemberAssignment[];
 }
@@ -142,7 +143,7 @@ export interface User extends HateoasModel {
 export type ConnectionStatus = 'PENDING' | 'PENDING_RECEIVED' | 'ACCEPTED' | 'REJECTED' | 'SELF' | null;
 
 // Bildirim tipi
-export type NotificationType = 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED';
+export type NotificationType = 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED' | 'BOARD_MEMBER_INVITATION' | 'BOARD_MEMBER_ACCEPTED';
 
 // Kullanici arama sonucu
 export interface UserSearchResult extends HateoasModel {

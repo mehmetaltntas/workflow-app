@@ -118,10 +118,10 @@ public class BoardService {
         Board board = boardRepository.findBySlugWithUser(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Pano", "slug", slug));
 
-        // Pano sahibi VEYA üye erişebilir
+        // Pano sahibi VEYA kabul edilmiş üye erişebilir
         Long currentUserId = currentUserService.getCurrentUserId();
         boolean isOwner = board.getUser().getId().equals(currentUserId);
-        boolean isMember = !isOwner && boardMemberRepository.existsByBoardIdAndUserId(board.getId(), currentUserId);
+        boolean isMember = !isOwner && boardMemberRepository.existsAcceptedByBoardIdAndUserId(board.getId(), currentUserId);
 
         if (!isOwner && !isMember) {
             authorizationService.verifyBoardOwnership(board.getId()); // Bu exception fırlatır
@@ -149,8 +149,8 @@ public class BoardService {
         response.setCreatedAt(board.getCreatedAt());
         response.setOwnerName(board.getUser().getUsername()); // User zaten JOIN FETCH ile yüklendi
 
-        // Board Members
-        List<BoardMember> boardMembers = boardMemberRepository.findByBoardIdWithUser(board.getId());
+        // Board Members (sadece ACCEPTED)
+        List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(board.getId());
         if (boardMembers != null && !boardMembers.isEmpty()) {
             List<BoardMemberDto> memberDtos = boardMembers.stream().map(member -> {
                 BoardMemberDto memberDto = new BoardMemberDto();
@@ -301,6 +301,14 @@ public class BoardService {
         // Detay sayfası için getBoardDetails() ve mapToResponseOptimized() kullanılır
 
         return response;
+    }
+
+    // Kullanıcının sorumlu olarak atandığı panoları getir
+    @Transactional
+    public List<BoardResponse> getAssignedBoards() {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<Board> boards = boardMemberRepository.findAcceptedBoardsByUserId(currentUserId);
+        return boards.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     // PANO SİL

@@ -17,6 +17,7 @@ export const queryKeys = {
     all: ['boards'] as const,
     list: (userId: number) => ['boards', 'list', userId] as const,
     detail: (slug: string) => ['boards', 'detail', slug] as const,
+    assigned: ['boards', 'assigned'] as const,
   },
   profile: {
     stats: (userId: number) => ['profile', 'stats', userId] as const,

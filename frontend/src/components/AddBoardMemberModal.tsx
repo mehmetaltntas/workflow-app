@@ -278,7 +278,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                       }}
                     >
                       <UserPlus size={14} />
-                      Ekle
+                      Davet Et
                     </button>
                   </div>
                 );

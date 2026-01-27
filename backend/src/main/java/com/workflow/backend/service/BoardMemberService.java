@@ -29,8 +29,10 @@ public class BoardMemberService {
     private final TaskRepository taskRepository;
     private final SubtaskRepository subtaskRepository;
     private final UserProfilePictureRepository profilePictureRepository;
+    private final NotificationRepository notificationRepository;
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
+    private final NotificationService notificationService;
 
     // Üye ekle
     @Transactional
@@ -63,8 +65,15 @@ public class BoardMemberService {
         BoardMember member = new BoardMember();
         member.setBoard(board);
         member.setUser(user);
+        member.setStatus(BoardMemberStatus.PENDING);
 
         BoardMember saved = boardMemberRepository.save(member);
+
+        // Davet bildirimi gönder
+        User currentUser = currentUserService.getCurrentUser();
+        String message = currentUser.getUsername() + " sizi \"" + board.getName() + "\" panosuna sorumlu kişi olarak davet etti.";
+        notificationService.createNotification(user, currentUser, NotificationType.BOARD_MEMBER_INVITATION, message, saved.getId());
+
         return mapToDto(saved);
     }
 
@@ -84,13 +93,13 @@ public class BoardMemberService {
         boardMemberRepository.delete(member);
     }
 
-    // Pano üyelerini getir
+    // Pano üyelerini getir (sadece ACCEPTED)
     @Transactional(readOnly = true)
     public List<BoardMemberDto> getMembers(Long boardId) {
         // Pano sahibi veya üye görebilir
         verifyBoardOwnerOrMember(boardId);
 
-        List<BoardMember> members = boardMemberRepository.findByBoardIdWithUser(boardId);
+        List<BoardMember> members = boardMemberRepository.findAcceptedByBoardIdWithUser(boardId);
         return members.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
@@ -200,8 +209,8 @@ public class BoardMemberService {
         if (boardRepository.existsByIdAndUserId(boardId, currentUserId)) {
             return; // Pano sahibi
         }
-        if (boardMemberRepository.existsByBoardIdAndUserId(boardId, currentUserId)) {
-            return; // Pano üyesi
+        if (boardMemberRepository.existsAcceptedByBoardIdAndUserId(boardId, currentUserId)) {
+            return; // Kabul edilmiş pano üyesi
         }
         throw new UnauthorizedAccessException("pano", boardId);
     }
@@ -212,7 +221,7 @@ public class BoardMemberService {
         if (boardRepository.existsByIdAndUserId(boardId, currentUserId)) {
             return; // Pano sahibi
         }
-        if (boardMemberRepository.existsByBoardIdAndUserId(boardId, currentUserId)
+        if (boardMemberRepository.existsAcceptedByBoardIdAndUserId(boardId, currentUserId)
                 && isUserAssignedToTarget(currentUserId, boardId, targetType, targetId)) {
             return; // Atanmış üye
         }
@@ -246,6 +255,52 @@ public class BoardMemberService {
         }
     }
 
+    // Daveti kabul et
+    @Transactional
+    public BoardMemberDto acceptMemberInvitation(Long memberId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        BoardMember member = boardMemberRepository.findPendingById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Davet", "id", memberId));
+
+        // Sadece davet edilen kişi kabul edebilir
+        if (!member.getUser().getId().equals(currentUserId)) {
+            throw new UnauthorizedAccessException("davet", memberId);
+        }
+
+        member.setStatus(BoardMemberStatus.ACCEPTED);
+        BoardMember saved = boardMemberRepository.save(member);
+
+        // Davet bildirimini sil
+        notificationRepository.deleteByReferenceIdAndType(memberId, NotificationType.BOARD_MEMBER_INVITATION);
+
+        // Pano sahibine kabul bildirimi gönder
+        User currentUser = currentUserService.getCurrentUser();
+        User boardOwner = member.getBoard().getUser();
+        String message = currentUser.getUsername() + " \"" + member.getBoard().getName() + "\" panosuna sorumlu kişi davetini kabul etti.";
+        notificationService.createNotification(boardOwner, currentUser, NotificationType.BOARD_MEMBER_ACCEPTED, message, saved.getId());
+
+        return mapToDto(saved);
+    }
+
+    // Daveti reddet
+    @Transactional
+    public void rejectMemberInvitation(Long memberId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        BoardMember member = boardMemberRepository.findPendingById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Davet", "id", memberId));
+
+        // Sadece davet edilen kişi reddedebilir
+        if (!member.getUser().getId().equals(currentUserId)) {
+            throw new UnauthorizedAccessException("davet", memberId);
+        }
+
+        // Davet bildirimini sil
+        notificationRepository.deleteByReferenceIdAndType(memberId, NotificationType.BOARD_MEMBER_INVITATION);
+
+        // BoardMember kaydını sil
+        boardMemberRepository.delete(member);
+    }
+
     // Entity -> DTO
     private BoardMemberDto mapToDto(BoardMember member) {
         BoardMemberDto dto = new BoardMemberDto();
@@ -254,6 +309,7 @@ public class BoardMemberService {
         dto.setUsername(member.getUser().getUsername());
         dto.setProfilePicture(
                 profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
+        dto.setStatus(member.getStatus().name());
         dto.setCreatedAt(member.getCreatedAt());
 
         if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {

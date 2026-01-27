@@ -11,7 +11,7 @@ export const useAddBoardMember = (boardId: number, slug: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
       queryClient.invalidateQueries({ queryKey: queryKeys.boardMembers.list(boardId) });
-      toast.success('Üye eklendi');
+      toast.success('Davet gönderildi');
     },
     onError: (error) => {
       const err = error as { response?: { status?: number; data?: string } };

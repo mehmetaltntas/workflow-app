@@ -1,11 +1,9 @@
 package com.workflow.backend.service;
 
 import com.workflow.backend.dto.NotificationResponse;
-import com.workflow.backend.entity.ConnectionStatus;
-import com.workflow.backend.entity.Notification;
-import com.workflow.backend.entity.NotificationType;
-import com.workflow.backend.entity.User;
+import com.workflow.backend.entity.*;
 import com.workflow.backend.exception.ResourceNotFoundException;
+import com.workflow.backend.repository.BoardMemberRepository;
 import com.workflow.backend.repository.ConnectionRepository;
 import com.workflow.backend.repository.NotificationRepository;
 import com.workflow.backend.repository.UserProfilePictureRepository;
@@ -27,6 +25,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final ConnectionRepository connectionRepository;
+    private final BoardMemberRepository boardMemberRepository;
     private final UserProfilePictureRepository profilePictureRepository;
     private final CurrentUserService currentUserService;
 
@@ -60,6 +59,28 @@ public class NotificationService {
                     .filter(n -> {
                         if (n.getType() == NotificationType.CONNECTION_REQUEST && n.getReferenceId() != null) {
                             return pendingConnectionIds.contains(n.getReferenceId());
+                        }
+                        return true;
+                    })
+                    .toList();
+        }
+
+        // PENDING olmayan board member davet bildirimlerini filtrele
+        List<Long> boardMemberInvitationRefIds = notifications.stream()
+                .filter(n -> n.getType() == NotificationType.BOARD_MEMBER_INVITATION && n.getReferenceId() != null)
+                .map(Notification::getReferenceId)
+                .toList();
+
+        if (!boardMemberInvitationRefIds.isEmpty()) {
+            Set<Long> pendingMemberIds = boardMemberRepository.findAllById(boardMemberInvitationRefIds).stream()
+                    .filter(bm -> bm.getStatus() == BoardMemberStatus.PENDING)
+                    .map(BoardMember::getId)
+                    .collect(Collectors.toSet());
+
+            notifications = notifications.stream()
+                    .filter(n -> {
+                        if (n.getType() == NotificationType.BOARD_MEMBER_INVITATION && n.getReferenceId() != null) {
+                            return pendingMemberIds.contains(n.getReferenceId());
                         }
                         return true;
                     })
@@ -105,6 +126,8 @@ public class NotificationService {
     public void cleanupStaleNotifications() {
         notificationRepository.deleteStaleConnectionRequestNotifications();
         log.info("Eski CONNECTION_REQUEST bildirimleri temizlendi");
+        notificationRepository.deleteStaleBoardMemberInvitationNotifications();
+        log.info("Eski BOARD_MEMBER_INVITATION bildirimleri temizlendi");
     }
 
     private NotificationResponse mapToResponse(Notification notification) {

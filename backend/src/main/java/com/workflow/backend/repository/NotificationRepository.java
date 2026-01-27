@@ -30,4 +30,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             "AND n.referenceId IS NOT NULL " +
             "AND n.referenceId NOT IN (SELECT c.id FROM Connection c WHERE c.status = 'PENDING')")
     void deleteStaleConnectionRequestNotifications();
+
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.type = 'BOARD_MEMBER_INVITATION' " +
+            "AND n.referenceId IS NOT NULL " +
+            "AND n.referenceId NOT IN (SELECT bm.id FROM BoardMember bm WHERE bm.status = 'PENDING')")
+    void deleteStaleBoardMemberInvitationNotifications();
 }

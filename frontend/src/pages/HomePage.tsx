@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
+import { useAssignedBoardsQuery } from "../hooks/queries/useAssignedBoards";
 import { useTheme } from "../contexts/ThemeContext";
 import {
   Home,
@@ -9,6 +10,7 @@ import {
   Sparkles,
   Clock,
   ArrowRight,
+  Users,
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
@@ -23,6 +25,7 @@ import "./HomePage.css";
 const HomePage = () => {
   const navigate = useNavigate();
   const { data: boards = [], isLoading: loading } = useBoardsQuery();
+  const { data: assignedBoards = [], isLoading: assignedLoading } = useAssignedBoardsQuery();
   const updateBoardMutation = useUpdateBoard();
   const deleteBoardMutation = useDeleteBoard();
   const { theme } = useTheme();
@@ -50,6 +53,12 @@ const HomePage = () => {
   const activeBoards = useMemo(() =>
     boards.filter((b) => b.status === "DEVAM_EDIYOR"),
     [boards]
+  );
+
+  // Atandigim panolardan sadece "DEVAM_EDIYOR" olanlari filtrele
+  const activeAssignedBoards = useMemo(() =>
+    assignedBoards.filter((b) => b.status === "DEVAM_EDIYOR"),
+    [assignedBoards]
   );
 
   // Pinned ve unpinned boards'u ayir
@@ -140,7 +149,7 @@ const HomePage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || assignedLoading) {
     return (
       <div className="home-page__loading">
         <h2>Yükleniyor...</h2>
@@ -232,7 +241,7 @@ const HomePage = () => {
         </div>
 
         {/* Content */}
-        {activeBoards.length > 0 ? (
+        {activeBoards.length > 0 || activeAssignedBoards.length > 0 ? (
           <div className="home-page__sections">
             {/* Pinned Boards Section */}
             {pinnedBoards.length > 0 && (
@@ -286,6 +295,44 @@ const HomePage = () => {
                 {/* Cards */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
                   {sortedUnpinnedBoards.map((board, index) => renderBoardCard(board, false, index, 1))}
+                </div>
+              </div>
+            )}
+
+            {/* Assigned Boards Section */}
+            {activeAssignedBoards.length > 0 && (
+              <div
+                className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}
+                style={{ transitionDelay: (pinnedBoards.length > 0 ? 100 : 0) + (sortedUnpinnedBoards.length > 0 ? 100 : 0) + "ms" }}
+              >
+                {/* Section Header */}
+                <div className="home-page__section-header">
+                  <div className="home-page__section-icon home-page__section-icon--assigned">
+                    <Users size={16} color={colors.semantic.success} />
+                  </div>
+                  <h2 className="home-page__section-title">Atandığım Panolar</h2>
+                  <span className="home-page__section-count home-page__section-count--default">
+                    {activeAssignedBoards.length}
+                  </span>
+                </div>
+
+                {/* Assigned Cards */}
+                <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
+                  {activeAssignedBoards.map((board, index) => (
+                    <div
+                      key={board.id}
+                      className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
+                      style={{ transitionDelay: `${(2 * 100) + (index * 50)}ms` }}
+                    >
+                      <BoardCard
+                        board={board}
+                        onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
+                        onEdit={() => {}}
+                        onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })}
+                        viewMode={viewMode === 'list' ? 'list' : 'grid'}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
