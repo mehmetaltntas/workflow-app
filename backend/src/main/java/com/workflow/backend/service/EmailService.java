@@ -32,6 +32,39 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendRegistrationVerificationCode(String toEmail, String code) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("WorkFlow - Kayit Dogrulama Kodu");
+            message.setText(buildRegistrationVerificationEmailBody(code));
+
+            mailSender.send(message);
+            logger.info("Kayit dogrulama kodu {} adresine gonderildi", toEmail);
+        } catch (Exception e) {
+            logger.error("Email gonderme hatasi: {} - {}", toEmail, e.getMessage());
+            throw new RuntimeException("Email gonderilemedi. Lutfen daha sonra tekrar deneyin.");
+        }
+    }
+
+    private String buildRegistrationVerificationEmailBody(String code) {
+        return String.format("""
+            Merhaba,
+
+            WorkFlow'a kayit oldugunuz icin tesekkurler!
+
+            Dogrulama kodunuz: %s
+
+            Bu kod 15 dakika icinde gecerliligini yitirecektir.
+
+            Eger bu talebi siz yapmadiyseniz, bu emaili gormezden gelebilirsiniz.
+
+            Saygilarimizla,
+            WorkFlow Ekibi
+            """, code);
+    }
+
     private String buildPasswordResetEmailBody(String code) {
         return String.format("""
             Merhaba,

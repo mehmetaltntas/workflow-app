@@ -5,6 +5,7 @@ import com.workflow.backend.dto.RegisterRequest;
 import com.workflow.backend.dto.UpdatePasswordRequest;
 import com.workflow.backend.dto.UpdateProfileRequest;
 import com.workflow.backend.dto.UserResponse;
+import com.workflow.backend.exception.InvalidVerificationCodeException;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.exception.DuplicateResourceException;
@@ -25,10 +26,16 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final AuthorizationService authorizationService;
+    private final EmailVerificationService emailVerificationService;
 
     // KULLANICI ADI MÜSAİTLİK KONTROLÜ
     public boolean isUsernameAvailable(String username) {
         return userRepository.findByUsername(username) == null;
+    }
+
+    // EMAIL MÜSAİTLİK KONTROLÜ
+    public boolean isEmailAvailable(String email) {
+        return userRepository.findByEmail(email) == null;
     }
 
     // KAYIT OLMA İŞLEMİ
@@ -43,7 +50,15 @@ public class UserService {
             throw new DuplicateResourceException("Email adresi", "email", request.getEmail());
         }
 
-        // 3. Entity Oluştur ve Verileri Aktar
+        // 3. Email dogrulama kodunu kontrol et
+        if (!emailVerificationService.verifyCode(request.getEmail(), request.getCode())) {
+            throw new InvalidVerificationCodeException("Geçersiz veya süresi dolmuş doğrulama kodu");
+        }
+
+        // Kodu kullanildi olarak isaretle
+        emailVerificationService.markCodeAsUsed(request.getEmail(), request.getCode());
+
+        // 4. Entity Oluştur ve Verileri Aktar
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());

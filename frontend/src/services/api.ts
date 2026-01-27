@@ -120,8 +120,11 @@ export const authService = {
   login: (data: { username: string; password: string }) => {
     return apiClient.post("/auth/login", data);
   },
-  register: (data: { username: string; email: string; password: string }) => {
+  register: (data: { username: string; email: string; password: string; code: string }) => {
     return apiClient.post("/auth/register", data);
+  },
+  sendRegistrationCode: (data: { username: string; email: string }) => {
+    return apiClient.post("/auth/register/send-code", data);
   },
   // Kullanıcı adı müsaitlik kontrolü
   checkUsername: (username: string) => {

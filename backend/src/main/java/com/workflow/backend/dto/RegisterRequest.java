@@ -28,4 +28,9 @@ public class RegisterRequest {
     @ValidPassword
     @Schema(description = "Şifre (en az 8 karakter, büyük/küçük harf, rakam ve özel karakter)", example = "Password123!", requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
+
+    @NotBlank(message = "Doğrulama kodu boş olamaz")
+    @Size(min = 6, max = 6, message = "Doğrulama kodu 6 haneli olmalıdır")
+    @Schema(description = "E-posta doğrulama kodu (6 haneli)", example = "123456", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String code;
 }

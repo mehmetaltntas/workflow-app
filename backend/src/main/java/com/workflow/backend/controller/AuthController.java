@@ -4,6 +4,7 @@ import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.security.JwtService;
+import com.workflow.backend.service.EmailVerificationService;
 import com.workflow.backend.service.GoogleAuthService;
 import com.workflow.backend.service.PasswordResetService;
 import com.workflow.backend.service.RefreshTokenService;
@@ -33,6 +34,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final PasswordResetService passwordResetService;
     private final GoogleAuthService googleAuthService;
+    private final EmailVerificationService emailVerificationService;
 
     @Operation(summary = "Kullanıcı adı müsaitlik kontrolü", description = "Verilen kullanıcı adının kullanılabilir olup olmadığını kontrol eder")
     @ApiResponses(value = {
@@ -44,6 +46,28 @@ public class AuthController {
             @RequestParam String username) {
         boolean available = userService.isUsernameAvailable(username);
         return ResponseEntity.ok(Map.of("available", available));
+    }
+
+    @Operation(summary = "Kayıt doğrulama kodu gönder", description = "Username/email müsaitlik kontrolü yapar ve e-posta adresine 6 haneli doğrulama kodu gönderir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Doğrulama kodu gönderildi"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz istek veya kullanıcı adı/email zaten kullanılıyor")
+    })
+    @PostMapping("/register/send-code")
+    public ResponseEntity<Map<String, String>> sendRegistrationCode(@Valid @RequestBody SendVerificationCodeRequest request) {
+        // Username musaitlik kontrolu
+        if (!userService.isUsernameAvailable(request.getUsername())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Bu kullanıcı adı zaten kullanılıyor"));
+        }
+
+        // Email musaitlik kontrolu
+        if (!userService.isEmailAvailable(request.getEmail())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Bu e-posta adresi zaten kullanılıyor"));
+        }
+
+        // Dogrulama kodu gonder
+        emailVerificationService.sendVerificationCode(request.getEmail());
+        return ResponseEntity.ok(Map.of("message", "Doğrulama kodu e-posta adresinize gönderildi"));
     }
 
     @Operation(summary = "Yeni kullanıcı kaydı", description = "Yeni bir kullanıcı hesabı oluşturur ve JWT token döner")

@@ -7,6 +7,8 @@ import { isValidEmail, getPasswordStrength, getUsernameError } from "../utils/va
 import { typography, spacing, radius, shadows, colors, animation } from '../styles/tokens';
 import { useAuthStore } from "../stores/authStore";
 
+type Step = "form" | "code";
+
 const RegisterPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -21,6 +23,10 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((state) => state.login);
+
+  const [step, setStep] = useState<Step>("form");
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const from = (location.state as { from?: string })?.from || "/home";
 
@@ -72,6 +78,13 @@ const RegisterPage = () => {
     };
   }, []);
 
+  // Kod inputlarina focus
+  useEffect(() => {
+    if (step === "code" && codeInputRefs.current[0]) {
+      codeInputRefs.current[0].focus();
+    }
+  }, [step]);
+
   const handleEmailChange = (value: string) => {
     setEmail(value);
     if (value && !isValidEmail(value)) {
@@ -81,7 +94,31 @@ const RegisterPage = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  // Kod inputu degisimi
+  const handleCodeChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newCode = [...code];
+    newCode[index] = value.slice(-1);
+    setCode(newCode);
+
+    if (value && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // Backspace ile onceki inputa don
+  const handleCodeKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
+      codeInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Step 1: Formu gonder, kod iste
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!username.trim() || !email.trim() || !password.trim()) {
@@ -112,10 +149,35 @@ const RegisterPage = () => {
 
     setIsLoading(true);
     try {
+      await authService.sendRegistrationCode({ username, email });
+      toast.success("Doğrulama kodu e-posta adresinize gönderildi");
+      setStep("code");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const message = error.response?.data?.message || "Bir hata oluştu. Lütfen tekrar deneyin.";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 2: Kodu dogrula ve kaydi tamamla
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const fullCode = code.join("");
+    if (fullCode.length !== 6) {
+      toast.error("6 haneli kodu eksiksiz giriniz");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
       const response = await authService.register({
         username,
         email,
         password,
+        code: fullCode,
       });
 
       login({
@@ -127,13 +189,28 @@ const RegisterPage = () => {
 
       toast.success("Kayıt başarılı!");
       navigate(from, { replace: true });
-    } catch {
-      toast.error("Kayıt başarısız! Kullanıcı adı veya e-posta alınmış olabilir.");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      const message = error.response?.data?.message || "Kayıt başarısız! Kod geçersiz veya süresi dolmuş olabilir.";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Tekrar kod gonder
+  const handleResendCode = async () => {
+    setIsLoading(true);
+    try {
+      await authService.sendRegistrationCode({ username, email });
+      setCode(["", "", "", "", "", ""]);
+      toast.success("Yeni doğrulama kodu gönderildi");
+    } catch {
+      toast.error("Kod gönderilemedi. Lütfen tekrar deneyin.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const inputStyle = {
     width: "100%",
@@ -251,7 +328,9 @@ const RegisterPage = () => {
             lineHeight: typography.lineHeight.relaxed,
           }}
         >
-          Ücretsiz hesap oluşturun ve projelerinizi yönetmeye hemen başlayın.
+          {step === "form"
+            ? "Ücretsiz hesap oluşturun ve projelerinizi yönetmeye hemen başlayın."
+            : `${email} adresine gönderilen doğrulama kodunu girin.`}
         </p>
 
         {/* Dekoratif Elementler */}
@@ -317,6 +396,32 @@ const RegisterPage = () => {
             }}
           />
 
+          {/* Adim Gostergesi */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: spacing[3],
+              marginBottom: spacing[6],
+            }}
+          >
+            {["form", "code"].map((s) => (
+              <div
+                key={s}
+                style={{
+                  width: spacing[10],
+                  height: spacing[1],
+                  borderRadius: radius.sm,
+                  background:
+                    s === step || (s === "form" && step === "code")
+                      ? `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`
+                      : colors.dark.border.default,
+                  transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
+                }}
+              />
+            ))}
+          </div>
+
           <h2
             style={{
               fontSize: typography.fontSize["4xl"],
@@ -326,7 +431,7 @@ const RegisterPage = () => {
               textAlign: "center",
             }}
           >
-            Hesap Oluştur
+            {step === "form" ? "Hesap Oluştur" : "Kodu Doğrulayın"}
           </h2>
           <p
             style={{
@@ -336,270 +441,429 @@ const RegisterPage = () => {
               textAlign: "center",
             }}
           >
-            Ücretsiz kayıt olun
+            {step === "form"
+              ? "Ücretsiz kayıt olun"
+              : `${email} adresine gönderilen 6 haneli kodu girin.`}
           </p>
 
-          {/* Form */}
-          <form
-            onSubmit={handleRegister}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: spacing[5],
-            }}
-          >
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.dark.text.secondary,
-                  marginBottom: spacing[2],
-                }}
-              >
-                Kullanıcı Adı
-              </label>
-              <input
-                type="text"
-                placeholder="Kullanıcı Adı"
-                value={username}
-                onChange={(e) => handleUsernameChange(e.target.value)}
-                maxLength={30}
-                style={{
-                  ...inputStyle,
-                  borderColor: usernameError
-                    ? colors.semantic.danger
-                    : usernameAvailable === true
-                    ? colors.semantic.success
-                    : colors.dark.border.default,
-                }}
-                onFocus={(e) => {
-                  if (!usernameError) {
-                    e.currentTarget.style.borderColor = usernameAvailable === true ? colors.semantic.success : colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                  }
-                  e.currentTarget.style.background = colors.dark.bg.input;
-                }}
-                onBlur={(e) => {
-                  if (!usernameError && usernameAvailable !== true) {
-                    e.currentTarget.style.borderColor = colors.dark.border.default;
-                  }
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.background = colors.dark.bg.secondary;
-                }}
-              />
-              {username && (
-                <div style={{ marginTop: spacing[1], fontSize: typography.fontSize.md }}>
-                  {checkingUsername && (
-                    <span style={{ color: colors.dark.text.tertiary }}>Kontrol ediliyor...</span>
-                  )}
-                  {usernameError && (
-                    <span style={{ color: colors.semantic.danger }}>{usernameError}</span>
-                  )}
-                  {!usernameError && !checkingUsername && usernameAvailable === true && (
-                    <span style={{ color: colors.semantic.success }}>Kullanıcı adı müsait</span>
-                  )}
-                </div>
-              )}
-              {!username && (
-                <p style={{ fontSize: typography.fontSize.sm, color: colors.dark.text.tertiary, marginTop: spacing[1] }}>
-                  3-30 karakter. Harf, rakam, nokta (.) ve alt tire (_) kullanılabilir.
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.dark.text.secondary,
-                  marginBottom: spacing[2],
-                }}
-              >
-                E-posta
-              </label>
-              <input
-                type="email"
-                placeholder="ornek@eposta.com"
-                value={email}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                style={{
-                  ...inputStyle,
-                  borderColor: emailError ? colors.semantic.danger : colors.dark.border.default,
-                }}
-                onFocus={(e) => {
-                  if (!emailError) {
-                    e.currentTarget.style.borderColor = colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                  }
-                  e.currentTarget.style.background = colors.dark.bg.input;
-                }}
-                onBlur={(e) => {
-                  if (!emailError) {
-                    e.currentTarget.style.borderColor = colors.dark.border.default;
-                  }
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.background = colors.dark.bg.secondary;
-                }}
-              />
-              {emailError && (
-                <p style={{ fontSize: typography.fontSize.md, color: colors.semantic.danger, marginTop: spacing[1] }}>
-                  {emailError}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.dark.text.secondary,
-                  marginBottom: spacing[2],
-                }}
-              >
-                Şifre
-              </label>
-              <div style={{ position: "relative" }}>
+          {/* Step: Form */}
+          {step === "form" && (
+            <form
+              onSubmit={handleSendCode}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: spacing[5],
+              }}
+            >
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.dark.text.secondary,
+                    marginBottom: spacing[2],
+                  }}
+                >
+                  Kullanıcı Adı
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="En az 8 karakter"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="text"
+                  placeholder="Kullanıcı Adı"
+                  value={username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  maxLength={30}
                   style={{
                     ...inputStyle,
-                    paddingRight: spacing[12],
+                    borderColor: usernameError
+                      ? colors.semantic.danger
+                      : usernameAvailable === true
+                      ? colors.semantic.success
+                      : colors.dark.border.default,
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                    if (!usernameError) {
+                      e.currentTarget.style.borderColor = usernameAvailable === true ? colors.semantic.success : colors.brand.primary;
+                      e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                    }
                     e.currentTarget.style.background = colors.dark.bg.input;
                   }}
                   onBlur={(e) => {
-                    e.currentTarget.style.borderColor = colors.dark.border.default;
+                    if (!usernameError && usernameAvailable !== true) {
+                      e.currentTarget.style.borderColor = colors.dark.border.default;
+                    }
                     e.currentTarget.style.boxShadow = "none";
                     e.currentTarget.style.background = colors.dark.bg.secondary;
                   }}
                 />
+                {username && (
+                  <div style={{ marginTop: spacing[1], fontSize: typography.fontSize.md }}>
+                    {checkingUsername && (
+                      <span style={{ color: colors.dark.text.tertiary }}>Kontrol ediliyor...</span>
+                    )}
+                    {usernameError && (
+                      <span style={{ color: colors.semantic.danger }}>{usernameError}</span>
+                    )}
+                    {!usernameError && !checkingUsername && usernameAvailable === true && (
+                      <span style={{ color: colors.semantic.success }}>Kullanıcı adı müsait</span>
+                    )}
+                  </div>
+                )}
+                {!username && (
+                  <p style={{ fontSize: typography.fontSize.sm, color: colors.dark.text.tertiary, marginTop: spacing[1] }}>
+                    3-30 karakter. Harf, rakam, nokta (.) ve alt tire (_) kullanılabilir.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.dark.text.secondary,
+                    marginBottom: spacing[2],
+                  }}
+                >
+                  E-posta
+                </label>
+                <input
+                  type="email"
+                  placeholder="ornek@eposta.com"
+                  value={email}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  style={{
+                    ...inputStyle,
+                    borderColor: emailError ? colors.semantic.danger : colors.dark.border.default,
+                  }}
+                  onFocus={(e) => {
+                    if (!emailError) {
+                      e.currentTarget.style.borderColor = colors.brand.primary;
+                      e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                    }
+                    e.currentTarget.style.background = colors.dark.bg.input;
+                  }}
+                  onBlur={(e) => {
+                    if (!emailError) {
+                      e.currentTarget.style.borderColor = colors.dark.border.default;
+                    }
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.background = colors.dark.bg.secondary;
+                  }}
+                />
+                {emailError && (
+                  <p style={{ fontSize: typography.fontSize.md, color: colors.semantic.danger, marginTop: spacing[1] }}>
+                    {emailError}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: typography.fontSize.lg,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.dark.text.secondary,
+                    marginBottom: spacing[2],
+                  }}
+                >
+                  Şifre
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="En az 8 karakter"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{
+                      ...inputStyle,
+                      paddingRight: spacing[12],
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = colors.brand.primary;
+                      e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                      e.currentTarget.style.background = colors.dark.bg.input;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.dark.border.default;
+                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.background = colors.dark.bg.secondary;
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: spacing[3],
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: colors.dark.text.tertiary,
+                      cursor: "pointer",
+                      padding: spacing[1],
+                      transition: `color ${animation.duration.fast}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = colors.dark.text.secondary;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = colors.dark.text.tertiary;
+                    }}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                {/* Sifre Guc Gostergesi */}
+                {password && (
+                  <div style={{ marginTop: spacing[2] }}>
+                    <div
+                      style={{
+                        height: spacing[1],
+                        borderRadius: radius.sm,
+                        background: colors.dark.border.default,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${(passwordStrength.score / 6) * 100}%`,
+                          height: "100%",
+                          background: passwordStrength.color,
+                          transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: typography.fontSize.md, color: passwordStrength.color }}>
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  width: "100%",
+                  padding: spacing[3.5],
+                  borderRadius: radius.md,
+                  border: "none",
+                  background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
+                  color: colors.dark.text.primary,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.7 : 1,
+                  transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: spacing[2],
+                  boxShadow: `0 4px 16px ${colors.brand.primary}30`,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${colors.brand.primary}40`;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = `0 4px 16px ${colors.brand.primary}30`;
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      style={{ animation: "spin 1s linear infinite" }}
+                    >
+                      <path d="M21 12a9 9 0 11-6.219-8.56" />
+                    </svg>
+                    Gönderiliyor...
+                  </>
+                ) : (
+                  "Kayıt Ol"
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Step: Code Verification */}
+          {step === "code" && (
+            <form
+              onSubmit={handleVerifyAndRegister}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: spacing[5],
+              }}
+            >
+              <div style={{ display: "flex", gap: spacing[2], justifyContent: "center" }}>
+                {code.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { codeInputRefs.current[index] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleCodeChange(index, e.target.value)}
+                    onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                    style={{
+                      width: spacing[12],
+                      height: spacing[14],
+                      textAlign: "center",
+                      fontSize: typography.fontSize["4xl"],
+                      fontWeight: typography.fontWeight.semibold,
+                      borderRadius: radius.md,
+                      border: `1px solid ${colors.dark.border.default}`,
+                      background: colors.dark.bg.secondary,
+                      color: colors.dark.text.primary,
+                      outline: "none",
+                      transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = colors.brand.primary;
+                      e.currentTarget.style.boxShadow = shadows.focusPrimary;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = colors.dark.border.default;
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  width: "100%",
+                  padding: spacing[3.5],
+                  borderRadius: radius.md,
+                  border: "none",
+                  background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
+                  color: colors.dark.text.primary,
+                  fontSize: typography.fontSize.xl,
+                  fontWeight: typography.fontWeight.semibold,
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.7 : 1,
+                  transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: spacing[2],
+                  boxShadow: `0 4px 16px ${colors.brand.primary}30`,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading) {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${colors.brand.primary}40`;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = `0 4px 16px ${colors.brand.primary}30`;
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      style={{ animation: "spin 1s linear infinite" }}
+                    >
+                      <path d="M21 12a9 9 0 11-6.219-8.56" />
+                    </svg>
+                    Doğrulanıyor...
+                  </>
+                ) : (
+                  "Doğrula ve Kayıt Ol"
+                )}
+              </button>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: spacing[4],
+                }}
+              >
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={handleResendCode}
+                  disabled={isLoading}
                   style={{
-                    position: "absolute",
-                    right: spacing[3],
-                    top: "50%",
-                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: colors.brand.primary,
+                    fontSize: typography.fontSize.lg,
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    fontWeight: typography.fontWeight.medium,
+                    transition: `opacity ${animation.duration.fast}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
+                >
+                  Tekrar Gönder
+                </button>
+                <span style={{ color: colors.dark.text.tertiary }}>|</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("form");
+                    setCode(["", "", "", "", "", ""]);
+                  }}
+                  style={{
                     background: "none",
                     border: "none",
                     color: colors.dark.text.tertiary,
+                    fontSize: typography.fontSize.lg,
                     cursor: "pointer",
-                    padding: spacing[1],
-                    transition: `color ${animation.duration.fast}`,
+                    transition: `opacity ${animation.duration.fast}`,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = colors.dark.text.secondary;
+                    e.currentTarget.style.opacity = "0.8";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = colors.dark.text.tertiary;
+                    e.currentTarget.style.opacity = "1";
                   }}
                 >
-                  {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
+                  Geri Dön
                 </button>
               </div>
-
-              {/* Sifre Guc Gostergesi */}
-              {password && (
-                <div style={{ marginTop: spacing[2] }}>
-                  <div
-                    style={{
-                      height: spacing[1],
-                      borderRadius: radius.sm,
-                      background: colors.dark.border.default,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${(passwordStrength.score / 6) * 100}%`,
-                        height: "100%",
-                        background: passwordStrength.color,
-                        transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
-                      }}
-                    />
-                  </div>
-                  <span style={{ fontSize: typography.fontSize.md, color: passwordStrength.color }}>
-                    {passwordStrength.label}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: "100%",
-                padding: spacing[3.5],
-                borderRadius: radius.md,
-                border: "none",
-                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
-                color: colors.dark.text.primary,
-                fontSize: typography.fontSize.xl,
-                fontWeight: typography.fontWeight.semibold,
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.7 : 1,
-                transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: spacing[2],
-                boxShadow: `0 4px 16px ${colors.brand.primary}30`,
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${colors.brand.primary}40`;
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = `0 4px 16px ${colors.brand.primary}30`;
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    style={{ animation: "spin 1s linear infinite" }}
-                  >
-                    <path d="M21 12a9 9 0 11-6.219-8.56" />
-                  </svg>
-                  Kaydediliyor...
-                </>
-              ) : (
-                "Kayıt Ol"
-              )}
-            </button>
-          </form>
+            </form>
+          )}
 
           {/* Giris Yap Link */}
           <p

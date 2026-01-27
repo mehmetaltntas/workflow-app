@@ -136,6 +136,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Geçersiz doğrulama kodu hatalarını yakala (400 Bad Request)
+     */
+    @ExceptionHandler(InvalidVerificationCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidVerificationCodeException(InvalidVerificationCodeException ex) {
+        logger.warn("Geçersiz doğrulama kodu: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Doğrulama Hatası",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
      * Yetkisiz erişim hatalarını yakala (403 Forbidden)
      */
     @ExceptionHandler(UnauthorizedAccessException.class)
