@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface ConnectionRepository extends JpaRepository<Connection, Long> {
 
-    @Query("SELECT c FROM Connection c WHERE " +
+    @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE " +
             "(c.sender.id = :userId1 AND c.receiver.id = :userId2) OR " +
             "(c.sender.id = :userId2 AND c.receiver.id = :userId1)")
     Optional<Connection> findBetweenUsers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
@@ -25,9 +25,9 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
             "(c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED'")
     long countAcceptedByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT c FROM Connection c WHERE c.receiver.id = :receiverId AND c.status = :status ORDER BY c.createdAt DESC")
+    @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE c.receiver.id = :receiverId AND c.status = :status ORDER BY c.createdAt DESC")
     List<Connection> findByReceiverIdAndStatus(@Param("receiverId") Long receiverId, @Param("status") ConnectionStatus status);
 
-    @Query("SELECT c FROM Connection c WHERE (c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED' ORDER BY c.updatedAt DESC")
+    @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE (c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED' ORDER BY c.updatedAt DESC")
     List<Connection> findAcceptedByUserId(@Param("userId") Long userId);
 }
