@@ -158,7 +158,12 @@ const BoardDetailPage = () => {
       toast.success("Liste eklendi");
     } catch (error) {
       console.error(error);
-      toast.error("Hata oluştu");
+      const axiosErr = error as AxiosError<{ status?: number }>;
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir liste zaten mevcut");
+      } else {
+        toast.error("Hata oluştu");
+      }
     }
   }, [newListName, newListDescription, newListLink, newListPriority, newListLabelIds, board, invalidateBoard, resetListForm]);
 
@@ -286,7 +291,12 @@ const BoardDetailPage = () => {
       toast.success("Görev eklendi");
     } catch (error) {
       console.error(error);
-      toast.error("Görev eklenemedi");
+      const axiosErr = error as AxiosError<{ status?: number }>;
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir görev zaten mevcut");
+      } else {
+        toast.error("Görev eklenemedi");
+      }
     }
   }, [newTaskTitle, newTaskDescription, newTaskLink, invalidateBoard]);
 
@@ -313,7 +323,12 @@ const BoardDetailPage = () => {
       toast.success("Alt görev eklendi");
     } catch (error) {
       console.error(error);
-      toast.error("Alt görev eklenemedi");
+      const axiosErr = error as AxiosError<{ status?: number }>;
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir alt görev zaten mevcut");
+      } else {
+        toast.error("Alt görev eklenemedi");
+      }
     }
   }, [newSubtaskTitle, newSubtaskDescription, newSubtaskLink, invalidateBoard]);
 
@@ -355,7 +370,13 @@ const BoardDetailPage = () => {
       toast.success("Güncellendi");
     } catch (error) {
       console.error(error);
-      toast.error("Hata oluştu");
+      const axiosErr = error as AxiosError<{ status?: number }>;
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir görev zaten mevcut");
+      } else {
+        toast.error("Hata oluştu");
+      }
+      throw error;
     }
   }, [invalidateBoard]);
 
@@ -367,7 +388,13 @@ const BoardDetailPage = () => {
       toast.success("Liste güncellendi");
     } catch (error) {
       console.error(error);
-      toast.error("Güncellenemedi");
+      const axiosErr = error as AxiosError<{ status?: number }>;
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir liste zaten mevcut");
+      } else {
+        toast.error("Güncellenemedi");
+      }
+      throw error;
     }
   }, [invalidateBoard]);
 
@@ -708,7 +735,12 @@ const BoardDetailPage = () => {
       toast.success("Alt görev güncellendi");
     } catch (error) {
       console.error(error);
-      toast.error("Alt görev güncellenemedi");
+      const axiosErr = error as AxiosError<{ status?: number }>;
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir alt görev zaten mevcut");
+      } else {
+        toast.error("Alt görev güncellenemedi");
+      }
       throw error;
     }
   }, [selectedTask, loadSubtasks, invalidateBoard]);

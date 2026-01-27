@@ -9,7 +9,7 @@ type BoardStatus = "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | 
 interface BoardEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; link?: string; description?: string; deadline?: string; status?: BoardStatus; category?: string }) => void;
+  onSave: (data: { name: string; link?: string; description?: string; deadline?: string; status?: BoardStatus; category?: string }) => Promise<void>;
   onDelete?: () => void;
   initialData: {
     name: string;
@@ -95,18 +95,22 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSave({
-        name: name.trim(),
-        link: link || undefined,
-        description: description || undefined,
-        deadline: deadline || undefined,
-        status,
-        category: category || undefined,
-      });
-      onClose();
+      try {
+        await onSave({
+          name: name.trim(),
+          link: link || undefined,
+          description: description || undefined,
+          deadline: deadline || undefined,
+          status,
+          category: category || undefined,
+        });
+        onClose();
+      } catch {
+        // Modal stays open - error toast shown by mutation hook
+      }
     }
   };
 

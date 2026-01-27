@@ -57,13 +57,8 @@ const BoardsPage = () => {
   // Yeni pano olusturma
   const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => {
     const formattedDeadline = deadline ? `${deadline}T23:59:59` : undefined;
-    createBoardMutation.mutate(
-      { name, status, link, description, deadline: formattedDeadline, category },
-      {
-        onSuccess: () => {
-          setIsModalOpen(false);
-        },
-      }
+    await createBoardMutation.mutateAsync(
+      { name, status, link, description, deadline: formattedDeadline, category }
     );
   };
 
@@ -71,25 +66,19 @@ const BoardsPage = () => {
   const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string }) => {
     if (!editingBoard) return;
     const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
-    updateBoardMutation.mutate(
-      {
-        boardId: editingBoard.id,
-        data: {
-          name: data.name,
-          status: data.status || editingBoard.status || "PLANLANDI",
-          link: data.link,
-          description: data.description,
-          deadline: formattedDeadline,
-          category: data.category
-        }
-      },
-      {
-        onSuccess: () => {
-          setIsEditModalOpen(false);
-          setEditingBoard(null);
-        },
+    await updateBoardMutation.mutateAsync({
+      boardId: editingBoard.id,
+      data: {
+        name: data.name,
+        status: data.status || editingBoard.status || "PLANLANDI",
+        link: data.link,
+        description: data.description,
+        deadline: formattedDeadline,
+        category: data.category
       }
-    );
+    });
+    setIsEditModalOpen(false);
+    setEditingBoard(null);
   };
 
   // Pano silme

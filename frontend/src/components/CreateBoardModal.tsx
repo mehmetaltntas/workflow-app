@@ -9,7 +9,7 @@ type BoardStatus = "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | 
 interface CreateBoardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => void;
+  onCreate: (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string) => Promise<void>;
   initialData?: {
     name: string;
     status: string;
@@ -80,19 +80,23 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onCreate(name, status, link || undefined, description || undefined, deadline || undefined, category || undefined);
-      if (!initialData) {
-        setName("");
-        setStatus("PLANLANDI");
-        setLink("");
-        setDescription("");
-        setDeadline("");
-        setCategory("");
+      try {
+        await onCreate(name, status, link || undefined, description || undefined, deadline || undefined, category || undefined);
+        if (!initialData) {
+          setName("");
+          setStatus("PLANLANDI");
+          setLink("");
+          setDescription("");
+          setDeadline("");
+          setCategory("");
+        }
+        onClose();
+      } catch {
+        // Modal stays open - error toast shown by mutation hook
       }
-      onClose();
     }
   };
 

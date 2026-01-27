@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Save, Link as LinkIcon, Type, ListChecks, Plus, Trash2, Square, CheckSquare, Edit3 } from "lucide-react";
+import toast from "react-hot-toast";
 import type { Task, Subtask } from "../types";
 import { subtaskService } from "../services/api";
 import { colors, cssVars, typography, spacing, radius, zIndex, animation } from "../styles/tokens";
@@ -68,6 +69,12 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
       setIsAddingSubtask(false);
     } catch (error) {
       console.error("Alt görev eklenemedi:", error);
+      const axiosErr = error as { response?: { status?: number } };
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir alt görev zaten mevcut");
+      } else {
+        toast.error("Alt görev eklenemedi");
+      }
     }
   };
 
@@ -101,6 +108,12 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
       onSubtaskChange?.();
     } catch (error) {
       console.error("Alt görev güncellenemedi:", error);
+      const axiosErr = error as { response?: { status?: number } };
+      if (axiosErr.response?.status === 409) {
+        toast.error("Bu isimde bir alt görev zaten mevcut");
+      } else {
+        toast.error("Alt görev güncellenemedi");
+      }
       throw error;
     }
   };

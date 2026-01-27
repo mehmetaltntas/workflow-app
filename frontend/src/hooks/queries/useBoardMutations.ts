@@ -39,7 +39,12 @@ export const useCreateBoard = () => {
     },
     onError: (error) => {
       console.error('Board creation error:', error);
-      toast.error('Pano oluşturulamadı');
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 409) {
+        toast.error('Bu isimde bir pano zaten mevcut');
+      } else {
+        toast.error('Pano oluşturulamadı');
+      }
     },
   });
 };
@@ -101,9 +106,13 @@ export const useUpdateBoard = () => {
           context.previousData
         );
       }
-      const axiosError = error as { response?: { data?: { message?: string } } };
+      const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
       console.error('Board update error:', error, 'Response:', axiosError.response?.data);
-      toast.error(axiosError.response?.data?.message || 'Pano güncellenemedi');
+      if (axiosError.response?.status === 409) {
+        toast.error('Bu isimde bir pano zaten mevcut');
+      } else {
+        toast.error(axiosError.response?.data?.message || 'Pano güncellenemedi');
+      }
     },
     onSuccess: () => {
       toast.success('Pano güncellendi');
