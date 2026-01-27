@@ -12,6 +12,7 @@ import { STATUS_COLORS, STATUS_LABELS, SLUG_TO_STATUS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
+import { SortDropdown, type SortField, type SortDirection } from "../components/ui/SortDropdown";
 
 const BOARDS_PER_PAGE = 25;
 
@@ -26,6 +27,8 @@ const BoardStatusPage = () => {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [sortField, setSortField] = useState<SortField>('alphabetic');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const statusKey = statusSlug ? SLUG_TO_STATUS[statusSlug] : undefined;
   const statusLabel = statusKey ? STATUS_LABELS[statusKey] : undefined;
@@ -67,11 +70,35 @@ const BoardStatusPage = () => {
 
   const filteredBoards = boards.filter(b => (b.status || "PLANLANDI") === statusKey);
 
+  // Sıralama - tüm filtrelenmiş panolara uygulanır (sayfalama öncesi)
+  const sortedBoards = useMemo(() => {
+    const sorted = [...filteredBoards];
+    sorted.sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case 'alphabetic':
+          comparison = a.name.localeCompare(b.name, 'tr');
+          break;
+        case 'date':
+          comparison = a.id - b.id;
+          break;
+        case 'deadline':
+          if (!a.deadline && !b.deadline) comparison = 0;
+          else if (!a.deadline) comparison = 1;
+          else if (!b.deadline) comparison = -1;
+          else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+          break;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    return sorted;
+  }, [filteredBoards, sortField, sortDirection]);
+
   // Sayfalama hesaplamaları
-  const totalPages = Math.max(1, Math.ceil(filteredBoards.length / BOARDS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(sortedBoards.length / BOARDS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * BOARDS_PER_PAGE;
-  const paginatedBoards = filteredBoards.slice(startIndex, startIndex + BOARDS_PER_PAGE);
+  const paginatedBoards = sortedBoards.slice(startIndex, startIndex + BOARDS_PER_PAGE);
 
   const goToPage = (page: number) => {
     if (page === 1) {
@@ -237,6 +264,12 @@ const BoardStatusPage = () => {
             {/* Controls */}
             <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
               <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
+              <SortDropdown
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortFieldChange={setSortField}
+                onSortDirectionChange={setSortDirection}
+              />
             </div>
           </div>
         </div>
