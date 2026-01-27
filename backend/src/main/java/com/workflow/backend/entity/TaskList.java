@@ -1,8 +1,10 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -16,13 +18,18 @@ import java.util.Set;
 @Table(name = "task_lists", indexes = {
     @Index(name = "idx_task_lists_board_id", columnList = "board_id")
 }) // 'lists' SQL'de özel kelime olabilir, o yüzden 'task_lists' dedik
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"labels", "board", "tasks"})
 @EqualsAndHashCode(exclude = {"labels", "board", "tasks"})
 public class TaskList {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     private String name; // Örn: "To Do", "In Progress"
 

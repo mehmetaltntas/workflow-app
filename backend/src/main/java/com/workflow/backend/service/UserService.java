@@ -9,20 +9,24 @@ import com.workflow.backend.exception.InvalidVerificationCodeException;
 import com.workflow.backend.entity.AuthProvider;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.entity.UserProfilePicture;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.exception.ResourceNotFoundException;
+import com.workflow.backend.repository.UserProfilePictureRepository;
 import com.workflow.backend.repository.UserRepository;
 import com.workflow.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserProfilePictureRepository profilePictureRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
@@ -74,14 +78,14 @@ public class UserService {
         // 5. Refresh Token Üret
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
 
-        // 6. Response DTO'ya çevirip dön
-        UserResponse response = mapToResponse(savedUser);
+        // 6. Response DTO'ya cevirip don (yeni kayit, profil resmi yok)
+        UserResponse response = mapToResponse(savedUser, null);
         response.setToken(accessToken);
         response.setRefreshToken(refreshToken.getToken());
         return response;
     }
 
-    // GİRİŞ YAPMA İŞLEMİ
+    // GIRIS YAPMA ISLEMI
     public UserResponse login(LoginRequest request) {
         // 1. Kullanıcıyı bul
         User user = userRepository.findByUsername(request.getUsername());
@@ -108,52 +112,64 @@ public class UserService {
         // 4. Refresh Token Üret
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
-        // 5. Giriş başarılı, bilgileri ve token'ları dön
-        UserResponse response = mapToResponse(user);
+        // 5. Giris basarili, bilgileri ve token'lari don
+        String pictureData = profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null);
+        UserResponse response = mapToResponse(user, pictureData);
         response.setToken(accessToken);
         response.setRefreshToken(refreshToken.getToken());
         return response;
     }
 
-    // KULLANICI BİLGİLERİNİ GETİR
+    // KULLANICI BILGILERINI GETIR
     public UserResponse getUserById(Long id) {
-        // Kullanıcı sadece kendi bilgilerini görebilir
+        // Kullanici sadece kendi bilgilerini gorebilir
         authorizationService.verifyUserOwnership(id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
-        return mapToResponse(user);
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", id));
+
+        // Profil resmini ayri sorgu ile al (lazy loading)
+        String pictureData = profilePictureRepository.findPictureDataByUserId(id).orElse(null);
+        return mapToResponse(user, pictureData);
     }
 
-    // PROFİL GÜNCELLEME İŞLEMİ
+    // PROFIL GUNCELLEME ISLEMI
+    @Transactional
     public UserResponse updateProfile(Long id, UpdateProfileRequest request) {
-        // Kullanıcı sadece kendi profilini güncelleyebilir
+        // Kullanici sadece kendi profilini guncelleyebilir
         authorizationService.verifyUserOwnership(id);
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", id));
 
         boolean usernameChanged = false;
 
-        // Username güncelleme (eğer değiştirildiyse ve başkası kullanmıyorsa)
+        // Username guncelleme (eger degistirildiyse ve baskasi kullanmiyorsa)
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
             User existingUser = userRepository.findByUsername(request.getUsername());
             if (existingUser != null && !existingUser.getId().equals(id)) {
-                throw new DuplicateResourceException("Kullanıcı adı", "username", request.getUsername());
+                throw new DuplicateResourceException("Kullanici adi", "username", request.getUsername());
             }
             user.setUsername(request.getUsername());
             usernameChanged = true;
         }
 
-        // Profil resmi güncelleme
+        // Profil resmi guncelleme (ayri tabloda saklaniyor)
         if (request.getProfilePicture() != null) {
-            user.setProfilePicture(request.getProfilePicture());
+            UserProfilePicture profilePic = profilePictureRepository.findByUserId(id)
+                    .orElse(new UserProfilePicture(user, null));
+            profilePic.setPictureData(request.getProfilePicture());
+            profilePic.setUser(user);
+            profilePictureRepository.save(profilePic);
         }
 
         User savedUser = userRepository.save(user);
-        UserResponse response = mapToResponse(savedUser);
 
-        // Kullanıcı adı değiştiyse yeni token'lar üret
+        // Profil resmini ayri sorgu ile al (lazy loading nedeniyle)
+        String pictureData = profilePictureRepository.findPictureDataByUserId(id).orElse(null);
+        UserResponse response = mapToResponse(savedUser, pictureData);
+
+        // Kullanici adi degistiyse yeni token'lar uret
         if (usernameChanged) {
             String accessToken = jwtService.generateAccessToken(savedUser.getUsername(), savedUser.getId());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
@@ -188,14 +204,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // Yardımcı Metot: Entity -> DTO Çevirici
-    private UserResponse mapToResponse(User user) {
+    // Yardimci Metot: Entity -> DTO Cevirici
+    // pictureData parametresi profil resminin Base64 verisini icerir (ayri tablodan geliyor).
+    private UserResponse mapToResponse(User user, String pictureData) {
         UserResponse response = new UserResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
-        response.setProfilePicture(user.getProfilePicture());
-        // Token burada set edilmiyor, yukarıda metot içinde ediliyor.
+        response.setProfilePicture(pictureData);
+        // Token burada set edilmiyor, yukarida metot icinde ediliyor.
         return response;
     }
 }

@@ -32,6 +32,7 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
     public BoardModel toModel(BoardResponse dto) {
         BoardModel model = new BoardModel();
         model.setId(dto.getId());
+        model.setVersion(dto.getVersion());
         model.setName(dto.getName());
         model.setOwnerName(dto.getOwnerName());
         model.setStatus(dto.getStatus());

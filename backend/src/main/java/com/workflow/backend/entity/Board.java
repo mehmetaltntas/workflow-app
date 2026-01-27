@@ -1,19 +1,28 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "boards", indexes = {
     @Index(name = "idx_boards_user_id", columnList = "user_id")
 })
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"user", "taskLists", "labels"})
+@EqualsAndHashCode(exclude = {"user", "taskLists", "labels"})
 public class Board {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     private String name;
 

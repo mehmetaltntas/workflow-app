@@ -173,6 +173,7 @@ public class SubtaskService {
     private SubtaskDto mapToDto(Subtask subtask) {
         SubtaskDto dto = new SubtaskDto();
         dto.setId(subtask.getId());
+        dto.setVersion(subtask.getVersion());
         dto.setTitle(subtask.getTitle());
         dto.setIsCompleted(subtask.getIsCompleted());
         dto.setPosition(subtask.getPosition());

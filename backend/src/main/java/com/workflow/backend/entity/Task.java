@@ -1,8 +1,10 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.BatchSize;
 
 import java.util.HashSet;
@@ -13,17 +15,22 @@ import java.util.Set;
     @Index(name = "idx_tasks_task_list_id", columnList = "task_list_id"),
     @Index(name = "idx_tasks_position", columnList = "position")
 })
-@Data
-@EqualsAndHashCode(exclude = {"labels", "taskList", "assignee"})
+@Getter
+@Setter
+@ToString(exclude = {"labels", "taskList", "assignee", "subtasks"})
+@EqualsAndHashCode(exclude = {"labels", "taskList", "assignee", "subtasks"})
 public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     private String title;
 
-    @Column(length = 100)
+    @Column(length = 500)
     private String description;
 
     private String link; // Harici link

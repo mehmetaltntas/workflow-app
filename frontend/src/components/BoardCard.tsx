@@ -4,9 +4,7 @@ import { STATUS_COLORS } from "../constants";
 import { Info, ExternalLink, Pin, PinOff } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
-import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors, cssVars } from "../utils/themeColors";
-import { typography, spacing, radius, shadows, animation, colors as tokenColors } from "../styles/tokens";
+import "./BoardCard.css";
 
 interface BoardCardProps {
   board: Board;
@@ -29,14 +27,13 @@ const BoardCard: React.FC<BoardCardProps> = ({
   canPin = true,
   viewMode = 'grid'
 }) => {
-  const { theme } = useTheme();
-  const colors = getThemeColors(theme);
-  const isLight = theme === 'light';
   const statusColor = STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
-  // Action menu items oluştur
+  // CSS custom property for dynamic status color
+  const statusStyle = { '--board-status-color': statusColor } as React.CSSProperties;
+
+  // Action menu items olustur
   const menuItems: ActionMenuItem[] = [
-    // Sabitle/Kaldır - sadece onTogglePin varsa ve (zaten sabitliyse VEYA sabitleme kapasitesi varsa) göster
     ...(onTogglePin && (isPinned || canPin) ? [{
       label: isPinned ? "Sabitlemeyi Kaldır" : "Sabitle",
       onClick: onTogglePin,
@@ -50,101 +47,46 @@ const BoardCard: React.FC<BoardCardProps> = ({
     },
   ];
 
-  // Liste görünümü için kompakt kart
+  // Liste gorunumu icin kompakt kart
   if (viewMode === 'list') {
     return (
       <div
         onClick={onClick}
-        className="group relative board-card"
-        style={{
-          background: isLight ? tokenColors.light.bg.card : tokenColors.dark.glass.bg,
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderRadius: radius.lg,
-          padding: `${spacing[3]} ${spacing[4]}`,
-          display: "flex",
-          alignItems: "center",
-          gap: spacing[4],
-          border: `1px solid ${colors.borderDefault}`,
-          cursor: "pointer",
-          transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-          boxShadow: isLight ? shadows.sm : shadows.md,
-        }}
+        className="board-card board-card--list"
+        style={statusStyle}
       >
         {/* Status Indicator */}
-        <div style={{
-          width: spacing[1],
-          height: spacing[8],
-          borderRadius: radius.full,
-          background: statusColor,
-          flexShrink: 0,
-        }} />
+        <div className="board-card__status-bar" />
 
         {/* Board Name */}
-        <h3
-          style={{
-            flex: 1,
-            fontSize: typography.fontSize.lg,
-            fontWeight: typography.fontWeight.semibold,
-            color: cssVars.textMain,
-            margin: 0,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <h3 className="board-card__name--list">
           {board.name}
         </h3>
 
         {/* Actions */}
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }} onClick={(e) => e.stopPropagation()}>
-          {/* Action Menu */}
+        <div className="board-card__actions" onClick={(e) => e.stopPropagation()}>
           <ActionMenu
             items={menuItems}
             triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
           />
 
-          {/* Info Button */}
           {onShowInfo && (
             <button
               onClick={onShowInfo}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[9],
-                height: spacing[9],
-                borderRadius: radius.md,
-                border: `1px solid ${statusColor}30`,
-                background: `${statusColor}15`,
-                color: statusColor,
-                cursor: "pointer",
-              }}
+              className="board-card__icon-btn"
               title="Pano Bilgileri"
             >
               <Info size={18} />
             </button>
           )}
 
-          {/* External Link Button */}
           {board.link && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 window.open(board.link, '_blank', 'noopener,noreferrer');
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: spacing[9],
-                height: spacing[9],
-                borderRadius: radius.md,
-                border: `1px solid ${statusColor}30`,
-                background: `${statusColor}15`,
-                color: statusColor,
-                cursor: "pointer",
-              }}
+              className="board-card__icon-btn"
               title="Bağlantıya Git"
             >
               <ExternalLink size={18} />
@@ -155,66 +97,23 @@ const BoardCard: React.FC<BoardCardProps> = ({
     );
   }
 
-  // Grid görünümü - kompakt kart
+  // Grid gorunumu - kompakt kart
   return (
     <div
       onClick={onClick}
-      className="group relative board-card"
-      style={{
-        background: isLight ? tokenColors.light.bg.card : tokenColors.dark.glass.bg,
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        height: "140px",
-        borderRadius: radius.xl,
-        padding: spacing[4],
-        display: "flex",
-        flexDirection: "column",
-        border: `1px solid ${colors.borderDefault}`,
-        cursor: "pointer",
-        transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-        boxShadow: isLight ? shadows.card : shadows.md,
-      }}
+      className="board-card board-card--grid"
+      style={statusStyle}
     >
       {/* Visual Accent */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: spacing[1],
-        bottom: 0,
-        background: `linear-gradient(to bottom, ${statusColor}, transparent)`,
-        opacity: 0.7,
-        borderRadius: `${radius.xl} 0 0 ${radius.xl}`,
-      }} />
+      <div className="board-card__accent" />
 
       {/* Top Row: Title + Actions */}
-      <div style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: spacing[2],
-        marginBottom: spacing[2],
-      }}>
-        {/* Board Name */}
-        <h3
-          style={{
-            flex: 1,
-            fontSize: typography.fontSize["2xl"],
-            fontWeight: typography.fontWeight.bold,
-            color: cssVars.textMain,
-            margin: 0,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            letterSpacing: typography.letterSpacing.tight,
-          }}
-        >
+      <div className="board-card__top-row">
+        <h3 className="board-card__name--grid">
           {board.name}
         </h3>
 
-        {/* Action Buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5] }} onClick={(e) => e.stopPropagation()}>
-          {/* Action Menu */}
+        <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
           <ActionMenu
             items={menuItems}
             triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
@@ -222,105 +121,41 @@ const BoardCard: React.FC<BoardCardProps> = ({
         </div>
       </div>
 
-      {/* Description (if exists and not DEVAM_EDIYOR) */}
+      {/* Description */}
       {board.description && board.status !== "DEVAM_EDIYOR" && (
-        <p style={{
-          color: colors.textTertiary,
-          fontSize: typography.fontSize.sm,
-          fontWeight: typography.fontWeight.normal,
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          lineHeight: typography.lineHeight.normal,
-          margin: 0,
-          marginBottom: spacing[2],
-          flex: 1,
-        }}>
+        <p className="board-card__description">
           {board.description}
         </p>
       )}
 
-      {/* Spacer for bottom icons */}
-      <div style={{ flex: 1 }} />
+      {/* Spacer */}
+      <div className="board-card__spacer" />
 
-      {/* Bottom Right Icons */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: spacing[1.5],
-          marginTop: spacing[2],
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Info Button */}
+      {/* Bottom Icons */}
+      <div className="board-card__bottom-actions" onClick={(e) => e.stopPropagation()}>
         {onShowInfo && (
           <button
             onClick={onShowInfo}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: spacing[9],
-              height: spacing[9],
-              borderRadius: radius.md,
-              border: `1px solid ${statusColor}30`,
-              background: `${statusColor}15`,
-              color: statusColor,
-              cursor: "pointer",
-              transition: `all ${animation.duration.fast}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = `${statusColor}25`;
-              e.currentTarget.style.transform = "scale(1.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = `${statusColor}15`;
-              e.currentTarget.style.transform = "scale(1)";
-            }}
+            className="board-card__icon-btn"
             title="Pano Bilgileri"
           >
             <Info size={18} strokeWidth={2.5} />
           </button>
         )}
 
-        {/* External Link Button */}
         {board.link && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               window.open(board.link, '_blank', 'noopener,noreferrer');
             }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: spacing[9],
-              height: spacing[9],
-              borderRadius: radius.md,
-              border: `1px solid ${statusColor}30`,
-              background: `${statusColor}15`,
-              color: statusColor,
-              cursor: "pointer",
-              transition: `all ${animation.duration.fast}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = `${statusColor}25`;
-              e.currentTarget.style.transform = "scale(1.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = `${statusColor}15`;
-              e.currentTarget.style.transform = "scale(1)";
-            }}
+            className="board-card__icon-btn"
             title="Bağlantıya Git"
           >
             <ExternalLink size={18} strokeWidth={2.5} />
           </button>
         )}
       </div>
-
     </div>
   );
 };

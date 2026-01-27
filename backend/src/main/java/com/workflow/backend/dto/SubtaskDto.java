@@ -8,6 +8,8 @@ import lombok.Data;
 public class SubtaskDto {
     private Long id;
 
+    private Long version;
+
     @NotBlank(message = "Alt görev başlığı boş olamaz")
     @Size(min = 1, max = 200, message = "Alt görev başlığı 1-200 karakter arasında olmalıdır")
     private String title;

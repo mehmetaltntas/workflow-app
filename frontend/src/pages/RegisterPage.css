@@ -1,0 +1,171 @@
+/* ===== RegisterPage Styles ===== */
+/* Re-uses login-page__* classes for shared auth layout. */
+/* This file contains register-specific styles only. */
+
+/* Step Indicator */
+.register-page__step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.register-page__step-bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.register-page__step-bar--active {
+  background: linear-gradient(135deg, #4dabf7 0%, #8b5cf6 100%);
+}
+
+/* Username feedback */
+.register-page__field-feedback {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.register-page__field-feedback--checking {
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+}
+
+.register-page__field-feedback--error {
+  color: #ff6b6b;
+}
+
+.register-page__field-feedback--success {
+  color: #16a34a;
+}
+
+.register-page__field-hint {
+  font-size: 11px;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  margin-top: 4px;
+}
+
+.register-page__email-error {
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-top: 4px;
+}
+
+/* Password strength meter */
+.register-page__strength-meter {
+  margin-top: 8px;
+}
+
+.register-page__strength-bar-bg {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.register-page__strength-bar-fill {
+  height: 100%;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.register-page__strength-label {
+  font-size: 12px;
+}
+
+/* Verification code inputs */
+.register-page__code-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.register-page__code-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  outline: none;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.register-page__code-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+}
+
+/* Code step action buttons */
+.register-page__code-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.register-page__resend-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 100ms;
+}
+
+.register-page__resend-btn:hover {
+  opacity: 0.8;
+}
+
+.register-page__resend-btn:disabled {
+  cursor: not-allowed;
+}
+
+.register-page__code-separator {
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+}
+
+.register-page__back-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 100ms;
+}
+
+.register-page__back-btn:hover {
+  opacity: 0.8;
+}
+
+/* Login link */
+.register-page__login-text {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+}
+
+.register-page__login-link {
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 100ms;
+  text-decoration: none;
+}
+
+.register-page__login-link:hover {
+  opacity: 0.8;
+}
+
+/* Input state modifiers */
+.register-page__input--error {
+  border-color: #ff6b6b !important;
+}
+
+.register-page__input--success {
+  border-color: #16a34a !important;
+}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/api";
 import { isValidEmail, getPasswordStrength } from "../utils/validation";
 import toast from "react-hot-toast";
@@ -262,9 +262,10 @@ const ForgotPasswordPage = () => {
 
           {/* Email Adimi */}
           {step === "email" && (
-            <form onSubmit={handleSendCode} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
+            <form onSubmit={handleSendCode} aria-label="E-posta doğrulama formu" style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
               <div>
                 <label
+                  htmlFor="forgot-email"
                   style={{
                     display: "block",
                     fontSize: typography.fontSize.lg,
@@ -276,7 +277,10 @@ const ForgotPasswordPage = () => {
                   E-posta Adresi
                 </label>
                 <input
+                  id="forgot-email"
                   type="email"
+                  autoComplete="email"
+                  aria-required="true"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ornek@email.com"
@@ -319,8 +323,8 @@ const ForgotPasswordPage = () => {
 
           {/* Kod Dogrulama Adimi */}
           {step === "code" && (
-            <form onSubmit={handleVerifyCode} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
-              <div style={{ display: "flex", gap: spacing[2], justifyContent: "center" }}>
+            <form onSubmit={handleVerifyCode} aria-label="Kod doğrulama formu" style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
+              <div role="group" aria-label="6 haneli doğrulama kodu" style={{ display: "flex", gap: spacing[2], justifyContent: "center" }}>
                 {code.map((digit, index) => (
                   <input
                     key={index}
@@ -328,6 +332,7 @@ const ForgotPasswordPage = () => {
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
+                    aria-label={`Doğrulama kodu ${index + 1}. hane`}
                     value={digit}
                     onChange={(e) => handleCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleCodeKeyDown(index, e)}
@@ -386,9 +391,10 @@ const ForgotPasswordPage = () => {
 
           {/* Yeni Sifre Adimi */}
           {step === "password" && (
-            <form onSubmit={handleResetPassword} style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
+            <form onSubmit={handleResetPassword} aria-label="Yeni şifre belirleme formu" style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
               <div>
                 <label
+                  htmlFor="forgot-new-password"
                   style={{
                     display: "block",
                     fontSize: typography.fontSize.lg,
@@ -401,7 +407,10 @@ const ForgotPasswordPage = () => {
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
+                    id="forgot-new-password"
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    aria-required="true"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="En az 8 karakter"
@@ -420,6 +429,7 @@ const ForgotPasswordPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
                     style={{
                       position: "absolute",
                       right: spacing[3],
@@ -433,12 +443,12 @@ const ForgotPasswordPage = () => {
                     }}
                   >
                     {showPassword ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
                         <line x1="1" y1="1" x2="23" y2="23" />
                       </svg>
                     ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
@@ -473,6 +483,7 @@ const ForgotPasswordPage = () => {
 
               <div>
                 <label
+                  htmlFor="forgot-confirm-password"
                   style={{
                     display: "block",
                     fontSize: typography.fontSize.lg,
@@ -484,7 +495,10 @@ const ForgotPasswordPage = () => {
                   Şifre Tekrar
                 </label>
                 <input
+                  id="forgot-confirm-password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  aria-required="true"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Şifrenizi tekrar girin"
@@ -534,16 +548,17 @@ const ForgotPasswordPage = () => {
             }}
           >
             Şifrenizi hatırladınız mı?{" "}
-            <span
-              onClick={() => navigate("/login")}
+            <Link
+              to="/login"
               style={{
                 color: colors.brand.primary,
                 cursor: "pointer",
                 fontWeight: typography.fontWeight.semibold,
+                textDecoration: "none",
               }}
             >
               Giriş Yap
-            </span>
+            </Link>
           </p>
         </div>
       </div>

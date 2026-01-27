@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Calendar, Link2, FileText, Type, Activity, FolderOpen } from "lucide-react";
-import { useTheme } from "../contexts/ThemeContext";
-import { getThemeColors } from "../utils/themeColors";
-import { colors, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
+import "./BoardEditModal.css";
 
 type BoardStatus = "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI";
 
@@ -23,10 +21,6 @@ interface CreateBoardModalProps {
 }
 
 const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, onCreate, initialData }) => {
-  const { theme } = useTheme();
-  const themeColors = getThemeColors(theme);
-  const isLight = theme === 'light';
-
   const [name, setName] = useState(initialData?.name || "");
   const [status, setStatus] = useState<BoardStatus>((initialData?.status as BoardStatus) || "PLANLANDI");
   const [link, setLink] = useState(initialData?.link || "");
@@ -37,7 +31,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
   const MAX_DESCRIPTION_LENGTH = 500;
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Modal açıkken arka plan scroll'unu kilitle
+  // Modal acikken arka plan scroll'unu kilitle
   useEffect(() => {
     if (!isOpen) return;
     const mainEl = document.querySelector('main');
@@ -102,122 +96,32 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
     }
   };
 
-  const inputStyle = {
-    width: "100%",
-    padding: spacing[3],
-    borderRadius: radius.lg,
-    border: `1px solid ${themeColors.borderDefault}`,
-    background: isLight ? colors.light.bg.input : colors.dark.bg.input,
-    color: isLight ? colors.light.text.primary : colors.dark.text.primary,
-    fontSize: typography.fontSize.lg,
-    outline: "none",
-    transition: `all ${animation.duration.fast}`,
-    boxSizing: "border-box" as const,
-  };
-
-  const labelStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing[2],
-    marginBottom: spacing[2],
-    color: isLight ? colors.light.text.secondary : colors.dark.text.secondary,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.medium,
-  };
-
-  const fieldContainerStyle = {
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: spacing[1],
-  };
-
   return createPortal(
     <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: isLight ? colors.light.bg.modalOverlay : colors.dark.bg.modalOverlay,
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        paddingTop: "10vh",
-        zIndex: zIndex.modal,
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        overflowY: "auto",
-      }}
+      className="board-edit-modal__overlay"
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onClose();
       }}
     >
-      {/* Modal Container - Yatay (Wide) */}
+      {/* Modal Container */}
       <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title-create-board"
-        style={{
-          background: isLight ? colors.light.bg.card : colors.dark.bg.card,
-          borderRadius: radius["2xl"],
-          width: "90%",
-          maxWidth: "800px",
-          border: `1px solid ${themeColors.borderDefault}`,
-          boxShadow: shadows.modal,
-          animation: "modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          marginBottom: spacing[10],
-        }}
+        className="board-edit-modal__container"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: `${spacing[5]} ${spacing[6]}`,
-            borderBottom: `1px solid ${themeColors.borderDefault}`,
-          }}
-        >
-          <h2
-            id="modal-title-create-board"
-            style={{
-              fontSize: typography.fontSize["3xl"],
-              fontWeight: typography.fontWeight.bold,
-              color: isLight ? colors.light.text.primary : colors.dark.text.primary,
-              margin: 0,
-              letterSpacing: typography.letterSpacing.tight,
-            }}
-          >
+        <div className="board-edit-modal__header">
+          <h2 id="modal-title-create-board" className="board-edit-modal__title">
             {initialData ? "Panoyu Düzenle" : "Yeni Pano Oluştur"}
           </h2>
           <button
             onClick={onClose}
             aria-label="Kapat"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: spacing[9],
-              height: spacing[9],
-              borderRadius: radius.lg,
-              border: "none",
-              background: isLight ? colors.light.bg.hover : colors.dark.bg.hover,
-              color: isLight ? colors.light.text.muted : colors.dark.text.muted,
-              cursor: "pointer",
-              transition: `all ${animation.duration.fast}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = isLight ? colors.light.bg.active : colors.dark.bg.active;
-              e.currentTarget.style.color = colors.semantic.danger;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = isLight ? colors.light.bg.hover : colors.dark.bg.hover;
-              e.currentTarget.style.color = isLight ? colors.light.text.muted : colors.dark.text.muted;
-            }}
+            className="board-edit-modal__close-btn"
           >
             <X size={20} />
           </button>
@@ -225,19 +129,12 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
 
         {/* Form Content */}
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              padding: spacing[6],
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: spacing[5],
-            }}
-          >
+          <div className="board-edit-modal__form-grid">
             {/* Sol Kolon */}
-            <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
-              {/* İsim */}
-              <div style={fieldContainerStyle}>
-                <label style={labelStyle}>
+            <div className="board-edit-modal__left-col">
+              {/* Isim */}
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
                   <Type size={16} />
                   Pano Adı
                 </label>
@@ -247,21 +144,13 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
                   onChange={(e) => setName(e.target.value)}
                   maxLength={25}
                   placeholder="Örn: Yeni Web Sitesi"
-                  style={inputStyle}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = themeColors.borderDefault;
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="board-edit-modal__input"
                 />
               </div>
 
-              {/* Bağlantı Adresi */}
-              <div style={fieldContainerStyle}>
-                <label style={labelStyle}>
+              {/* Baglanti Adresi */}
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
                   <Link2 size={16} />
                   Bağlantı Adresi
                 </label>
@@ -270,66 +159,28 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="https://..."
-                  style={inputStyle}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = themeColors.borderDefault;
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="board-edit-modal__input"
                 />
               </div>
 
               {/* Son Tarih */}
-              <div style={fieldContainerStyle}>
-                <label style={labelStyle}>
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
                   <Calendar size={16} />
                   Son Tarih
                 </label>
-                <div style={{ display: "flex", gap: spacing[2] }}>
+                <div className="board-edit-modal__date-row">
                   <input
                     type="date"
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
-                    style={{
-                      ...inputStyle,
-                      flex: 1,
-                      colorScheme: isLight ? "light" : "dark",
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = colors.brand.primary;
-                      e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = themeColors.borderDefault;
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
+                    className="board-edit-modal__input board-edit-modal__date-input"
                   />
                   {deadline && (
                     <button
                       type="button"
                       onClick={() => setDeadline("")}
-                      style={{
-                        padding: `${spacing[2]} ${spacing[3]}`,
-                        borderRadius: radius.lg,
-                        border: `1px solid ${themeColors.borderDefault}`,
-                        background: isLight ? colors.light.bg.hover : colors.dark.bg.hover,
-                        color: isLight ? colors.light.text.muted : colors.dark.text.muted,
-                        fontSize: typography.fontSize.sm,
-                        cursor: "pointer",
-                        transition: `all ${animation.duration.fast}`,
-                        whiteSpace: "nowrap",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = colors.semantic.danger;
-                        e.currentTarget.style.color = colors.semantic.danger;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = themeColors.borderDefault;
-                        e.currentTarget.style.color = isLight ? colors.light.text.muted : colors.dark.text.muted;
-                      }}
+                      className="board-edit-modal__clear-btn"
                     >
                       Temizle
                     </button>
@@ -338,12 +189,12 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               </div>
 
               {/* Durum */}
-              <div style={fieldContainerStyle}>
-                <label style={labelStyle}>
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
                   <Activity size={16} />
                   Başlangıç Durumu
                 </label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: spacing[2] }}>
+                <div className="board-edit-modal__status-group">
                   {(Object.keys(STATUS_LABELS) as BoardStatus[]).map((statusKey) => {
                     const isActive = status === statusKey;
                     const statusColor = STATUS_COLORS[statusKey];
@@ -352,40 +203,16 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
                         key={statusKey}
                         type="button"
                         onClick={() => setStatus(statusKey)}
+                        className={`board-edit-modal__status-btn ${isActive ? "board-edit-modal__status-btn--active" : ""}`}
                         style={{
-                          padding: `${spacing[2]} ${spacing[3]}`,
-                          borderRadius: radius.lg,
-                          border: `1px solid ${isActive ? statusColor : themeColors.borderDefault}`,
-                          background: isActive ? `${statusColor}20` : "transparent",
-                          color: isActive ? statusColor : (isLight ? colors.light.text.secondary : colors.dark.text.secondary),
-                          fontSize: typography.fontSize.sm,
-                          fontWeight: isActive ? typography.fontWeight.semibold : typography.fontWeight.medium,
-                          cursor: "pointer",
-                          transition: `all ${animation.duration.fast}`,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: spacing[1.5],
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.borderColor = statusColor;
-                            e.currentTarget.style.background = `${statusColor}10`;
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActive) {
-                            e.currentTarget.style.borderColor = themeColors.borderDefault;
-                            e.currentTarget.style.background = "transparent";
-                          }
+                          borderColor: isActive ? statusColor : undefined,
+                          background: isActive ? `${statusColor}20` : undefined,
+                          color: isActive ? statusColor : undefined,
                         }}
                       >
                         <div
-                          style={{
-                            width: spacing[2],
-                            height: spacing[2],
-                            borderRadius: radius.full,
-                            background: statusColor,
-                          }}
+                          className="board-edit-modal__status-dot"
+                          style={{ background: statusColor }}
                         />
                         {STATUS_LABELS[statusKey]}
                       </button>
@@ -395,23 +222,15 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               </div>
 
               {/* Kategori */}
-              <div style={fieldContainerStyle}>
-                <label style={labelStyle}>
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
                   <FolderOpen size={16} />
                   Kategori
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = themeColors.borderDefault;
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  className="board-edit-modal__input"
                 >
                   <option value="">Kategori Seçin</option>
                   <option value="YAZILIM_GELISTIRME">Yazılım Geliştirme</option>
@@ -438,18 +257,15 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
               </div>
             </div>
 
-            {/* Sağ Kolon - Açıklama */}
-            <div style={fieldContainerStyle}>
-              <label style={labelStyle}>
+            {/* Sag Kolon - Aciklama */}
+            <div className="board-edit-modal__field">
+              <label className="board-edit-modal__label">
                 <FileText size={16} />
                 Açıklama
                 <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: typography.fontSize.xs,
-                    color: description.length >= MAX_DESCRIPTION_LENGTH ? colors.semantic.danger : (isLight ? colors.light.text.subtle : colors.dark.text.subtle),
-                    fontWeight: typography.fontWeight.normal,
-                  }}
+                  className={`board-edit-modal__char-counter ${
+                    description.length >= MAX_DESCRIPTION_LENGTH ? "board-edit-modal__char-counter--limit" : ""
+                  }`}
                 >
                   {description.length}/{MAX_DESCRIPTION_LENGTH}
                 </span>
@@ -463,109 +279,32 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
                 }}
                 placeholder="Pano hakkında kısa bir açıklama..."
                 maxLength={MAX_DESCRIPTION_LENGTH}
-                style={{
-                  ...inputStyle,
-                  height: "100%",
-                  minHeight: "180px",
-                  resize: "none",
-                  fontFamily: "inherit",
-                  lineHeight: typography.lineHeight.relaxed,
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.brand.primary;
-                  e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = themeColors.borderDefault;
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                className="board-edit-modal__textarea"
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: spacing[3],
-              padding: `${spacing[4]} ${spacing[6]}`,
-              borderTop: `1px solid ${themeColors.borderDefault}`,
-              background: isLight ? colors.light.bg.secondary : colors.dark.bg.secondary,
-              borderRadius: `0 0 ${radius["2xl"]} ${radius["2xl"]}`,
-            }}
-          >
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: `${spacing[2.5]} ${spacing[5]}`,
-                borderRadius: radius.lg,
-                border: `1px solid ${themeColors.borderDefault}`,
-                background: "transparent",
-                color: isLight ? colors.light.text.secondary : colors.dark.text.secondary,
-                fontSize: typography.fontSize.lg,
-                fontWeight: typography.fontWeight.medium,
-                cursor: "pointer",
-                transition: `all ${animation.duration.fast}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = isLight ? colors.light.bg.hover : colors.dark.bg.hover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              İptal
-            </button>
-            <button
-              type="submit"
-              disabled={!name.trim()}
-              style={{
-                padding: `${spacing[2.5]} ${spacing[6]}`,
-                borderRadius: radius.lg,
-                border: "none",
-                background: name.trim()
-                  ? `linear-gradient(135deg, ${colors.brand.primary}, ${colors.brand.primaryDark})`
-                  : isLight ? colors.light.bg.secondary : colors.dark.bg.secondary,
-                color: name.trim() ? "#fff" : (isLight ? colors.light.text.disabled : colors.dark.text.disabled),
-                fontSize: typography.fontSize.lg,
-                fontWeight: typography.fontWeight.semibold,
-                cursor: name.trim() ? "pointer" : "not-allowed",
-                transition: `all ${animation.duration.fast}`,
-                boxShadow: name.trim() ? `0 4px 12px ${colors.brand.primary}30` : "none",
-              }}
-              onMouseEnter={(e) => {
-                if (name.trim()) {
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = `0 6px 16px ${colors.brand.primary}40`;
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = name.trim() ? `0 4px 12px ${colors.brand.primary}30` : "none";
-              }}
-            >
-              {initialData ? "Güncelle" : "Oluştur"}
-            </button>
+          <div className="board-edit-modal__footer" style={{ justifyContent: "flex-end" }}>
+            <div className="board-edit-modal__actions">
+              <button
+                type="button"
+                onClick={onClose}
+                className="board-edit-modal__cancel-btn"
+              >
+                İptal
+              </button>
+              <button
+                type="submit"
+                disabled={!name.trim()}
+                className="board-edit-modal__save-btn"
+              >
+                {initialData ? "Güncelle" : "Oluştur"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
-
-      {/* Animation Keyframes */}
-      <style>{`
-        @keyframes modalSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-      `}</style>
     </div>,
     document.body
   );

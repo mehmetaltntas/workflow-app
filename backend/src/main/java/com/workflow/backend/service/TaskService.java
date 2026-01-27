@@ -6,6 +6,7 @@ import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.Priority;
 import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
+import com.workflow.backend.exception.BadRequestException;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.BoardRepository;
@@ -18,8 +19,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +59,9 @@ public class TaskService {
             try {
                 list.setPriority(Priority.valueOf(request.getPriority()));
             } catch (IllegalArgumentException e) {
-                // Geçersiz priority değeri, null olarak bırak
+                throw new BadRequestException(
+                        "Geçersiz öncelik değeri: '" + request.getPriority() +
+                        "'. Geçerli değerler: " + Arrays.toString(Priority.values()));
             }
         }
 
@@ -63,7 +70,7 @@ public class TaskService {
             List<Label> labels = labelRepository.findAllById(request.getLabelIds());
             for (Label label : labels) {
                 if (!label.getBoard().getId().equals(board.getId())) {
-                    throw new RuntimeException("Etiket bu panoya ait değil: " + label.getId());
+                    throw new BadRequestException("Seçilen etiket bu panoya ait değil.");
                 }
             }
             list.setLabels(new HashSet<>(labels));
@@ -197,13 +204,28 @@ public class TaskService {
 
         logger.info("Toplu sıralama başlatıldı: Liste {} için {} görev", list.getName(), request.getTaskPositions().size());
 
+        // Tüm task ID'lerini topla ve tek sorguda getir (N+1 sorunu çözümü)
+        List<Long> taskIds = request.getTaskPositions().stream()
+                .map(BatchReorderRequest.TaskPosition::getTaskId)
+                .toList();
+
+        Map<Long, Task> taskMap = taskRepository.findAllById(taskIds).stream()
+                .collect(Collectors.toMap(Task::getId, Function.identity()));
+
+        // Eksik görevleri kontrol et
+        for (Long taskId : taskIds) {
+            if (!taskMap.containsKey(taskId)) {
+                throw new ResourceNotFoundException("Görev", "id", taskId);
+            }
+        }
+
+        // Tüm görevlerin bu listeye ait olduğunu doğrula ve pozisyonları güncelle
         List<Task> tasksToUpdate = new java.util.ArrayList<>();
         for (BatchReorderRequest.TaskPosition tp : request.getTaskPositions()) {
-            Task task = taskRepository.findById(tp.getTaskId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", tp.getTaskId()));
+            Task task = taskMap.get(tp.getTaskId());
 
             if (!task.getTaskList().getId().equals(request.getListId())) {
-                throw new RuntimeException("Görev bu listeye ait değil: " + tp.getTaskId());
+                throw new BadRequestException("Sıralanmak istenen görev bu listeye ait değil.");
             }
 
             task.setPosition(tp.getPosition());
@@ -254,7 +276,9 @@ public class TaskService {
             try {
                 list.setPriority(Priority.valueOf(request.getPriority()));
             } catch (IllegalArgumentException e) {
-                list.setPriority(null);
+                throw new BadRequestException(
+                        "Geçersiz öncelik değeri: '" + request.getPriority() +
+                        "'. Geçerli değerler: " + Arrays.toString(Priority.values()));
             }
         }
 
@@ -264,7 +288,7 @@ public class TaskService {
             Long boardId = list.getBoard().getId();
             for (Label label : labels) {
                 if (!label.getBoard().getId().equals(boardId)) {
-                    throw new RuntimeException("Etiket bu panoya ait değil: " + label.getId());
+                    throw new BadRequestException("Seçilen etiket bu panoya ait değil.");
                 }
             }
             list.setLabels(new HashSet<>(labels));
@@ -339,7 +363,7 @@ public class TaskService {
             Long boardId = task.getTaskList().getBoard().getId();
             for (Label label : labels) {
                 if (!label.getBoard().getId().equals(boardId)) {
-                    throw new RuntimeException("Etiket bu panoya ait değil: " + label.getId());
+                    throw new BadRequestException("Seçilen etiket bu panoya ait değil.");
                 }
             }
             task.setLabels(new HashSet<>(labels));
@@ -363,6 +387,7 @@ public class TaskService {
     private TaskDto mapToDto(Task task) {
         TaskDto dto = new TaskDto();
         dto.setId(task.getId());
+        dto.setVersion(task.getVersion());
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
         dto.setPosition(task.getPosition());
@@ -388,6 +413,7 @@ public class TaskService {
             dto.setSubtasks(task.getSubtasks().stream().map(subtask -> {
                 SubtaskDto subtaskDto = new SubtaskDto();
                 subtaskDto.setId(subtask.getId());
+                subtaskDto.setVersion(subtask.getVersion());
                 subtaskDto.setTitle(subtask.getTitle());
                 subtaskDto.setIsCompleted(subtask.getIsCompleted());
                 subtaskDto.setPosition(subtask.getPosition());
@@ -401,6 +427,7 @@ public class TaskService {
     private TaskListDto mapToListDto(TaskList list) {
         TaskListDto dto = new TaskListDto();
         dto.setId(list.getId());
+        dto.setVersion(list.getVersion());
         dto.setName(list.getName());
         dto.setDescription(list.getDescription());
         dto.setLink(list.getLink());

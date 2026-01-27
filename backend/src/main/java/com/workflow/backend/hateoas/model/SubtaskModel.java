@@ -10,6 +10,7 @@ import org.springframework.hateoas.server.core.Relation;
 @Relation(collectionRelation = "subtasks", itemRelation = "subtask")
 public class SubtaskModel extends RepresentationModel<SubtaskModel> {
     private Long id;
+    private Long version;
     private String title;
     private Boolean isCompleted;
     private Integer position;

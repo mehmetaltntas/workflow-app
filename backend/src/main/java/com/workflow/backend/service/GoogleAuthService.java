@@ -8,8 +8,10 @@ import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.entity.AuthProvider;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.entity.UserProfilePicture;
 import com.workflow.backend.exception.ConfigurationException;
 import com.workflow.backend.exception.InvalidCredentialsException;
+import com.workflow.backend.repository.UserProfilePictureRepository;
 import com.workflow.backend.repository.UserRepository;
 import com.workflow.backend.security.JwtService;
 import jakarta.annotation.PostConstruct;
@@ -29,6 +31,7 @@ public class GoogleAuthService {
     private static final Logger logger = LoggerFactory.getLogger(GoogleAuthService.class);
 
     private final UserRepository userRepository;
+    private final UserProfilePictureRepository profilePictureRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
@@ -82,12 +85,15 @@ public class GoogleAuthService {
             String accessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
+            // Profil resmini ayri tablodan al
+            String pictureData = profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null);
+
             // Response olustur
             UserResponse response = new UserResponse();
             response.setId(user.getId());
             response.setUsername(user.getUsername());
             response.setEmail(user.getEmail());
-            response.setProfilePicture(user.getProfilePicture());
+            response.setProfilePicture(pictureData);
             response.setToken(accessToken);
             response.setRefreshToken(refreshToken.getToken());
 
@@ -114,10 +120,16 @@ public class GoogleAuthService {
             // Sadece Google hesabi ise bagla
             existingUser.setGoogleId(googleId);
             existingUser.setAuthProvider(AuthProvider.GOOGLE);
-            if (existingUser.getProfilePicture() == null && picture != null) {
-                existingUser.setProfilePicture(picture);
+            User savedUser = userRepository.save(existingUser);
+
+            // Profil resmi yoksa ve Google'dan geldiyse kaydet (ayri tabloda)
+            if (picture != null) {
+                boolean hasPicture = profilePictureRepository.findByUserId(savedUser.getId()).isPresent();
+                if (!hasPicture) {
+                    profilePictureRepository.save(new UserProfilePicture(savedUser, picture));
+                }
             }
-            return userRepository.save(existingUser);
+            return savedUser;
         }
 
         // Yeni kullanici olustur
@@ -126,11 +138,17 @@ public class GoogleAuthService {
         newUser.setEmail(email);
         newUser.setUsername(generateUniqueUsername(name, email));
         newUser.setAuthProvider(AuthProvider.GOOGLE);
-        newUser.setProfilePicture(picture);
         // Google ile giris yapan kullanicinin sifresi yok
         newUser.setPassword(null);
 
-        return userRepository.save(newUser);
+        User savedNewUser = userRepository.save(newUser);
+
+        // Profil resmini ayri tabloda sakla
+        if (picture != null) {
+            profilePictureRepository.save(new UserProfilePicture(savedNewUser, picture));
+        }
+
+        return savedNewUser;
     }
 
     private String generateUniqueUsername(String name, String email) {

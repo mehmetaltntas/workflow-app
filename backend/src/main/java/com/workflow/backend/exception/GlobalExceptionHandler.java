@@ -187,6 +187,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Geçersiz istek hatalarını yakala (400 Bad Request)
+     */
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException ex) {
+        logger.warn("Geçersiz istek: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Geçersiz İstek",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
      * Genel RuntimeException'ları yakala (Fallback)
      */
     @ExceptionHandler(RuntimeException.class)

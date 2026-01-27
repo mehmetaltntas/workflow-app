@@ -13,6 +13,7 @@ import java.util.List;
 @Relation(collectionRelation = "boards", itemRelation = "board")
 public class BoardModel extends RepresentationModel<BoardModel> {
     private Long id;
+    private Long version;
     private String name;
     private String ownerName;
     private String status;

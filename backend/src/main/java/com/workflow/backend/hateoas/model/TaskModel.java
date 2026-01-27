@@ -15,6 +15,7 @@ import java.util.List;
 @Relation(collectionRelation = "tasks", itemRelation = "task")
 public class TaskModel extends RepresentationModel<TaskModel> {
     private Long id;
+    private Long version;
     private String title;
     private String description;
     private String link;

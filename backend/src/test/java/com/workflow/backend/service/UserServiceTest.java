@@ -6,6 +6,7 @@ import com.workflow.backend.dto.UpdatePasswordRequest;
 import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.repository.UserProfilePictureRepository;
 import com.workflow.backend.repository.UserRepository;
 import com.workflow.backend.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private UserProfilePictureRepository profilePictureRepository;
+
+    @Mock
     private JwtService jwtService;
 
     @Mock
@@ -43,6 +47,9 @@ class UserServiceTest {
 
     @Mock
     private AuthorizationService authorizationService;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
 
     @InjectMocks
     private UserService userService;
@@ -79,17 +86,20 @@ class UserServiceTest {
             // Arrange
             when(userRepository.findByUsername(anyString())).thenReturn(null);
             when(userRepository.findByEmail(anyString())).thenReturn(null);
+            when(emailVerificationService.verifyCode(anyString(), anyString())).thenReturn(true);
             when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
                 user.setId(1L);
                 return user;
             });
-            when(jwtService.generateAccessToken(anyString())).thenReturn("accessToken");
+            when(jwtService.generateAccessToken(anyString(), any(Long.class))).thenReturn("accessToken");
 
             RefreshToken refreshToken = new RefreshToken();
             refreshToken.setToken("refreshToken");
             when(refreshTokenService.createRefreshToken(anyString())).thenReturn(refreshToken);
+
+            registerRequest.setCode("123456");
 
             // Act
             UserResponse response = userService.register(registerRequest);
@@ -143,7 +153,8 @@ class UserServiceTest {
             // Arrange
             when(userRepository.findByUsername("testuser")).thenReturn(testUser);
             when(passwordEncoder.matches("password", "encodedPassword")).thenReturn(true);
-            when(jwtService.generateAccessToken("testuser")).thenReturn("accessToken");
+            when(jwtService.generateAccessToken("testuser", 1L)).thenReturn("accessToken");
+            when(profilePictureRepository.findPictureDataByUserId(1L)).thenReturn(Optional.empty());
 
             RefreshToken refreshToken = new RefreshToken();
             refreshToken.setToken("refreshToken");

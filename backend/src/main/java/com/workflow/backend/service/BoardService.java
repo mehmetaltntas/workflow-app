@@ -133,6 +133,7 @@ public class BoardService {
     private BoardResponse mapToResponseWithDetails(Board board) {
         BoardResponse response = new BoardResponse();
         response.setId(board.getId());
+        response.setVersion(board.getVersion());
         response.setName(board.getName());
         response.setSlug(board.getSlug());
         response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");
@@ -161,6 +162,7 @@ public class BoardService {
             List<TaskListDto> listDtos = board.getTaskLists().stream().map(taskList -> {
                 TaskListDto listDto = new TaskListDto();
                 listDto.setId(taskList.getId());
+                listDto.setVersion(taskList.getVersion());
                 listDto.setName(taskList.getName());
                 listDto.setDescription(taskList.getDescription());
                 listDto.setLink(taskList.getLink());
@@ -189,6 +191,7 @@ public class BoardService {
                     List<TaskDto> taskDtos = taskList.getTasks().stream().map(task -> {
                         TaskDto taskDto = new TaskDto();
                         taskDto.setId(task.getId());
+                        taskDto.setVersion(task.getVersion());
                         taskDto.setTitle(task.getTitle());
                         taskDto.setDescription(task.getDescription());
                         taskDto.setPosition(task.getPosition());
@@ -215,6 +218,7 @@ public class BoardService {
                             taskDto.setSubtasks(task.getSubtasks().stream().map(subtask -> {
                                 SubtaskDto subtaskDto = new SubtaskDto();
                                 subtaskDto.setId(subtask.getId());
+                                subtaskDto.setVersion(subtask.getVersion());
                                 subtaskDto.setTitle(subtask.getTitle());
                                 subtaskDto.setIsCompleted(subtask.getIsCompleted());
                                 subtaskDto.setPosition(subtask.getPosition());
@@ -247,6 +251,7 @@ public class BoardService {
 
         BoardResponse response = new BoardResponse();
         response.setId(board.getId());
+        response.setVersion(board.getVersion());
         response.setName(board.getName());
         response.setSlug(board.getSlug());
         response.setStatus(board.getStatus() != null ? board.getStatus() : "PLANLANDI");

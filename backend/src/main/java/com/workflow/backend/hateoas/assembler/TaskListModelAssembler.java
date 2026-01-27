@@ -31,6 +31,7 @@ public class TaskListModelAssembler extends RepresentationModelAssemblerSupport<
     public TaskListModel toModel(TaskListDto dto) {
         TaskListModel model = new TaskListModel();
         model.setId(dto.getId());
+        model.setVersion(dto.getVersion());
         model.setName(dto.getName());
         model.setLink(dto.getLink());
         model.setIsCompleted(dto.getIsCompleted());

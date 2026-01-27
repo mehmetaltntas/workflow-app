@@ -18,6 +18,9 @@ public class TaskDto {
     @Schema(description = "Görev ID", example = "1")
     private Long id;
 
+    @Schema(description = "Optimistic locking için versiyon numarası", example = "0")
+    private Long version;
+
     @Size(min = 1, max = 200, message = "Görev başlığı 1-200 karakter arasında olmalıdır")
     @Schema(description = "Görev başlığı", example = "API entegrasyonu yap")
     private String title;

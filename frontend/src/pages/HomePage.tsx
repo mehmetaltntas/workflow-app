@@ -16,8 +16,9 @@ import BoardEditModal from "../components/BoardEditModal";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
 import { SortDropdown, type SortField, type SortDirection } from "../components/ui/SortDropdown";
-import { typography, spacing, radius, colors, cssVars, animation } from '../styles/tokens';
+import { colors } from '../styles/tokens';
 import { useUIStore, MAX_PINNED_BOARDS } from '../stores/uiStore';
+import "./HomePage.css";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const HomePage = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [isVisible, setIsVisible] = useState(false);
 
-  // Animasyon için
+  // Animasyon icin
   useEffect(() => {
     if (!loading) {
       const timer = setTimeout(() => setIsVisible(true), 50);
@@ -45,24 +46,23 @@ const HomePage = () => {
     }
   }, [loading]);
 
-  // Sadece "DEVAM_EDIYOR" statüsündeki panoları filtrele
+  // Sadece "DEVAM_EDIYOR" statusundeki panolari filtrele
   const activeBoards = useMemo(() =>
     boards.filter((b) => b.status === "DEVAM_EDIYOR"),
     [boards]
   );
 
-  // Pinned ve unpinned boards'u ayır
+  // Pinned ve unpinned boards'u ayir
   const { pinnedBoards, unpinnedBoards } = useMemo(() => {
     const pinned = activeBoards.filter(b => pinnedBoardIds.includes(b.id));
     const unpinned = activeBoards.filter(b => !pinnedBoardIds.includes(b.id));
 
-    // Pinned boards'u ID sırasına göre sırala (ekleme sırası)
     pinned.sort((a, b) => pinnedBoardIds.indexOf(a.id) - pinnedBoardIds.indexOf(b.id));
 
     return { pinnedBoards: pinned, unpinnedBoards: unpinned };
   }, [activeBoards, pinnedBoardIds]);
 
-  // Sıralama fonksiyonu - sadece unpinned boards için
+  // Siralama fonksiyonu
   const sortedUnpinnedBoards = useMemo(() => {
     const sorted = [...unpinnedBoards];
 
@@ -74,11 +74,9 @@ const HomePage = () => {
           comparison = a.name.localeCompare(b.name, 'tr');
           break;
         case 'date':
-          // Board ID'yi oluşturma tarihi olarak kullan (ID daha büyük = daha yeni)
           comparison = a.id - b.id;
           break;
         case 'deadline':
-          // Son tarihi olmayan panolar en sona
           if (!a.deadline && !b.deadline) comparison = 0;
           else if (!a.deadline) comparison = 1;
           else if (!b.deadline) comparison = -1;
@@ -92,7 +90,7 @@ const HomePage = () => {
     return sorted;
   }, [unpinnedBoards, sortField, sortDirection]);
 
-  // İstatistikler
+  // Istatistikler
   const stats = useMemo(() => {
     const total = activeBoards.length;
     const pinned = pinnedBoards.length;
@@ -135,7 +133,6 @@ const HomePage = () => {
 
   const handleDeleteBoard = () => {
     if (editingBoard) {
-      // Pinned listesinden de kaldır
       unpinBoard(editingBoard.id);
       deleteBoardMutation.mutate(editingBoard.id);
       setIsEditModalOpen(false);
@@ -145,33 +142,21 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div
-        style={{
-          height: "calc(100vh - 64px)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          color: cssVars.textMuted,
-        }}
-      >
+      <div className="home-page__loading">
         <h2>Yükleniyor...</h2>
       </div>
     );
   }
 
-  // Board kartı render fonksiyonu
+  // Board karti render fonksiyonu
   const renderBoardCard = (board: Board, _isPinned: boolean, index: number, groupIndex: number) => {
     const boardIsPinned = pinnedBoardIds.includes(board.id);
     const boardCanPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
     return (
       <div
         key={board.id}
-        style={{
-          opacity: isVisible ? 1 : 0,
-          transform: isVisible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.98)",
-          transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-          transitionDelay: `${(groupIndex * 100) + (index * 50)}ms`,
-        }}
+        className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
+        style={{ transitionDelay: `${(groupIndex * 100) + (index * 50)}ms` }}
       >
         <BoardCard
           board={board}
@@ -188,118 +173,49 @@ const HomePage = () => {
   };
 
   return (
-    <div
-      style={{
-        background: cssVars.bgBody,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? "translateY(0)" : "translateY(10px)",
-        transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-      }}
-    >
+    <div className={`home-page ${isVisible ? "home-page--visible" : "home-page--hidden"}`}>
       {/* Main Content */}
-      <div
-        style={{
-          padding: spacing[10],
-        }}
-      >
+      <div className="home-page__content">
         {/* Header */}
-        <div style={{ marginBottom: spacing[8] }}>
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            flexWrap: "wrap",
-            gap: spacing[4],
-            marginBottom: spacing[6]
-          }}>
+        <div className="home-page__header">
+          <div className="home-page__header-top">
             {/* Title Section */}
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: radius.xl,
-                background: `linear-gradient(135deg, ${colors.brand.primaryLight}, ${colors.brand.primary}20)`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: `1px solid ${colors.brand.primary}30`
-              }}>
+            <div className="home-page__title-section">
+              <div className="home-page__title-icon">
                 <Home color={colors.brand.primary} size={24} />
               </div>
               <div>
-                <h1 style={{
-                  fontSize: typography.fontSize["4xl"],
-                  fontWeight: typography.fontWeight.bold,
-                  color: cssVars.textMain,
-                  margin: 0,
-                  letterSpacing: typography.letterSpacing.tight,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: spacing[2],
-                }}>
+                <h1 className="home-page__title">
                   Hoş Geldin!
                   <Sparkles size={24} color={colors.semantic.warning} />
                 </h1>
-                <p style={{
-                  fontSize: typography.fontSize.md,
-                  color: cssVars.textMuted,
-                  margin: 0
-                }}>
+                <p className="home-page__subtitle">
                   İşte üzerinde çalıştığın aktif projeler
                 </p>
               </div>
             </div>
 
             {/* Stats Cards & Panel Toggle */}
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[3], flexWrap: "wrap" }}>
+            <div className="home-page__controls">
               {/* Total Active */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: spacing[2.5],
-                padding: `${spacing[2.5]} ${spacing[4]}`,
-                background: `linear-gradient(135deg, ${colors.status.inProgress}15, ${colors.status.inProgress}05)`,
-                borderRadius: radius.xl,
-                border: `1px solid ${colors.status.inProgress}20`,
-              }}>
+              <div className="home-page__stat-card home-page__stat-card--active">
                 <Clock size={18} color={colors.status.inProgress} />
                 <div>
-                  <div style={{
-                    fontSize: typography.fontSize.lg,
-                    fontWeight: typography.fontWeight.bold,
-                    color: colors.status.inProgress
-                  }}>
+                  <div className="home-page__stat-value home-page__stat-value--active">
                     {stats.total}
                   </div>
-                  <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
-                    Aktif Proje
-                  </div>
+                  <div className="home-page__stat-label">Aktif Proje</div>
                 </div>
               </div>
 
               {/* Pinned Count */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: spacing[2.5],
-                padding: `${spacing[2.5]} ${spacing[4]}`,
-                background: isLight
-                  ? `linear-gradient(135deg, ${colors.brand.primary}12, ${colors.brand.primary}05)`
-                  : `linear-gradient(135deg, ${colors.semantic.warning}15, ${colors.semantic.warning}05)`,
-                borderRadius: radius.xl,
-                border: isLight
-                  ? `1px solid ${colors.brand.primary}25`
-                  : `1px solid ${colors.semantic.warning}20`,
-                boxShadow: isLight ? `0 2px 8px ${colors.brand.primary}10` : 'none',
-              }}>
+              <div className="home-page__stat-card home-page__stat-card--pinned">
                 <Pin size={18} color={isLight ? colors.brand.primary : colors.semantic.warning} />
                 <div>
-                  <div style={{
-                    fontSize: typography.fontSize.lg,
-                    fontWeight: typography.fontWeight.bold,
-                    color: isLight ? colors.brand.primary : colors.semantic.warning
-                  }}>
+                  <div className="home-page__stat-value home-page__stat-value--pinned">
                     {stats.pinned}/{MAX_PINNED_BOARDS}
                   </div>
-                  <div style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
-                    Sabitlenmiş
-                  </div>
+                  <div className="home-page__stat-label">Sabitlenmiş</div>
                 </div>
               </div>
 
@@ -311,82 +227,29 @@ const HomePage = () => {
                 onSortFieldChange={setSortField}
                 onSortDirectionChange={setSortDirection}
               />
-
             </div>
           </div>
         </div>
 
         {/* Content */}
         {activeBoards.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: spacing[10] }}>
+          <div className="home-page__sections">
             {/* Pinned Boards Section */}
             {pinnedBoards.length > 0 && (
-              <div
-                style={{
-                  opacity: isVisible ? 1 : 0,
-                  transform: isVisible ? "translateY(0)" : "translateY(20px)",
-                  transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-                }}
-              >
+              <div className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}>
                 {/* Section Header */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: spacing[3],
-                  marginBottom: spacing[5],
-                  paddingBottom: spacing[3],
-                  borderBottom: `1px solid ${cssVars.border}`,
-                }}>
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: spacing[8],
-                    height: spacing[8],
-                    borderRadius: radius.lg,
-                    background: isLight
-                      ? `linear-gradient(135deg, ${colors.brand.primary}20, ${colors.brand.primary}10)`
-                      : `linear-gradient(135deg, ${colors.semantic.warning}25, ${colors.semantic.warning}15)`,
-                    border: isLight
-                      ? `1px solid ${colors.brand.primary}30`
-                      : `1px solid ${colors.semantic.warning}30`,
-                    boxShadow: isLight ? `0 2px 8px ${colors.brand.primary}15` : 'none',
-                  }}>
+                <div className="home-page__section-header">
+                  <div className="home-page__section-icon home-page__section-icon--pinned">
                     <Pin size={16} color={isLight ? colors.brand.primary : colors.semantic.warning} />
                   </div>
-                  <h2 style={{
-                    fontSize: typography.fontSize["2xl"],
-                    fontWeight: typography.fontWeight.semibold,
-                    color: cssVars.textMain,
-                    margin: 0,
-                  }}>
-                    Sabitlenmiş Panolar
-                  </h2>
-                  <span style={{
-                    fontSize: typography.fontSize.md,
-                    color: isLight ? colors.brand.primary : colors.semantic.warning,
-                    fontWeight: typography.fontWeight.medium,
-                    padding: `${spacing[0.5]} ${spacing[2.5]}`,
-                    background: isLight
-                      ? `${colors.brand.primary}15`
-                      : `${colors.semantic.warning}15`,
-                    borderRadius: radius.full,
-                  }}>
+                  <h2 className="home-page__section-title">Sabitlenmiş Panolar</h2>
+                  <span className="home-page__section-count home-page__section-count--pinned">
                     {pinnedBoards.length}
                   </span>
                 </div>
 
                 {/* Pinned Cards */}
-                <div
-                  style={{
-                    display: viewMode === 'list' ? "flex" : "grid",
-                    flexDirection: viewMode === 'list' ? "column" : undefined,
-                    gridTemplateColumns: viewMode === 'grid'
-                      ? "repeat(auto-fill, minmax(280px, 1fr))"
-                      : undefined,
-                    gap: viewMode === 'list' ? spacing[2] : spacing[4],
-                  }}
-                >
+                <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
                   {pinnedBoards.map((board, index) => renderBoardCard(board, true, index, 0))}
                 </div>
               </div>
@@ -395,75 +258,24 @@ const HomePage = () => {
             {/* Other Active Boards Section */}
             {sortedUnpinnedBoards.length > 0 && (
               <div
-                style={{
-                  opacity: isVisible ? 1 : 0,
-                  transform: isVisible ? "translateY(0)" : "translateY(20px)",
-                  transition: `all ${animation.duration.slow} ${animation.easing.spring}`,
-                  transitionDelay: pinnedBoards.length > 0 ? "100ms" : "0ms",
-                }}
+                className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}
+                style={{ transitionDelay: pinnedBoards.length > 0 ? "100ms" : "0ms" }}
               >
                 {/* Section Header */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: spacing[3],
-                  marginBottom: spacing[5],
-                  paddingBottom: spacing[3],
-                  borderBottom: `1px solid ${cssVars.border}`,
-                }}>
-                  <div style={{
-                    width: spacing[3],
-                    height: spacing[3],
-                    borderRadius: radius.full,
-                    background: colors.status.inProgress,
-                    boxShadow: `0 0 12px ${colors.status.inProgress}50`
-                  }} />
-                  <h2 style={{
-                    fontSize: typography.fontSize["2xl"],
-                    fontWeight: typography.fontWeight.semibold,
-                    color: cssVars.textMain,
-                    margin: 0,
-                  }}>
+                <div className="home-page__section-header">
+                  <div className="home-page__section-dot" />
+                  <h2 className="home-page__section-title">
                     {pinnedBoards.length > 0 ? "Diğer Aktif Panolar" : "Aktif Panolar"}
                   </h2>
-                  <span style={{
-                    fontSize: typography.fontSize.md,
-                    color: cssVars.textMuted,
-                    fontWeight: typography.fontWeight.medium,
-                    padding: `${spacing[0.5]} ${spacing[2.5]}`,
-                    background: cssVars.bgSecondary,
-                    borderRadius: radius.full,
-                  }}>
+                  <span className="home-page__section-count home-page__section-count--default">
                     {sortedUnpinnedBoards.length}
                   </span>
 
-                  {/* Tümünü Gör linki - 15+ pano varsa göster */}
+                  {/* Tumunu Gor linki */}
                   {sortedUnpinnedBoards.length >= 15 && (
                     <button
                       onClick={() => navigate('/boards/status/devam-ediyor')}
-                      style={{
-                        marginLeft: "auto",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: spacing[1.5],
-                        padding: `${spacing[1.5]} ${spacing[3]}`,
-                        borderRadius: radius.lg,
-                        border: `1px solid ${colors.status.inProgress}30`,
-                        background: `${colors.status.inProgress}10`,
-                        color: colors.status.inProgress,
-                        cursor: "pointer",
-                        transition: `all ${animation.duration.normal}`,
-                        fontWeight: typography.fontWeight.semibold,
-                        fontSize: typography.fontSize.sm,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = `${colors.status.inProgress}20`;
-                        e.currentTarget.style.borderColor = `${colors.status.inProgress}50`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = `${colors.status.inProgress}10`;
-                        e.currentTarget.style.borderColor = `${colors.status.inProgress}30`;
-                      }}
+                      className="home-page__view-all-btn"
                     >
                       Tümünü Gör ({sortedUnpinnedBoards.length})
                       <ArrowRight size={16} />
@@ -472,16 +284,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Cards */}
-                <div
-                  style={{
-                    display: viewMode === 'list' ? "flex" : "grid",
-                    flexDirection: viewMode === 'list' ? "column" : undefined,
-                    gridTemplateColumns: viewMode === 'grid'
-                      ? "repeat(auto-fill, minmax(280px, 1fr))"
-                      : undefined,
-                    gap: viewMode === 'list' ? spacing[2] : spacing[4],
-                  }}
-                >
+                <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
                   {sortedUnpinnedBoards.map((board, index) => renderBoardCard(board, false, index, 1))}
                 </div>
               </div>
@@ -500,7 +303,7 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Pano Düzenleme Modalı */}
+      {/* Pano Duzenleme Modali */}
       {isEditModalOpen && editingBoard && (
         <BoardEditModal
           isOpen={isEditModalOpen}

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { authService } from "../services/api";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import GoogleSignInButton from "../components/GoogleSignInButton";
-import { typography, spacing, radius, shadows, colors, animation } from '../styles/tokens';
 import { useAuthStore } from "../stores/authStore";
+import "./LoginPage.css";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -70,210 +70,43 @@ const LoginPage = () => {
     toast.error(error);
   };
 
-  const inputStyle = {
-    width: "100%",
-    boxSizing: "border-box" as const,
-    padding: `${spacing[3.5]} ${spacing[4]}`,
-    borderRadius: radius.md,
-    border: `1px solid ${colors.dark.border.default}`,
-    background: colors.dark.bg.secondary,
-    color: colors.dark.text.primary,
-    fontSize: typography.fontSize.xl,
-    outline: "none",
-    transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
-  };
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        background: colors.dark.bg.body,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
+    <div className="login-page">
       {/* Background Gradient Effects */}
-      <div
-        style={{
-          position: "absolute",
-          top: "-30%",
-          left: "-20%",
-          width: "60%",
-          height: "80%",
-          background: `radial-gradient(ellipse, ${colors.brand.primary}12 0%, transparent 60%)`,
-          filter: "blur(100px)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: "-20%",
-          right: "-10%",
-          width: "50%",
-          height: "70%",
-          background: `radial-gradient(ellipse, rgba(139, 92, 246, 0.1) 0%, transparent 60%)`,
-          filter: "blur(100px)",
-          pointerEvents: "none",
-        }}
-      />
+      <div className="login-page__bg-gradient--left" />
+      <div className="login-page__bg-gradient--right" />
 
       {/* Sol Panel - Branding */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: spacing[10],
-          position: "relative",
-        }}
-      >
-        <div
-          onClick={() => navigate("/")}
-          style={{
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              width: spacing[20],
-              height: spacing[20],
-              background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
-              borderRadius: radius["2xl"],
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: spacing[6],
-              transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
-              boxShadow: `0 8px 32px ${colors.brand.primary}40`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.05)";
-              e.currentTarget.style.boxShadow = `0 12px 40px ${colors.brand.primary}50`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = `0 8px 32px ${colors.brand.primary}40`;
-            }}
-          >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill={colors.dark.text.inverse}>
+      <div className="login-page__branding">
+        <Link to="/" aria-label="WorkFlow ana sayfaya git" className="login-page__brand-link">
+          <div className="login-page__logo">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="#1a1b1e" aria-hidden="true">
               <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
             </svg>
           </div>
-          <h1
-            style={{
-              fontSize: typography.fontSize["5xl"],
-              fontWeight: typography.fontWeight.extrabold,
-              color: colors.dark.text.primary,
-              marginBottom: spacing[4],
-            }}
-          >
-            WorkFlow
-          </h1>
-        </div>
-        <p
-          style={{
-            fontSize: typography.fontSize.xl,
-            color: colors.dark.text.secondary,
-            textAlign: "center",
-            maxWidth: "300px",
-            lineHeight: typography.lineHeight.relaxed,
-          }}
-        >
+          <h1 className="login-page__title">WorkFlow</h1>
+        </Link>
+        <p className="login-page__subtitle">
           Görevlerinizi kolayca yönetin, ekibinizle iş birliği yapın ve
           projelerinizi zamanında tamamlayın.
         </p>
 
         {/* Dekoratif Elementler */}
-        <div
-          style={{
-            marginTop: "60px",
-            display: "flex",
-            gap: spacing[5],
-          }}
-        >
+        <div className="login-page__decorative">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                width: "60px",
-                height: "60px",
-                borderRadius: radius.lg,
-                background: `linear-gradient(135deg, ${colors.brand.primary}${10 + i * 8} 0%, rgba(139, 92, 246, ${0.08 + i * 0.06}) 100%)`,
-                border: `1px solid ${colors.dark.border.default}`,
-                transition: `all ${animation.duration.slow} ${animation.easing.smooth}`,
-              }}
-            />
+            <div key={i} className="login-page__decorative-box" />
           ))}
         </div>
       </div>
 
       {/* Sag Panel - Login Form */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: spacing[10],
-          position: "relative",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "420px",
-            background: colors.dark.bg.elevated,
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            borderRadius: radius["2xl"],
-            padding: spacing[10],
-            border: `1px solid ${colors.dark.border.default}`,
-            boxShadow: shadows.modal,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
+      <div className="login-page__form-panel">
+        <div className="login-page__form-card">
           {/* Card Top Glow */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "60%",
-              height: "1px",
-              background: `linear-gradient(90deg, transparent, ${colors.brand.primary}50, transparent)`,
-            }}
-          />
+          <div className="login-page__card-glow" />
 
-          <h2
-            style={{
-              fontSize: typography.fontSize["4xl"],
-              fontWeight: typography.fontWeight.bold,
-              color: colors.dark.text.primary,
-              marginBottom: spacing[2],
-              textAlign: "center",
-            }}
-          >
-            Hoş Geldiniz
-          </h2>
-          <p
-            style={{
-              fontSize: typography.fontSize.lg,
-              color: colors.dark.text.tertiary,
-              marginBottom: spacing[8],
-              textAlign: "center",
-            }}
-          >
-            Hesabınıza giriş yapın
-          </p>
+          <h2 className="login-page__form-title">Hoş Geldiniz</h2>
+          <p className="login-page__form-subtitle">Hesabınıza giriş yapın</p>
 
           {/* Google Sign-In */}
           <GoogleSignInButton
@@ -283,121 +116,58 @@ const LoginPage = () => {
           />
 
           {/* Ayirici */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[4],
-              margin: `${spacing[6]} 0`,
-            }}
-          >
-            <div style={{ flex: 1, height: "1px", background: colors.dark.border.default }} />
-            <span style={{ fontSize: typography.fontSize.base, color: colors.dark.text.subtle }}>veya</span>
-            <div style={{ flex: 1, height: "1px", background: colors.dark.border.default }} />
+          <div className="login-page__divider">
+            <div className="login-page__divider-line" />
+            <span className="login-page__divider-text">veya</span>
+            <div className="login-page__divider-line" />
           </div>
 
           {/* Form */}
-          <form
-            onSubmit={handleLogin}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: spacing[5],
-            }}
-          >
+          <form onSubmit={handleLogin} aria-label="Giriş formu" className="login-page__form">
             <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.dark.text.secondary,
-                  marginBottom: spacing[2],
-                }}
-              >
+              <label htmlFor="login-username" className="login-page__label">
                 Kullanıcı Adı
               </label>
               <input
+                id="login-username"
                 type="text"
                 placeholder="Kullanıcı Adı"
+                autoComplete="username"
+                aria-required="true"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = colors.brand.primary;
-                  e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                  e.currentTarget.style.background = colors.dark.bg.input;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = colors.dark.border.default;
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.background = colors.dark.bg.secondary;
-                }}
+                className="login-page__input"
               />
             </div>
 
             <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.dark.text.secondary,
-                  marginBottom: spacing[2],
-                }}
-              >
+              <label htmlFor="login-password" className="login-page__label">
                 Şifre
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="login-page__password-wrapper">
                 <input
+                  id="login-password"
                   type={showPassword ? "text" : "password"}
                   placeholder="********"
+                  autoComplete="current-password"
+                  aria-required="true"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    ...inputStyle,
-                    paddingRight: spacing[12],
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = colors.brand.primary;
-                    e.currentTarget.style.boxShadow = shadows.focusPrimary;
-                    e.currentTarget.style.background = colors.dark.bg.input;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = colors.dark.border.default;
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.background = colors.dark.bg.secondary;
-                  }}
+                  className="login-page__input login-page__input--password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute",
-                    right: spacing[3],
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    color: colors.dark.text.tertiary,
-                    cursor: "pointer",
-                    padding: spacing[1],
-                    transition: `color ${animation.duration.fast}`,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = colors.dark.text.secondary;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = colors.dark.text.tertiary;
-                  }}
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  className="login-page__password-toggle"
                 >
                   {showPassword ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -407,58 +177,16 @@ const LoginPage = () => {
             </div>
 
             {/* Sifremi Unuttum Link */}
-            <div style={{ textAlign: "right" }}>
-              <span
-                onClick={() => navigate("/forgot-password")}
-                style={{
-                  fontSize: typography.fontSize.base,
-                  color: colors.brand.primary,
-                  cursor: "pointer",
-                  fontWeight: typography.fontWeight.medium,
-                  transition: `opacity ${animation.duration.fast}`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.8";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                }}
-              >
+            <div className="login-page__forgot-password-wrapper">
+              <Link to="/forgot-password" className="login-page__forgot-password">
                 Şifremi Unuttum
-              </span>
+              </Link>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              style={{
-                width: "100%",
-                padding: spacing[3.5],
-                borderRadius: radius.md,
-                border: "none",
-                background: `linear-gradient(135deg, ${colors.brand.primary} 0%, #8b5cf6 100%)`,
-                color: colors.dark.text.primary,
-                fontSize: typography.fontSize.xl,
-                fontWeight: typography.fontWeight.semibold,
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.7 : 1,
-                transition: `all ${animation.duration.normal} ${animation.easing.smooth}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: spacing[2],
-                boxShadow: `0 4px 16px ${colors.brand.primary}30`,
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = `0 8px 24px ${colors.brand.primary}40`;
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = `0 4px 16px ${colors.brand.primary}30`;
-              }}
+              className="login-page__submit-btn"
             >
               {isLoading ? (
                 <>
@@ -469,7 +197,7 @@ const LoginPage = () => {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
-                    style={{ animation: "spin 1s linear infinite" }}
+                    className="login-page__spinner"
                   >
                     <path d="M21 12a9 9 0 11-6.219-8.56" />
                   </svg>
@@ -482,45 +210,14 @@ const LoginPage = () => {
           </form>
 
           {/* Kayit Ol Link */}
-          <p
-            style={{
-              marginTop: spacing[6],
-              textAlign: "center",
-              fontSize: typography.fontSize.lg,
-              color: colors.dark.text.tertiary,
-            }}
-          >
+          <p className="login-page__register-text">
             Hesabınız yok mu?{" "}
-            <span
-              onClick={() => navigate("/register")}
-              style={{
-                color: colors.brand.primary,
-                cursor: "pointer",
-                fontWeight: typography.fontWeight.semibold,
-                transition: `opacity ${animation.duration.fast}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = "0.8";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = "1";
-              }}
-            >
+            <Link to="/register" className="login-page__register-link">
               Kayıt Ol
-            </span>
+            </Link>
           </p>
         </div>
       </div>
-
-      {/* Spinner Animation */}
-      <style>
-        {`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
     </div>
   );
 };

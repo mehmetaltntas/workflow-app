@@ -30,6 +30,7 @@ public class TaskModelAssembler extends RepresentationModelAssemblerSupport<Task
     public TaskModel toModel(TaskDto dto) {
         TaskModel model = new TaskModel();
         model.setId(dto.getId());
+        model.setVersion(dto.getVersion());
         model.setTitle(dto.getTitle());
         model.setDescription(dto.getDescription());
         model.setLink(dto.getLink());

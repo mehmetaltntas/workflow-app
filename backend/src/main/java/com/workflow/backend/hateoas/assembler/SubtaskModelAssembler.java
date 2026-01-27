@@ -19,6 +19,7 @@ public class SubtaskModelAssembler extends RepresentationModelAssemblerSupport<S
     public SubtaskModel toModel(SubtaskDto dto) {
         SubtaskModel model = new SubtaskModel();
         model.setId(dto.getId());
+        model.setVersion(dto.getVersion());
         model.setTitle(dto.getTitle());
         model.setIsCompleted(dto.getIsCompleted());
         model.setPosition(dto.getPosition());
