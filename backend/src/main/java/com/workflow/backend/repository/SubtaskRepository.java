@@ -16,6 +16,8 @@ public interface SubtaskRepository extends JpaRepository<Subtask, Long> {
     @Query("SELECT COALESCE(MAX(s.position), -1) FROM Subtask s WHERE s.task.id = :taskId")
     Integer findMaxPositionByTaskId(Long taskId);
 
+    boolean existsByTitleAndTask(String title, com.workflow.backend.entity.Task task);
+
     long countByTaskIdAndIsCompleted(Long taskId, Boolean isCompleted);
 
     // Authorization: Subtask'ın belirli bir kullanıcıya ait olup olmadığını kontrol et

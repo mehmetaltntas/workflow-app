@@ -343,8 +343,12 @@ public class TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
 
-        if (request.getTitle() != null)
+        if (request.getTitle() != null && !request.getTitle().equals(task.getTitle())) {
+            if (taskRepository.existsByTitleAndTaskList(request.getTitle(), task.getTaskList())) {
+                throw new DuplicateResourceException("Görev", "title", request.getTitle());
+            }
             task.setTitle(request.getTitle());
+        }
         if (request.getDescription() != null)
             task.setDescription(request.getDescription());
         if (request.getLink() != null)

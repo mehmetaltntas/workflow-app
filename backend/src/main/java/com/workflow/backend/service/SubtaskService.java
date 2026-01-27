@@ -7,6 +7,7 @@ import com.workflow.backend.entity.Task;
 import com.workflow.backend.entity.TaskList;
 import com.workflow.backend.repository.SubtaskRepository;
 import com.workflow.backend.repository.TaskListRepository;
+import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,10 @@ public class SubtaskService {
 
         Task task = taskRepository.findById(request.getTaskId())
                 .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", request.getTaskId()));
+
+        if (subtaskRepository.existsByTitleAndTask(request.getTitle(), task)) {
+            throw new DuplicateResourceException("Alt görev", "title", request.getTitle());
+        }
 
         // Yeni pozisyon hesapla
         Integer maxPosition = subtaskRepository.findMaxPositionByTaskId(task.getId());
@@ -70,7 +75,10 @@ public class SubtaskService {
         Subtask subtask = subtaskRepository.findById(subtaskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alt görev", "id", subtaskId));
 
-        if (request.getTitle() != null) {
+        if (request.getTitle() != null && !request.getTitle().equals(subtask.getTitle())) {
+            if (subtaskRepository.existsByTitleAndTask(request.getTitle(), subtask.getTask())) {
+                throw new DuplicateResourceException("Alt görev", "title", request.getTitle());
+            }
             subtask.setTitle(request.getTitle());
         }
         if (request.getIsCompleted() != null) {
