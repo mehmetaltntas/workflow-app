@@ -84,7 +84,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const columnRef = useRef<HTMLDivElement>(null);
-  const selectedRef = useRef<HTMLButtonElement>(null);
+  const selectedRef = useRef<HTMLDivElement>(null);
   const [actionMenuId, setActionMenuId] = useState<number | null>(null);
 
   // Seçili öğeyi görünür yap
@@ -310,10 +310,18 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
               const isHovered = hoveredId === item.id;
 
               return (
-                <button
+                <div
                   key={item.id}
                   ref={isSelected ? selectedRef : null}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onSelect(item)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelect(item);
+                    }
+                  }}
                   onMouseEnter={() => onHover(item)}
                   onMouseLeave={() => onHover(null)}
                   style={{
@@ -636,7 +644,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                       }}
                     />
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
