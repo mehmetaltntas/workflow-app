@@ -13,6 +13,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -93,14 +96,23 @@ public class ConnectionController {
         return ResponseEntity.ok(CollectionModel.of(models));
     }
 
-    @Operation(summary = "Kabul edilmis baglantiları getir")
+    @Operation(summary = "Kabul edilmis baglantiları sayfalanmis olarak getir")
     @GetMapping("/accepted")
-    public ResponseEntity<CollectionModel<ConnectionModel>> getAcceptedConnections() {
-        List<ConnectionResponse> results = connectionService.getAcceptedConnections();
-        List<ConnectionModel> models = results.stream()
+    public ResponseEntity<Map<String, Object>> getAcceptedConnections(
+            @Parameter(description = "Sayfa numarasi (0-indexed)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Sayfa boyutu") @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 100));
+        Page<ConnectionResponse> resultPage = connectionService.getAcceptedConnections(pageable);
+        List<ConnectionModel> models = resultPage.getContent().stream()
                 .map(connectionAssembler::toModel)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(CollectionModel.of(models));
+        return ResponseEntity.ok(Map.of(
+                "content", models,
+                "page", resultPage.getNumber(),
+                "size", resultPage.getSize(),
+                "totalElements", resultPage.getTotalElements(),
+                "totalPages", resultPage.getTotalPages()
+        ));
     }
 
     @Operation(summary = "Baglantiyi kaldir")

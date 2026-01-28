@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,9 +43,10 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
 
-    public List<NotificationResponse> getNotifications() {
+    public Page<NotificationResponse> getNotifications(Pageable pageable) {
         Long currentUserId = currentUserService.getCurrentUserId();
-        List<Notification> notifications = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(currentUserId);
+        Page<Notification> notificationPage = notificationRepository.findByRecipientIdPaged(currentUserId, pageable);
+        List<Notification> notifications = notificationPage.getContent();
 
         // Artik PENDING olmayan baglanti isteklerinin bildirimlerini filtrele
         List<Long> connectionRequestRefIds = notifications.stream()
@@ -96,7 +100,9 @@ public class NotificationService {
                 profilePictureRepository.findPictureDataByUserIds(actorIds).stream()
                         .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
 
-        return notifications.stream().map(n -> mapToResponse(n, profilePictureMap)).toList();
+        List<NotificationResponse> content = notifications.stream()
+                .map(n -> mapToResponse(n, profilePictureMap)).toList();
+        return new PageImpl<>(content, pageable, notificationPage.getTotalElements());
     }
 
     public long getUnreadCount() {

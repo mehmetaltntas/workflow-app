@@ -9,7 +9,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,14 +30,23 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationModelAssembler notificationAssembler;
 
-    @Operation(summary = "Tum bildirimleri getir")
+    @Operation(summary = "Bildirimleri sayfalanmis olarak getir")
     @GetMapping
-    public ResponseEntity<CollectionModel<NotificationModel>> getNotifications() {
-        List<NotificationResponse> results = notificationService.getNotifications();
-        List<NotificationModel> models = results.stream()
+    public ResponseEntity<Map<String, Object>> getNotifications(
+            @Parameter(description = "Sayfa numarasi (0-indexed)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Sayfa boyutu") @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 100));
+        Page<NotificationResponse> resultPage = notificationService.getNotifications(pageable);
+        List<NotificationModel> models = resultPage.getContent().stream()
                 .map(notificationAssembler::toModel)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(CollectionModel.of(models));
+        return ResponseEntity.ok(Map.of(
+                "content", models,
+                "page", resultPage.getNumber(),
+                "size", resultPage.getSize(),
+                "totalElements", resultPage.getTotalElements(),
+                "totalPages", resultPage.getTotalPages()
+        ));
     }
 
     @Operation(summary = "Okunmamis bildirim sayisini getir")

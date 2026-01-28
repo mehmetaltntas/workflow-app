@@ -6,7 +6,9 @@ import lombok.Data;
 import java.time.Instant;
 
 @Entity
-@Table(name = "email_verification_tokens")
+@Table(name = "email_verification_tokens", indexes = {
+    @Index(name = "idx_evt_email", columnList = "email")
+})
 @Data
 public class EmailVerificationToken {
 

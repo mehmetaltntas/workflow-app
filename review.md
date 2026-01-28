@@ -21,8 +21,10 @@ Controller seviyesinde authorization kontrolü yok. PUT /users/{id}/password, PU
 
 findMaxPositionByTaskId() atomik değil. Eş zamanlı isteklerde aynı position değeri atanabilir. Database-level atomic operation kullanılmalı.
 
-YÜKSEK Seviye 5. XSS Protection Header Devre Dışı
-Dosya: SecurityConfig.java:47
+YÜKSEK Seviye
+
+5. XSS Protection Header Devre Dışı
+   Dosya: SecurityConfig.java:47
 
 .xssProtection(xss -> xss.disable())
 Browser XSS koruması kasıtlı olarak kapatılmış.
@@ -61,13 +63,17 @@ batchReorder endpoint'i gelen dizinin boyutunu sınırlamıyor. Milyonlarca öğ
 12. Tutarsız Validation Limitleri
     CreateTaskRequest.description → max 100 karakter, ama Task entity → max 500 karakter. Kullanıcı 100-500 arası açıklama oluşturamıyor, ancak update ile 500'e kadar yazabilir.
 
-ORTA Seviye 13. Eksik Database Index'ler
-tasks.assignee_id - FK index yok
-password_reset_tokens.user_id - index yok
-labels.board_id - index yok
-notifications(recipient_id, type) - composite index yok
-email_verification_tokens.email - index yok 14. HSTS Header Eksik
-Dosya: SecurityConfig.java
+ORTA Seviye
+
+13. Eksik Database Index'ler
+    tasks.assignee_id - FK index yok
+    password_reset_tokens.user_id - index yok
+    labels.board_id - index yok
+    notifications(recipient_id, type) - composite index yok
+    email_verification_tokens.email - index yok
+
+14. HSTS Header Eksik
+    Dosya: SecurityConfig.java
 
 Strict-Transport-Security header'ı yapılandırılmamış. Üretim ortamında HTTPS zorunlu kılınmalı.
 

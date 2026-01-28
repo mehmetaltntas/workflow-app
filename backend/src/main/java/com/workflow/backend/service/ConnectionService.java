@@ -8,6 +8,8 @@ import com.workflow.backend.repository.ConnectionRepository;
 import com.workflow.backend.repository.UserProfilePictureRepository;
 import com.workflow.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -239,6 +241,12 @@ public class ConnectionService {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<Connection> accepted = connectionRepository.findAcceptedByUserId(currentUserId);
         return accepted.stream().map(this::mapToResponse).toList();
+    }
+
+    public Page<ConnectionResponse> getAcceptedConnections(Pageable pageable) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Page<Connection> page = connectionRepository.findAcceptedByUserIdPaged(currentUserId, pageable);
+        return page.map(this::mapToResponse);
     }
 
     @Transactional

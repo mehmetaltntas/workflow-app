@@ -1,11 +1,14 @@
 package com.workflow.backend.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.workflow.backend.exception.GlobalExceptionHandler;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,9 +21,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitFilter.class);
+    private final ObjectMapper objectMapper;
 
     // IP bazlı bucket'ları tutan map (endpoint -> IP -> Bucket)
     private final Map<String, Map<String, Bucket>> buckets = new ConcurrentHashMap<>();
@@ -100,7 +105,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         logger.warn("Rate limit exceeded for IP: {} on endpoint: {}", clientIp, bucketKey);
         response.setStatus(429); // Too Many Requests
         response.setContentType("application/json");
-        response.getWriter().write("{\"status\":429,\"error\":\"Too Many Requests\",\"message\":\"İstek limiti aşıldı. Lütfen daha sonra tekrar deneyin.\"}");
+        GlobalExceptionHandler.ErrorResponse errorResponse = new GlobalExceptionHandler.ErrorResponse(
+                429, "Too Many Requests",
+                "İstek limiti aşıldı. Lütfen daha sonra tekrar deneyin.", null);
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
         return false;
     }
 

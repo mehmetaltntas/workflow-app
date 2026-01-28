@@ -46,7 +46,11 @@ public class SecurityConfig {
                                                                                 "frame-src https://accounts.google.com; " +
                                                                                 "font-src 'self' data:;"))
                                                 .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
-                                                .contentTypeOptions(contentType -> {}))
+                                                .contentTypeOptions(contentType -> {})
+                                                .httpStrictTransportSecurity(hsts -> hsts
+                                                                .includeSubDomains(true)
+                                                                .maxAgeInSeconds(31536000)
+                                                                .preload(true)))
                                 .authorizeHttpRequests(auth -> {
                                         auth.requestMatchers("/auth/**", "/error").permitAll();
                                         if (isDevProfile()) {

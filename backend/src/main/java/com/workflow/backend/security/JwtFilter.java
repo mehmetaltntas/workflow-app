@@ -1,5 +1,7 @@
 package com.workflow.backend.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.workflow.backend.exception.GlobalExceptionHandler;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -24,6 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -85,7 +88,10 @@ public class JwtFilter extends OncePerRequestFilter {
             logger.warn("Invalid JWT token: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Geçersiz veya süresi dolmuş token. Lütfen tekrar giriş yapın.\"}");
+            GlobalExceptionHandler.ErrorResponse errorResponse = new GlobalExceptionHandler.ErrorResponse(
+                    401, "Unauthorized",
+                    "Geçersiz veya süresi dolmuş token. Lütfen tekrar giriş yapın.", null);
+            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
             return;
         }
 

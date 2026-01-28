@@ -27,8 +27,7 @@ public class EmailService {
             mailSender.send(message);
             logger.info("Sifre sifirlama kodu {} adresine gonderildi", toEmail);
         } catch (Exception e) {
-            logger.error("Email gonderme hatasi: {} - {}", toEmail, e.getMessage());
-            throw new RuntimeException("Email gonderilemedi. Lutfen daha sonra tekrar deneyin.");
+            logger.error("Email gonderme hatasi: {} - {}", toEmail, e.getMessage(), e);
         }
     }
 
@@ -43,8 +42,7 @@ public class EmailService {
             mailSender.send(message);
             logger.info("Kayit dogrulama kodu {} adresine gonderildi", toEmail);
         } catch (Exception e) {
-            logger.error("Email gonderme hatasi: {} - {}", toEmail, e.getMessage());
-            throw new RuntimeException("Email gonderilemedi. Lutfen daha sonra tekrar deneyin.");
+            logger.error("Email gonderme hatasi: {} - {}", toEmail, e.getMessage(), e);
         }
     }
 

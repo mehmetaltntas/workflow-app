@@ -8,7 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "labels")
+@Table(name = "labels", indexes = {
+    @Index(name = "idx_labels_board_id", columnList = "board_id")
+})
 @Data
 @EqualsAndHashCode(exclude = {"tasks", "board"})
 public class Label {
