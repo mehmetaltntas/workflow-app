@@ -9,9 +9,9 @@ import {
   FileText,
   BarChart3,
   Clock,
-  TrendingUp,
   AlertTriangle,
-  FolderOpen
+  FolderOpen,
+  User,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -170,45 +170,64 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   const hasCategory = !!board.category;
 
   const cardStyle: React.CSSProperties = {
-    padding: spacing[5],
-    borderRadius: radius.xl,
+    padding: spacing[4],
+    borderRadius: radius.lg,
     background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
     border: `1px solid ${themeColors.borderDefault}`,
   };
 
-  const sectionLabelStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm,
+  const metaLabelStyle: React.CSSProperties = {
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
     color: cssVars.textMuted,
     textTransform: "uppercase",
     letterSpacing: typography.letterSpacing.wide,
+    whiteSpace: "nowrap",
+    display: "flex",
+    alignItems: "center",
+    gap: spacing[1.5],
+    minHeight: spacing[5],
   };
+
+  const metaValueStyle: React.CSSProperties = {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.medium,
+    color: cssVars.textMain,
+    display: "flex",
+    alignItems: "center",
+    gap: spacing[2],
+    minHeight: spacing[5],
+  };
+
+  const ownerDisplay = board.ownerFirstName && board.ownerLastName
+    ? `${board.ownerFirstName} ${board.ownerLastName}`
+    : board.ownerName;
 
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: spacing[6],
+        gap: spacing[4],
         animation: `fadeIn ${animation.duration.slow} ${animation.easing.spring}`,
       }}
     >
-      {/* Hero Section */}
+      {/* Hero Section — Compact */}
       <div
         style={{
           ...cardStyle,
-          padding: spacing[6],
+          padding: spacing[5],
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          flexDirection: "column",
+          gap: spacing[3],
           background: `linear-gradient(135deg, ${statusColor}08, ${isLight ? colors.light.bg.card : colors.dark.glass.bg})`,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[4], flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
           <div
             style={{
               width: spacing[1.5],
-              height: spacing[14],
+              height: spacing[10],
               borderRadius: radius.full,
               background: `linear-gradient(180deg, ${statusColor}, ${statusColor}60)`,
               flexShrink: 0,
@@ -217,12 +236,11 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2
               style={{
-                fontSize: typography.fontSize["4xl"],
+                fontSize: typography.fontSize["2xl"],
                 fontWeight: typography.fontWeight.bold,
                 color: cssVars.textMain,
                 margin: 0,
-                marginBottom: spacing[3],
-                letterSpacing: typography.letterSpacing.tight,
+                marginBottom: spacing[1.5],
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -230,7 +248,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
             >
               {board.name}
             </h2>
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[3], flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexWrap: "wrap" }}>
               <span
                 style={{
                   display: "inline-flex",
@@ -239,7 +257,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
                   fontWeight: typography.fontWeight.bold,
                   color: statusColor,
                   background: `${statusColor}15`,
-                  padding: `${spacing[1]} ${spacing[3]}`,
+                  padding: `${spacing[0.5]} ${spacing[2.5]}`,
                   borderRadius: radius.full,
                   textTransform: "uppercase",
                   letterSpacing: typography.letterSpacing.wider,
@@ -252,53 +270,29 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: spacing[1.5],
+                    gap: spacing[1],
                     fontSize: typography.fontSize.xs,
                     fontWeight: typography.fontWeight.semibold,
                     color: colors.brand.primary,
                     background: colors.brand.primaryLight,
-                    padding: `${spacing[1]} ${spacing[3]}`,
+                    padding: `${spacing[0.5]} ${spacing[2.5]}`,
                     borderRadius: radius.full,
                   }}
                 >
-                  <FolderOpen size={12} />
+                  <FolderOpen size={11} />
                   {CATEGORY_MAP[board.category!] || board.category}
                 </span>
               )}
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: spacing[1.5],
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: cssVars.textMuted,
-                }}
-              >
-                Oluşturan:
-                <span style={{ fontWeight: typography.fontWeight.bold, color: cssVars.textMain }}>
-                  {board.ownerFirstName && board.ownerLastName
-                    ? `${board.ownerFirstName} ${board.ownerLastName}`
-                    : board.ownerName}
-                </span>
-                <span style={{ fontWeight: typography.fontWeight.normal, color: cssVars.textMuted }}>@{board.ownerName}</span>
-              </span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Overall Progress */}
-      <div style={cardStyle}>
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[4] }}>
-          <TrendingUp size={16} color={colors.brand.primary} />
-          <span style={sectionLabelStyle}>Genel İlerleme</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[4] }}>
+        {/* Inline Progress Bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[3], paddingLeft: spacing[3] }}>
           <div
             style={{
               flex: 1,
-              height: spacing[2.5],
+              height: spacing[1.5],
               background: themeColors.bgActive,
               borderRadius: radius.full,
               overflow: "hidden",
@@ -318,10 +312,10 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           </div>
           <span
             style={{
-              fontSize: typography.fontSize["3xl"],
+              fontSize: typography.fontSize.lg,
               fontWeight: typography.fontWeight.bold,
               color: stats.overallProgress === 100 ? colors.semantic.success : colors.brand.primary,
-              minWidth: spacing[14],
+              minWidth: spacing[10],
               textAlign: "right",
             }}
           >
@@ -330,215 +324,160 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
         </div>
       </div>
 
-      {/* Stats Grid - 3 columns */}
+      {/* Metadata Grid — Consolidated */}
+      {(hasDeadline || hasLink || true) && (
+        <div style={cardStyle}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr",
+              gap: `${spacing[2]} ${spacing[4]}`,
+              alignItems: "center",
+            }}
+          >
+            {/* Oluşturan */}
+            <span style={metaLabelStyle}>
+              <User size={12} />
+              Oluşturan
+            </span>
+            <span style={metaValueStyle}>
+              <span style={{ fontWeight: typography.fontWeight.semibold }}>{ownerDisplay}</span>
+              <span style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>@{board.ownerName}</span>
+            </span>
+
+            {/* Son Tarih */}
+            {hasDeadline && deadlineInfo && (
+              <>
+                <span style={metaLabelStyle}>
+                  {deadlineInfo.label === 'Gecikmiş' ? (
+                    <AlertTriangle size={12} color={deadlineInfo.color} />
+                  ) : (
+                    <Calendar size={12} color={deadlineInfo.color} />
+                  )}
+                  <span style={{ color: deadlineInfo.color }}>Son Tarih</span>
+                </span>
+                <span style={metaValueStyle}>
+                  <span style={{ fontWeight: typography.fontWeight.semibold, color: deadlineInfo.color }}>
+                    {new Date(board.deadline!).toLocaleDateString('tr-TR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: spacing[1],
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: typography.fontWeight.bold,
+                      color: deadlineInfo.color,
+                      background: `${deadlineInfo.color}12`,
+                      padding: `${spacing[0.5]} ${spacing[2]}`,
+                      borderRadius: radius.sm,
+                    }}
+                  >
+                    <Clock size={10} />
+                    {deadlineInfo.label === 'Gecikmiş'
+                      ? `${deadlineInfo.days} gün gecikmiş`
+                      : deadlineInfo.label === 'Bugün'
+                        ? 'Bugün son gün'
+                        : `${deadlineInfo.days} gün kaldı`
+                    }
+                  </span>
+                </span>
+              </>
+            )}
+
+            {/* Bağlantı */}
+            {hasLink && (
+              <>
+                <span style={metaLabelStyle}>
+                  <ExternalLink size={12} />
+                  Bağlantı
+                </span>
+                <a
+                  href={board.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    ...metaValueStyle,
+                    color: colors.brand.primary,
+                    textDecoration: "none",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    display: "block",
+                    fontSize: typography.fontSize.sm,
+                  }}
+                >
+                  {board.link}
+                </a>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Stats Row — Horizontal Compact */}
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: spacing[4],
+          ...cardStyle,
+          display: "flex",
+          alignItems: "stretch",
+          padding: 0,
+          overflow: "hidden",
         }}
       >
-        <StatCard
-          icon={<ListChecks size={20} />}
+        <CompactStatCell
+          icon={<ListChecks size={16} />}
           label="Liste"
           completed={stats.lists.completed}
           total={stats.lists.total}
           color={colors.status.completed}
-          isLight={isLight}
           themeColors={themeColors}
+          isLight={isLight}
         />
-        <StatCard
-          icon={<CheckSquare size={20} />}
+        <div style={{ width: 1, background: themeColors.borderDefault, flexShrink: 0 }} />
+        <CompactStatCell
+          icon={<CheckSquare size={16} />}
           label="Görev"
           completed={stats.tasks.completed}
           total={stats.tasks.total}
           overdue={stats.tasks.overdue}
           color={colors.status.inProgress}
-          isLight={isLight}
           themeColors={themeColors}
+          isLight={isLight}
         />
-        <StatCard
-          icon={<Layers size={20} />}
+        <div style={{ width: 1, background: themeColors.borderDefault, flexShrink: 0 }} />
+        <CompactStatCell
+          icon={<Layers size={16} />}
           label="Alt Görev"
           completed={stats.subtasks.completed}
           total={stats.subtasks.total}
           overdue={stats.subtasks.overdue}
           color={colors.brand.primary}
-          isLight={isLight}
           themeColors={themeColors}
+          isLight={isLight}
         />
       </div>
 
-      {/* Details Grid - deadline and link side by side */}
-      {(hasDeadline || hasLink) && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: hasDeadline && hasLink ? "1fr 1fr" : "1fr",
-            gap: spacing[4],
-          }}
-        >
-          {hasDeadline && deadlineInfo && (
-            <div
-              style={{
-                padding: spacing[5],
-                borderRadius: radius.xl,
-                background: deadlineInfo.bg,
-                border: `1px solid ${deadlineInfo.color}30`,
-                display: "flex",
-                flexDirection: "column",
-                gap: spacing[3],
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: spacing[8],
-                      height: spacing[8],
-                      borderRadius: radius.lg,
-                      background: `${deadlineInfo.color}20`,
-                    }}
-                  >
-                    {deadlineInfo.label === 'Gecikmiş' ? (
-                      <AlertTriangle size={16} color={deadlineInfo.color} />
-                    ) : (
-                      <Calendar size={16} color={deadlineInfo.color} />
-                    )}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: typography.fontSize.xs,
-                      fontWeight: typography.fontWeight.bold,
-                      color: deadlineInfo.color,
-                      textTransform: "uppercase",
-                      letterSpacing: typography.letterSpacing.wider,
-                    }}
-                  >
-                    Son Tarih
-                  </span>
-                </div>
-                {deadlineInfo.days !== undefined && deadlineInfo.days > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: spacing[1],
-                      padding: `${spacing[0.5]} ${spacing[2]}`,
-                      borderRadius: radius.md,
-                      background: `${deadlineInfo.color}15`,
-                    }}
-                  >
-                    <Clock size={11} color={deadlineInfo.color} />
-                    <span style={{ fontSize: typography.fontSize.xs, fontWeight: typography.fontWeight.semibold, color: deadlineInfo.color }}>
-                      {deadlineInfo.days} gün
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <p
-                  style={{
-                    fontSize: typography.fontSize.lg,
-                    fontWeight: typography.fontWeight.bold,
-                    color: deadlineInfo.color,
-                    margin: 0,
-                    marginBottom: spacing[1],
-                  }}
-                >
-                  {new Date(board.deadline!).toLocaleDateString('tr-TR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </p>
-                <span
-                  style={{
-                    display: "inline-block",
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.semibold,
-                    color: deadlineInfo.color,
-                    background: `${deadlineInfo.color}15`,
-                    padding: `${spacing[0.5]} ${spacing[2]}`,
-                    borderRadius: radius.sm,
-                  }}
-                >
-                  {deadlineInfo.label}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {hasLink && (
-            <a
-              href={board.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: spacing[3],
-                padding: spacing[5],
-                borderRadius: radius.xl,
-                background: `linear-gradient(135deg, ${colors.brand.primaryLight}, ${colors.brand.primary}10)`,
-                border: `1px solid ${colors.brand.primary}30`,
-                color: colors.brand.primary,
-                textDecoration: "none",
-                transition: `all ${animation.duration.normal}`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: spacing[8],
-                    height: spacing[8],
-                    borderRadius: radius.lg,
-                    background: `${colors.brand.primary}20`,
-                  }}
-                >
-                  <ExternalLink size={16} />
-                </div>
-                <span
-                  style={{
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.bold,
-                    textTransform: "uppercase",
-                    letterSpacing: typography.letterSpacing.wider,
-                    opacity: 0.8,
-                  }}
-                >
-                  Harici Bağlantı
-                </span>
-              </div>
-              <p
-                style={{
-                  fontSize: typography.fontSize.base,
-                  fontWeight: typography.fontWeight.medium,
-                  margin: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {board.link}
-              </p>
-            </a>
-          )}
-        </div>
-      )}
-
-      {/* Description - full width */}
+      {/* Description — Compact */}
       {hasDescription && (
         <div style={cardStyle}>
-          <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[3] }}>
-            <FileText size={16} color={cssVars.textMuted} />
-            <span style={sectionLabelStyle}>Açıklama</span>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[2] }}>
+            <FileText size={14} color={cssVars.textMuted} />
+            <span
+              style={{
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.semibold,
+                color: cssVars.textMuted,
+                textTransform: "uppercase",
+                letterSpacing: typography.letterSpacing.wide,
+              }}
+            >
+              Açıklama
+            </span>
           </div>
           <p
             style={{
@@ -554,7 +493,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
         </div>
       )}
 
-      {/* Board Members Section - only for TEAM boards */}
+      {/* Board Members Section — only for TEAM boards */}
       {board.boardType === 'TEAM' && <BoardMembersSection board={board} />}
 
       {/* CSS Animation */}
@@ -574,8 +513,8 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   );
 };
 
-// Stat Card Component - vertical layout for grid
-interface StatCardProps {
+// Compact Stat Cell — Horizontal layout for the stats row
+interface CompactStatCellProps {
   icon: React.ReactNode;
   label: string;
   completed: number;
@@ -586,88 +525,95 @@ interface StatCardProps {
   themeColors: ReturnType<typeof getThemeColors>;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon, label, completed, total, overdue, color, isLight, themeColors }) => {
+const CompactStatCell: React.FC<CompactStatCellProps> = ({ icon, label, completed, total, overdue, color, isLight, themeColors }) => {
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
     <div
       style={{
-        padding: spacing[5],
-        borderRadius: radius.xl,
-        background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-        border: `1px solid ${themeColors.borderDefault}`,
+        flex: 1,
+        padding: `${spacing[3]} ${spacing[4]}`,
         display: "flex",
         flexDirection: "column",
-        gap: spacing[3],
+        gap: spacing[2],
       }}
     >
-      {/* Icon & Overdue Badge */}
+      {/* Top row: icon + label + overdue */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: spacing[10],
-            height: spacing[10],
-            borderRadius: radius.lg,
-            background: `${color}15`,
-            color: color,
-          }}
-        >
-          {icon}
+        <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: spacing[7],
+              height: spacing[7],
+              borderRadius: radius.md,
+              background: `${color}15`,
+              color: color,
+            }}
+          >
+            {icon}
+          </div>
+          <span
+            style={{
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.medium,
+              color: cssVars.textMuted,
+              textTransform: "uppercase",
+              letterSpacing: typography.letterSpacing.wide,
+            }}
+          >
+            {label}
+          </span>
         </div>
         {overdue !== undefined && overdue > 0 && (
           <span
             style={{
               display: "flex",
               alignItems: "center",
-              gap: spacing[1],
+              gap: spacing[0.5],
               fontSize: typography.fontSize.xs,
               fontWeight: typography.fontWeight.bold,
               color: colors.semantic.danger,
-              padding: `${spacing[0.5]} ${spacing[2]}`,
+              padding: `0 ${spacing[1.5]}`,
               background: colors.semantic.dangerLight,
               borderRadius: radius.sm,
+              lineHeight: "18px",
             }}
           >
-            <AlertTriangle size={10} />
+            <AlertTriangle size={9} />
             {overdue}
           </span>
         )}
       </div>
 
-      {/* Label & Count */}
-      <div>
+      {/* Count */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: spacing[1] }}>
         <span
           style={{
-            fontSize: typography.fontSize.sm,
-            fontWeight: typography.fontWeight.medium,
-            color: cssVars.textMuted,
-            display: "block",
-            marginBottom: spacing[1],
-          }}
-        >
-          {label}
-        </span>
-        <span
-          style={{
-            fontSize: typography.fontSize["2xl"],
+            fontSize: typography.fontSize.xl,
             fontWeight: typography.fontWeight.bold,
             color: cssVars.textMain,
           }}
         >
           {completed}
-          <span style={{ color: cssVars.textMuted, fontWeight: typography.fontWeight.normal, fontSize: typography.fontSize.lg }}>
-            {" "}/ {total}
-          </span>
+        </span>
+        <span
+          style={{
+            fontSize: typography.fontSize.sm,
+            fontWeight: typography.fontWeight.normal,
+            color: cssVars.textMuted,
+          }}
+        >
+          / {total}
         </span>
       </div>
 
-      {/* Progress Bar */}
+      {/* Mini Progress Bar */}
       <div
         style={{
-          height: spacing[1.5],
+          height: spacing[1],
           background: themeColors.bgActive,
           borderRadius: radius.full,
           overflow: "hidden",

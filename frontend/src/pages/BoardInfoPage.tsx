@@ -111,52 +111,41 @@ const BoardInfoPage = () => {
         >
           <ArrowLeft size={20} />
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
-          <div>
-            <h1
-              style={{
-                fontSize: typography.fontSize["2xl"],
-                fontWeight: typography.fontWeight.bold,
-                color: cssVars.textMain,
-                margin: 0,
-              }}
-            >
-              Pano Bilgileri
-            </h1>
-            <p
-              style={{
-                fontSize: typography.fontSize.sm,
-                color: cssVars.textMuted,
-                margin: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: spacing[2],
-              }}
-            >
-              <span>{board.name}</span>
-              {board.createdAt && (
-                <>
-                  <span style={{ color: cssVars.textMuted, opacity: 0.4 }}>·</span>
-                  <span>
-                    {new Date(board.createdAt).toLocaleDateString("tr-TR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: cssVars.textMuted }}>
-            <span style={{ fontSize: '13px' }}>Oluşturan:</span>
-            <span style={{ fontSize: '14px', fontWeight: 600, color: cssVars.textMain }}>
-              {board.ownerFirstName && board.ownerLastName
-                ? `${board.ownerFirstName} ${board.ownerLastName}`
-                : board.ownerName}
-            </span>
-            <span style={{ fontSize: '12px', color: cssVars.textMuted }}>@{board.ownerName}</span>
-          </div>
+        <div style={{ flex: 1 }}>
+          <h1
+            style={{
+              fontSize: typography.fontSize["2xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
+              margin: 0,
+            }}
+          >
+            Pano Bilgileri
+          </h1>
+          <p
+            style={{
+              fontSize: typography.fontSize.sm,
+              color: cssVars.textMuted,
+              margin: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: spacing[2],
+            }}
+          >
+            <span>{board.name}</span>
+            {board.createdAt && (
+              <>
+                <span style={{ color: cssVars.textMuted, opacity: 0.4 }}>·</span>
+                <span>
+                  {new Date(board.createdAt).toLocaleDateString("tr-TR", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </>
+            )}
+          </p>
         </div>
       </div>
 
@@ -167,7 +156,7 @@ const BoardInfoPage = () => {
           overflow: "auto",
           display: "flex",
           justifyContent: "center",
-          padding: `${spacing[8]} ${spacing[6]}`,
+          padding: `${spacing[6]} ${spacing[6]}`,
         }}
       >
         <div

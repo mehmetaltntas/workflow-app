@@ -80,7 +80,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   };
 
   const sectionLabelStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
     color: cssVars.textMuted,
     textTransform: "uppercase",
@@ -88,8 +88,8 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   };
 
   const cardStyle: React.CSSProperties = {
-    padding: spacing[5],
-    borderRadius: radius.xl,
+    padding: spacing[4],
+    borderRadius: radius.lg,
     background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
     border: `1px solid ${themeColors.borderDefault}`,
   };
@@ -103,7 +103,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: spacing[4],
+            marginBottom: spacing[3],
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
@@ -151,24 +151,25 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         {/* Board Creator Card (TEAM only) */}
         {board.boardType === 'TEAM' && (
           <div style={{
-            display: "flex", alignItems: "center", gap: spacing[3],
-            padding: spacing[4], borderRadius: radius.lg,
+            display: "flex", alignItems: "center", gap: spacing[2.5],
+            padding: spacing[3], borderRadius: radius.md,
             border: `1px solid ${colors.brand.primary}30`,
             background: `${colors.brand.primary}08`,
-            marginBottom: spacing[3],
+            marginBottom: spacing[2],
           }}>
             <div style={{
-              width: spacing[9], height: spacing[9], borderRadius: radius.full,
+              width: spacing[8], height: spacing[8], borderRadius: radius.full,
               background: `linear-gradient(135deg, ${colors.brand.primary}, #7950f2)`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.sm,
+              color: "#fff", fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.xs,
+              flexShrink: 0,
             }}>
               {board.ownerFirstName && board.ownerLastName
                 ? `${board.ownerFirstName.charAt(0)}${board.ownerLastName.charAt(0)}`.toUpperCase()
                 : board.ownerName.substring(0, 2).toUpperCase()}
             </div>
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: cssVars.textMain, display: "block" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: typography.fontSize.base, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain, display: "block" }}>
                 {board.ownerFirstName && board.ownerLastName ? `${board.ownerFirstName} ${board.ownerLastName}` : board.ownerName}
               </span>
               <span style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>
@@ -190,11 +191,11 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
           <div
             style={{
               textAlign: "center",
-              padding: `${spacing[6]} ${spacing[4]}`,
+              padding: `${spacing[4]} ${spacing[3]}`,
               color: cssVars.textMuted,
             }}
           >
-            <Users size={32} style={{ opacity: 0.3, marginBottom: spacing[2] }} />
+            <Users size={24} style={{ opacity: 0.3, marginBottom: spacing[2] }} />
             <p
               style={{
                 fontSize: typography.fontSize.sm,
@@ -216,16 +217,16 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
             )}
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: spacing[2] }}>
             {members.map((member) => (
               <div
                 key={member.id}
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: spacing[2],
-                  padding: spacing[4],
-                  borderRadius: radius.lg,
+                  gap: spacing[1.5],
+                  padding: spacing[3],
+                  borderRadius: radius.md,
                   border: `1px solid ${themeColors.borderDefault}`,
                   background: isLight ? "transparent" : "rgba(255,255,255,0.02)",
                 }}
@@ -242,7 +243,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: spacing[3],
+                      gap: spacing[2.5],
                     }}
                   >
                     {member.profilePicture ? (
@@ -250,17 +251,18 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                         src={member.profilePicture}
                         alt={member.username}
                         style={{
-                          width: spacing[9],
-                          height: spacing[9],
+                          width: spacing[8],
+                          height: spacing[8],
                           borderRadius: radius.full,
                           objectFit: "cover",
+                          flexShrink: 0,
                         }}
                       />
                     ) : (
                       <div
                         style={{
-                          width: spacing[9],
-                          height: spacing[9],
+                          width: spacing[8],
+                          height: spacing[8],
                           borderRadius: radius.full,
                           background: colors.brand.primaryLight,
                           display: "flex",
@@ -268,7 +270,8 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           justifyContent: "center",
                           color: colors.brand.primary,
                           fontWeight: typography.fontWeight.bold,
-                          fontSize: typography.fontSize.sm,
+                          fontSize: typography.fontSize.xs,
+                          flexShrink: 0,
                         }}
                       >
                         {member.firstName && member.lastName
@@ -279,8 +282,8 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                     <div>
                       <span
                         style={{
-                          fontSize: board.boardType === 'TEAM' ? typography.fontSize.lg : typography.fontSize.base,
-                          fontWeight: board.boardType === 'TEAM' ? typography.fontWeight.bold : typography.fontWeight.semibold,
+                          fontSize: typography.fontSize.base,
+                          fontWeight: typography.fontWeight.semibold,
                           color: cssVars.textMain,
                           display: "block",
                         }}
@@ -322,9 +325,9 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          width: spacing[8],
-                          height: spacing[8],
-                          borderRadius: radius.lg,
+                          width: spacing[7],
+                          height: spacing[7],
+                          borderRadius: radius.md,
                           border: `1px solid ${themeColors.borderDefault}`,
                           background: "transparent",
                           color: colors.brand.primary,
@@ -332,7 +335,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           transition: `all ${animation.duration.fast}`,
                         }}
                       >
-                        <Target size={16} />
+                        <Target size={14} />
                       </button>
                       <button
                         onClick={() => handleRemoveMember(member.id)}
@@ -341,9 +344,9 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          width: spacing[8],
-                          height: spacing[8],
-                          borderRadius: radius.lg,
+                          width: spacing[7],
+                          height: spacing[7],
+                          borderRadius: radius.md,
                           border: `1px solid ${colors.semantic.danger}30`,
                           background: "transparent",
                           color: colors.semantic.danger,
@@ -351,7 +354,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           transition: `all ${animation.duration.fast}`,
                         }}
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </button>
                     </div>
                   )}
@@ -363,8 +366,8 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                     style={{
                       display: "flex",
                       flexWrap: "wrap",
-                      gap: spacing[1.5],
-                      paddingTop: spacing[1],
+                      gap: spacing[1],
+                      paddingTop: spacing[0.5],
                     }}
                   >
                     {member.assignments.map((a) => (
@@ -378,7 +381,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           fontWeight: typography.fontWeight.medium,
                           color: colors.brand.primary,
                           background: colors.brand.primaryLight,
-                          padding: `${spacing[0.5]} ${spacing[2.5]}`,
+                          padding: `${spacing[0.5]} ${spacing[2]}`,
                           borderRadius: radius.full,
                         }}
                       >
