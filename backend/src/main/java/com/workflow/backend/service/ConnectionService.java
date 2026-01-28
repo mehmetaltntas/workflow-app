@@ -14,6 +14,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -25,6 +27,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class ConnectionService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ConnectionService.class);
 
     private final ConnectionRepository connectionRepository;
     private final UserRepository userRepository;
@@ -289,7 +293,7 @@ public class ConnectionService {
         LocalDateTime expireDate = LocalDateTime.now().minusDays(30);
         int deleted = connectionRepository.deleteExpiredPendingConnections(expireDate);
         if (deleted > 0) {
-            System.out.println("Suresi dolmus " + deleted + " baglanti istegi silindi.");
+            logger.info("Suresi dolmus {} baglanti istegi silindi.", deleted);
         }
     }
 }

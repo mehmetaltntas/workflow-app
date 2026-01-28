@@ -141,25 +141,10 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        String token = null;
-
-        // Try Authorization header first
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-        }
-
-        // Fallback to cookie
-        if (token == null) {
-            token = extractCookieValue(request, "access_token");
-        }
-
-        if (token != null) {
-            try {
-                String username = jwtService.extractUsername(token);
-                refreshTokenService.deleteByUsername(username);
-            } catch (Exception e) {
-                // Token might be expired, still clear cookies
-            }
+        // Refresh token cookie'sinden sadece bu oturumun token'ını sil
+        String refreshToken = extractCookieValue(request, "refresh_token");
+        if (refreshToken != null) {
+            refreshTokenService.deleteByToken(refreshToken);
         }
 
         clearTokenCookies(response);
@@ -233,7 +218,7 @@ public class AuthController {
             Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
             refreshCookie.setHttpOnly(true);
             refreshCookie.setSecure(true);
-            refreshCookie.setPath("/auth/refresh");
+            refreshCookie.setPath("/auth");
             refreshCookie.setMaxAge(604800); // 7 days (matches refresh token expiry)
             refreshCookie.setAttribute("SameSite", "Lax");
             response.addCookie(refreshCookie);
@@ -252,7 +237,7 @@ public class AuthController {
         Cookie refreshCookie = new Cookie("refresh_token", "");
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(true);
-        refreshCookie.setPath("/auth/refresh");
+        refreshCookie.setPath("/auth");
         refreshCookie.setMaxAge(0);
         refreshCookie.setAttribute("SameSite", "Lax");
         response.addCookie(refreshCookie);

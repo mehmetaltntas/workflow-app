@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,9 +25,12 @@ public class RefreshTokenService {
     private final UserRepository userRepository;
     private final JwtProperties jwtProperties;
 
+    private static final int MAX_TOKENS_PER_USER = 5;
+
     /**
      * Kullanıcı için yeni bir refresh token oluşturur.
-     * Eğer kullanıcının mevcut bir refresh token'ı varsa, önce onu siler.
+     * Kullanıcı başına maksimum MAX_TOKENS_PER_USER adet token tutulur.
+     * Limit aşılırsa en eski token'lar silinir.
      */
     @Transactional
     public RefreshToken createRefreshToken(String username) {
@@ -35,8 +39,15 @@ public class RefreshTokenService {
             throw new ResourceNotFoundException("Kullanıcı", "username", username);
         }
 
-        // Mevcut refresh token'ı sil (varsa)
-        refreshTokenRepository.deleteByUser(user);
+        // Eski token'ları temizle - maksimum MAX_TOKENS_PER_USER token per kullanıcı
+        long tokenCount = refreshTokenRepository.countByUser(user);
+        if (tokenCount >= MAX_TOKENS_PER_USER) {
+            List<RefreshToken> oldTokens = refreshTokenRepository.findByUserOrderByExpiryDateAsc(user);
+            long tokensToDelete = tokenCount - MAX_TOKENS_PER_USER + 1; // +1 yeni token için yer aç
+            for (int i = 0; i < tokensToDelete && i < oldTokens.size(); i++) {
+                refreshTokenRepository.delete(oldTokens.get(i));
+            }
+        }
 
         // Yeni refresh token oluştur
         RefreshToken refreshToken = new RefreshToken();
@@ -86,10 +97,19 @@ public class RefreshTokenService {
     }
 
     /**
-     * Kullanıcının refresh token'ını siler (logout için).
+     * Belirli bir refresh token'ı siler (logout için).
+     * Sadece o oturuma ait token silinir, diğer oturumlar etkilenmez.
      */
     @Transactional
-    public void deleteByUsername(String username) {
+    public void deleteByToken(String token) {
+        refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
+    }
+
+    /**
+     * Kullanıcının tüm refresh token'larını siler (şifre değişikliği vb. için).
+     */
+    @Transactional
+    public void deleteAllByUsername(String username) {
         User user = userRepository.findByUsername(username);
         if (user != null) {
             refreshTokenRepository.deleteByUser(user);

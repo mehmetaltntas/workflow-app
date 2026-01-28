@@ -178,7 +178,7 @@ const SettingsPage = () => {
     }
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = useCallback(async () => {
     if (!userId) return;
 
     if (username !== originalUsername) {
@@ -250,7 +250,7 @@ const SettingsPage = () => {
     } finally {
       setIsSavingProfile(false);
     }
-  };
+  }, [userId, username, originalUsername, usernameAvailable, firstName, originalFirstName, lastName, originalLastName, profilePicture, login]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,7 +298,7 @@ const SettingsPage = () => {
     }
   };
 
-  const handleScheduleDeletion = async () => {
+  const handleScheduleDeletion = useCallback(async () => {
     if (!userId) return;
     setIsDeletionLoading(true);
     try {
@@ -316,9 +316,9 @@ const SettingsPage = () => {
     } finally {
       setIsDeletionLoading(false);
     }
-  };
+  }, [userId, setDeletionScheduledAt]);
 
-  const handleCancelDeletion = async () => {
+  const handleCancelDeletion = useCallback(async () => {
     if (!userId) return;
     setIsDeletionLoading(true);
     try {
@@ -330,7 +330,7 @@ const SettingsPage = () => {
     } finally {
       setIsDeletionLoading(false);
     }
-  };
+  }, [userId, setDeletionScheduledAt]);
 
   const menuItems = [
     { id: 'profile' as const, label: 'Profil', icon: User, description: 'Profil bilgilerinizi düzenleyin' },

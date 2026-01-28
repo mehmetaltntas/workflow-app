@@ -12,11 +12,12 @@ interface AuthState {
   logout: () => Promise<void>;
   updateUsername: (username: string) => void;
   setDeletionScheduledAt: (date: string | null) => void;
+  validateSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       userId: null,
       username: null,
       firstName: null,
@@ -52,6 +53,42 @@ export const useAuthStore = create<AuthState>()(
       },
       updateUsername: (username) => set({ username }),
       setDeletionScheduledAt: (date) => set({ deletionScheduledAt: date }),
+      validateSession: async () => {
+        const { userId, isAuthenticated } = get();
+        if (!isAuthenticated || !userId) return;
+
+        try {
+          const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+          const response = await fetch(`${baseUrl}/users/${userId}`, {
+            method: "GET",
+            credentials: "include",
+          });
+
+          if (response.status === 401 || response.status === 403) {
+            set({
+              userId: null,
+              username: null,
+              firstName: null,
+              lastName: null,
+              deletionScheduledAt: null,
+              isAuthenticated: false,
+            });
+            return;
+          }
+
+          if (response.ok) {
+            const data = await response.json();
+            set({
+              username: data.username ?? get().username,
+              firstName: data.firstName ?? null,
+              lastName: data.lastName ?? null,
+              deletionScheduledAt: data.deletionScheduledAt ?? null,
+            });
+          }
+        } catch {
+          // Network error - keep current state, don't force logout on transient failures
+        }
+      },
     }),
     { name: 'workflow-auth' }
   )

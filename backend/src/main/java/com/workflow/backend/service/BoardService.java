@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -430,15 +431,22 @@ public class BoardService {
         if (input == null)
             return "";
 
-        String result = input.toLowerCase()
+        String result = input
+                .replace("Ğ", "g")
+                .replace("Ü", "u")
+                .replace("Ş", "s")
+                .replace("İ", "i")
+                .replace("Ö", "o")
+                .replace("Ç", "c")
+                .toLowerCase(Locale.forLanguageTag("tr"))
                 .replace("ğ", "g")
                 .replace("ü", "u")
                 .replace("ş", "s")
                 .replace("ı", "i")
                 .replace("ö", "o")
                 .replace("ç", "c")
-                .replaceAll("[^a-z0-9\\s-]", "") // Harf, sayı, boşluk ve tire dışındakileri sil
-                .replaceAll("\\s+", "-"); // Boşlukları tire yap
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-");
 
         return result;
     }

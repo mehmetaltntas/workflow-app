@@ -28,6 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -207,35 +209,37 @@ class AuthControllerTest {
     class LogoutTests {
 
         @Test
-        @DisplayName("Should logout successfully with valid token in header")
-        void logout_ValidToken_ReturnsSuccess() {
+        @DisplayName("Should logout successfully and delete specific refresh token from cookie")
+        void logout_ValidRefreshTokenCookie_ReturnsSuccess() {
             // Arrange
-            when(jwtService.extractUsername(anyString())).thenReturn("testuser");
-
-            // Act
-            ResponseEntity<String> response = authController.logout("Bearer validToken", mockRequest, mockResponse);
-
-            // Assert
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
-            verify(refreshTokenService).deleteByUsername("testuser");
-            // Verify cookies were cleared
-            verify(mockResponse).addCookie(any(Cookie.class));
-        }
-
-        @Test
-        @DisplayName("Should logout and clear cookies even without auth header (using cookie)")
-        void logout_NullHeader_UsesCooke() {
-            // Arrange
-            Cookie accessCookie = new Cookie("access_token", "tokenFromCookie");
-            when(mockRequest.getCookies()).thenReturn(new Cookie[]{accessCookie});
-            when(jwtService.extractUsername("tokenFromCookie")).thenReturn("testuser");
+            Cookie refreshCookie = new Cookie("refresh_token", "validRefreshToken");
+            when(mockRequest.getCookies()).thenReturn(new Cookie[]{refreshCookie});
 
             // Act
             ResponseEntity<String> response = authController.logout(null, mockRequest, mockResponse);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
-            verify(refreshTokenService).deleteByUsername("testuser");
+            verify(refreshTokenService).deleteByToken("validRefreshToken");
+            // Verify cookies were cleared (access_token + refresh_token)
+            verify(mockResponse, atLeast(2)).addCookie(any(Cookie.class));
+        }
+
+        @Test
+        @DisplayName("Should logout and clear cookies even without refresh token cookie")
+        void logout_NoRefreshTokenCookie_StillClearsCookies() {
+            // Arrange
+            Cookie accessCookie = new Cookie("access_token", "tokenFromCookie");
+            when(mockRequest.getCookies()).thenReturn(new Cookie[]{accessCookie});
+
+            // Act
+            ResponseEntity<String> response = authController.logout(null, mockRequest, mockResponse);
+
+            // Assert
+            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            verify(refreshTokenService, never()).deleteByToken(anyString());
+            // Verify cookies were cleared (access_token + refresh_token)
+            verify(mockResponse, atLeast(2)).addCookie(any(Cookie.class));
         }
 
         @Test
@@ -249,7 +253,8 @@ class AuthControllerTest {
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
-            verify(mockResponse).addCookie(any(Cookie.class));
+            // Verify cookies were cleared (access_token + refresh_token)
+            verify(mockResponse, atLeast(2)).addCookie(any(Cookie.class));
         }
     }
 }
