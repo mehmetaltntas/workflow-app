@@ -97,8 +97,9 @@ public class NotificationService {
                 .map(n -> n.getActor().getId())
                 .collect(Collectors.toSet());
         Map<Long, String> profilePictureMap = actorIds.isEmpty() ? Map.of() :
-                profilePictureRepository.findPictureDataByUserIds(actorIds).stream()
-                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+                profilePictureRepository.findFilePathsByUserIds(actorIds).stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0],
+                                row -> "/users/" + row[0] + "/profile-picture"));
 
         List<NotificationResponse> content = notifications.stream()
                 .map(n -> mapToResponse(n, profilePictureMap)).toList();
@@ -168,7 +169,8 @@ public class NotificationService {
         response.setActorId(notification.getActor().getId());
         response.setActorUsername(notification.getActor().getUsername());
         response.setActorProfilePicture(
-                profilePictureRepository.findPictureDataByUserId(notification.getActor().getId()).orElse(null));
+                profilePictureRepository.findFilePathByUserId(notification.getActor().getId())
+                        .map(fp -> "/users/" + notification.getActor().getId() + "/profile-picture").orElse(null));
         response.setReferenceId(notification.getReferenceId());
         response.setCreatedAt(notification.getCreatedAt());
         return response;

@@ -8,7 +8,9 @@ import com.workflow.backend.hateoas.assembler.UserSearchModelAssembler;
 import com.workflow.backend.hateoas.model.UserModel;
 import com.workflow.backend.hateoas.model.UserProfileModel;
 import com.workflow.backend.hateoas.model.UserSearchModel;
+import com.workflow.backend.repository.UserProfilePictureRepository;
 import com.workflow.backend.service.CurrentUserService;
+import com.workflow.backend.service.ProfilePictureStorageService;
 import com.workflow.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,10 +24,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
@@ -42,6 +48,8 @@ public class UserController {
     private final UserModelAssembler userAssembler;
     private final UserSearchModelAssembler userSearchAssembler;
     private final UserProfileModelAssembler userProfileAssembler;
+    private final UserProfilePictureRepository profilePictureRepository;
+    private final ProfilePictureStorageService profilePictureStorageService;
 
     private void verifyCurrentUser(Long userId) {
         Long currentUserId = currentUserService.getCurrentUserId();
@@ -65,6 +73,28 @@ public class UserController {
         UserResponse user = userService.getUserById(id);
         UserModel model = userAssembler.toModel(user);
         return ResponseEntity.ok(model);
+    }
+
+    @Operation(summary = "Profil resmini getir", description = "Kullanicinin profil resmini dosya olarak dondurur (kimlik dogrulama gerektirmez)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profil resmi basariyla getirildi"),
+            @ApiResponse(responseCode = "404", description = "Profil resmi bulunamadi")
+    })
+    @GetMapping("/{id}/profile-picture")
+    public ResponseEntity<byte[]> getProfilePicture(
+            @Parameter(description = "Kullanici ID") @PathVariable Long id) {
+        String filePath = profilePictureRepository.findFilePathByUserId(id).orElse(null);
+        if (filePath == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        byte[] imageBytes = profilePictureStorageService.load(filePath);
+        String contentType = profilePictureStorageService.getContentType(filePath);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic())
+                .body(imageBytes);
     }
 
     @Operation(summary = "Profil güncelle", description = "Kullanıcının profil bilgilerini (kullanıcı adı, profil resmi) günceller")

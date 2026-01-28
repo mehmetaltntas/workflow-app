@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { ChevronRight, Folder, FileText, CheckSquare, Loader2, Plus, MoreHorizontal, Edit2, Trash2, Check, ListTodo } from 'lucide-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { colors, typography, spacing, radius, shadows, animation } from '../styles/tokens';
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors, type ThemeColors } from "../utils/themeColors";
@@ -89,15 +90,39 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
   const [actionMenuId, setActionMenuId] = useState<number | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; bottom: number; right: number; openUp: boolean }>({ top: 0, bottom: 0, right: 0, openUp: false });
 
+  // Virtualization threshold: only virtualize for large lists
+  const VIRTUALIZATION_THRESHOLD = 50;
+  const shouldVirtualize = items.length > VIRTUALIZATION_THRESHOLD;
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 68, // estimated row height (card ~60px + 4px gap + padding)
+    overscan: 10,
+    enabled: shouldVirtualize,
+  });
+
   // Seçili öğeyi görünür yap
-  useEffect(() => {
-    if (selectedRef.current && columnRef.current) {
-      selectedRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
+  const scrollToSelected = useCallback(() => {
+    if (selectedId === null) return;
+    if (shouldVirtualize) {
+      const selectedIndex = items.findIndex((item) => item.id === selectedId);
+      if (selectedIndex >= 0) {
+        virtualizer.scrollToIndex(selectedIndex, { align: 'auto', behavior: 'smooth' });
+      }
+    } else {
+      if (selectedRef.current && columnRef.current) {
+        selectedRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }
     }
-  }, [selectedId]);
+  }, [selectedId, shouldVirtualize, items, virtualizer]);
+
+  useEffect(() => {
+    scrollToSelected();
+  }, [scrollToSelected]);
 
   // Scroll sırasında açık menüyü kapat
   useEffect(() => {
@@ -317,15 +342,16 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
             )}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
-            {items.map((item) => {
+          (() => {
+            // Shared card renderer used by both normal and virtualized paths
+            const renderCard = (item: MillerColumnItem, extraStyle?: React.CSSProperties) => {
               const isSelected = selectedId === item.id;
               const isHovered = hoveredId === item.id;
 
               return (
                 <div
                   key={item.id}
-                  ref={isSelected ? selectedRef : null}
+                  ref={isSelected && !shouldVirtualize ? selectedRef : null}
                   role="button"
                   tabIndex={0}
                   onClick={() => onSelect(item)}
@@ -351,12 +377,14 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                     cursor: 'pointer',
                     transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
                     textAlign: 'left',
-                    position: 'relative',
+                    position: extraStyle ? 'absolute' as const : 'relative' as const,
                     boxShadow: isSelected
                       ? `${shadows.md}, 0 0 0 1px rgba(77, 171, 247, 0.3)`
                       : isHovered
                         ? '0 4px 16px rgba(0, 0, 0, 0.2)'
                         : '0 2px 8px rgba(0, 0, 0, 0.15)',
+                    boxSizing: 'border-box',
+                    ...extraStyle,
                   }}
                 >
                   {/* Priority Indicator */}
@@ -673,8 +701,39 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                   )}
                 </div>
               );
-            })}
-          </div>
+            };
+
+            // For small lists, render normally without virtualization overhead
+            if (!shouldVirtualize) {
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+                  {items.map((item) => renderCard(item))}
+                </div>
+              );
+            }
+
+            // For large lists (>50 items), use virtualization
+            const virtualItems = virtualizer.getVirtualItems();
+            return (
+              <div
+                style={{
+                  height: `${virtualizer.getTotalSize()}px`,
+                  width: '100%',
+                  position: 'relative',
+                }}
+              >
+                {virtualItems.map((virtualRow) => {
+                  const item = items[virtualRow.index];
+                  return renderCard(item, {
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  });
+                })}
+              </div>
+            );
+          })()
         )}
       </div>
     </div>

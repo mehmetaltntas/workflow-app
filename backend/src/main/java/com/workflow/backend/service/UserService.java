@@ -30,6 +30,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserProfilePictureRepository profilePictureRepository;
+    private final ProfilePictureStorageService profilePictureStorageService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
@@ -128,8 +129,8 @@ public class UserService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
         // 5. Giris basarili, bilgileri ve token'lari don
-        String pictureData = profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null);
-        UserResponse response = mapToResponse(user, pictureData);
+        String profilePictureUrl = getProfilePictureUrl(user.getId());
+        UserResponse response = mapToResponse(user, profilePictureUrl);
         response.setToken(accessToken);
         response.setRefreshToken(refreshToken.getToken());
         return response;
@@ -143,9 +144,9 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", id));
 
-        // Profil resmini ayri sorgu ile al (lazy loading)
-        String pictureData = profilePictureRepository.findPictureDataByUserId(id).orElse(null);
-        return mapToResponse(user, pictureData);
+        // Profil resmi URL'ini al
+        String profilePictureUrl = getProfilePictureUrl(id);
+        return mapToResponse(user, profilePictureUrl);
     }
 
     // PROFIL GUNCELLEME ISLEMI
@@ -180,20 +181,28 @@ public class UserService {
             user.setLastName(request.getLastName());
         }
 
-        // Profil resmi guncelleme (ayri tabloda saklaniyor)
+        // Profil resmi guncelleme (dosya sisteminde saklaniyor)
         if (request.getProfilePicture() != null) {
             UserProfilePicture profilePic = profilePictureRepository.findByUserId(id)
                     .orElse(new UserProfilePicture(user, null));
-            profilePic.setPictureData(request.getProfilePicture());
+
+            // Eski dosyayi sil
+            if (profilePic.getFilePath() != null) {
+                profilePictureStorageService.delete(profilePic.getFilePath());
+            }
+
+            // Yeni dosyayi kaydet
+            String filePath = profilePictureStorageService.save(id, request.getProfilePicture());
+            profilePic.setFilePath(filePath);
             profilePic.setUser(user);
             profilePictureRepository.save(profilePic);
         }
 
         User savedUser = userRepository.save(user);
 
-        // Profil resmini ayri sorgu ile al (lazy loading nedeniyle)
-        String pictureData = profilePictureRepository.findPictureDataByUserId(id).orElse(null);
-        UserResponse response = mapToResponse(savedUser, pictureData);
+        // Profil resmi URL'ini al
+        String profilePictureUrl = getProfilePictureUrl(id);
+        UserResponse response = mapToResponse(savedUser, profilePictureUrl);
 
         // Kullanici adi degistiyse yeni token'lar uret
         if (usernameChanged) {
@@ -242,8 +251,7 @@ public class UserService {
             UserSearchResponse response = new UserSearchResponse();
             response.setId(user.getId());
             response.setUsername(user.getUsername());
-            response.setProfilePicture(
-                    profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null));
+            response.setProfilePicture(getProfilePictureUrl(user.getId()));
             return response;
         }).toList();
     }
@@ -273,8 +281,7 @@ public class UserService {
         // Gizli profilde baglanti sayisi ve profil resmi gosterilmez (kendi profili haricinde)
         if (Boolean.TRUE.equals(user.getIsProfilePublic()) || "SELF".equals(connectionStatus) || "ACCEPTED".equals(connectionStatus)) {
             response.setConnectionCount(connectionCount);
-            response.setProfilePicture(
-                    profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null));
+            response.setProfilePicture(getProfilePictureUrl(user.getId()));
         } else {
             response.setConnectionCount(null);
             response.setProfilePicture(null);
@@ -427,8 +434,8 @@ public class UserService {
         user.setDeletionScheduledAt(LocalDateTime.now());
         User savedUser = userRepository.save(user);
 
-        String pictureData = profilePictureRepository.findPictureDataByUserId(userId).orElse(null);
-        return mapToResponse(savedUser, pictureData);
+        String profilePictureUrl = getProfilePictureUrl(userId);
+        return mapToResponse(savedUser, profilePictureUrl);
     }
 
     // HESAP SILME IPTAL
@@ -442,8 +449,8 @@ public class UserService {
         user.setDeletionScheduledAt(null);
         User savedUser = userRepository.save(user);
 
-        String pictureData = profilePictureRepository.findPictureDataByUserId(userId).orElse(null);
-        return mapToResponse(savedUser, pictureData);
+        String profilePictureUrl = getProfilePictureUrl(userId);
+        return mapToResponse(savedUser, profilePictureUrl);
     }
 
     // ZAMANLANMIS HESAPLARI SIL (Her gece 02:00'de calisir)
@@ -455,6 +462,11 @@ public class UserService {
 
         for (User user : usersToDelete) {
             log.info("Zamanlanmis hesap siliniyor: userId={}, username={}", user.getId(), user.getUsername());
+
+            // Profil resmi dosyasini sil
+            profilePictureRepository.findFilePathByUserId(user.getId())
+                    .ifPresent(profilePictureStorageService::delete);
+
             userRepository.delete(user);
         }
 
@@ -463,16 +475,26 @@ public class UserService {
         }
     }
 
+    /**
+     * Kullanici ID'sine gore profil resmi URL'i dondurur.
+     * Dosya yolu varsa "/users/{userId}/profile-picture" formatinda URL uretir.
+     */
+    private String getProfilePictureUrl(Long userId) {
+        return profilePictureRepository.findFilePathByUserId(userId)
+                .map(filePath -> "/users/" + userId + "/profile-picture")
+                .orElse(null);
+    }
+
     // Yardimci Metot: Entity -> DTO Cevirici
-    // pictureData parametresi profil resminin Base64 verisini icerir (ayri tablodan geliyor).
-    private UserResponse mapToResponse(User user, String pictureData) {
+    // profilePictureUrl parametresi profil resminin URL yolunu icerir.
+    private UserResponse mapToResponse(User user, String profilePictureUrl) {
         UserResponse response = new UserResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
-        response.setProfilePicture(pictureData);
+        response.setProfilePicture(profilePictureUrl);
         response.setDeletionScheduledAt(user.getDeletionScheduledAt());
         // Token burada set edilmiyor, yukarida metot icinde ediliyor.
         return response;

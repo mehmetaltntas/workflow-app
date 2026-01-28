@@ -36,6 +36,9 @@ public class BoardMemberAssignment {
     @Column(name = "target_id", nullable = false)
     private Long targetId;
 
+    @Version
+    private Long version;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

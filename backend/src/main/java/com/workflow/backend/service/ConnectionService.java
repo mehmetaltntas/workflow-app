@@ -277,11 +277,13 @@ public class ConnectionService {
         response.setSenderId(connection.getSender().getId());
         response.setSenderUsername(connection.getSender().getUsername());
         response.setSenderProfilePicture(
-                profilePictureRepository.findPictureDataByUserId(connection.getSender().getId()).orElse(null));
+                profilePictureRepository.findFilePathByUserId(connection.getSender().getId())
+                        .map(fp -> "/users/" + connection.getSender().getId() + "/profile-picture").orElse(null));
         response.setReceiverId(connection.getReceiver().getId());
         response.setReceiverUsername(connection.getReceiver().getUsername());
         response.setReceiverProfilePicture(
-                profilePictureRepository.findPictureDataByUserId(connection.getReceiver().getId()).orElse(null));
+                profilePictureRepository.findFilePathByUserId(connection.getReceiver().getId())
+                        .map(fp -> "/users/" + connection.getReceiver().getId() + "/profile-picture").orElse(null));
         response.setStatus(connection.getStatus().name());
         response.setCreatedAt(connection.getCreatedAt());
         return response;

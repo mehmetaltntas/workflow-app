@@ -87,8 +87,9 @@ public class GoogleAuthService {
             String accessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
-            // Profil resmini ayri tablodan al
-            String pictureData = profilePictureRepository.findPictureDataByUserId(user.getId()).orElse(null);
+            // Profil resmi URL'ini al
+            String profilePictureUrl = profilePictureRepository.findFilePathByUserId(user.getId())
+                    .map(fp -> "/users/" + user.getId() + "/profile-picture").orElse(null);
 
             // Response olustur
             UserResponse response = new UserResponse();
@@ -97,7 +98,7 @@ public class GoogleAuthService {
             response.setEmail(user.getEmail());
             response.setFirstName(user.getFirstName());
             response.setLastName(user.getLastName());
-            response.setProfilePicture(pictureData);
+            response.setProfilePicture(profilePictureUrl);
             response.setToken(accessToken);
             response.setRefreshToken(refreshToken.getToken());
 

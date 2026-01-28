@@ -13,11 +13,11 @@ public interface UserProfilePictureRepository extends JpaRepository<UserProfileP
 
     Optional<UserProfilePicture> findByUserId(Long userId);
 
-    @Query("SELECT p.pictureData FROM UserProfilePicture p WHERE p.user.id = :userId")
-    Optional<String> findPictureDataByUserId(@Param("userId") Long userId);
+    @Query("SELECT p.filePath FROM UserProfilePicture p WHERE p.user.id = :userId")
+    Optional<String> findFilePathByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT p.user.id, p.pictureData FROM UserProfilePicture p WHERE p.user.id IN :userIds")
-    List<Object[]> findPictureDataByUserIds(@Param("userIds") Collection<Long> userIds);
+    @Query("SELECT p.user.id, p.filePath FROM UserProfilePicture p WHERE p.user.id IN :userIds")
+    List<Object[]> findFilePathsByUserIds(@Param("userIds") Collection<Long> userIds);
 
     void deleteByUserId(Long userId);
 }

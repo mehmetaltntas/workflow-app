@@ -7,8 +7,7 @@ import lombok.Setter;
 
 /**
  * Profil resmini ayri bir tabloda saklar.
- * Bu sayede User sorgularinda buyuk Base64 verisi otomatik olarak cekilmez,
- * sadece ihtiyac duyuldugunda lazy olarak yuklenir.
+ * Dosya sisteminde saklanan profil resminin yolunu tutar.
  */
 @Entity
 @Table(name = "user_profile_pictures")
@@ -25,11 +24,14 @@ public class UserProfilePicture {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(columnDefinition = "TEXT")
-    private String pictureData;
+    @Version
+    private Long version;
 
-    public UserProfilePicture(User user, String pictureData) {
+    @Column(name = "file_path", length = 500)
+    private String filePath;
+
+    public UserProfilePicture(User user, String filePath) {
         this.user = user;
-        this.pictureData = pictureData;
+        this.filePath = filePath;
     }
 }

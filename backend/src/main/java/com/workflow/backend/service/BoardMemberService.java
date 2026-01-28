@@ -124,11 +124,12 @@ public class BoardMemberService {
         final Set<Long> finalConnectedUserIds = connectedUserIds;
         final boolean finalIsOwner = isOwner;
 
-        // Profil resimlerini toplu olarak ön-yükle (N+1 sorgu önleme)
+        // Profil resmi URL'lerini toplu olarak ön-yükle (N+1 sorgu önleme)
         Set<Long> userIds = members.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
         Map<Long, String> profilePictureMap = userIds.isEmpty() ? Map.of() :
-                profilePictureRepository.findPictureDataByUserIds(userIds).stream()
-                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+                profilePictureRepository.findFilePathsByUserIds(userIds).stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0],
+                                row -> "/users/" + row[0] + "/profile-picture"));
 
         return members.stream().map(member -> {
             boolean showProfile = finalIsOwner
@@ -348,11 +349,12 @@ public class BoardMemberService {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<BoardMember> pendingMembers = boardMemberRepository.findPendingByUserId(currentUserId);
 
-        // Profil resimlerini toplu olarak ön-yükle (N+1 sorgu önleme)
+        // Profil resmi URL'lerini toplu olarak ön-yükle (N+1 sorgu önleme)
         Set<Long> userIds = pendingMembers.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
         Map<Long, String> profilePictureMap = userIds.isEmpty() ? Map.of() :
-                profilePictureRepository.findPictureDataByUserIds(userIds).stream()
-                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+                profilePictureRepository.findFilePathsByUserIds(userIds).stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0],
+                                row -> "/users/" + row[0] + "/profile-picture"));
 
         return pendingMembers.stream()
                 .map(m -> mapToDto(m, true, profilePictureMap))
@@ -385,7 +387,8 @@ public class BoardMemberService {
                 dto.setProfilePicture(profilePictureMap.get(member.getUser().getId()));
             } else {
                 dto.setProfilePicture(
-                        profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
+                        profilePictureRepository.findFilePathByUserId(member.getUser().getId())
+                                .map(fp -> "/users/" + member.getUser().getId() + "/profile-picture").orElse(null));
             }
         }
 

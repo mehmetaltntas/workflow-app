@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.backend.exception.GlobalExceptionHandler;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -95,14 +96,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     /**
      * Rate limit kontrolü yapar. Limit aşılmışsa 429 yanıtı döner ve false döner.
+     * Başarılı ve başarısız durumlarda RateLimit-* header'larını ekler.
      */
     private boolean tryConsume(String bucketKey, String clientIp, RateLimitConfig config, HttpServletResponse response)
             throws IOException {
         Bucket bucket = resolveBucket(bucketKey, clientIp, config);
-        if (bucket.tryConsume(1)) {
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+
+        response.setHeader("RateLimit-Limit", String.valueOf(config.tokens()));
+        response.setHeader("RateLimit-Remaining", String.valueOf(probe.getRemainingTokens()));
+        response.setHeader("RateLimit-Reset", String.valueOf(
+                Math.max(0, probe.getNanosToWaitForRefill() / 1_000_000_000)));
+
+        if (probe.isConsumed()) {
             return true;
         }
         logger.warn("Rate limit exceeded for IP: {} on endpoint: {}", clientIp, bucketKey);
+        response.setHeader("Retry-After", String.valueOf(
+                Math.max(1, probe.getNanosToWaitForRefill() / 1_000_000_000)));
         response.setStatus(429); // Too Many Requests
         response.setContentType("application/json");
         GlobalExceptionHandler.ErrorResponse errorResponse = new GlobalExceptionHandler.ErrorResponse(

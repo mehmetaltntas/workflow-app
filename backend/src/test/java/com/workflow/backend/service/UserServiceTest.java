@@ -37,6 +37,9 @@ class UserServiceTest {
     private UserProfilePictureRepository profilePictureRepository;
 
     @Mock
+    private ProfilePictureStorageService profilePictureStorageService;
+
+    @Mock
     private JwtService jwtService;
 
     @Mock
@@ -84,8 +87,8 @@ class UserServiceTest {
         @DisplayName("Should register user successfully")
         void register_Success() {
             // Arrange
-            when(userRepository.findByUsername(anyString())).thenReturn(null);
-            when(userRepository.findByEmail(anyString())).thenReturn(null);
+            when(userRepository.findByUsernameIgnoreCase(anyString())).thenReturn(null);
+            when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(null);
             when(emailVerificationService.verifyCode(anyString(), anyString())).thenReturn(true);
             when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -117,12 +120,12 @@ class UserServiceTest {
         @DisplayName("Should throw exception when username already exists")
         void register_DuplicateUsername_ThrowsException() {
             // Arrange
-            when(userRepository.findByUsername("newuser")).thenReturn(testUser);
+            when(userRepository.findByUsernameIgnoreCase("newuser")).thenReturn(testUser);
 
             // Act & Assert
             assertThatThrownBy(() -> userService.register(registerRequest))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("kullanıcı adı zaten alınmış");
+                    .hasMessageContaining("zaten mevcut");
 
             verify(userRepository, never()).save(any(User.class));
         }
@@ -131,13 +134,13 @@ class UserServiceTest {
         @DisplayName("Should throw exception when email already exists")
         void register_DuplicateEmail_ThrowsException() {
             // Arrange
-            when(userRepository.findByUsername(anyString())).thenReturn(null);
-            when(userRepository.findByEmail("new@example.com")).thenReturn(testUser);
+            when(userRepository.findByUsernameIgnoreCase(anyString())).thenReturn(null);
+            when(userRepository.findByEmailIgnoreCase("new@example.com")).thenReturn(testUser);
 
             // Act & Assert
             assertThatThrownBy(() -> userService.register(registerRequest))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("email adresi zaten kullanılıyor");
+                    .hasMessageContaining("zaten mevcut");
 
             verify(userRepository, never()).save(any(User.class));
         }
@@ -151,10 +154,10 @@ class UserServiceTest {
         @DisplayName("Should login user successfully")
         void login_Success() {
             // Arrange
-            when(userRepository.findByUsername("testuser")).thenReturn(testUser);
+            when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(testUser);
             when(passwordEncoder.matches("password", "encodedPassword")).thenReturn(true);
             when(jwtService.generateAccessToken("testuser", 1L)).thenReturn("accessToken");
-            when(profilePictureRepository.findPictureDataByUserId(1L)).thenReturn(Optional.empty());
+            when(profilePictureRepository.findFilePathByUserId(1L)).thenReturn(Optional.empty());
 
             RefreshToken refreshToken = new RefreshToken();
             refreshToken.setToken("refreshToken");
@@ -174,7 +177,7 @@ class UserServiceTest {
         @DisplayName("Should throw exception when password is invalid")
         void login_InvalidPassword_ThrowsException() {
             // Arrange
-            when(userRepository.findByUsername("testuser")).thenReturn(testUser);
+            when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(testUser);
             when(passwordEncoder.matches("password", "encodedPassword")).thenReturn(false);
 
             // Act & Assert
@@ -187,7 +190,7 @@ class UserServiceTest {
         @DisplayName("Should throw exception when user not found")
         void login_UserNotFound_ThrowsException() {
             // Arrange
-            when(userRepository.findByUsername("testuser")).thenReturn(null);
+            when(userRepository.findByUsernameIgnoreCase("testuser")).thenReturn(null);
 
             // Act & Assert
             assertThatThrownBy(() -> userService.login(loginRequest))

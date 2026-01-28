@@ -52,7 +52,7 @@ public class SecurityConfig {
                                                                 .maxAgeInSeconds(31536000)
                                                                 .preload(true)))
                                 .authorizeHttpRequests(auth -> {
-                                        auth.requestMatchers("/auth/**", "/error").permitAll();
+                                        auth.requestMatchers("/auth/**", "/error", "/users/*/profile-picture").permitAll();
                                         if (isDevProfile()) {
                                                 auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll();
                                         }

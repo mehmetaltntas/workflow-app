@@ -32,6 +32,9 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private int attempts = 0;
 
+    @Version
+    private Long version;
+
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }

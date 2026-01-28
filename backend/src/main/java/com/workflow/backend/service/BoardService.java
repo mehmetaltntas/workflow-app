@@ -191,7 +191,8 @@ public class BoardService {
                     memberDto.setFirstName(member.getUser().getFirstName());
                     memberDto.setLastName(member.getUser().getLastName());
                     memberDto.setProfilePicture(
-                            profilePictureRepository.findPictureDataByUserId(memberUserId).orElse(null));
+                            profilePictureRepository.findFilePathByUserId(memberUserId)
+                                    .map(fp -> "/users/" + memberUserId + "/profile-picture").orElse(null));
                 }
                 // showProfile false ise userId, firstName, lastName, profilePicture null kalır
 
