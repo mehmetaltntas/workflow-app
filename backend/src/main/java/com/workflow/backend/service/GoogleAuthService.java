@@ -73,13 +73,15 @@ public class GoogleAuthService {
             String googleId = payload.getSubject();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
+            String givenName = (String) payload.get("given_name");   // May be null
+            String familyName = (String) payload.get("family_name"); // May be null
             String picture = (String) payload.get("picture");
 
             logger.info("Google ile giris: {} - {}", email, googleId);
 
             // Mevcut kullaniciyi bul veya yeni olustur
             User user = userRepository.findByGoogleId(googleId)
-                    .orElseGet(() -> findOrCreateUser(googleId, email, name, picture));
+                    .orElseGet(() -> findOrCreateUser(googleId, email, givenName, familyName, name, picture));
 
             // Token'lari olustur (userId claim ile)
             String accessToken = jwtService.generateAccessToken(user.getUsername(), user.getId());
@@ -93,6 +95,8 @@ public class GoogleAuthService {
             response.setId(user.getId());
             response.setUsername(user.getUsername());
             response.setEmail(user.getEmail());
+            response.setFirstName(user.getFirstName());
+            response.setLastName(user.getLastName());
             response.setProfilePicture(pictureData);
             response.setToken(accessToken);
             response.setRefreshToken(refreshToken.getToken());
@@ -107,7 +111,8 @@ public class GoogleAuthService {
         }
     }
 
-    private User findOrCreateUser(String googleId, String email, String name, String picture) {
+    private User findOrCreateUser(String googleId, String email, String givenName,
+                                  String familyName, String name, String picture) {
         // Oncelikle ayni email ile kayitli kullanici var mi kontrol et
         User existingUser = userRepository.findByEmail(email);
 
@@ -120,6 +125,19 @@ public class GoogleAuthService {
             // Sadece Google hesabi ise bagla
             existingUser.setGoogleId(googleId);
             existingUser.setAuthProvider(AuthProvider.GOOGLE);
+
+            // Eger firstName/lastName bos ise Google'dan set et
+            if (existingUser.getFirstName() == null || existingUser.getLastName() == null) {
+                String[] names = parseGoogleName(givenName, familyName, name);
+                if (existingUser.getFirstName() == null) {
+                    existingUser.setFirstName(names[0]);
+                }
+                if (existingUser.getLastName() == null) {
+                    existingUser.setLastName(names[1]);
+                }
+                logger.info("Eksik firstName/lastName Google'dan guncellendi");
+            }
+
             User savedUser = userRepository.save(existingUser);
 
             // Profil resmi yoksa ve Google'dan geldiyse kaydet (ayri tabloda)
@@ -140,6 +158,11 @@ public class GoogleAuthService {
         newUser.setAuthProvider(AuthProvider.GOOGLE);
         // Google ile giris yapan kullanicinin sifresi yok
         newUser.setPassword(null);
+
+        // firstName ve lastName ayarla
+        String[] names = parseGoogleName(givenName, familyName, name);
+        newUser.setFirstName(names[0]);
+        newUser.setLastName(names[1]);
 
         User savedNewUser = userRepository.save(newUser);
 
@@ -166,5 +189,57 @@ public class GoogleAuthService {
         }
 
         return username;
+    }
+
+    /**
+     * Google'dan gelen isim bilgilerini firstName ve lastName olarak parse eder.
+     *
+     * Oncelik sirasi:
+     * 1. Google'un sagladigi given_name ve family_name (varsa)
+     * 2. name alanini parse et (yoksa)
+     * 3. Varsayilan degerler (hicbiri yoksa)
+     *
+     * @param givenName Google'un given_name alani (null olabilir)
+     * @param familyName Google'un family_name alani (null olabilir)
+     * @param fullName Google'un name alani (null olabilir)
+     * @return String[2] array: [0]=firstName, [1]=lastName
+     */
+    private String[] parseGoogleName(String givenName, String familyName, String fullName) {
+        // 1. ONCELIK: Google'un sagladigi given_name ve family_name
+        if (givenName != null && !givenName.trim().isEmpty() &&
+            familyName != null && !familyName.trim().isEmpty()) {
+            logger.info("Google given_name ve family_name kullaniliyor");
+            return new String[]{givenName.trim(), familyName.trim()};
+        }
+
+        // 2. ONCELIK: given_name varsa ama family_name yoksa
+        if (givenName != null && !givenName.trim().isEmpty()) {
+            logger.info("Sadece Google given_name mevcut, family_name varsayilan");
+            return new String[]{givenName.trim(), "User"};
+        }
+
+        // 3. ONCELIK: name alanini parse et
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            String cleanedName = fullName.trim().replaceAll("\\s+", " ");
+
+            if (!cleanedName.contains(" ")) {
+                // Tek kelime
+                logger.info("Tek kelimeli isim tespit edildi: {}", cleanedName);
+                return new String[]{cleanedName, "User"};
+            }
+
+            // Birden fazla kelime: ilk kelime firstName, geri kalani lastName
+            int firstSpaceIndex = cleanedName.indexOf(" ");
+            String firstName = cleanedName.substring(0, firstSpaceIndex);
+            String lastName = cleanedName.substring(firstSpaceIndex + 1);
+
+            logger.info("Google name parse edildi: '{}' -> firstName='{}', lastName='{}'",
+                        fullName, firstName, lastName);
+            return new String[]{firstName, lastName};
+        }
+
+        // 4. VARSAYILAN: Hicbir isim bilgisi yok
+        logger.warn("Google'dan hic isim bilgisi alinmadi, varsayilan degerler kullaniliyor");
+        return new String[]{"Google", "User"};
     }
 }

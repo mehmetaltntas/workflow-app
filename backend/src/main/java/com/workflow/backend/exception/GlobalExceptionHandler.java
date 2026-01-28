@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -119,20 +120,37 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Yapılandırma hatalarını yakala (500 Internal Server Error)
+     * Eksik request header hatalarını yakala (400 Bad Request)
      */
-    @ExceptionHandler(ConfigurationException.class)
-    public ResponseEntity<ErrorResponse> handleConfigurationException(ConfigurationException ex) {
-        logger.error("Yapılandırma hatası: {}", ex.getMessage());
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestHeaderException(MissingRequestHeaderException ex) {
+        logger.warn("Eksik header: {}", ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Yapılandırma Hatası",
-                "Sunucu yapılandırmasında bir sorun var. Lütfen yönetici ile iletişime geçin.",
+                HttpStatus.BAD_REQUEST.value(),
+                "Eksik Header",
+                ex.getHeaderName() + " header'ı gerekli",
                 null
         );
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Yapılandırma hatalarını yakala (503 Service Unavailable)
+     */
+    @ExceptionHandler(ConfigurationException.class)
+    public ResponseEntity<ErrorResponse> handleConfigurationException(ConfigurationException ex) {
+        logger.warn("Yapılandırma hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "Hizmet Kullanılamıyor",
+                "Bu özellik şu anda kullanılamıyor. Lütfen yönetici ile iletişime geçin.",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
     }
 
     /**

@@ -138,9 +138,9 @@ export const authService = {
   logout: () => {
     return apiClient.post("/auth/logout");
   },
-  // Şifremi Unuttum - E-posta'ya kod gönder
-  forgotPassword: (email: string) => {
-    return apiClient.post("/auth/forgot-password", { email });
+  // Şifremi Unuttum - Kullanıcı adı veya e-posta'ya kod gönder
+  forgotPassword: (usernameOrEmail: string) => {
+    return apiClient.post("/auth/forgot-password", { usernameOrEmail });
   },
   // Doğrulama kodunu kontrol et
   verifyCode: (email: string, code: string) => {

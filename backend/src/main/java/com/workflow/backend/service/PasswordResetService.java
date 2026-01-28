@@ -32,16 +32,28 @@ public class PasswordResetService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     /**
-     * Email adresine 6 haneli sifre sifirlama kodu gonderir
+     * Kullanici adi veya email adresine gore 6 haneli sifre sifirlama kodu gonderir
      */
     @Transactional
-    public void sendResetCode(String email) {
-        User user = userRepository.findByEmail(email);
+    public void sendResetCode(String usernameOrEmail) {
+        // Oncelikle email olarak ara (case-sensitive)
+        User user = userRepository.findByEmail(usernameOrEmail);
+
+        // Email ile bulunamazsa username olarak ara
+        if (user == null) {
+            user = userRepository.findByUsername(usernameOrEmail);
+        }
 
         // Kullanici bulunamasa bile ayni mesaji donuyoruz (guvenlik icin)
         if (user == null) {
-            logger.warn("Sifre sifirlama istegi: {} - kullanici bulunamadi", email);
+            logger.warn("Sifre sifirlama istegi: {} - kullanici bulunamadi", usernameOrEmail);
             return; // Sessizce don, hacker'a bilgi verme
+        }
+
+        // Google ile kayit olan kullanicilar sifre sifirlayamaz
+        if (user.getPassword() == null) {
+            logger.warn("Sifre sifirlama istegi: {} - Google hesabi, sifre yok", usernameOrEmail);
+            return; // Sessizce don, guvenlik icin
         }
 
         // Onceki kullanilmamis tokenlari sil
@@ -59,10 +71,11 @@ public class PasswordResetService {
 
         tokenRepository.save(token);
 
-        // Email gonder
-        emailService.sendPasswordResetCode(email, code);
+        // Email gonder (kullanicinin kayitli email adresine)
+        String userEmail = user.getEmail();
+        emailService.sendPasswordResetCode(userEmail, code);
 
-        logger.info("Sifre sifirlama kodu olusturuldu: {}", email);
+        logger.info("Sifre sifirlama kodu olusturuldu: {} (email: {})", usernameOrEmail, userEmail);
     }
 
     /**

@@ -123,8 +123,8 @@ public class AuthController {
     })
     @PostMapping("/logout")
     public ResponseEntity<String> logout(
-            @Parameter(description = "Bearer token", required = true)
-            @RequestHeader("Authorization") String authHeader) {
+            @Parameter(description = "Bearer token")
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             String username = jwtService.extractUsername(token);
@@ -134,15 +134,15 @@ public class AuthController {
         return ResponseEntity.badRequest().body("Geçersiz token");
     }
 
-    @Operation(summary = "Şifre sıfırlama kodu gönder", description = "Email adresine 6 haneli doğrulama kodu gönderir")
+    @Operation(summary = "Şifre sıfırlama kodu gönder", description = "Kullanici adi veya email adresine 6 haneli doğrulama kodu gönderir")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Kod gönderildi (email kayıtlıysa)"),
-            @ApiResponse(responseCode = "400", description = "Geçersiz email formatı")
+            @ApiResponse(responseCode = "200", description = "Kod gönderildi (kullanici kayitliysa)"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz giriş")
     })
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        passwordResetService.sendResetCode(request.getEmail());
-        return ResponseEntity.ok(Map.of("message", "Eger email adresi sistemde kayitliysa, dogrulama kodu gonderildi."));
+        passwordResetService.sendResetCode(request.getUsernameOrEmail());
+        return ResponseEntity.ok(Map.of("message", "Eger kullanici sistemde kayitliysa, dogrulama kodu email adresine gonderildi."));
     }
 
     @Operation(summary = "Doğrulama kodunu kontrol et", description = "Şifre sıfırlama için gönderilen kodu doğrular")

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "../services/api";
-import { isValidEmail, getPasswordStrength } from "../utils/validation";
+import { getPasswordStrength } from "../utils/validation";
 import toast from "react-hot-toast";
 import { typography, spacing, radius, colors, cssVars } from '../styles/tokens';
 
@@ -26,19 +26,19 @@ const ForgotPasswordPage = () => {
     }
   }, [step]);
 
-  // Email gonder
+  // Kod gonder (kullanici adi veya email ile)
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isValidEmail(email)) {
-      toast.error("Geçerli bir e-posta adresi giriniz");
+    if (!email.trim()) {
+      toast.error("Kullanıcı adı veya e-posta adresi giriniz");
       return;
     }
 
     setIsLoading(true);
     try {
       await authService.forgotPassword(email);
-      toast.success("Doğrulama kodu e-posta adresinize gönderildi");
+      toast.success("Kullanıcı kayıtlıysa, doğrulama kodu e-posta adresine gönderildi");
       setStep("code");
     } catch {
       toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
@@ -255,14 +255,14 @@ const ForgotPasswordPage = () => {
               textAlign: "center",
             }}
           >
-            {step === "email" && "E-posta adresinizi girin, size doğrulama kodu gönderelim."}
-            {step === "code" && `${email} adresine gönderilen 6 haneli kodu girin.`}
+            {step === "email" && "Kullanıcı adınızı veya e-posta adresinizi girin."}
+            {step === "code" && "E-posta adresinize gönderilen 6 haneli kodu girin."}
             {step === "password" && "Hesabınız için yeni bir şifre belirleyin."}
           </p>
 
-          {/* Email Adimi */}
+          {/* Kullanici Adi veya Email Adimi */}
           {step === "email" && (
-            <form onSubmit={handleSendCode} aria-label="E-posta doğrulama formu" style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
+            <form onSubmit={handleSendCode} aria-label="Kullanıcı doğrulama formu" style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
               <div>
                 <label
                   htmlFor="forgot-email"
@@ -274,16 +274,16 @@ const ForgotPasswordPage = () => {
                     marginBottom: spacing[2],
                   }}
                 >
-                  E-posta Adresi
+                  Kullanıcı Adı veya E-posta
                 </label>
                 <input
                   id="forgot-email"
-                  type="email"
-                  autoComplete="email"
+                  type="text"
+                  autoComplete="username"
                   aria-required="true"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ornek@email.com"
+                  placeholder="kullanici_adi veya ornek@email.com"
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
@@ -384,7 +384,7 @@ const ForgotPasswordPage = () => {
                   cursor: "pointer",
                 }}
               >
-                Farklı e-posta adresi kullan
+                Farklı hesap kullan
               </button>
             </form>
           )}
