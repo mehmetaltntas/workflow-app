@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { AxiosError } from "axios";
 import { authService } from "../services/api";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -192,9 +193,11 @@ const RegisterPage = () => {
       toast.success("Doğrulama kodu e-posta adresinize gönderildi");
       setStep("code");
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      const message = error.response?.data?.message || "Bir hata oluştu. Lütfen tekrar deneyin.";
-      toast.error(message);
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data?.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
+      } else {
+        toast.error("Bir hata oluştu. Lütfen tekrar deneyin.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -231,9 +234,11 @@ const RegisterPage = () => {
       toast.success("Kayıt başarılı!");
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      const message = error.response?.data?.message || "Kayıt başarısız! Kod geçersiz veya süresi dolmuş olabilir.";
-      toast.error(message);
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data?.message || "Kayıt başarısız! Kod geçersiz veya süresi dolmuş olabilir.");
+      } else {
+        toast.error("Kayıt başarısız! Kod geçersiz veya süresi dolmuş olabilir.");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,16 +48,35 @@ public class EmailVerificationService {
         logger.info("Kayit dogrulama kodu olusturuldu: {}", email);
     }
 
+    private static final int MAX_ATTEMPTS = 5;
+
+    @Transactional
     public boolean verifyCode(String email, String code) {
-        return tokenRepository.findByEmailAndCodeAndUsedFalse(email, code)
-                .map(token -> {
-                    if (token.isExpired()) {
-                        logger.warn("Kayit dogrulama kodu suresi dolmus: {} - {}", email, code);
-                        return false;
-                    }
-                    return true;
-                })
-                .orElse(false);
+        Optional<EmailVerificationToken> tokenOpt = tokenRepository.findByEmailAndUsedFalse(email);
+        if (tokenOpt.isEmpty()) {
+            return false;
+        }
+
+        EmailVerificationToken token = tokenOpt.get();
+
+        if (token.isExpired()) {
+            logger.warn("Kayit dogrulama kodu suresi dolmus: {}", email);
+            return false;
+        }
+
+        if (token.getAttempts() >= MAX_ATTEMPTS) {
+            logger.warn("Kayit dogrulama kodu maksimum deneme sayisina ulasti: {}", email);
+            return false;
+        }
+
+        if (!token.getCode().equals(code)) {
+            token.setAttempts(token.getAttempts() + 1);
+            tokenRepository.save(token);
+            logger.warn("Kayit dogrulama kodu hatali: {} (deneme: {})", email, token.getAttempts());
+            return false;
+        }
+
+        return true;
     }
 
     @Transactional

@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
@@ -44,7 +45,7 @@ public class SecurityConfig {
                                                                                 "img-src 'self' data: https://*.googleusercontent.com; " +
                                                                                 "frame-src https://accounts.google.com; " +
                                                                                 "font-src 'self' data:;"))
-                                                .xssProtection(xss -> xss.disable())
+                                                .xssProtection(xss -> xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
                                                 .contentTypeOptions(contentType -> {}))
                                 .authorizeHttpRequests(auth -> {
                                         auth.requestMatchers("/auth/**", "/error").permitAll();

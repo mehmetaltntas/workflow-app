@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -78,19 +79,38 @@ public class PasswordResetService {
         logger.info("Sifre sifirlama kodu olusturuldu: {} (email: {})", usernameOrEmail, userEmail);
     }
 
+    private static final int MAX_ATTEMPTS = 5;
+
     /**
-     * Dogrulama kodunu kontrol eder
+     * Dogrulama kodunu kontrol eder. Maksimum deneme sayisini asmissa kodu gecersiz kilar.
      */
+    @Transactional
     public boolean verifyCode(String email, String code) {
-        return tokenRepository.findByUserEmailAndCodeAndUsedFalse(email, code)
-                .map(token -> {
-                    if (token.isExpired()) {
-                        logger.warn("Kod suresi dolmus: {} - {}", email, code);
-                        return false;
-                    }
-                    return true;
-                })
-                .orElse(false);
+        Optional<PasswordResetToken> tokenOpt = tokenRepository.findByUserEmailAndUsedFalse(email);
+        if (tokenOpt.isEmpty()) {
+            return false;
+        }
+
+        PasswordResetToken token = tokenOpt.get();
+
+        if (token.isExpired()) {
+            logger.warn("Kod suresi dolmus: {}", email);
+            return false;
+        }
+
+        if (token.getAttempts() >= MAX_ATTEMPTS) {
+            logger.warn("Kod maksimum deneme sayisina ulasti: {}", email);
+            return false;
+        }
+
+        if (!token.getCode().equals(code)) {
+            token.setAttempts(token.getAttempts() + 1);
+            tokenRepository.save(token);
+            logger.warn("Kod hatali: {} (deneme: {})", email, token.getAttempts());
+            return false;
+        }
+
+        return true;
     }
 
     /**

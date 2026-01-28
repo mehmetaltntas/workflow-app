@@ -3,6 +3,7 @@ package com.workflow.backend.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class BatchReorderRequest {
     private Long listId;
 
     @NotEmpty(message = "Task sıralaması boş olamaz")
+    @Size(max = 100, message = "Tek seferde en fazla 100 görev sıralanabilir")
     @Valid
     private List<TaskPosition> taskPositions;
 

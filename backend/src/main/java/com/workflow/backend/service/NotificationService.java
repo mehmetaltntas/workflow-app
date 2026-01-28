@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -87,7 +88,15 @@ public class NotificationService {
                     .toList();
         }
 
-        return notifications.stream().map(this::mapToResponse).toList();
+        // Profil resimlerini toplu olarak ön-yükle (N+1 sorgu önleme)
+        Set<Long> actorIds = notifications.stream()
+                .map(n -> n.getActor().getId())
+                .collect(Collectors.toSet());
+        Map<Long, String> profilePictureMap = actorIds.isEmpty() ? Map.of() :
+                profilePictureRepository.findPictureDataByUserIds(actorIds).stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+
+        return notifications.stream().map(n -> mapToResponse(n, profilePictureMap)).toList();
     }
 
     public long getUnreadCount() {
@@ -128,6 +137,20 @@ public class NotificationService {
         log.info("Eski CONNECTION_REQUEST bildirimleri temizlendi");
         notificationRepository.deleteStaleBoardMemberInvitationNotifications();
         log.info("Eski BOARD_MEMBER_INVITATION bildirimleri temizlendi");
+    }
+
+    private NotificationResponse mapToResponse(Notification notification, Map<Long, String> profilePictureMap) {
+        NotificationResponse response = new NotificationResponse();
+        response.setId(notification.getId());
+        response.setType(notification.getType().name());
+        response.setMessage(notification.getMessage());
+        response.setIsRead(notification.getIsRead());
+        response.setActorId(notification.getActor().getId());
+        response.setActorUsername(notification.getActor().getUsername());
+        response.setActorProfilePicture(profilePictureMap.get(notification.getActor().getId()));
+        response.setReferenceId(notification.getReferenceId());
+        response.setCreatedAt(notification.getCreatedAt());
+        return response;
     }
 
     private NotificationResponse mapToResponse(Notification notification) {

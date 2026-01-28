@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserProfilePictureRepository extends JpaRepository<UserProfilePicture, Long> {
@@ -13,6 +15,9 @@ public interface UserProfilePictureRepository extends JpaRepository<UserProfileP
 
     @Query("SELECT p.pictureData FROM UserProfilePicture p WHERE p.user.id = :userId")
     Optional<String> findPictureDataByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT p.user.id, p.pictureData FROM UserProfilePicture p WHERE p.user.id IN :userIds")
+    List<Object[]> findPictureDataByUserIds(@Param("userIds") Collection<Long> userIds);
 
     void deleteByUserId(Long userId);
 }

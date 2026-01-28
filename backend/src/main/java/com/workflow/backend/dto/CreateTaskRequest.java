@@ -19,7 +19,7 @@ public class CreateTaskRequest {
     @Schema(description = "Görev başlığı", example = "API entegrasyonu yap", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
-    @Size(max = 100, message = "Açıklama en fazla 100 karakter olabilir")
+    @Size(max = 500, message = "Açıklama en fazla 500 karakter olabilir")
     @Schema(description = "Görev açıklaması", example = "REST API ile veri çekme işlemi")
     private String description;
 

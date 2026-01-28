@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -123,11 +124,17 @@ public class BoardMemberService {
         final Set<Long> finalConnectedUserIds = connectedUserIds;
         final boolean finalIsOwner = isOwner;
 
+        // Profil resimlerini toplu olarak ön-yükle (N+1 sorgu önleme)
+        Set<Long> userIds = members.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
+        Map<Long, String> profilePictureMap = userIds.isEmpty() ? Map.of() :
+                profilePictureRepository.findPictureDataByUserIds(userIds).stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+
         return members.stream().map(member -> {
             boolean showProfile = finalIsOwner
                     || member.getUser().getId().equals(currentUserId)
                     || (finalConnectedUserIds != null && finalConnectedUserIds.contains(member.getUser().getId()));
-            return mapToDto(member, showProfile);
+            return mapToDto(member, showProfile, profilePictureMap);
         }).collect(Collectors.toList());
     }
 
@@ -340,7 +347,16 @@ public class BoardMemberService {
     public List<BoardMemberDto> getPendingInvitations() {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<BoardMember> pendingMembers = boardMemberRepository.findPendingByUserId(currentUserId);
-        return pendingMembers.stream().map(this::mapToDto).collect(Collectors.toList());
+
+        // Profil resimlerini toplu olarak ön-yükle (N+1 sorgu önleme)
+        Set<Long> userIds = pendingMembers.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
+        Map<Long, String> profilePictureMap = userIds.isEmpty() ? Map.of() :
+                profilePictureRepository.findPictureDataByUserIds(userIds).stream()
+                        .collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+
+        return pendingMembers.stream()
+                .map(m -> mapToDto(m, true, profilePictureMap))
+                .collect(Collectors.toList());
     }
 
     // Entity -> DTO (tam profil bilgisi - geriye uyumlu)
@@ -350,6 +366,11 @@ public class BoardMemberService {
 
     // Entity -> DTO (profil bilgisi filtrelemeli)
     private BoardMemberDto mapToDto(BoardMember member, boolean showProfileInfo) {
+        return mapToDto(member, showProfileInfo, null);
+    }
+
+    // Entity -> DTO (ön-yüklenmiş profil resimleri ile)
+    private BoardMemberDto mapToDto(BoardMember member, boolean showProfileInfo, Map<Long, String> profilePictureMap) {
         BoardMemberDto dto = new BoardMemberDto();
         dto.setId(member.getId());
         dto.setUsername(member.getUser().getUsername());
@@ -360,10 +381,13 @@ public class BoardMemberService {
             dto.setUserId(member.getUser().getId());
             dto.setFirstName(member.getUser().getFirstName());
             dto.setLastName(member.getUser().getLastName());
-            dto.setProfilePicture(
-                    profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
+            if (profilePictureMap != null) {
+                dto.setProfilePicture(profilePictureMap.get(member.getUser().getId()));
+            } else {
+                dto.setProfilePicture(
+                        profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
+            }
         }
-        // showProfileInfo false ise userId, firstName, lastName, profilePicture null kalır
 
         if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
             dto.setAssignments(member.getAssignments().stream()

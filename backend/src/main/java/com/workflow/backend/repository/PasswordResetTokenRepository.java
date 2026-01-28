@@ -14,6 +14,9 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     @Query("SELECT t FROM PasswordResetToken t WHERE t.user.email = :email AND t.code = :code AND t.used = false")
     Optional<PasswordResetToken> findByUserEmailAndCodeAndUsedFalse(@Param("email") String email, @Param("code") String code);
 
+    @Query("SELECT t FROM PasswordResetToken t WHERE t.user.email = :email AND t.used = false")
+    Optional<PasswordResetToken> findByUserEmailAndUsedFalse(@Param("email") String email);
+
     // Kullanicinin tum tokenlarini sil (yeni kod gonderirken eskilerini temizle)
     void deleteByUser(User user);
 

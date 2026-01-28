@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
-@RequestMapping
 @RequiredArgsConstructor
 @Tag(name = "Tasks", description = "Görev (task) ve liste (task list) işlemleri")
 @SecurityRequirement(name = "bearerAuth")

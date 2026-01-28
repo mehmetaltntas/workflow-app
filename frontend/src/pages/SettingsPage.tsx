@@ -15,6 +15,7 @@ import {
   Globe,
   Trash2,
 } from "lucide-react";
+import { AxiosError } from "axios";
 import { userService, authService } from "../services/api";
 import toast from "react-hot-toast";
 import { getUsernameError } from "../utils/validation";
@@ -241,8 +242,11 @@ const SettingsPage = () => {
       toast.success("Profil başarıyla güncellendi!", { id: loadingToast });
     } catch (error: unknown) {
       console.error("Profil güncellenemedi:", error);
-      const err = error as { response?: { data?: string } };
-      toast.error(err.response?.data || "Profil güncellenemedi", { id: loadingToast });
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data || "Profil güncellenemedi", { id: loadingToast });
+      } else {
+        toast.error("Profil güncellenemedi", { id: loadingToast });
+      }
     } finally {
       setIsSavingProfile(false);
     }
@@ -267,8 +271,11 @@ const SettingsPage = () => {
       setConfirmPassword("");
     } catch (error: unknown) {
       console.error("Şifre değiştirilemedi:", error);
-      const err = error as { response?: { data?: string } };
-      toast.error(err.response?.data || "Şifre değiştirilemedi", { id: loadingToast });
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data || "Şifre değiştirilemedi", { id: loadingToast });
+      } else {
+        toast.error("Şifre değiştirilemedi", { id: loadingToast });
+      }
     } finally {
       setIsSubmittingPassword(false);
     }
