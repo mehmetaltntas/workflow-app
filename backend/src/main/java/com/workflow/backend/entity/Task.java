@@ -26,6 +26,7 @@ public class Task {
     private Long id;
 
     @Version
+    @Column(nullable = false)
     private Long version = 0L;
 
     private String title;

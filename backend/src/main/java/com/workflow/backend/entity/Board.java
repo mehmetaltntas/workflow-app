@@ -22,6 +22,7 @@ public class Board {
     private Long id;
 
     @Version
+    @Column(nullable = false)
     private Long version = 0L;
 
     private String name;

@@ -21,6 +21,7 @@ public class Notification {
     private Long id;
 
     @Version
+    @Column(nullable = false)
     private Long version = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)

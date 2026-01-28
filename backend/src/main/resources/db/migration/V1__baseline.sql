@@ -112,7 +112,22 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- 9. Email Verification Tokens tablosu
+-- 9. Board Members tablosu
+CREATE TABLE IF NOT EXISTS board_members (
+    id BIGSERIAL PRIMARY KEY,
+    version BIGINT NOT NULL DEFAULT 0,
+    board_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_board_members_board FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE,
+    CONSTRAINT fk_board_members_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_board_members_board_user UNIQUE (board_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_board_members_board_id ON board_members(board_id);
+CREATE INDEX IF NOT EXISTS idx_board_members_user_id ON board_members(user_id);
+
+-- 10. Email Verification Tokens tablosu
 CREATE TABLE IF NOT EXISTS email_verification_tokens (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
