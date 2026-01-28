@@ -225,6 +225,7 @@ const RegisterPage = () => {
         refreshToken: response.data.refreshToken,
         id: response.data.id,
         username: response.data.username,
+        deletionScheduledAt: response.data.deletionScheduledAt,
       });
 
       toast.success("Kayıt başarılı!");

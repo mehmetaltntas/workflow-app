@@ -2,6 +2,7 @@ package com.workflow.backend.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "Kullanıcı bilgileri yanıtı")
@@ -30,4 +31,7 @@ public class UserResponse {
 
     @Schema(description = "Refresh Token (7 gün geçerli)")
     private String refreshToken;
+
+    @Schema(description = "Hesap silme zamanlama tarihi")
+    private LocalDateTime deletionScheduledAt;
 }

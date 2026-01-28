@@ -13,13 +13,17 @@ import com.workflow.backend.exception.UnauthorizedAccessException;
 import com.workflow.backend.repository.*;
 import com.workflow.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -407,6 +411,53 @@ public class UserService {
         return response;
     }
 
+    // HESAP SILME ZAMANLAMA
+    @Transactional
+    public UserResponse scheduleDeletion(Long userId) {
+        authorizationService.verifyUserOwnership(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", userId));
+
+        user.setDeletionScheduledAt(LocalDateTime.now());
+        User savedUser = userRepository.save(user);
+
+        String pictureData = profilePictureRepository.findPictureDataByUserId(userId).orElse(null);
+        return mapToResponse(savedUser, pictureData);
+    }
+
+    // HESAP SILME IPTAL
+    @Transactional
+    public UserResponse cancelDeletion(Long userId) {
+        authorizationService.verifyUserOwnership(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", userId));
+
+        user.setDeletionScheduledAt(null);
+        User savedUser = userRepository.save(user);
+
+        String pictureData = profilePictureRepository.findPictureDataByUserId(userId).orElse(null);
+        return mapToResponse(savedUser, pictureData);
+    }
+
+    // ZAMANLANMIS HESAPLARI SIL (Her gece 02:00'de calisir)
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void processScheduledDeletions() {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
+        List<User> usersToDelete = userRepository.findUsersScheduledForDeletion(cutoff);
+
+        for (User user : usersToDelete) {
+            log.info("Zamanlanmis hesap siliniyor: userId={}, username={}", user.getId(), user.getUsername());
+            userRepository.delete(user);
+        }
+
+        if (!usersToDelete.isEmpty()) {
+            log.info("Toplam {} hesap silindi", usersToDelete.size());
+        }
+    }
+
     // Yardimci Metot: Entity -> DTO Cevirici
     // pictureData parametresi profil resminin Base64 verisini icerir (ayri tablodan geliyor).
     private UserResponse mapToResponse(User user, String pictureData) {
@@ -417,6 +468,7 @@ public class UserService {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setProfilePicture(pictureData);
+        response.setDeletionScheduledAt(user.getDeletionScheduledAt());
         // Token burada set edilmiyor, yukarida metot icinde ediliyor.
         return response;
     }

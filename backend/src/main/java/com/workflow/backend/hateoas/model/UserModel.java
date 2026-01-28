@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.Relation;
+import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -15,4 +16,5 @@ public class UserModel extends RepresentationModel<UserModel> {
     private String profilePicture;
     private String token;
     private String refreshToken;
+    private LocalDateTime deletionScheduledAt;
 }

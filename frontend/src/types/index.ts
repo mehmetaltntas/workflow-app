@@ -146,6 +146,7 @@ export interface User extends HateoasModel {
   lastName?: string;
   token?: string;
   refreshToken?: string;
+  deletionScheduledAt?: string | null;
 }
 
 // Baglanti durumu

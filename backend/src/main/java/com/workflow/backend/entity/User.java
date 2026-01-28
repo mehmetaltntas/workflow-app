@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity // 1. Bu bir veritabanı tablosudur
@@ -52,6 +53,8 @@ public class User {
 
     @Column(nullable = false)
     private Boolean isProfilePublic = false;
+
+    private LocalDateTime deletionScheduledAt;
 
     // ILISKI: Bir kullanicinin birden fazla panosu olabilir.
     // "mappedBy": Board tablosundaki 'user' degiskeni bu iliskiyi yonetiyor demek.

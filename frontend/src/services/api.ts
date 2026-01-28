@@ -349,6 +349,14 @@ export const userService = {
     const response = await apiClient.get<UserProfileStats>(`/users/profile/${encodeURIComponent(username)}/stats`);
     return response.data;
   },
+  scheduleDeletion: async (userId: number): Promise<User> => {
+    const response = await apiClient.post<User>(`/users/${userId}/schedule-deletion`);
+    return extractEntity<User>(response);
+  },
+  cancelDeletion: async (userId: number): Promise<User> => {
+    const response = await apiClient.post<User>(`/users/${userId}/cancel-deletion`);
+    return extractEntity<User>(response);
+  },
 };
 
 // 9. Arama İşlemleri

@@ -163,6 +163,38 @@
   flex: 1;
 }
 
+/* ===== Deletion Banner ===== */
+.layout__deletion-banner {
+  background: #dc2626;
+  color: white;
+  padding: 10px 24px;
+  flex-shrink: 0;
+}
+
+.layout__deletion-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.layout__deletion-banner-cancel {
+  background: none;
+  border: none;
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.layout__deletion-banner-cancel:hover {
+  opacity: 0.85;
+}
+
 /* ===== Footer ===== */
 .layout__footer {
   background: var(--bg-body);

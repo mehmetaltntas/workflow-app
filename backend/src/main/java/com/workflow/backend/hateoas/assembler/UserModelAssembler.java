@@ -25,6 +25,7 @@ public class UserModelAssembler extends RepresentationModelAssemblerSupport<User
         model.setProfilePicture(dto.getProfilePicture());
         model.setToken(dto.getToken());
         model.setRefreshToken(dto.getRefreshToken());
+        model.setDeletionScheduledAt(dto.getDeletionScheduledAt());
 
         // Self link
         model.add(linkTo(methodOn(UserController.class).getUser(dto.getId()))

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Home, Settings, LogOut, ChevronDown, Sun, Moon, Calendar, User, Users, UserCheck, Github, Twitter, Mail, Heart } from "lucide-react";
+import { LayoutDashboard, Home, Settings, LogOut, ChevronDown, Sun, Moon, Calendar, User, Users, UserCheck, Github, Twitter, Mail, Heart, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
-import { authService } from "../services/api";
+import { authService, userService } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { sizes } from "../styles/tokens";
 import { useAuthStore } from "../stores/authStore";
@@ -25,7 +25,7 @@ const Layout = () => {
   }
 
   // authStore'dan kullanici bilgilerini al
-  const { username: storedUsername, logout } = useAuthStore();
+  const { username: storedUsername, logout, deletionScheduledAt, userId, setDeletionScheduledAt } = useAuthStore();
   const username = storedUsername || "Kullanıcı";
   // Avatar icin bas harfler
   const initials = username.substring(0, 2).toUpperCase();
@@ -61,6 +61,17 @@ const Layout = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isDropdownOpen]);
+
+  const handleCancelDeletionFromBanner = async () => {
+    if (!userId) return;
+    try {
+      await userService.cancelDeletion(userId);
+      setDeletionScheduledAt(null);
+      toast.success("Hesap silme işlemi iptal edildi");
+    } catch {
+      toast.error("İptal işlemi başarısız");
+    }
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -180,6 +191,32 @@ const Layout = () => {
           </div>
         </div>
       </nav>
+
+      {/* Deletion Banner */}
+      {deletionScheduledAt && (() => {
+        const scheduledDate = new Date(deletionScheduledAt);
+        const deleteDate = new Date(scheduledDate);
+        deleteDate.setDate(deleteDate.getDate() + 30);
+        const now = new Date();
+        const diffTime = deleteDate.getTime() - now.getTime();
+        const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        return (
+          <div className="layout__deletion-banner">
+            <div className="layout__deletion-banner-content">
+              <AlertTriangle size={16} />
+              <span>
+                Hesabınız {diffDays} gün içinde silinecek.
+              </span>
+              <button
+                onClick={handleCancelDeletionFromBanner}
+                className="layout__deletion-banner-cancel"
+              >
+                İptal Et
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Sayfa Icerigi */}
       <main className="layout__main">
