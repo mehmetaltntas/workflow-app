@@ -37,6 +37,12 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE (c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED' ORDER BY c.updatedAt DESC")
     List<Connection> findAcceptedByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT CASE WHEN c.sender.id = :userId THEN c.receiver.id ELSE c.sender.id END " +
+            "FROM Connection c WHERE c.status = 'ACCEPTED' AND " +
+            "((c.sender.id = :userId AND c.receiver.id IN :targetUserIds) OR " +
+            "(c.receiver.id = :userId AND c.sender.id IN :targetUserIds))")
+    List<Long> findConnectedUserIds(@Param("userId") Long userId, @Param("targetUserIds") List<Long> targetUserIds);
+
     @Modifying
     @Query("DELETE FROM Connection c WHERE c.status = 'PENDING' AND c.createdAt < :expireDate")
     int deleteExpiredPendingConnections(@Param("expireDate") LocalDateTime expireDate);

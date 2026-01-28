@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +35,7 @@ public class BoardMemberService {
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
     private final NotificationService notificationService;
+    private final ConnectionService connectionService;
 
     // Üye ekle
     @Transactional
@@ -98,14 +100,35 @@ public class BoardMemberService {
         boardMemberRepository.delete(member);
     }
 
-    // Pano üyelerini getir (sadece ACCEPTED)
+    // Pano üyelerini getir (sadece ACCEPTED) - bağlantı durumuna göre profil filtreleme
     @Transactional(readOnly = true)
     public List<BoardMemberDto> getMembers(Long boardId) {
         // Pano sahibi veya üye görebilir
         verifyBoardOwnerOrMember(boardId);
 
+        Long currentUserId = currentUserService.getCurrentUserId();
+        boolean isOwner = boardRepository.existsByIdAndUserId(boardId, currentUserId);
+
         List<BoardMember> members = boardMemberRepository.findAcceptedByBoardIdWithUser(boardId);
-        return members.stream().map(this::mapToDto).collect(Collectors.toList());
+
+        Set<Long> connectedUserIds = null;
+        if (!isOwner && !members.isEmpty()) {
+            List<Long> memberUserIds = members.stream()
+                    .map(m -> m.getUser().getId())
+                    .filter(id -> !id.equals(currentUserId))
+                    .collect(Collectors.toList());
+            connectedUserIds = connectionService.getConnectedUserIds(currentUserId, memberUserIds);
+        }
+
+        final Set<Long> finalConnectedUserIds = connectedUserIds;
+        final boolean finalIsOwner = isOwner;
+
+        return members.stream().map(member -> {
+            boolean showProfile = finalIsOwner
+                    || member.getUser().getId().equals(currentUserId)
+                    || (finalConnectedUserIds != null && finalConnectedUserIds.contains(member.getUser().getId()));
+            return mapToDto(member, showProfile);
+        }).collect(Collectors.toList());
     }
 
     // Atama oluştur
@@ -320,18 +343,27 @@ public class BoardMemberService {
         return pendingMembers.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
-    // Entity -> DTO
+    // Entity -> DTO (tam profil bilgisi - geriye uyumlu)
     private BoardMemberDto mapToDto(BoardMember member) {
+        return mapToDto(member, true);
+    }
+
+    // Entity -> DTO (profil bilgisi filtrelemeli)
+    private BoardMemberDto mapToDto(BoardMember member, boolean showProfileInfo) {
         BoardMemberDto dto = new BoardMemberDto();
         dto.setId(member.getId());
-        dto.setUserId(member.getUser().getId());
         dto.setUsername(member.getUser().getUsername());
-        dto.setFirstName(member.getUser().getFirstName());
-        dto.setLastName(member.getUser().getLastName());
-        dto.setProfilePicture(
-                profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
         dto.setStatus(member.getStatus().name());
         dto.setCreatedAt(member.getCreatedAt());
+
+        if (showProfileInfo) {
+            dto.setUserId(member.getUser().getId());
+            dto.setFirstName(member.getUser().getFirstName());
+            dto.setLastName(member.getUser().getLastName());
+            dto.setProfilePicture(
+                    profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
+        }
+        // showProfileInfo false ise userId, firstName, lastName, profilePicture null kalır
 
         if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
             dto.setAssignments(member.getAssignments().stream()

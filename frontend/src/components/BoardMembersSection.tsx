@@ -289,7 +289,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           ? `${member.firstName} ${member.lastName}`
                           : member.username}
                       </span>
-                      {board.boardType === 'TEAM' && (
+                      {board.boardType === 'TEAM' && member.firstName && member.lastName && (
                         <span
                           style={{
                             fontSize: typography.fontSize.xs,

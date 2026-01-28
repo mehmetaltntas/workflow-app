@@ -97,14 +97,31 @@ const HomePage = () => {
   };
 
   // Unpinned boardlari bireysel ve ekip olarak ayir
+  // Ekip panolarina atandigim panolari da dahil et (deduplication ile)
   const { sortedIndividualBoards, sortedTeamBoards } = useMemo(() => {
     const individual = unpinnedBoards.filter(b => b.boardType !== 'TEAM');
-    const team = unpinnedBoards.filter(b => b.boardType === 'TEAM');
+    const ownedTeam = unpinnedBoards.filter(b => b.boardType === 'TEAM');
+
+    // Owned team board ID'lerini topla (deduplication icin)
+    const ownedTeamIds = new Set(ownedTeam.map(b => b.id));
+
+    // Atanmis panolardan sadece owned'da olmayanlari al
+    const assignedOnly = activeAssignedBoards.filter(b => !ownedTeamIds.has(b.id));
+
+    // Birlestir: owned team + unique assigned
+    const mergedTeam = [...ownedTeam, ...assignedOnly];
+
     return {
       sortedIndividualBoards: sortBoards(individual),
-      sortedTeamBoards: sortBoards(team),
+      sortedTeamBoards: sortBoards(mergedTeam),
     };
-  }, [unpinnedBoards, sortField, sortDirection]);
+  }, [unpinnedBoards, activeAssignedBoards, sortField, sortDirection]);
+
+  // Atanmis pano ID'leri (render ayrimi icin)
+  const assignedBoardIds = useMemo(() =>
+    new Set(activeAssignedBoards.map(b => b.id)),
+    [activeAssignedBoards]
+  );
 
   // Istatistikler
   const stats = useMemo(() => {
@@ -188,6 +205,34 @@ const HomePage = () => {
         />
       </div>
     );
+  };
+
+  // Ekip panolari icin render fonksiyonu (sahip vs atanmis ayrimi)
+  const renderTeamBoardCard = (board: Board, index: number, groupIndex: number) => {
+    const isAssigned = assignedBoardIds.has(board.id);
+    const isOwned = boards.some(b => b.id === board.id);
+    const effectivelyAssigned = isAssigned && !isOwned;
+
+    if (effectivelyAssigned) {
+      return (
+        <div
+          key={board.id}
+          className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
+          style={{ transitionDelay: `${(groupIndex * 100) + (index * 50)}ms` }}
+        >
+          <BoardCard
+            board={board}
+            onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
+            onEdit={() => {}}
+            onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })}
+            viewMode={viewMode === 'list' ? 'list' : 'grid'}
+            accentColor={colors.assigned.primary}
+          />
+        </div>
+      );
+    }
+
+    return renderBoardCard(board, false, index, groupIndex);
   };
 
   return (
@@ -325,9 +370,9 @@ const HomePage = () => {
                   </span>
 
                   {/* Tumunu Gor linki */}
-                  {sortedTeamBoards.length > 10 && (
+                  {sortedTeamBoards.length > 12 && (
                     <button
-                      onClick={() => navigate('/boards/status/devam-ediyor')}
+                      onClick={() => navigate('/team')}
                       className="home-page__view-all-btn"
                     >
                       Tümünü Gör ({sortedTeamBoards.length})
@@ -336,62 +381,13 @@ const HomePage = () => {
                   )}
                 </div>
 
-                {/* Cards - max 10 */}
+                {/* Cards - max 12 */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {sortedTeamBoards.slice(0, 10).map((board, index) => renderBoardCard(board, false, index, 2))}
+                  {sortedTeamBoards.slice(0, 12).map((board, index) => renderTeamBoardCard(board, index, 2))}
                 </div>
               </div>
             )}
 
-            {/* Assigned Boards Section */}
-            {activeAssignedBoards.length > 0 && (
-              <div
-                className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}
-                style={{ transitionDelay: (pinnedBoards.length > 0 ? 100 : 0) + (sortedIndividualBoards.length > 0 ? 100 : 0) + (sortedTeamBoards.length > 0 ? 100 : 0) + "ms" }}
-              >
-                {/* Section Header */}
-                <div className="home-page__section-header">
-                  <div className="home-page__section-icon home-page__section-icon--assigned">
-                    <Users size={16} color={colors.assigned.primary} />
-                  </div>
-                  <h2 className="home-page__section-title">Atandığım Panolar</h2>
-                  <span className="home-page__section-count home-page__section-count--assigned">
-                    {activeAssignedBoards.length}
-                  </span>
-
-                  {/* Daha Fazlasi linki - 5'ten fazlaysa goster */}
-                  {activeAssignedBoards.length > 5 && (
-                    <button
-                      onClick={() => navigate('/team')}
-                      className="home-page__view-all-btn home-page__view-all-btn--assigned"
-                    >
-                      Tümünü Gör ({activeAssignedBoards.length})
-                      <ArrowRight size={16} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Assigned Cards - max 5 goster */}
-                <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {activeAssignedBoards.slice(0, 5).map((board, index) => (
-                    <div
-                      key={board.id}
-                      className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
-                      style={{ transitionDelay: `${(3 * 100) + (index * 50)}ms` }}
-                    >
-                      <BoardCard
-                        board={board}
-                        onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
-                        onEdit={() => {}}
-                        onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })}
-                        viewMode={viewMode === 'list' ? 'list' : 'grid'}
-                        accentColor={colors.assigned.primary}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <EmptyState

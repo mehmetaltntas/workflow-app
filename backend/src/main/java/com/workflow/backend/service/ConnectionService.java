@@ -14,8 +14,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -206,6 +209,13 @@ public class ConnectionService {
 
     public long getConnectionCount(Long userId) {
         return connectionRepository.countAcceptedByUserId(userId);
+    }
+
+    public Set<Long> getConnectedUserIds(Long userId, List<Long> targetUserIds) {
+        if (targetUserIds == null || targetUserIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return new HashSet<>(connectionRepository.findConnectedUserIds(userId, targetUserIds));
     }
 
     public long getMyConnectionCount() {

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,7 @@ public class BoardService {
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
     private final LabelService labelService;
+    private final ConnectionService connectionService;
 
     // PANO OLUŞTURMA
     @Transactional
@@ -158,17 +160,39 @@ public class BoardService {
         response.setIsOwner(isOwner);
         response.setCurrentUserId(currentUserId);
 
-        // Board Members (sadece ACCEPTED)
+        // Board Members (sadece ACCEPTED) - bağlantı durumuna göre profil bilgisi filtreleme
         List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(board.getId());
         if (boardMembers != null && !boardMembers.isEmpty()) {
+            // Üye ise, hangi üyelerle bağlantısı olduğunu toplu sorgu ile bul
+            Set<Long> connectedUserIds = null;
+            if (!isOwner) {
+                List<Long> memberUserIds = boardMembers.stream()
+                        .map(m -> m.getUser().getId())
+                        .filter(id -> !id.equals(currentUserId))
+                        .collect(Collectors.toList());
+                connectedUserIds = connectionService.getConnectedUserIds(currentUserId, memberUserIds);
+            }
+
+            final Set<Long> finalConnectedUserIds = connectedUserIds;
             List<BoardMemberDto> memberDtos = boardMembers.stream().map(member -> {
                 BoardMemberDto memberDto = new BoardMemberDto();
                 memberDto.setId(member.getId());
-                memberDto.setUserId(member.getUser().getId());
                 memberDto.setUsername(member.getUser().getUsername());
-                memberDto.setProfilePicture(
-                        profilePictureRepository.findPictureDataByUserId(member.getUser().getId()).orElse(null));
                 memberDto.setCreatedAt(member.getCreatedAt());
+
+                Long memberUserId = member.getUser().getId();
+                boolean showProfile = isOwner
+                        || memberUserId.equals(currentUserId)
+                        || (finalConnectedUserIds != null && finalConnectedUserIds.contains(memberUserId));
+
+                if (showProfile) {
+                    memberDto.setUserId(memberUserId);
+                    memberDto.setFirstName(member.getUser().getFirstName());
+                    memberDto.setLastName(member.getUser().getLastName());
+                    memberDto.setProfilePicture(
+                            profilePictureRepository.findPictureDataByUserId(memberUserId).orElse(null));
+                }
+                // showProfile false ise userId, firstName, lastName, profilePicture null kalır
 
                 if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
                     memberDto.setAssignments(member.getAssignments().stream().map(assignment -> {
