@@ -25,7 +25,6 @@ public class UserProfilePicture {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String pictureData;
 

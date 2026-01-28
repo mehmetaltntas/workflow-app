@@ -42,40 +42,44 @@ public class UserService {
     private final TaskRepository taskRepository;
     private final SubtaskRepository subtaskRepository;
 
-    // KULLANICI ADI MÜSAİTLİK KONTROLÜ
+    // KULLANICI ADI MÜSAİTLİK KONTROLÜ (case-insensitive)
     public boolean isUsernameAvailable(String username) {
-        return userRepository.findByUsername(username) == null;
+        return userRepository.findByUsernameIgnoreCase(username) == null;
     }
 
-    // EMAIL MÜSAİTLİK KONTROLÜ
+    // EMAIL MÜSAİTLİK KONTROLÜ (case-insensitive)
     public boolean isEmailAvailable(String email) {
-        return userRepository.findByEmail(email) == null;
+        return userRepository.findByEmailIgnoreCase(email) == null;
     }
 
     // KAYIT OLMA İŞLEMİ
     public UserResponse register(RegisterRequest request) {
-        // 1. Kural: Bu kullanıcı adı zaten var mı?
-        if (userRepository.findByUsername(request.getUsername()) != null) {
-            throw new DuplicateResourceException("Kullanıcı adı", "username", request.getUsername());
+        // Kullanici adi ve email her zaman kucuk harfle saklanir
+        String username = request.getUsername().toLowerCase();
+        String email = request.getEmail().toLowerCase();
+
+        // 1. Kural: Bu kullanıcı adı zaten var mı? (case-insensitive)
+        if (userRepository.findByUsernameIgnoreCase(username) != null) {
+            throw new DuplicateResourceException("Kullanıcı adı", "username", username);
         }
 
-        // 2. Kural: Bu email zaten kullanılıyor mu?
-        if (userRepository.findByEmail(request.getEmail()) != null) {
-            throw new DuplicateResourceException("Email adresi", "email", request.getEmail());
+        // 2. Kural: Bu email zaten kullanılıyor mu? (case-insensitive)
+        if (userRepository.findByEmailIgnoreCase(email) != null) {
+            throw new DuplicateResourceException("Email adresi", "email", email);
         }
 
         // 3. Email dogrulama kodunu kontrol et
-        if (!emailVerificationService.verifyCode(request.getEmail(), request.getCode())) {
+        if (!emailVerificationService.verifyCode(email, request.getCode())) {
             throw new InvalidVerificationCodeException("Geçersiz veya süresi dolmuş doğrulama kodu");
         }
 
         // Kodu kullanildi olarak isaretle
-        emailVerificationService.markCodeAsUsed(request.getEmail(), request.getCode());
+        emailVerificationService.markCodeAsUsed(email, request.getCode());
 
         // 4. Entity Oluştur ve Verileri Aktar
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+        user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword())); // BCrypt ile şifrele
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -98,8 +102,8 @@ public class UserService {
 
     // GIRIS YAPMA ISLEMI
     public UserResponse login(LoginRequest request) {
-        // 1. Kullanıcıyı bul
-        User user = userRepository.findByUsername(request.getUsername());
+        // 1. Kullanıcıyı bul (case-insensitive)
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername());
 
         // 2. Kullanıcı yoksa hata ver
         if (user == null) {
@@ -156,12 +160,13 @@ public class UserService {
         boolean usernameChanged = false;
 
         // Username guncelleme (eger degistirildiyse ve baskasi kullanmiyorsa)
-        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
-            User existingUser = userRepository.findByUsername(request.getUsername());
+        if (request.getUsername() != null && !request.getUsername().toLowerCase().equals(user.getUsername())) {
+            String newUsername = request.getUsername().toLowerCase();
+            User existingUser = userRepository.findByUsernameIgnoreCase(newUsername);
             if (existingUser != null && !existingUser.getId().equals(id)) {
-                throw new DuplicateResourceException("Kullanici adi", "username", request.getUsername());
+                throw new DuplicateResourceException("Kullanici adi", "username", newUsername);
             }
-            user.setUsername(request.getUsername());
+            user.setUsername(newUsername);
             usernameChanged = true;
         }
 
@@ -247,7 +252,7 @@ public class UserService {
     public UserProfileResponse getUserProfile(String username) {
         Long currentUserId = currentUserService.getCurrentUserId();
 
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameIgnoreCase(username);
         if (user == null) {
             throw new ResourceNotFoundException("Kullanici", "username", username);
         }
@@ -291,12 +296,12 @@ public class UserService {
     }
 
     // KULLANICI PROFIL ISTATISTIKLERINI GETIR
-    @Cacheable(value = "profileStats", key = "#username")
+    @Cacheable(value = "profileStats", key = "#username.toLowerCase()")
     @Transactional(readOnly = true)
     public UserProfileStatsResponse getUserProfileStats(String username) {
         Long currentUserId = currentUserService.getCurrentUserId();
 
-        User targetUser = userRepository.findByUsername(username);
+        User targetUser = userRepository.findByUsernameIgnoreCase(username);
         if (targetUser == null) {
             throw new ResourceNotFoundException("Kullanici", "username", username);
         }

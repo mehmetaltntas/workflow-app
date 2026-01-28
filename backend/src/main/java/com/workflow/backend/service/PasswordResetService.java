@@ -36,17 +36,17 @@ public class PasswordResetService {
      */
     @Transactional
     public void sendResetCode(String usernameOrEmail) {
-        // Oncelikle email olarak ara (case-sensitive)
-        User user = userRepository.findByEmail(usernameOrEmail);
+        // Oncelikle email olarak ara (case-insensitive)
+        User user = userRepository.findByEmailIgnoreCase(usernameOrEmail);
 
-        // Email ile bulunamazsa username olarak ara
+        // Email ile bulunamazsa username olarak ara (case-insensitive)
         if (user == null) {
-            user = userRepository.findByUsername(usernameOrEmail);
+            user = userRepository.findByUsernameIgnoreCase(usernameOrEmail);
         }
 
         // Kullanici bulunamasa bile ayni mesaji donuyoruz (guvenlik icin)
         if (user == null) {
-            logger.warn("Sifre sifirlama istegi: {} - kullanici bulunamadi", usernameOrEmail);
+            logger.info("Sifre sifirlama istegi: {} - kullanici bulunamadi (guvenlik icin sessizce donuluyor)", usernameOrEmail);
             return; // Sessizce don, hacker'a bilgi verme
         }
 

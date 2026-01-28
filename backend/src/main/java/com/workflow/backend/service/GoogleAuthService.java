@@ -113,8 +113,8 @@ public class GoogleAuthService {
 
     private User findOrCreateUser(String googleId, String email, String givenName,
                                   String familyName, String name, String picture) {
-        // Oncelikle ayni email ile kayitli kullanici var mi kontrol et
-        User existingUser = userRepository.findByEmail(email);
+        // Oncelikle ayni email ile kayitli kullanici var mi kontrol et (case-insensitive)
+        User existingUser = userRepository.findByEmailIgnoreCase(email);
 
         if (existingUser != null) {
             // Yerel hesap varsa, Google ile baglamaya izin verme (hesap ele gecirme riski)
@@ -150,10 +150,10 @@ public class GoogleAuthService {
             return savedUser;
         }
 
-        // Yeni kullanici olustur
+        // Yeni kullanici olustur (email kucuk harfle saklanir)
         User newUser = new User();
         newUser.setGoogleId(googleId);
-        newUser.setEmail(email);
+        newUser.setEmail(email.toLowerCase());
         newUser.setUsername(generateUniqueUsername(name, email));
         newUser.setAuthProvider(AuthProvider.GOOGLE);
         // Google ile giris yapan kullanicinin sifresi yok
@@ -182,8 +182,8 @@ public class GoogleAuthService {
         String username = baseUsername;
         int counter = 1;
 
-        // Benzersiz username bulana kadar numara ekle
-        while (userRepository.findByUsername(username) != null) {
+        // Benzersiz username bulana kadar numara ekle (case-insensitive kontrol)
+        while (userRepository.findByUsernameIgnoreCase(username) != null) {
             username = baseUsername + counter;
             counter++;
         }

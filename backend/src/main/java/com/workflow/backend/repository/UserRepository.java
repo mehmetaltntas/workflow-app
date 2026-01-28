@@ -21,6 +21,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
     User findByEmailIgnoreCase(@Param("email") String email);
 
+    // Case-insensitive username lookup (Şifre sıfırlama için)
+    @Query("SELECT u FROM User u WHERE LOWER(u.username) = LOWER(:username)")
+    User findByUsernameIgnoreCase(@Param("username") String username);
+
     // Google OAuth: Google ID ile kullanıcı bul
     Optional<User> findByGoogleId(String googleId);
 
