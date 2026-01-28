@@ -29,4 +29,7 @@ public class UpdateBoardRequest {
 
     @Schema(description = "Pano kategorisi", example = "YAZILIM_GELISTIRME")
     private String category;
+
+    @Schema(description = "Pano tipi", example = "INDIVIDUAL", allowableValues = {"INDIVIDUAL", "TEAM"})
+    private String boardType;
 }

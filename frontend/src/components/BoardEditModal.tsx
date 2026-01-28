@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Calendar, Link2, FileText, Type, Trash2, Activity, FolderOpen } from "lucide-react";
+import { X, Calendar, Link2, FileText, Type, Trash2, Activity, FolderOpen, Users } from "lucide-react";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import "./BoardEditModal.css";
 
 type BoardStatus = "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI";
+type BoardType = "INDIVIDUAL" | "TEAM";
 
 interface BoardEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; link?: string; description?: string; deadline?: string; status?: BoardStatus; category?: string }) => Promise<void>;
+  onSave: (data: { name: string; link?: string; description?: string; deadline?: string; status?: BoardStatus; category?: string; boardType?: BoardType }) => Promise<void>;
   onDelete?: () => void;
   initialData: {
     name: string;
@@ -18,6 +19,7 @@ interface BoardEditModalProps {
     deadline?: string;
     status?: BoardStatus;
     category?: string;
+    boardType?: BoardType;
   };
 }
 
@@ -28,6 +30,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
   const [deadline, setDeadline] = useState(initialData.deadline || "");
   const [status, setStatus] = useState<BoardStatus>(initialData.status || "PLANLANDI");
   const [category, setCategory] = useState(initialData.category || "");
+  const [boardType, setBoardType] = useState<BoardType>(initialData.boardType || "INDIVIDUAL");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const MAX_DESCRIPTION_LENGTH = 500;
@@ -40,6 +43,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
       setDeadline(initialData.deadline || "");
       setStatus(initialData.status || "PLANLANDI");
       setCategory(initialData.category || "");
+      setBoardType(initialData.boardType || "INDIVIDUAL");
       setShowDeleteConfirm(false);
     }
   }, [isOpen, initialData]);
@@ -106,6 +110,7 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
           deadline: deadline || undefined,
           status,
           category: category || undefined,
+          boardType,
         });
         onClose();
       } catch {
@@ -157,6 +162,40 @@ const BoardEditModal: React.FC<BoardEditModalProps> = ({ isOpen, onClose, onSave
           <div className="board-edit-modal__form-grid">
             {/* Sol Kolon */}
             <div className="board-edit-modal__left-col">
+              {/* Pano Tipi */}
+              <div className="board-edit-modal__field">
+                <label className="board-edit-modal__label">
+                  <Users size={16} />
+                  Pano Tipi
+                </label>
+                <div className="board-edit-modal__status-group">
+                  <button
+                    type="button"
+                    onClick={() => setBoardType('INDIVIDUAL')}
+                    className={`board-edit-modal__status-btn ${boardType === 'INDIVIDUAL' ? "board-edit-modal__status-btn--active" : ""}`}
+                    style={{
+                      borderColor: boardType === 'INDIVIDUAL' ? '#8b5cf6' : undefined,
+                      background: boardType === 'INDIVIDUAL' ? '#8b5cf620' : undefined,
+                      color: boardType === 'INDIVIDUAL' ? '#8b5cf6' : undefined,
+                    }}
+                  >
+                    Bireysel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBoardType('TEAM')}
+                    className={`board-edit-modal__status-btn ${boardType === 'TEAM' ? "board-edit-modal__status-btn--active" : ""}`}
+                    style={{
+                      borderColor: boardType === 'TEAM' ? '#3b82f6' : undefined,
+                      background: boardType === 'TEAM' ? '#3b82f620' : undefined,
+                      color: boardType === 'TEAM' ? '#3b82f6' : undefined,
+                    }}
+                  >
+                    Ekip
+                  </button>
+                </div>
+              </div>
+
               {/* Isim */}
               <div className="board-edit-modal__field">
                 <label className="board-edit-modal__label">

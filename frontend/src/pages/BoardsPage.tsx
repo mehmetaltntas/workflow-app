@@ -63,7 +63,7 @@ const BoardsPage = () => {
   };
 
   // Pano duzenleme
-  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string }) => {
+  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string; boardType?: 'INDIVIDUAL' | 'TEAM' }) => {
     if (!editingBoard) return;
     const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
     await updateBoardMutation.mutateAsync({
@@ -74,7 +74,8 @@ const BoardsPage = () => {
         link: data.link,
         description: data.description,
         deadline: formattedDeadline,
-        category: data.category
+        category: data.category,
+        boardType: data.boardType
       }
     });
     setIsEditModalOpen(false);
@@ -348,7 +349,8 @@ const BoardsPage = () => {
             description: editingBoard.description,
             deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
             status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
-            category: editingBoard.category
+            category: editingBoard.category,
+            boardType: editingBoard.boardType as "INDIVIDUAL" | "TEAM" | undefined
           }}
         />
       )}

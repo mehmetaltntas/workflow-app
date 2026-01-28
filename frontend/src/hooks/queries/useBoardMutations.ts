@@ -70,6 +70,7 @@ export const useUpdateBoard = () => {
         description?: string;
         deadline?: string;
         category?: string;
+        boardType?: 'INDIVIDUAL' | 'TEAM';
       };
     }) => {
       if (!userId) throw new Error('User not authenticated');

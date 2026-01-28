@@ -122,7 +122,7 @@ const HomePage = () => {
     navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } });
   };
 
-  const handleSaveBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string }) => {
+  const handleSaveBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string; boardType?: 'INDIVIDUAL' | 'TEAM' }) => {
     if (editingBoard) {
       const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
       updateBoardMutation.mutate(
@@ -134,7 +134,8 @@ const HomePage = () => {
             link: data.link,
             description: data.description,
             deadline: formattedDeadline,
-            category: data.category
+            category: data.category,
+            boardType: data.boardType
           }
         },
         {
@@ -421,7 +422,8 @@ const HomePage = () => {
             description: editingBoard.description,
             deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
             status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
-            category: editingBoard.category
+            category: editingBoard.category,
+            boardType: editingBoard.boardType as "INDIVIDUAL" | "TEAM" | undefined
           }}
         />
       )}

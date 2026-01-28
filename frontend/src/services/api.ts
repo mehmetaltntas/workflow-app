@@ -171,7 +171,7 @@ export const boardService = {
     return extractEntity<Board>(response);
   },
   deleteBoard: (boardId: number) => apiClient.delete(`/boards/${boardId}`),
-  updateBoard: async (boardId: number, data: { name?: string; status?: string; link?: string; description?: string; deadline?: string; category?: string }): Promise<Board> => {
+  updateBoard: async (boardId: number, data: { name?: string; status?: string; link?: string; description?: string; deadline?: string; category?: string; boardType?: 'INDIVIDUAL' | 'TEAM' }): Promise<Board> => {
     const response = await apiClient.put<Board>(`/boards/${boardId}`, data);
     return extractEntity<Board>(response);
   },

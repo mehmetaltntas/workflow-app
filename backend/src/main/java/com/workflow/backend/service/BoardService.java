@@ -364,6 +364,9 @@ public class BoardService {
         board.setDescription(request.getDescription());
         board.setDeadline(request.getDeadline());
         board.setCategory(request.getCategory());
+        if (request.getBoardType() != null) {
+            board.setBoardType(BoardType.valueOf(request.getBoardType()));
+        }
 
         Board savedBoard = boardRepository.save(board);
         return mapToResponse(savedBoard);
