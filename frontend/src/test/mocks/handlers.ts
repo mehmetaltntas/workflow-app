@@ -24,8 +24,7 @@ export const handlers = [
 
   http.post(`${API_URL}/auth/refresh`, async () => {
     return HttpResponse.json({
-      accessToken: 'new-access-token',
-      refreshToken: 'mock-refresh-token',
+      message: 'Token yenilendi',
     })
   }),
 

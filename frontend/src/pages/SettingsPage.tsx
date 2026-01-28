@@ -216,17 +216,15 @@ const SettingsPage = () => {
 
       const updatedUser = await userService.updateProfile(userId, data);
 
-      if (updatedUser.token && updatedUser.refreshToken) {
-        // Kullanıcı adı değiştiyse yeni token'larla oturumu güncelle
+      if (updatedUser.username) {
+        // Kullanıcı adı değiştiyse oturumu güncelle (token'lar cookie'de, backend tarafında yenilenir)
         login({
-          token: updatedUser.token,
-          refreshToken: updatedUser.refreshToken,
           id: userId,
           username: updatedUser.username,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
           deletionScheduledAt: updatedUser.deletionScheduledAt,
         });
-      } else if (updatedUser.username) {
-        updateAuthUsername(updatedUser.username);
       }
 
       if (updatedUser.username) {

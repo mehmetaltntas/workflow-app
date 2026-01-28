@@ -11,14 +11,6 @@ const server = setupServer()
 describe('API Services', () => {
   beforeEach(() => {
     server.listen({ onUnhandledRequest: 'bypass' })
-    // Mock localStorage
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
-      if (key === 'token') return 'mock-token'
-      if (key === 'refreshToken') return 'mock-refresh-token'
-      return null
-    })
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {})
-    vi.spyOn(Storage.prototype, 'clear').mockImplementation(() => {})
   })
 
   afterEach(() => {
@@ -31,13 +23,11 @@ describe('API Services', () => {
   })
 
   describe('authService', () => {
-    it('login returns tokens on success', async () => {
+    it('login returns user data on success', async () => {
       const mockResponse = {
         id: 1,
         username: 'testuser',
         email: 'test@example.com',
-        token: 'access-token',
-        refreshToken: 'refresh-token',
       }
 
       server.use(
@@ -52,16 +42,14 @@ describe('API Services', () => {
       })
 
       expect(response.data).toEqual(mockResponse)
-      expect(response.data.token).toBe('access-token')
+      expect(response.data.username).toBe('testuser')
     })
 
-    it('register creates user and returns tokens', async () => {
+    it('register creates user and returns user data', async () => {
       const mockResponse = {
         id: 1,
         username: 'newuser',
         email: 'new@example.com',
-        token: 'access-token',
-        refreshToken: 'refresh-token',
       }
 
       server.use(
@@ -82,10 +70,9 @@ describe('API Services', () => {
       expect(response.data.username).toBe('newuser')
     })
 
-    it('refreshToken returns new access token', async () => {
+    it('refreshToken returns success message', async () => {
       const mockResponse = {
-        accessToken: 'new-access-token',
-        refreshToken: 'mock-refresh-token',
+        message: 'Token yenilendi',
       }
 
       server.use(
@@ -94,9 +81,9 @@ describe('API Services', () => {
         })
       )
 
-      const response = await authService.refreshToken('mock-refresh-token')
+      const response = await authService.refreshToken()
 
-      expect(response.data.accessToken).toBe('new-access-token')
+      expect(response.data.message).toBe('Token yenilendi')
     })
   })
 

@@ -4,8 +4,6 @@ export const mockUser = {
   id: 1,
   username: 'testuser',
   email: 'test@example.com',
-  token: 'mock-access-token',
-  refreshToken: 'mock-refresh-token',
 }
 
 export const mockLabel: Label = {

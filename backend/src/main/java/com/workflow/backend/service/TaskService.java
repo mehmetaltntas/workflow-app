@@ -87,7 +87,8 @@ public class TaskService {
         // Kullanıcı sadece kendi listesine görev ekleyebilir
         authorizationService.verifyTaskListOwnership(request.getTaskListId());
 
-        TaskList taskList = taskListRepository.findById(request.getTaskListId())
+        // Pessimistic lock on TaskList to prevent race condition in position calculation
+        TaskList taskList = taskListRepository.findByIdWithLock(request.getTaskListId())
                 .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", request.getTaskListId()));
 
         if (taskRepository.existsByTitleAndTaskList(request.getTitle(), taskList)) {

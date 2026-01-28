@@ -1,12 +1,14 @@
 package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.*;
+import com.workflow.backend.exception.UnauthorizedAccessException;
 import com.workflow.backend.hateoas.assembler.UserModelAssembler;
 import com.workflow.backend.hateoas.assembler.UserProfileModelAssembler;
 import com.workflow.backend.hateoas.assembler.UserSearchModelAssembler;
 import com.workflow.backend.hateoas.model.UserModel;
 import com.workflow.backend.hateoas.model.UserProfileModel;
 import com.workflow.backend.hateoas.model.UserSearchModel;
+import com.workflow.backend.service.CurrentUserService;
 import com.workflow.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,9 +38,17 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 public class UserController {
 
     private final UserService userService;
+    private final CurrentUserService currentUserService;
     private final UserModelAssembler userAssembler;
     private final UserSearchModelAssembler userSearchAssembler;
     private final UserProfileModelAssembler userProfileAssembler;
+
+    private void verifyCurrentUser(Long userId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        if (!currentUserId.equals(userId)) {
+            throw new UnauthorizedAccessException("kullanıcı", userId);
+        }
+    }
 
     @Operation(summary = "Kullanıcı bilgilerini getir", description = "Belirtilen kullanıcının profil bilgilerini getirir")
     @ApiResponses(value = {
@@ -51,6 +61,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserModel> getUser(
             @Parameter(description = "Kullanıcı ID") @PathVariable Long id) {
+        verifyCurrentUser(id);
         UserResponse user = userService.getUserById(id);
         UserModel model = userAssembler.toModel(user);
         return ResponseEntity.ok(model);
@@ -69,6 +80,7 @@ public class UserController {
     public ResponseEntity<UserModel> updateProfile(
             @Parameter(description = "Kullanıcı ID") @PathVariable Long id,
             @Valid @RequestBody UpdateProfileRequest request) {
+        verifyCurrentUser(id);
         UserResponse updated = userService.updateProfile(id, request);
         UserModel model = userAssembler.toModel(updated);
         return ResponseEntity.ok(model);
@@ -86,6 +98,7 @@ public class UserController {
     public ResponseEntity<RepresentationModel<?>> updatePassword(
             @Parameter(description = "Kullanıcı ID") @PathVariable Long id,
             @Valid @RequestBody UpdatePasswordRequest request) {
+        verifyCurrentUser(id);
         userService.updatePassword(id, request);
 
         RepresentationModel<?> response = new RepresentationModel<>();
@@ -152,6 +165,7 @@ public class UserController {
     public ResponseEntity<Void> updatePrivacy(
             @Parameter(description = "Kullanici ID") @PathVariable Long id,
             @Valid @RequestBody UpdatePrivacyRequest request) {
+        verifyCurrentUser(id);
         userService.updatePrivacy(id, request);
         return ResponseEntity.ok().build();
     }
@@ -167,6 +181,7 @@ public class UserController {
     @PostMapping("/{id}/schedule-deletion")
     public ResponseEntity<UserModel> scheduleDeletion(
             @Parameter(description = "Kullanici ID") @PathVariable Long id) {
+        verifyCurrentUser(id);
         UserResponse result = userService.scheduleDeletion(id);
         UserModel model = userAssembler.toModel(result);
         return ResponseEntity.ok(model);
@@ -183,6 +198,7 @@ public class UserController {
     @PostMapping("/{id}/cancel-deletion")
     public ResponseEntity<UserModel> cancelDeletion(
             @Parameter(description = "Kullanici ID") @PathVariable Long id) {
+        verifyCurrentUser(id);
         UserResponse result = userService.cancelDeletion(id);
         UserModel model = userAssembler.toModel(result);
         return ResponseEntity.ok(model);

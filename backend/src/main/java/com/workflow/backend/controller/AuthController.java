@@ -16,6 +16,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -78,8 +81,11 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Sunucu hatası")
     })
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) {
         UserResponse result = userService.register(request);
+        addTokenCookies(response, result.getToken(), result.getRefreshToken());
+        result.setToken(null);
+        result.setRefreshToken(null);
         return ResponseEntity.ok(result);
     }
 
@@ -91,20 +97,26 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Geçersiz istek")
     })
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         UserResponse result = userService.login(request);
+        addTokenCookies(response, result.getToken(), result.getRefreshToken());
+        result.setToken(null);
+        result.setRefreshToken(null);
         return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "Token yenileme", description = "Refresh token ile yeni access token alır")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Token yenileme başarılı",
-                    content = @Content(schema = @Schema(implementation = TokenRefreshResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Token yenileme başarılı"),
             @ApiResponse(responseCode = "401", description = "Refresh token geçersiz veya süresi dolmuş")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-        String requestRefreshToken = request.getRefreshToken();
+    public ResponseEntity<Map<String, String>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String requestRefreshToken = extractCookieValue(request, "refresh_token");
+
+        if (requestRefreshToken == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Refresh token bulunamadı"));
+        }
 
         RefreshToken refreshToken = refreshTokenService.findAndVerifyToken(requestRefreshToken);
         if (refreshToken == null) {
@@ -113,7 +125,8 @@ public class AuthController {
 
         String newAccessToken = jwtService.generateAccessToken(
                 refreshToken.getUser().getUsername(), refreshToken.getUser().getId());
-        return ResponseEntity.ok(new TokenRefreshResponse(newAccessToken, requestRefreshToken));
+        addTokenCookies(response, newAccessToken, null);
+        return ResponseEntity.ok(Map.of("message", "Token yenilendi"));
     }
 
     @Operation(summary = "Çıkış yap", description = "Kullanıcının refresh token'ını siler")
@@ -124,14 +137,33 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<String> logout(
             @Parameter(description = "Bearer token")
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        String token = null;
+
+        // Try Authorization header first
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            String username = jwtService.extractUsername(token);
-            refreshTokenService.deleteByUsername(username);
-            return ResponseEntity.ok("Çıkış başarılı");
+            token = authHeader.substring(7);
         }
-        return ResponseEntity.badRequest().body("Geçersiz token");
+
+        // Fallback to cookie
+        if (token == null) {
+            token = extractCookieValue(request, "access_token");
+        }
+
+        if (token != null) {
+            try {
+                String username = jwtService.extractUsername(token);
+                refreshTokenService.deleteByUsername(username);
+            } catch (Exception e) {
+                // Token might be expired, still clear cookies
+            }
+        }
+
+        clearTokenCookies(response);
+        return ResponseEntity.ok("Çıkış başarılı");
     }
 
     @Operation(summary = "Şifre sıfırlama kodu gönder", description = "Kullanici adi veya email adresine 6 haneli doğrulama kodu gönderir")
@@ -178,8 +210,62 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Google OAuth yapılandırılmamış")
     })
     @PostMapping("/google")
-    public ResponseEntity<UserResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
+    public ResponseEntity<UserResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request, HttpServletResponse response) {
         UserResponse result = googleAuthService.authenticateWithGoogle(request.getIdToken());
+        addTokenCookies(response, result.getToken(), result.getRefreshToken());
+        result.setToken(null);
+        result.setRefreshToken(null);
         return ResponseEntity.ok(result);
+    }
+
+    // --- Cookie helper methods ---
+
+    private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        Cookie accessCookie = new Cookie("access_token", accessToken);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(900); // 15 minutes (matches JWT access token expiry)
+        accessCookie.setAttribute("SameSite", "Lax");
+        response.addCookie(accessCookie);
+
+        if (refreshToken != null) {
+            Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setSecure(true);
+            refreshCookie.setPath("/auth/refresh");
+            refreshCookie.setMaxAge(604800); // 7 days (matches refresh token expiry)
+            refreshCookie.setAttribute("SameSite", "Lax");
+            response.addCookie(refreshCookie);
+        }
+    }
+
+    private void clearTokenCookies(HttpServletResponse response) {
+        Cookie accessCookie = new Cookie("access_token", "");
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0);
+        accessCookie.setAttribute("SameSite", "Lax");
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie("refresh_token", "");
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/auth/refresh");
+        refreshCookie.setMaxAge(0);
+        refreshCookie.setAttribute("SameSite", "Lax");
+        response.addCookie(refreshCookie);
+    }
+
+    private String extractCookieValue(HttpServletRequest request, String cookieName) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookieName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }

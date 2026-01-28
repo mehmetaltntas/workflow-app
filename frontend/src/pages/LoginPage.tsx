@@ -30,8 +30,6 @@ const LoginPage = () => {
       const response = await authService.login({ username, password });
 
       login({
-        token: response.data.token,
-        refreshToken: response.data.refreshToken,
         id: response.data.id,
         username: response.data.username,
         firstName: response.data.firstName,
@@ -54,8 +52,6 @@ const LoginPage = () => {
       const response = await authService.googleAuth(idToken);
 
       login({
-        token: response.data.token,
-        refreshToken: response.data.refreshToken,
         id: response.data.id,
         username: response.data.username,
         firstName: response.data.firstName,

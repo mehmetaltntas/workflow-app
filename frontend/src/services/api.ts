@@ -75,7 +75,7 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  // Cookie taşıyabilmesi için (İleride HttpOnly cookie'ye geçersek lazım olur)
+  // HttpOnly cookie'lerin otomatik gönderilmesi için
   withCredentials: true,
 });
 
@@ -88,31 +88,22 @@ let failedQueue: Array<{
 }> = [];
 
 // Bekleyen istekleri işle
-const processQueue = (error: AxiosError | null, token: string | null = null) => {
+const processQueue = (error: AxiosError | null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
-    } else if (token) {
-      prom.config.headers.Authorization = `Bearer ${token}`;
+    } else {
       prom.resolve(apiClient(prom.config));
     }
   });
   failedQueue = [];
 };
 
-// 2. TOKEN INTERCEPTOR (ÖNEMLİ KISIM)
-// Her istekten önce çalışır ve token'ı ekler
+// 2. REQUEST INTERCEPTOR
+// Cookies are sent automatically via withCredentials: true
 apiClient.interceptors.request.use(
-  (config) => {
-    const { token } = useAuthStore.getState();
-    if (token && !config.url?.includes("/auth/")) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (config) => config,
+  (error) => Promise.reject(error),
 );
 
 // 3. Auth (Kimlik) İşlemleri
@@ -130,9 +121,9 @@ export const authService = {
   checkUsername: (username: string) => {
     return apiClient.get<{ available: boolean }>(`/auth/check-username?username=${encodeURIComponent(username)}`);
   },
-  // Refresh token ile yeni access token al
-  refreshToken: (refreshToken: string) => {
-    return apiClient.post("/auth/refresh", { refreshToken });
+  // Refresh token ile yeni access token al (cookie üzerinden otomatik gönderilir)
+  refreshToken: () => {
+    return apiClient.post("/auth/refresh");
   },
   // Logout - refresh token'ı sil
   logout: () => {
@@ -484,34 +475,20 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const { refreshToken, logout, updateToken } = useAuthStore.getState();
-
-      // Refresh token yoksa logout yap
-      if (!refreshToken) {
-        isRefreshing = false;
-        console.warn("Refresh token bulunamadı, çıkış yapılıyor...");
-        logout();
-        window.location.href = "/login";
-        return Promise.reject(error);
-      }
+      const { logout } = useAuthStore.getState();
 
       try {
-        // Yeni access token al
-        const response = await apiClient.post("/auth/refresh", { refreshToken });
-        const { accessToken } = response.data;
+        // Yeni access token al (refresh token cookie üzerinden otomatik gönderilir)
+        await apiClient.post("/auth/refresh");
 
-        // Yeni token'ı kaydet
-        updateToken(accessToken);
+        // Bekleyen istekleri işle (cookie otomatik eklenir)
+        processQueue(null);
 
-        // Bekleyen istekleri işle
-        processQueue(null, accessToken);
-
-        // Orijinal isteği yeni token ile tekrarla
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        // Orijinal isteği tekrarla (cookie otomatik eklenir)
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Refresh başarısız - logout yap
-        processQueue(refreshError as AxiosError, null);
+        processQueue(refreshError as AxiosError);
         console.warn("Token yenileme başarısız, çıkış yapılıyor...");
         logout();
         window.location.href = "/login";

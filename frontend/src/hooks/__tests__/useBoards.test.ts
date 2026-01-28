@@ -67,8 +67,6 @@ describe('useBoards', () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       const state = {
         userId: 1,
-        token: 'test-token',
-        refreshToken: 'test-refresh-token',
         username: 'testuser',
         firstName: null,
         lastName: null,
@@ -76,7 +74,6 @@ describe('useBoards', () => {
         isAuthenticated: true,
         login: vi.fn(),
         logout: vi.fn(),
-        updateToken: vi.fn(),
         updateUsername: vi.fn(),
         setDeletionScheduledAt: vi.fn(),
       }
@@ -218,8 +215,6 @@ describe('useBoards', () => {
     vi.mocked(useAuthStore).mockImplementation((selector) => {
       const state = {
         userId: null,
-        token: null,
-        refreshToken: null,
         username: null,
         firstName: null,
         lastName: null,
@@ -227,7 +222,6 @@ describe('useBoards', () => {
         isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
-        updateToken: vi.fn(),
         updateUsername: vi.fn(),
         setDeletionScheduledAt: vi.fn(),
       }

@@ -33,7 +33,8 @@ public class SubtaskService {
         // Kullanıcı sadece kendi görevine alt görev ekleyebilir
         authorizationService.verifyTaskOwnership(request.getTaskId());
 
-        Task task = taskRepository.findById(request.getTaskId())
+        // Pessimistic lock on Task to prevent race condition in position calculation
+        Task task = taskRepository.findByIdWithLock(request.getTaskId())
                 .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", request.getTaskId()));
 
         if (subtaskRepository.existsByTitleAndTask(request.getTitle(), task)) {
