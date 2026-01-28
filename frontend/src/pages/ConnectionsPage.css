@@ -171,10 +171,24 @@
   min-width: 0;
 }
 
-.connections-page__username-link {
-  font-size: 15px;
-  font-weight: 600;
+.connections-page__fullname-link {
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text-main);
+  text-decoration: none;
+  transition: color 200ms ease;
+  display: block;
+  line-height: 1.3;
+}
+
+.connections-page__fullname-link:hover {
+  color: var(--primary);
+}
+
+.connections-page__username-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 200ms ease;
 }

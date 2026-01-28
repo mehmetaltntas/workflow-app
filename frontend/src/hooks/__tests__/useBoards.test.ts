@@ -70,10 +70,15 @@ describe('useBoards', () => {
         token: 'test-token',
         refreshToken: 'test-refresh-token',
         username: 'testuser',
+        firstName: null,
+        lastName: null,
+        deletionScheduledAt: null,
         isAuthenticated: true,
         login: vi.fn(),
         logout: vi.fn(),
         updateToken: vi.fn(),
+        updateUsername: vi.fn(),
+        setDeletionScheduledAt: vi.fn(),
       }
       if (typeof selector === 'function') {
         return selector(state)
@@ -216,10 +221,15 @@ describe('useBoards', () => {
         token: null,
         refreshToken: null,
         username: null,
+        firstName: null,
+        lastName: null,
+        deletionScheduledAt: null,
         isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
         updateToken: vi.fn(),
+        updateUsername: vi.fn(),
+        setDeletionScheduledAt: vi.fn(),
       }
       if (typeof selector === 'function') {
         return selector(state)

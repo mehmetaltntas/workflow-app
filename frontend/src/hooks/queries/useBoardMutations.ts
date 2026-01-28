@@ -25,6 +25,7 @@ export const useCreateBoard = () => {
       description?: string;
       deadline?: string;
       category?: string;
+      boardType?: 'INDIVIDUAL' | 'TEAM';
     }) => {
       if (!userId) throw new Error('User not authenticated');
       return boardService.createBoard({

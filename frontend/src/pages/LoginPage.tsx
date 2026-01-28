@@ -34,6 +34,8 @@ const LoginPage = () => {
         refreshToken: response.data.refreshToken,
         id: response.data.id,
         username: response.data.username,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
         deletionScheduledAt: response.data.deletionScheduledAt,
       });
 
@@ -56,6 +58,8 @@ const LoginPage = () => {
         refreshToken: response.data.refreshToken,
         id: response.data.id,
         username: response.data.username,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
         deletionScheduledAt: response.data.deletionScheduledAt,
       });
 

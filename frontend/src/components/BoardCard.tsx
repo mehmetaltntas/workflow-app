@@ -16,6 +16,7 @@ interface BoardCardProps {
   canPin?: boolean;
   viewMode?: 'grid' | 'list';
   accentColor?: string;
+  showTypeBadge?: boolean;
 }
 
 const BoardCard: React.FC<BoardCardProps> = ({
@@ -28,6 +29,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   canPin = true,
   viewMode = 'grid',
   accentColor,
+  showTypeBadge = false,
 }) => {
   const statusColor = accentColor || STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
@@ -53,7 +55,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
       }}
     >
       {isTeam ? <Users size={12} strokeWidth={2.5} /> : <User size={12} strokeWidth={2.5} />}
-      {isTeam ? 'Takim' : 'Bireysel'}
+      {isTeam ? 'Ekip' : 'Bireysel'}
     </span>
   );
 
@@ -89,7 +91,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
         </h3>
 
         {/* Board Type Badge */}
-        {boardTypeBadge}
+        {showTypeBadge && boardTypeBadge}
 
         {/* Actions */}
         <div className="board-card__actions" onClick={(e) => e.stopPropagation()}>
@@ -143,7 +145,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
           {/* Board Type Badge */}
-          {boardTypeBadge}
+          {showTypeBadge && boardTypeBadge}
 
           <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
             <ActionMenu

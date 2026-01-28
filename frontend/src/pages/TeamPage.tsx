@@ -147,7 +147,7 @@ const TeamPage = () => {
               <Users color={colors.assigned.primary} size={24} />
             </div>
             <div>
-              <h1 className="assigned-page__title">Takım</h1>
+              <h1 className="assigned-page__title">Ekip</h1>
               <p className="assigned-page__subtitle">Yükleniyor...</p>
             </div>
           </div>
@@ -167,15 +167,15 @@ const TeamPage = () => {
               <Users color={colors.assigned.primary} size={24} />
             </div>
             <div>
-              <h1 className="assigned-page__title">Takım</h1>
+              <h1 className="assigned-page__title">Ekip</h1>
             </div>
           </div>
         </div>
         <div className="assigned-page__empty-center">
           <EmptyState
             icon={<Users size={48} strokeWidth={1.5} />}
-            title="Henüz takım panonuz yok"
-            description="Bir pano sahibi sizi üye olarak eklediğinde veya siz takım özellikli pano oluşturduğunuzda burada görünecektir."
+            title="Henüz ekip panonuz yok"
+            description="Bir pano sahibi sizi üye olarak eklediğinde veya siz ekip özellikli pano oluşturduğunuzda burada görünecektir."
             action={{
               label: "Ana Sayfaya Dön",
               onClick: () => navigate("/home"),
@@ -218,9 +218,9 @@ const TeamPage = () => {
                 <Users color={colors.assigned.primary} size={24} />
               </div>
               <div>
-                <h1 className="assigned-page__title">Takım</h1>
+                <h1 className="assigned-page__title">Ekip</h1>
                 <p className="assigned-page__subtitle">
-                  Atandığınız ve takım özellikli panolarınız
+                  Atandığınız ve ekip özellikli panolarınız
                 </p>
               </div>
             </div>
@@ -281,7 +281,7 @@ const TeamPage = () => {
               <div className="team-page__section-icon team-page__section-icon--team">
                 <LayoutDashboard size={20} color={colors.assigned.primary} />
               </div>
-              <h2 className="team-page__section-title">Takım Panolarım</h2>
+              <h2 className="team-page__section-title">Ekip Panolarım</h2>
               <span className="assigned-page__group-count">{myTeamBoards.length}</span>
             </div>
             {renderBoardGroups(groupedTeam, '/team')}

@@ -137,7 +137,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                 margin: 0,
               }}
             >
-              Sorumlu Kisi Ekle
+              Üye Ekle
             </h2>
           </div>
           <button

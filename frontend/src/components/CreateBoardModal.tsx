@@ -167,7 +167,7 @@ const CreateBoardModal: React.FC<CreateBoardModalProps> = ({ isOpen, onClose, on
                       color: boardType === 'TEAM' ? '#3b82f6' : undefined,
                     }}
                   >
-                    Takım
+                    Ekip
                   </button>
                 </div>
               </div>

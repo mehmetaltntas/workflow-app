@@ -108,7 +108,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         >
           <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
             <Users size={16} color={colors.brand.primary} />
-            <span style={sectionLabelStyle}>Sorumlu Kisiler</span>
+            <span style={sectionLabelStyle}>Üyeler</span>
             {members.length > 0 && (
               <span
                 style={{
@@ -163,7 +163,9 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.sm,
             }}>
-              {board.ownerName.charAt(0).toUpperCase()}
+              {board.ownerFirstName && board.ownerLastName
+                ? `${board.ownerFirstName.charAt(0)}${board.ownerLastName.charAt(0)}`.toUpperCase()
+                : board.ownerName.substring(0, 2).toUpperCase()}
             </div>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: cssVars.textMain, display: "block" }}>
@@ -199,7 +201,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                 margin: 0,
               }}
             >
-              Henüz sorumlu kisi eklenmemis
+              Henüz üye eklenmemiş
             </p>
             {isOwner && (
               <p
@@ -209,7 +211,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                   opacity: 0.7,
                 }}
               >
-                Baglantilarinizdan sorumlu kisi ekleyin
+                Bağlantılarınızdan üye ekleyin
               </p>
             )}
           </div>
@@ -269,7 +271,9 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                           fontSize: typography.fontSize.sm,
                         }}
                       >
-                        {member.username.charAt(0).toUpperCase()}
+                        {member.firstName && member.lastName
+                          ? `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`.toUpperCase()
+                          : member.username.substring(0, 2).toUpperCase()}
                       </div>
                     )}
                     <div>

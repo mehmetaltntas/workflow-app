@@ -74,6 +74,9 @@ describe('API Services', () => {
         username: 'newuser',
         email: 'new@example.com',
         password: 'password123',
+        code: 'ABC123',
+        firstName: 'New',
+        lastName: 'User',
       })
 
       expect(response.data.username).toBe('newuser')

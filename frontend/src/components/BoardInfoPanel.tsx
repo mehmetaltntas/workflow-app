@@ -129,7 +129,7 @@ const getDeadlineInfo = (deadline: string | undefined) => {
 
 export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   board,
-  onClose,
+  onClose: _onClose,
 }) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);

@@ -98,7 +98,9 @@ const UserProfilePage = () => {
     );
   }
 
-  const initials = profile.username.substring(0, 2).toUpperCase();
+  const initials = profile.firstName && profile.lastName
+    ? `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`.toUpperCase()
+    : profile.username.substring(0, 2).toUpperCase();
 
   return (
     <div
@@ -480,7 +482,7 @@ const UserProfilePage = () => {
                   }}
                 >
                   <Users size={20} />
-                  Takim Panosu
+                  Ekip Panosu
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
                   <div
@@ -496,7 +498,7 @@ const UserProfilePage = () => {
                     <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
                       <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.brand.primary }} />
                       <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
-                        Takim Panolari
+                        Ekip Panoları
                       </span>
                     </div>
                     <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>

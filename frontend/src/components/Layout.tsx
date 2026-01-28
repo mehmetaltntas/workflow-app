@@ -25,10 +25,12 @@ const Layout = () => {
   }
 
   // authStore'dan kullanici bilgilerini al
-  const { username: storedUsername, logout, deletionScheduledAt, userId, setDeletionScheduledAt } = useAuthStore();
+  const { username: storedUsername, firstName, lastName, logout, deletionScheduledAt, userId, setDeletionScheduledAt } = useAuthStore();
   const username = storedUsername || "Kullanıcı";
   // Avatar icin bas harfler
-  const initials = username.substring(0, 2).toUpperCase();
+  const initials = firstName && lastName
+    ? `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+    : username.substring(0, 2).toUpperCase();
 
   // Board detay sayfasinda miyiz? (/boards/:slug formatinda)
   const isBoardDetailPage = /^\/boards\/(info\/)?[^/]+$/.test(location.pathname);
@@ -114,7 +116,7 @@ const Layout = () => {
             </Link>
             <Link to="/team" className={`nav-pill ${isActive("/team") ? "active" : ""}`}>
               <UserCheck size={16} strokeWidth={2} />
-              <span>Takım</span>
+              <span>Ekip</span>
             </Link>
           </div>
         </div>
@@ -261,7 +263,7 @@ const Footer = () => {
               <Link to="/calendar" className="layout__footer-link">Takvim</Link>
               <Link to="/profile" className="layout__footer-link">Profil</Link>
               <Link to="/connections" className="layout__footer-link">Agim</Link>
-              <Link to="/team" className="layout__footer-link">Takım</Link>
+              <Link to="/team" className="layout__footer-link">Ekip</Link>
             </div>
           </div>
 

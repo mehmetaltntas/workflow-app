@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutDashboard } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutDashboard, Users } from "lucide-react";
 import { useBoards } from "../hooks/useBoards";
+import { useMyTeamBoardsQuery } from "../hooks/queries/useAssignedBoards";
 import { typography, spacing, radius, cssVars, colors, animation } from "../styles/tokens";
 import { STATUS_LABELS, STATUS_COLORS } from "../constants";
 import type { Board } from "../types";
@@ -17,6 +18,7 @@ interface CalendarEvent {
   color: string;
   daysRemaining: number;
   status: string;
+  isTeamBoard?: boolean;
 }
 
 // Türkçe ay isimleri
@@ -39,6 +41,7 @@ const formatLocalDate = (date: Date) => {
 const CalendarPage = () => {
   const navigate = useNavigate();
   const { boards, loading } = useBoards();
+  const { data: myTeamBoards = [], isLoading: teamLoading } = useMyTeamBoardsQuery();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
@@ -64,30 +67,52 @@ const CalendarPage = () => {
     }
   };
 
-  // Sadece board deadline'larından etkinlikleri çıkar
+  // Board deadline'larından etkinlikleri çıkar (kendi panolar + ekip panolar)
   const events = useMemo(() => {
     const allEvents: CalendarEvent[] = [];
+    const addedBoardIds = new Set<number>();
 
+    // Kendi panolari ekle
     boards.forEach((board: Board) => {
-      // Sadece Board deadline
       if (board.deadline) {
         const deadlineInfo = getDeadlineColor(board.deadline);
         allEvents.push({
           id: `board-${board.id}`,
           title: board.name,
-          date: board.deadline.split('T')[0], // Sadece tarih kısmını al
+          date: board.deadline.split('T')[0],
           type: "board",
           boardSlug: board.slug,
           boardName: board.name,
           color: deadlineInfo.color,
           daysRemaining: deadlineInfo.days,
           status: board.status || "PLANLANDI",
+          isTeamBoard: board.boardType === 'TEAM',
+        });
+        addedBoardIds.add(board.id);
+      }
+    });
+
+    // Ekip panolarini ekle (duplicate kontrolu ile)
+    myTeamBoards.forEach((board: Board) => {
+      if (board.deadline && !addedBoardIds.has(board.id)) {
+        const deadlineInfo = getDeadlineColor(board.deadline);
+        allEvents.push({
+          id: `team-board-${board.id}`,
+          title: board.name,
+          date: board.deadline.split('T')[0],
+          type: "board",
+          boardSlug: board.slug,
+          boardName: board.name,
+          color: deadlineInfo.color,
+          daysRemaining: deadlineInfo.days,
+          status: board.status || "PLANLANDI",
+          isTeamBoard: true,
         });
       }
     });
 
     return allEvents;
-  }, [boards]);
+  }, [boards, myTeamBoards]);
 
   // Ay başlangıç ve bitiş günlerini hesapla
   const calendarDays = useMemo(() => {
@@ -176,7 +201,7 @@ const CalendarPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || teamLoading) {
     return (
       <div
         style={{
@@ -520,15 +545,36 @@ const CalendarPage = () => {
                         marginBottom: spacing[1],
                       }}
                     >
-                      <span
-                        style={{
-                          fontSize: typography.fontSize.lg,
-                          fontWeight: typography.fontWeight.semibold,
-                          color: cssVars.textMain,
-                        }}
-                      >
-                        {selectedBoard.title}
-                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.lg,
+                            fontWeight: typography.fontWeight.semibold,
+                            color: cssVars.textMain,
+                          }}
+                        >
+                          {selectedBoard.title}
+                        </span>
+                        {selectedBoard.isTeamBoard && (
+                          <span
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: spacing[1],
+                              fontSize: typography.fontSize.xs,
+                              fontWeight: typography.fontWeight.semibold,
+                              color: colors.brand.primary,
+                              background: colors.brand.primaryLight,
+                              padding: `2px ${spacing[2]}`,
+                              borderRadius: radius.full,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            <Users size={10} />
+                            Ekip
+                          </span>
+                        )}
+                      </div>
                       <span
                         style={{
                           fontSize: typography.fontSize.xs,

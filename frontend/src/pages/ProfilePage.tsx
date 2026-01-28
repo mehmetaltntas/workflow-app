@@ -24,7 +24,9 @@ const ProfilePage = () => {
   const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", true);
   const { data: profile } = useUserProfile(username);
   const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
-  const initials = username.substring(0, 2).toUpperCase();
+  const initials = profile?.firstName && profile?.lastName
+    ? `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`.toUpperCase()
+    : username.substring(0, 2).toUpperCase();
 
   const { data: connectionCount = 0 } = useQuery({
     queryKey: queryKeys.connections.count,
@@ -445,7 +447,7 @@ const ProfilePage = () => {
               }}
             >
               <Users size={20} />
-              Takim Panosu
+              Ekip Panosu
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
               <div
@@ -461,7 +463,7 @@ const ProfilePage = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
                   <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.brand.primary }} />
                   <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
-                    Takim Panolari
+                    Ekip Panoları
                   </span>
                 </div>
                 <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>

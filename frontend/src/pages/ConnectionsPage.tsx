@@ -60,8 +60,13 @@ const ConnectionsPage = () => {
           {connections.map((connection) => {
             const isCurrentUserSender = connection.senderUsername === currentUsername;
             const otherUsername = isCurrentUserSender ? connection.receiverUsername : connection.senderUsername;
+            const otherFirstName = isCurrentUserSender ? connection.receiverFirstName : connection.senderFirstName;
+            const otherLastName = isCurrentUserSender ? connection.receiverLastName : connection.senderLastName;
             const otherProfilePicture = isCurrentUserSender ? connection.receiverProfilePicture : connection.senderProfilePicture;
-            const initials = otherUsername.substring(0, 2).toUpperCase();
+            const fullName = otherFirstName && otherLastName ? `${otherFirstName} ${otherLastName}` : null;
+            const initials = otherFirstName && otherLastName
+              ? `${otherFirstName.charAt(0)}${otherLastName.charAt(0)}`.toUpperCase()
+              : otherUsername.substring(0, 2).toUpperCase();
 
             return (
               <div key={connection.id} className="connections-page__item">
@@ -75,8 +80,13 @@ const ConnectionsPage = () => {
                   {!otherProfilePicture && initials}
                 </div>
                 <div className="connections-page__user-info">
+                  {fullName && (
+                    <Link to={`/profile/${otherUsername}`} className="connections-page__fullname-link">
+                      {fullName}
+                    </Link>
+                  )}
                   <Link to={`/profile/${otherUsername}`} className="connections-page__username-link">
-                    {otherUsername}
+                    @{otherUsername}
                   </Link>
                 </div>
                 <button

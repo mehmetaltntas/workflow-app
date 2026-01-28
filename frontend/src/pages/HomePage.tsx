@@ -11,6 +11,7 @@ import {
   Clock,
   ArrowRight,
   Users,
+  User,
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
@@ -72,12 +73,10 @@ const HomePage = () => {
   }, [activeBoards, pinnedBoardIds]);
 
   // Siralama fonksiyonu
-  const sortedUnpinnedBoards = useMemo(() => {
-    const sorted = [...unpinnedBoards];
-
+  const sortBoards = (boardsToSort: Board[]) => {
+    const sorted = [...boardsToSort];
     sorted.sort((a, b) => {
       let comparison = 0;
-
       switch (sortField) {
         case 'alphabetic':
           comparison = a.name.localeCompare(b.name, 'tr');
@@ -92,11 +91,19 @@ const HomePage = () => {
           else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
           break;
       }
-
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-
     return sorted;
+  };
+
+  // Unpinned boardlari bireysel ve ekip olarak ayir
+  const { sortedIndividualBoards, sortedTeamBoards } = useMemo(() => {
+    const individual = unpinnedBoards.filter(b => b.boardType !== 'TEAM');
+    const team = unpinnedBoards.filter(b => b.boardType === 'TEAM');
+    return {
+      sortedIndividualBoards: sortBoards(individual),
+      sortedTeamBoards: sortBoards(team),
+    };
   }, [unpinnedBoards, sortField, sortDirection]);
 
   // Istatistikler
@@ -158,7 +165,7 @@ const HomePage = () => {
   }
 
   // Board karti render fonksiyonu
-  const renderBoardCard = (board: Board, _isPinned: boolean, index: number, groupIndex: number) => {
+  const renderBoardCard = (board: Board, showTypeBadge: boolean, index: number, groupIndex: number) => {
     const boardIsPinned = pinnedBoardIds.includes(board.id);
     const boardCanPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
     return (
@@ -176,6 +183,7 @@ const HomePage = () => {
           isPinned={boardIsPinned}
           canPin={boardCanPin}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}
+          showTypeBadge={showTypeBadge}
         />
       </div>
     );
@@ -257,44 +265,79 @@ const HomePage = () => {
                   </span>
                 </div>
 
-                {/* Pinned Cards */}
+                {/* Pinned Cards - show type badge */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
                   {pinnedBoards.map((board, index) => renderBoardCard(board, true, index, 0))}
                 </div>
               </div>
             )}
 
-            {/* Other Active Boards Section */}
-            {sortedUnpinnedBoards.length > 0 && (
+            {/* Active Individual Boards Section */}
+            {sortedIndividualBoards.length > 0 && (
               <div
                 className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}
                 style={{ transitionDelay: pinnedBoards.length > 0 ? "100ms" : "0ms" }}
               >
                 {/* Section Header */}
                 <div className="home-page__section-header">
-                  <div className="home-page__section-dot" />
-                  <h2 className="home-page__section-title">
-                    {pinnedBoards.length > 0 ? "Diğer Aktif Panolar" : "Aktif Panolar"}
-                  </h2>
+                  <div className="home-page__section-icon">
+                    <User size={16} color={colors.brand.primary} />
+                  </div>
+                  <h2 className="home-page__section-title">Aktif Bireysel Panolar</h2>
                   <span className="home-page__section-count home-page__section-count--default">
-                    {sortedUnpinnedBoards.length}
+                    {sortedIndividualBoards.length}
                   </span>
 
                   {/* Tumunu Gor linki */}
-                  {sortedUnpinnedBoards.length >= 15 && (
+                  {sortedIndividualBoards.length > 10 && (
                     <button
                       onClick={() => navigate('/boards/status/devam-ediyor')}
                       className="home-page__view-all-btn"
                     >
-                      Tümünü Gör ({sortedUnpinnedBoards.length})
+                      Tümünü Gör ({sortedIndividualBoards.length})
                       <ArrowRight size={16} />
                     </button>
                   )}
                 </div>
 
-                {/* Cards */}
+                {/* Cards - max 10 */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {sortedUnpinnedBoards.map((board, index) => renderBoardCard(board, false, index, 1))}
+                  {sortedIndividualBoards.slice(0, 10).map((board, index) => renderBoardCard(board, false, index, 1))}
+                </div>
+              </div>
+            )}
+
+            {/* Active Team Boards Section */}
+            {sortedTeamBoards.length > 0 && (
+              <div
+                className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}
+                style={{ transitionDelay: (pinnedBoards.length > 0 ? 100 : 0) + (sortedIndividualBoards.length > 0 ? 100 : 0) + "ms" }}
+              >
+                {/* Section Header */}
+                <div className="home-page__section-header">
+                  <div className="home-page__section-icon">
+                    <Users size={16} color={colors.brand.primary} />
+                  </div>
+                  <h2 className="home-page__section-title">Aktif Ekip Panoları</h2>
+                  <span className="home-page__section-count home-page__section-count--default">
+                    {sortedTeamBoards.length}
+                  </span>
+
+                  {/* Tumunu Gor linki */}
+                  {sortedTeamBoards.length > 10 && (
+                    <button
+                      onClick={() => navigate('/boards/status/devam-ediyor')}
+                      className="home-page__view-all-btn"
+                    >
+                      Tümünü Gör ({sortedTeamBoards.length})
+                      <ArrowRight size={16} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Cards - max 10 */}
+                <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
+                  {sortedTeamBoards.slice(0, 10).map((board, index) => renderBoardCard(board, false, index, 2))}
                 </div>
               </div>
             )}
@@ -303,7 +346,7 @@ const HomePage = () => {
             {activeAssignedBoards.length > 0 && (
               <div
                 className={`home-page__section ${isVisible ? "home-page__section--visible" : "home-page__section--hidden"}`}
-                style={{ transitionDelay: (pinnedBoards.length > 0 ? 100 : 0) + (sortedUnpinnedBoards.length > 0 ? 100 : 0) + "ms" }}
+                style={{ transitionDelay: (pinnedBoards.length > 0 ? 100 : 0) + (sortedIndividualBoards.length > 0 ? 100 : 0) + (sortedTeamBoards.length > 0 ? 100 : 0) + "ms" }}
               >
                 {/* Section Header */}
                 <div className="home-page__section-header">
@@ -333,7 +376,7 @@ const HomePage = () => {
                     <div
                       key={board.id}
                       className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
-                      style={{ transitionDelay: `${(2 * 100) + (index * 50)}ms` }}
+                      style={{ transitionDelay: `${(3 * 100) + (index * 50)}ms` }}
                     >
                       <BoardCard
                         board={board}

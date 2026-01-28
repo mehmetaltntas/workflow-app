@@ -180,9 +180,13 @@ export interface Connection extends HateoasModel {
   id: number;
   senderId: number;
   senderUsername: string;
+  senderFirstName?: string | null;
+  senderLastName?: string | null;
   senderProfilePicture?: string | null;
   receiverId: number;
   receiverUsername: string;
+  receiverFirstName?: string | null;
+  receiverLastName?: string | null;
   receiverProfilePicture?: string | null;
   status: string;
   createdAt: string;

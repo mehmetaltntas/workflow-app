@@ -6,9 +6,11 @@ interface AuthState {
   refreshToken: string | null;
   userId: number | null;
   username: string | null;
+  firstName: string | null;
+  lastName: string | null;
   deletionScheduledAt: string | null;
   isAuthenticated: boolean;
-  login: (data: { token: string; refreshToken: string; id: number; username: string; deletionScheduledAt?: string | null }) => void;
+  login: (data: { token: string; refreshToken: string; id: number; username: string; firstName?: string | null; lastName?: string | null; deletionScheduledAt?: string | null }) => void;
   logout: () => void;
   updateToken: (token: string) => void;
   updateUsername: (username: string) => void;
@@ -22,6 +24,8 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       userId: null,
       username: null,
+      firstName: null,
+      lastName: null,
       deletionScheduledAt: null,
       isAuthenticated: false,
       login: (data) => set({
@@ -29,6 +33,8 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: data.refreshToken,
         userId: data.id,
         username: data.username,
+        firstName: data.firstName || null,
+        lastName: data.lastName || null,
         deletionScheduledAt: data.deletionScheduledAt || null,
         isAuthenticated: true,
       }),
@@ -37,6 +43,8 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: null,
         userId: null,
         username: null,
+        firstName: null,
+        lastName: null,
         deletionScheduledAt: null,
         isAuthenticated: false,
       }),
