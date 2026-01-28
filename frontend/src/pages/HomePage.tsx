@@ -207,32 +207,31 @@ const HomePage = () => {
     );
   };
 
-  // Ekip panolari icin render fonksiyonu (sahip vs atanmis ayrimi)
+  // Ekip panolari icin render fonksiyonu (tum ekip panolari ayni renk temasini kullanir)
   const renderTeamBoardCard = (board: Board, index: number, groupIndex: number) => {
     const isAssigned = assignedBoardIds.has(board.id);
     const isOwned = boards.some(b => b.id === board.id);
     const effectivelyAssigned = isAssigned && !isOwned;
 
-    if (effectivelyAssigned) {
-      return (
-        <div
-          key={board.id}
-          className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
-          style={{ transitionDelay: `${(groupIndex * 100) + (index * 50)}ms` }}
-        >
-          <BoardCard
-            board={board}
-            onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
-            onEdit={() => {}}
-            onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })}
-            viewMode={viewMode === 'list' ? 'list' : 'grid'}
-            accentColor={colors.assigned.primary}
-          />
-        </div>
-      );
-    }
-
-    return renderBoardCard(board, false, index, groupIndex);
+    return (
+      <div
+        key={board.id}
+        className={`home-page__card-wrapper ${isVisible ? "home-page__card-wrapper--visible" : "home-page__card-wrapper--hidden"}`}
+        style={{ transitionDelay: `${(groupIndex * 100) + (index * 50)}ms` }}
+      >
+        <BoardCard
+          board={board}
+          onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
+          onEdit={effectivelyAssigned ? () => {} : () => handleEdit(board)}
+          onShowInfo={effectivelyAssigned
+            ? () => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })
+            : () => handleShowInfo(board)
+          }
+          viewMode={viewMode === 'list' ? 'list' : 'grid'}
+          accentColor={colors.assigned.primary}
+        />
+      </div>
+    );
   };
 
   return (
@@ -362,10 +361,10 @@ const HomePage = () => {
                 {/* Section Header */}
                 <div className="home-page__section-header">
                   <div className="home-page__section-icon">
-                    <Users size={16} color={colors.brand.primary} />
+                    <Users size={16} color={colors.assigned.primary} />
                   </div>
                   <h2 className="home-page__section-title">Aktif Ekip Panoları</h2>
-                  <span className="home-page__section-count home-page__section-count--default">
+                  <span className="home-page__section-count home-page__section-count--assigned">
                     {sortedTeamBoards.length}
                   </span>
 
