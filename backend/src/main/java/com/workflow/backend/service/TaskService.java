@@ -7,7 +7,6 @@ import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
-import com.workflow.backend.repository.SubtaskRepository;
 import com.workflow.backend.repository.TaskListRepository;
 import com.workflow.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,6 @@ public class TaskService {
 
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
-    private final SubtaskRepository subtaskRepository;
     private final BoardRepository boardRepository;
     private final LabelRepository labelRepository;
     private final AuthorizationService authorizationService;
