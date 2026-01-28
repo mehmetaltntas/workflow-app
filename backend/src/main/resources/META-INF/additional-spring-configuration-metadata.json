@@ -27,6 +27,12 @@
       "name": "google.client-id",
       "type": "java.lang.String",
       "description": "Google OAuth2 Client ID for authentication"
+    },
+    {
+      "name": "profile-picture.storage-dir",
+      "type": "java.lang.String",
+      "description": "Directory path for storing profile picture files.",
+      "defaultValue": "./uploads/profile-pictures"
     }
   ]
 }
