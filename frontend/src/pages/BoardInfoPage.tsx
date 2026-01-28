@@ -148,12 +148,15 @@ const BoardInfoPage = () => {
               )}
             </p>
           </div>
-          {board.boardType === 'TEAM' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: cssVars.textMuted }}>
-              <span style={{ fontSize: '13px' }}>Kurucu:</span>
-              <span style={{ fontSize: '14px', fontWeight: 600, color: cssVars.textMain }}>{board.ownerName}</span>
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: cssVars.textMuted }}>
+            <span style={{ fontSize: '13px' }}>Oluşturan:</span>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: cssVars.textMain }}>
+              {board.ownerFirstName && board.ownerLastName
+                ? `${board.ownerFirstName} ${board.ownerLastName}`
+                : board.ownerName}
+            </span>
+            <span style={{ fontSize: '12px', color: cssVars.textMuted }}>@{board.ownerName}</span>
+          </div>
         </div>
       </div>
 

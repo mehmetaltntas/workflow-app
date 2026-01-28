@@ -265,21 +265,24 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
                   {CATEGORY_MAP[board.category!] || board.category}
                 </span>
               )}
-              {board.boardType === 'TEAM' && (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: spacing[1.5],
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.semibold,
-                    color: cssVars.textMuted,
-                  }}
-                >
-                  Kurucu:
-                  <span style={{ fontWeight: typography.fontWeight.bold, color: cssVars.textMain }}>{board.ownerName}</span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: spacing[1.5],
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: cssVars.textMuted,
+                }}
+              >
+                Oluşturan:
+                <span style={{ fontWeight: typography.fontWeight.bold, color: cssVars.textMain }}>
+                  {board.ownerFirstName && board.ownerLastName
+                    ? `${board.ownerFirstName} ${board.ownerLastName}`
+                    : board.ownerName}
                 </span>
-              )}
+                <span style={{ fontWeight: typography.fontWeight.normal, color: cssVars.textMuted }}>@{board.ownerName}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -551,8 +554,8 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
         </div>
       )}
 
-      {/* Board Members Section */}
-      <BoardMembersSection board={board} />
+      {/* Board Members Section - only for TEAM boards */}
+      {board.boardType === 'TEAM' && <BoardMembersSection board={board} />}
 
       {/* CSS Animation */}
       <style>{`
