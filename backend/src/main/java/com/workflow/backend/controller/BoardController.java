@@ -143,6 +143,20 @@ public class BoardController {
         return ResponseEntity.ok(models);
     }
 
+    @Operation(summary = "Takım panolarımı getir", description = "Kullanıcının kendi oluşturduğu TEAM tipindeki panoları getirir")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Takım panoları başarıyla getirildi"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli")
+    })
+    @GetMapping("/my-team-boards")
+    public ResponseEntity<List<BoardModel>> getMyTeamBoards() {
+        List<BoardResponse> boards = boardService.getMyTeamBoards();
+        List<BoardModel> models = boards.stream()
+                .map(boardAssembler::toModel)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(models);
+    }
+
     @Operation(summary = "Pano detaylarını getir", description = "Slug ile belirtilen panonun tüm detaylarını (listeler, görevler, etiketler) getirir")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pano detayları başarıyla getirildi",

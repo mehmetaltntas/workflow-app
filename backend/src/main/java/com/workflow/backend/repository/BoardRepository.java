@@ -48,4 +48,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     // Profil istatistikleri: Takim panosu sayisi
     @Query("SELECT COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM")
     long countTeamBoardsByUserId(@Param("userId") Long userId);
+
+    // Kullanicinin kendi TEAM tipindeki panolarini getir
+    @EntityGraph(attributePaths = {"user"})
+    @Query("SELECT b FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM")
+    List<Board> findTeamBoardsByUserId(@Param("userId") Long userId);
 }

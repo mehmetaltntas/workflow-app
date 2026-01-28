@@ -323,6 +323,14 @@ public class BoardService {
         return boards.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    // Kullanıcının kendi oluşturduğu TEAM tipindeki panoları getir
+    @Transactional
+    public List<BoardResponse> getMyTeamBoards() {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<Board> boards = boardRepository.findTeamBoardsByUserId(currentUserId);
+        return boards.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
     // PANO SİL
     public void deleteBoard(Long boardId) {
         // Kullanıcı sadece kendi panosunu silebilir

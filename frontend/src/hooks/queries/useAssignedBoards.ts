@@ -8,3 +8,10 @@ export const useAssignedBoardsQuery = () => {
     queryFn: () => boardService.getAssignedBoards(),
   });
 };
+
+export const useMyTeamBoardsQuery = () => {
+  return useQuery({
+    queryKey: queryKeys.boards.myTeamBoards,
+    queryFn: () => boardService.getMyTeamBoards(),
+  });
+};

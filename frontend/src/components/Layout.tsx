@@ -101,9 +101,9 @@ const Layout = () => {
               <Users size={16} strokeWidth={2} />
               <span>Agim</span>
             </Link>
-            <Link to="/assigned-boards" className={`nav-pill ${isActive("/assigned-boards") ? "active" : ""}`}>
+            <Link to="/team" className={`nav-pill ${isActive("/team") ? "active" : ""}`}>
               <UserCheck size={16} strokeWidth={2} />
-              <span>Atama</span>
+              <span>Takım</span>
             </Link>
           </div>
         </div>
@@ -224,7 +224,7 @@ const Footer = () => {
               <Link to="/calendar" className="layout__footer-link">Takvim</Link>
               <Link to="/profile" className="layout__footer-link">Profil</Link>
               <Link to="/connections" className="layout__footer-link">Agim</Link>
-              <Link to="/assigned-boards" className="layout__footer-link">Atama</Link>
+              <Link to="/team" className="layout__footer-link">Takım</Link>
             </div>
           </div>
 

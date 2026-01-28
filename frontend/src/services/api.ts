@@ -185,6 +185,10 @@ export const boardService = {
     const response = await apiClient.get<Board[]>("/boards/assigned");
     return response.data;
   },
+  getMyTeamBoards: async (): Promise<Board[]> => {
+    const response = await apiClient.get<Board[]>("/boards/my-team-boards");
+    return response.data;
+  },
 };
 
 // 5. Görev ve Liste İşlemleri

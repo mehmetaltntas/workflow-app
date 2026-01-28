@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAssignedBoardsQuery } from "../hooks/queries/useAssignedBoards";
+import { useAssignedBoardsQuery, useMyTeamBoardsQuery } from "../hooks/queries/useAssignedBoards";
 import {
   Users,
   ArrowLeft,
   Clock,
+  LayoutDashboard,
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
@@ -15,13 +16,16 @@ import { colors } from '../styles/tokens';
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import "./AssignedBoardsPage.css";
 
-const AssignedBoardsPage = () => {
+const TeamPage = () => {
   const navigate = useNavigate();
-  const { data: assignedBoards = [], isLoading: loading } = useAssignedBoardsQuery();
+  const { data: assignedBoards = [], isLoading: loadingAssigned } = useAssignedBoardsQuery();
+  const { data: myTeamBoards = [], isLoading: loadingTeam } = useMyTeamBoardsQuery();
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const loading = loadingAssigned || loadingTeam;
 
   useEffect(() => {
     if (!loading) {
@@ -30,11 +34,11 @@ const AssignedBoardsPage = () => {
     }
   }, [loading]);
 
-  // Status bazli gruplama
-  const groupedBoards = useMemo(() => {
+  // Status bazli gruplama helper
+  const groupByStatus = (boards: Board[]) => {
     const groups: Record<string, Board[]> = {};
 
-    assignedBoards.forEach(board => {
+    boards.forEach(board => {
       const status = board.status || "PLANLANDI";
       if (!groups[status]) groups[status] = [];
       groups[status].push(board);
@@ -63,17 +67,76 @@ const AssignedBoardsPage = () => {
     });
 
     return groups;
-  }, [assignedBoards, sortField, sortDirection]);
+  };
+
+  const groupedAssigned = useMemo(() => groupByStatus(assignedBoards), [assignedBoards, sortField, sortDirection]);
+  const groupedTeam = useMemo(() => groupByStatus(myTeamBoards), [myTeamBoards, sortField, sortDirection]);
 
   // Istatistikler
   const stats = useMemo(() => {
-    const total = assignedBoards.length;
-    const active = assignedBoards.filter(b => b.status === "DEVAM_EDIYOR").length;
-    return { total, active };
-  }, [assignedBoards]);
+    const totalAssigned = assignedBoards.length;
+    const totalTeam = myTeamBoards.length;
+    const activeAssigned = assignedBoards.filter(b => b.status === "DEVAM_EDIYOR").length;
+    const activeTeam = myTeamBoards.filter(b => b.status === "DEVAM_EDIYOR").length;
+    return { totalAssigned, totalTeam, total: totalAssigned + totalTeam, active: activeAssigned + activeTeam };
+  }, [assignedBoards, myTeamBoards]);
 
   // Status siralamasi
   const statusOrder = ["DEVAM_EDIYOR", "PLANLANDI", "DURDURULDU", "TAMAMLANDI", "BIRAKILDI"];
+
+  const renderBoardGroups = (groupedBoards: Record<string, Board[]>, fromPath: string) => (
+    <div className="assigned-page__groups">
+      {statusOrder.map((statusKey, groupIndex) => {
+        const boardsInGroup = groupedBoards[statusKey];
+        if (!boardsInGroup || boardsInGroup.length === 0) return null;
+
+        return (
+          <div
+            key={statusKey}
+            className={`assigned-page__group ${isVisible ? "assigned-page__group--visible" : "assigned-page__group--hidden"}`}
+            style={{ transitionDelay: `${groupIndex * 100}ms` }}
+          >
+            {/* Group Header */}
+            <div className="assigned-page__group-header">
+              <div
+                className="assigned-page__group-dot"
+                style={{
+                  background: STATUS_COLORS[statusKey],
+                  boxShadow: `0 0 12px ${STATUS_COLORS[statusKey]}50`,
+                }}
+              />
+              <h2 className="assigned-page__group-title">
+                {STATUS_LABELS[statusKey]}
+              </h2>
+              <span className="assigned-page__group-count">
+                {boardsInGroup.length}
+              </span>
+            </div>
+
+            {/* Cards */}
+            <div className={viewMode === 'list' ? "assigned-page__card-list" : "assigned-page__card-grid"}>
+              {boardsInGroup.map((board, cardIndex) => (
+                <div
+                  key={board.id}
+                  className={`assigned-page__card-wrapper ${isVisible ? "assigned-page__card-wrapper--visible" : "assigned-page__card-wrapper--hidden"}`}
+                  style={{ transitionDelay: `${(groupIndex * 100) + (cardIndex * 50)}ms` }}
+                >
+                  <BoardCard
+                    board={board}
+                    onClick={() => navigate(`/boards/${board.slug}`, { state: { from: fromPath } })}
+                    onEdit={() => {}}
+                    onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: fromPath } })}
+                    viewMode={viewMode === 'list' ? 'list' : 'grid'}
+                    accentColor={colors.assigned.primary}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -84,7 +147,7 @@ const AssignedBoardsPage = () => {
               <Users color={colors.assigned.primary} size={24} />
             </div>
             <div>
-              <h1 className="assigned-page__title">Atanan Panolar</h1>
+              <h1 className="assigned-page__title">Takım</h1>
               <p className="assigned-page__subtitle">Yükleniyor...</p>
             </div>
           </div>
@@ -93,7 +156,9 @@ const AssignedBoardsPage = () => {
     );
   }
 
-  if (assignedBoards.length === 0) {
+  const hasNoBoards = assignedBoards.length === 0 && myTeamBoards.length === 0;
+
+  if (hasNoBoards) {
     return (
       <div className="assigned-page__empty">
         <div className="assigned-page__header" style={{ padding: '40px 40px 0' }}>
@@ -102,15 +167,15 @@ const AssignedBoardsPage = () => {
               <Users color={colors.assigned.primary} size={24} />
             </div>
             <div>
-              <h1 className="assigned-page__title">Atanan Panolar</h1>
+              <h1 className="assigned-page__title">Takım</h1>
             </div>
           </div>
         </div>
         <div className="assigned-page__empty-center">
           <EmptyState
             icon={<Users size={48} strokeWidth={1.5} />}
-            title="Henüz atanmış panonuz yok"
-            description="Bir pano sahibi sizi üye olarak eklediğinde, o panolar burada görünecektir."
+            title="Henüz takım panonuz yok"
+            description="Bir pano sahibi sizi üye olarak eklediğinde veya siz takım özellikli pano oluşturduğunuzda burada görünecektir."
             action={{
               label: "Ana Sayfaya Dön",
               onClick: () => navigate("/home"),
@@ -153,9 +218,9 @@ const AssignedBoardsPage = () => {
                 <Users color={colors.assigned.primary} size={24} />
               </div>
               <div>
-                <h1 className="assigned-page__title">Atanan Panolar</h1>
+                <h1 className="assigned-page__title">Takım</h1>
                 <p className="assigned-page__subtitle">
-                  Size atanan tüm panolar
+                  Atandığınız ve takım özellikli panolarınız
                 </p>
               </div>
             </div>
@@ -195,61 +260,36 @@ const AssignedBoardsPage = () => {
           </div>
         </div>
 
-        {/* Board Groups by Status */}
-        <div className="assigned-page__groups">
-          {statusOrder.map((statusKey, groupIndex) => {
-            const boardsInGroup = groupedBoards[statusKey];
-            if (!boardsInGroup || boardsInGroup.length === 0) return null;
-
-            return (
-              <div
-                key={statusKey}
-                className={`assigned-page__group ${isVisible ? "assigned-page__group--visible" : "assigned-page__group--hidden"}`}
-                style={{ transitionDelay: `${groupIndex * 100}ms` }}
-              >
-                {/* Group Header */}
-                <div className="assigned-page__group-header">
-                  <div
-                    className="assigned-page__group-dot"
-                    style={{
-                      background: STATUS_COLORS[statusKey],
-                      boxShadow: `0 0 12px ${STATUS_COLORS[statusKey]}50`,
-                    }}
-                  />
-                  <h2 className="assigned-page__group-title">
-                    {STATUS_LABELS[statusKey]}
-                  </h2>
-                  <span className="assigned-page__group-count">
-                    {boardsInGroup.length}
-                  </span>
-                </div>
-
-                {/* Cards */}
-                <div className={viewMode === 'list' ? "assigned-page__card-list" : "assigned-page__card-grid"}>
-                  {boardsInGroup.map((board, cardIndex) => (
-                    <div
-                      key={board.id}
-                      className={`assigned-page__card-wrapper ${isVisible ? "assigned-page__card-wrapper--visible" : "assigned-page__card-wrapper--hidden"}`}
-                      style={{ transitionDelay: `${(groupIndex * 100) + (cardIndex * 50)}ms` }}
-                    >
-                      <BoardCard
-                        board={board}
-                        onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/assigned-boards' } })}
-                        onEdit={() => {}}
-                        onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: '/assigned-boards' } })}
-                        viewMode={viewMode === 'list' ? 'list' : 'grid'}
-                        accentColor={colors.assigned.primary}
-                      />
-                    </div>
-                  ))}
-                </div>
+        {/* Section: Atandigim Panolar */}
+        {assignedBoards.length > 0 && (
+          <div className="team-page__section">
+            <div className="team-page__section-header">
+              <div className="team-page__section-icon">
+                <Users size={20} color={colors.assigned.primary} />
               </div>
-            );
-          })}
-        </div>
+              <h2 className="team-page__section-title">Atandığım Panolar</h2>
+              <span className="assigned-page__group-count">{assignedBoards.length}</span>
+            </div>
+            {renderBoardGroups(groupedAssigned, '/team')}
+          </div>
+        )}
+
+        {/* Section: Takim Panolarim */}
+        {myTeamBoards.length > 0 && (
+          <div className="team-page__section">
+            <div className="team-page__section-header">
+              <div className="team-page__section-icon team-page__section-icon--team">
+                <LayoutDashboard size={20} color={colors.assigned.primary} />
+              </div>
+              <h2 className="team-page__section-title">Takım Panolarım</h2>
+              <span className="assigned-page__group-count">{myTeamBoards.length}</span>
+            </div>
+            {renderBoardGroups(groupedTeam, '/team')}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default AssignedBoardsPage;
+export default TeamPage;

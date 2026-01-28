@@ -318,7 +318,7 @@ const HomePage = () => {
                   {/* Daha Fazlasi linki - 5'ten fazlaysa goster */}
                   {activeAssignedBoards.length > 5 && (
                     <button
-                      onClick={() => navigate('/assigned-boards')}
+                      onClick={() => navigate('/team')}
                       className="home-page__view-all-btn home-page__view-all-btn--assigned"
                     >
                       Tümünü Gör ({activeAssignedBoards.length})
