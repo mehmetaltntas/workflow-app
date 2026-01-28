@@ -161,6 +161,16 @@ public class UserService {
             usernameChanged = true;
         }
 
+        // İsim guncelleme
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+
+        // Soyisim guncelleme
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+
         // Profil resmi guncelleme (ayri tabloda saklaniyor)
         if (request.getProfilePicture() != null) {
             UserProfilePicture profilePic = profilePictureRepository.findByUserId(id)

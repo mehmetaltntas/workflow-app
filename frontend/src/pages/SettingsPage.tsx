@@ -27,6 +27,10 @@ const SettingsPage = () => {
 
   // Profile states
   const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [originalFirstName, setOriginalFirstName] = useState("");
+  const [originalLastName, setOriginalLastName] = useState("");
   const [email, setEmail] = useState("");
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [originalUsername, setOriginalUsername] = useState("");
@@ -64,6 +68,10 @@ const SettingsPage = () => {
         const user = await userService.getUser(userId);
         setUsername(user.username);
         setOriginalUsername(user.username);
+        setFirstName(user.firstName || "");
+        setLastName(user.lastName || "");
+        setOriginalFirstName(user.firstName || "");
+        setOriginalLastName(user.lastName || "");
         setEmail(user.email);
         setProfilePicture((user as { profilePicture?: string }).profilePicture || null);
 
@@ -86,8 +94,12 @@ const SettingsPage = () => {
 
   // Track profile changes
   useEffect(() => {
-    setHasProfileChanges(username !== originalUsername);
-  }, [username, originalUsername]);
+    setHasProfileChanges(
+      username !== originalUsername ||
+      firstName !== originalFirstName ||
+      lastName !== originalLastName
+    );
+  }, [username, originalUsername, firstName, originalFirstName, lastName, originalLastName]);
 
   const checkUsernameAvailability = useCallback(async (value: string) => {
     try {
@@ -177,10 +189,18 @@ const SettingsPage = () => {
     const loadingToast = toast.loading("Profil güncelleniyor...");
 
     try {
-      const data: { username?: string; profilePicture?: string } = {};
+      const data: { username?: string; firstName?: string; lastName?: string; profilePicture?: string } = {};
 
       if (username !== originalUsername) {
         data.username = username;
+      }
+
+      if (firstName !== originalFirstName) {
+        data.firstName = firstName;
+      }
+
+      if (lastName !== originalLastName) {
+        data.lastName = lastName;
       }
 
       if (profilePicture) {
@@ -203,6 +223,12 @@ const SettingsPage = () => {
 
       if (updatedUser.username) {
         setOriginalUsername(updatedUser.username);
+      }
+      if (updatedUser.firstName !== undefined) {
+        setOriginalFirstName(updatedUser.firstName || "");
+      }
+      if (updatedUser.lastName !== undefined) {
+        setOriginalLastName(updatedUser.lastName || "");
       }
 
       setHasProfileChanges(false);
@@ -567,6 +593,64 @@ const SettingsPage = () => {
 
               {/* Form Fields */}
               <div style={{ display: "flex", flexDirection: "column", gap: spacing[6] }}>
+                {/* First Name & Last Name Fields */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing[4] }}>
+                  <div>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: spacing[2],
+                      fontSize: typography.fontSize.base,
+                      fontWeight: typography.fontWeight.semibold,
+                      color: cssVars.textMuted,
+                      marginBottom: spacing[2],
+                    }}>
+                      <User size={14} />
+                      İsim
+                    </label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="İsminizi girin"
+                      maxLength={50}
+                      style={{
+                        width: "100%",
+                        padding: `${spacing[3]} ${spacing[4]}`,
+                        fontSize: typography.fontSize.lg,
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: spacing[2],
+                      fontSize: typography.fontSize.base,
+                      fontWeight: typography.fontWeight.semibold,
+                      color: cssVars.textMuted,
+                      marginBottom: spacing[2],
+                    }}>
+                      <User size={14} />
+                      Soyisim
+                    </label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Soyisminizi girin"
+                      maxLength={50}
+                      style={{
+                        width: "100%",
+                        padding: `${spacing[3]} ${spacing[4]}`,
+                        fontSize: typography.fontSize.lg,
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {/* Username Field */}
                 <div>
                   <label style={{

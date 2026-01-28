@@ -331,7 +331,7 @@ export const userService = {
     const response = await apiClient.get<User>(`/users/${userId}`);
     return extractEntity<User>(response);
   },
-  updateProfile: async (userId: number, data: { username?: string; profilePicture?: string }): Promise<User> => {
+  updateProfile: async (userId: number, data: { username?: string; firstName?: string; lastName?: string; profilePicture?: string }): Promise<User> => {
     const response = await apiClient.put<User>(`/users/${userId}/profile`, data);
     return extractEntity<User>(response);
   },
