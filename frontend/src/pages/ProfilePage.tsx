@@ -23,9 +23,7 @@ const ProfilePage = () => {
   const username = useAuthStore((state) => state.username) || "Kullanici";
   const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", true);
   const { data: profile } = useUserProfile(username);
-  const fullName = profile?.firstName && profile?.lastName
-    ? `${profile.firstName} ${profile.lastName}`
-    : null;
+  const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
   const initials = username.substring(0, 2).toUpperCase();
 
   const { data: connectionCount = 0 } = useQuery({
