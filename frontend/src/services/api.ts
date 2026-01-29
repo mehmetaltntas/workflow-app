@@ -386,8 +386,8 @@ export const connectionService = {
     return response.data.count;
   },
   getAcceptedConnections: async (): Promise<Connection[]> => {
-    const response = await apiClient.get<PagedResponse<Connection>>("/connections/accepted");
-    return extractCollection<Connection>(response);
+    const response = await apiClient.get<{ content: Connection[] }>("/connections/accepted");
+    return response.data.content ?? [];
   },
   removeConnection: async (connectionId: number): Promise<void> => {
     await apiClient.delete(`/connections/${connectionId}`);
