@@ -166,6 +166,9 @@ const Layout = () => {
               <div className="menu-dropdown" style={{ right: 0, top: "120%", minWidth: "200px" }}>
                 {/* User Info Header */}
                 <div className="layout__dropdown-header">
+                  {firstName && lastName && (
+                    <div className="layout__dropdown-fullname">{firstName} {lastName}</div>
+                  )}
                   <div className="layout__dropdown-username">{username}</div>
                   <div className="layout__dropdown-subtitle">Hesabınızı yönetin</div>
                 </div>

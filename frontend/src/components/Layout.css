@@ -137,10 +137,17 @@
   margin-bottom: 6px;
 }
 
-.layout__dropdown-username {
-  font-size: 14px;
-  font-weight: 600;
+.layout__dropdown-fullname {
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.layout__dropdown-username {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
   margin-bottom: 2px;
 }
 
