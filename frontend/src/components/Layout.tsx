@@ -149,7 +149,7 @@ const Layout = () => {
                 {initials}
               </div>
               <span className="layout__profile-username">
-                {username}
+                Ben
               </span>
               <ChevronDown
                 size={parseInt(sizes.iconSm)}
@@ -177,7 +177,7 @@ const Layout = () => {
                   <span className="menu-item-icon">
                     <Settings size={parseInt(sizes.iconSm)} strokeWidth={2} />
                   </span>
-                  <span>Ayarlar</span>
+                  <span>Ayarlar ve Gizlilik</span>
                 </Link>
 
                 <div className="menu-divider" />

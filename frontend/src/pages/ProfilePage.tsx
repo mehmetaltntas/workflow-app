@@ -155,28 +155,28 @@ const ProfilePage = () => {
             {initials}
           </div>
           <div>
-            <h1
-              style={{
-                fontSize: typography.fontSize["4xl"],
-                fontWeight: typography.fontWeight.bold,
-                color: cssVars.textMain,
-                margin: 0,
-              }}
-            >
-              {username}
-            </h1>
             {fullName && (
-              <p
+              <h1
                 style={{
-                  fontSize: typography.fontSize.xl,
-                  color: cssVars.textMuted,
+                  fontSize: typography.fontSize["4xl"],
+                  fontWeight: typography.fontWeight.bold,
+                  color: cssVars.textMain,
                   margin: 0,
-                  marginTop: spacing[1],
                 }}
               >
                 {fullName}
-              </p>
+              </h1>
             )}
+            <p
+              style={{
+                fontSize: typography.fontSize.base,
+                color: cssVars.textMuted,
+                margin: 0,
+                marginTop: fullName ? spacing[1] : 0,
+              }}
+            >
+              @{username}
+            </p>
             <p
               style={{
                 fontSize: typography.fontSize.lg,
