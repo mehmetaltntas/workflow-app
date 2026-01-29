@@ -22,6 +22,7 @@ import {
 } from "../hooks/queries/useBoardMembers";
 import AddBoardMemberModal from "./AddBoardMemberModal";
 import AssignMemberModal from "./AssignMemberModal";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 interface BoardMembersSectionProps {
   board: Board;
@@ -43,6 +44,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<BoardMember | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<BoardMember | null>(null);
 
   const addMemberMutation = useAddBoardMember(board.id, board.slug);
   const removeMemberMutation = useRemoveBoardMember(board.id, board.slug);
@@ -56,8 +58,15 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
     await addMemberMutation.mutateAsync(userId);
   };
 
-  const handleRemoveMember = (memberId: number) => {
-    removeMemberMutation.mutate(memberId);
+  const handleRemoveMember = (member: BoardMember) => {
+    setMemberToRemove(member);
+  };
+
+  const handleConfirmRemove = () => {
+    if (memberToRemove) {
+      removeMemberMutation.mutate(memberToRemove.id);
+      setMemberToRemove(null);
+    }
   };
 
   const handleOpenAssign = (member: BoardMember) => {
@@ -336,7 +345,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                         <Target size={14} />
                       </button>
                       <button
-                        onClick={() => handleRemoveMember(member.id)}
+                        onClick={() => handleRemoveMember(member)}
                         title="Üyeyi kaldir"
                         style={{
                           display: "flex",
@@ -412,6 +421,21 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         onCreateAssignment={handleCreateAssignment}
         onRemoveAssignment={handleRemoveAssignment}
         onCreateBulkAssignment={handleCreateBulkAssignment}
+      />
+
+      <ConfirmationModal
+        isOpen={!!memberToRemove}
+        title="Üyeyi Kaldır"
+        message={
+          memberToRemove
+            ? `"${memberToRemove.firstName && memberToRemove.lastName ? `${memberToRemove.firstName} ${memberToRemove.lastName}` : memberToRemove.username}" adlı üyeyi bu panodan kaldırmak istediğinize emin misiniz?`
+            : ""
+        }
+        confirmText="Evet, Kaldır"
+        cancelText="İptal"
+        variant="danger"
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setMemberToRemove(null)}
       />
     </>
   );
