@@ -5,6 +5,7 @@ import com.workflow.backend.entity.*;
 import com.workflow.backend.exception.BadRequestException;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.ResourceNotFoundException;
+import com.workflow.backend.exception.UnauthorizedAccessException;
 import com.workflow.backend.repository.BoardRepository;
 import com.workflow.backend.repository.LabelRepository;
 import com.workflow.backend.repository.TaskListRepository;
@@ -245,12 +246,21 @@ public class TaskService {
     // LİSTE GÜNCELLE
     @Transactional
     public TaskListDto updateTaskList(Long listId, TaskListDto request) {
-        // Kullanıcı sadece kendi listesini güncelleyebilir
-        authorizationService.verifyTaskListOwnership(listId);
+        // Pano sahibi VEYA atanmış üye (üye sadece isCompleted değiştirebilir)
+        boolean isOwner = boardMemberService.verifyAccessToTaskList(listId);
 
         TaskList list = taskListRepository.findById(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", listId));
 
+        // Atanmış üye: sadece tamamlanma durumu değiştirilebilir
+        if (!isOwner) {
+            if (request.getIsCompleted() == null) {
+                throw new UnauthorizedAccessException("liste", listId);
+            }
+            return updateTaskListCompletion(list, request.getIsCompleted());
+        }
+
+        // Pano sahibi: tüm alanlar güncellenebilir
         if (request.getName() != null && !request.getName().equals(list.getName())) {
             if (taskListRepository.existsByNameAndBoard(request.getName(), list.getBoard())) {
                 throw new DuplicateResourceException("Liste", "name", request.getName());
@@ -304,6 +314,22 @@ public class TaskService {
         return mapToListDto(savedList);
     }
 
+    // Liste tamamlanma durumunu güncelle (atanmış üye için)
+    private TaskListDto updateTaskListCompletion(TaskList list, boolean isCompleted) {
+        list.setIsCompleted(isCompleted);
+        if (list.getTasks() != null) {
+            list.getTasks().forEach(task -> {
+                task.setIsCompleted(isCompleted);
+                if (task.getSubtasks() != null) {
+                    task.getSubtasks().forEach(subtask -> subtask.setIsCompleted(isCompleted));
+                }
+            });
+            taskRepository.saveAll(list.getTasks());
+        }
+        TaskList saved = taskListRepository.save(list);
+        return mapToListDto(saved);
+    }
+
     // GÖREV SİL
     @Transactional
     public void deleteTask(Long taskId) {
@@ -335,12 +361,21 @@ public class TaskService {
     // GÖREV GÜNCELLE
     @Transactional
     public TaskDto updateTask(Long taskId, TaskDto request) {
-        // Kullanıcı sadece kendi görevini güncelleyebilir
-        authorizationService.verifyTaskOwnership(taskId);
+        // Pano sahibi VEYA atanmış üye (üye sadece isCompleted değiştirebilir)
+        boolean isOwner = boardMemberService.verifyAccessToTask(taskId);
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
 
+        // Atanmış üye: sadece tamamlanma durumu değiştirilebilir
+        if (!isOwner) {
+            if (request.getIsCompleted() == null) {
+                throw new UnauthorizedAccessException("görev", taskId);
+            }
+            return updateTaskCompletion(task, request.getIsCompleted());
+        }
+
+        // Pano sahibi: tüm alanlar güncellenebilir
         if (request.getTitle() != null && !request.getTitle().equals(task.getTitle())) {
             if (taskRepository.existsByTitleAndTaskList(request.getTitle(), task.getTaskList())) {
                 throw new DuplicateResourceException("Görev", "title", request.getTitle());
@@ -383,6 +418,27 @@ public class TaskService {
         }
 
         return mapToDto(savedTask);
+    }
+
+    // Görev tamamlanma durumunu güncelle (atanmış üye veya toggle için)
+    private TaskDto updateTaskCompletion(Task task, boolean isCompleted) {
+        task.setIsCompleted(isCompleted);
+
+        // Alt görevleri de güncelle
+        if (task.getSubtasks() != null) {
+            task.getSubtasks().forEach(subtask -> subtask.setIsCompleted(isCompleted));
+        }
+
+        Task saved = taskRepository.save(task);
+
+        // Cascade: task → list
+        TaskList parentList = task.getTaskList();
+        List<Task> listTasks = taskRepository.findByTaskListIdOrderByPositionAsc(parentList.getId());
+        boolean allTasksCompleted = listTasks.stream().allMatch(Task::getIsCompleted);
+        parentList.setIsCompleted(allTasksCompleted);
+        taskListRepository.save(parentList);
+
+        return mapToDto(saved);
     }
 
     // GÖREV TAMAMLANMA TOGGLE (sahip + atanmış üye)

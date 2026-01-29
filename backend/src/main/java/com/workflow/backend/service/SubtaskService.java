@@ -143,8 +143,8 @@ public class SubtaskService {
 
     // Görevin alt görevlerini getir
     public List<SubtaskDto> getSubtasksByTaskId(Long taskId) {
-        // Kullanıcı sadece kendi görevinin alt görevlerini görebilir
-        authorizationService.verifyTaskOwnership(taskId);
+        // Pano sahibi VEYA atanmış üye görevin alt görevlerini görebilir
+        boardMemberService.verifyAccessToTask(taskId);
 
         return subtaskRepository.findByTaskIdOrderByPositionAsc(taskId)
                 .stream()

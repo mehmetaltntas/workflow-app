@@ -65,7 +65,7 @@ public class BoardMemberService {
             throw new BadRequestException("Bu kullanıcıyla kabul edilmiş bir bağlantınız bulunmamaktadır.");
         }
 
-        // Mevcut üyelik kaydı kontrolü (REJECTED ise tekrar davet et, PENDING/ACCEPTED ise hata)
+        // Mevcut üyelik kaydı kontrolü (REJECTED ise tekrar davet et, PENDING ise mevcut kaydı dön, ACCEPTED ise hata)
         java.util.Optional<BoardMember> existingMember = boardMemberRepository.findByBoardIdAndUserId(boardId, userId);
         if (existingMember.isPresent()) {
             BoardMember existing = existingMember.get();
@@ -80,6 +80,10 @@ public class BoardMemberService {
                 notificationService.createNotification(user, currentUser, NotificationType.BOARD_MEMBER_INVITATION, message, saved.getId());
 
                 return mapToDto(saved);
+            }
+            if (existing.getStatus() == BoardMemberStatus.PENDING) {
+                // Zaten bekleyen davet var, mevcut kaydı dön (idempotent)
+                return mapToDto(existing);
             }
             throw new DuplicateResourceException("Pano üyesi", "userId", userId);
         }
@@ -257,6 +261,58 @@ public class BoardMemberService {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Task'a erişim kontrolü: Pano sahibi VEYA atanmış üye.
+     * @return true if owner, false if assigned member
+     * @throws UnauthorizedAccessException eğer ne sahip ne de atanmış üye ise
+     */
+    public boolean verifyAccessToTask(Long taskId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+
+        // Pano sahibi kontrolü
+        if (taskRepository.existsByIdAndTaskListBoardUserId(taskId, currentUserId)) {
+            return true;
+        }
+
+        // Atanmış üye kontrolü
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Görev", "id", taskId));
+        Long boardId = task.getTaskList().getBoard().getId();
+
+        if (boardMemberRepository.existsAcceptedByBoardIdAndUserId(boardId, currentUserId)
+                && isUserAssignedToTarget(currentUserId, boardId, AssignmentTargetType.TASK, taskId)) {
+            return false; // Atanmış üye
+        }
+
+        throw new UnauthorizedAccessException("görev", taskId);
+    }
+
+    /**
+     * TaskList'e erişim kontrolü: Pano sahibi VEYA atanmış üye.
+     * @return true if owner, false if assigned member
+     * @throws UnauthorizedAccessException eğer ne sahip ne de atanmış üye ise
+     */
+    public boolean verifyAccessToTaskList(Long taskListId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+
+        // Pano sahibi kontrolü
+        if (taskListRepository.existsByIdAndBoardUserId(taskListId, currentUserId)) {
+            return true;
+        }
+
+        // Atanmış üye kontrolü
+        TaskList taskList = taskListRepository.findById(taskListId)
+                .orElseThrow(() -> new ResourceNotFoundException("Liste", "id", taskListId));
+        Long boardId = taskList.getBoard().getId();
+
+        if (boardMemberRepository.existsAcceptedByBoardIdAndUserId(boardId, currentUserId)
+                && isUserAssignedToTarget(currentUserId, boardId, AssignmentTargetType.LIST, taskListId)) {
+            return false; // Atanmış üye
+        }
+
+        throw new UnauthorizedAccessException("liste", taskListId);
     }
 
     // Pano sahibi VEYA üye kontrolü (görüntüleme için)
