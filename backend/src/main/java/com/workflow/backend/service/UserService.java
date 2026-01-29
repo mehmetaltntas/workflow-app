@@ -2,7 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.*;
 import com.workflow.backend.exception.InvalidVerificationCodeException;
-import com.workflow.backend.entity.*;;
+import com.workflow.backend.entity.*;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.exception.ResourceNotFoundException;
