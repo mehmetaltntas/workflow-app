@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { queryClient } from '../lib/queryClient';
 
 interface AuthState {
   userId: number | null;
@@ -33,15 +34,10 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: true,
       }),
       logout: async () => {
-        try {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-          await fetch(`${baseUrl}/auth/logout`, {
-            method: "POST",
-            credentials: "include",
-          });
-        } catch {
-          // Backend cagrisi basarisiz olsa bile local state temizlenmeli
-        }
+        // Güvenlik: Önce cache ve state temizle, sonra backend çağrısı yap.
+        // Bu sıralama, logout() await edilmeden çağrıldığında bile
+        // cache'in hemen temizlenmesini garanti eder.
+        queryClient.clear();
         set({
           userId: null,
           username: null,
@@ -50,6 +46,15 @@ export const useAuthStore = create<AuthState>()(
           deletionScheduledAt: null,
           isAuthenticated: false,
         });
+        try {
+          const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+          await fetch(`${baseUrl}/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch {
+          // Backend cagrisi basarisiz olsa bile local state zaten temizlendi
+        }
       },
       updateUsername: (username) => set({ username }),
       setDeletionScheduledAt: (date) => set({ deletionScheduledAt: date }),
@@ -65,6 +70,7 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (response.status === 401 || response.status === 403) {
+            queryClient.clear();
             set({
               userId: null,
               username: null,

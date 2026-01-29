@@ -4,6 +4,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import GoogleSignInButton from "../components/GoogleSignInButton";
 import { useAuthStore } from "../stores/authStore";
+import { queryClient } from "../lib/queryClient";
 import "./LoginPage.css";
 
 const LoginPage = () => {
@@ -29,6 +30,9 @@ const LoginPage = () => {
     try {
       const response = await authService.login({ username, password });
 
+      // Güvenlik: Önceki oturumdan kalan cache'li verileri temizle
+      queryClient.clear();
+
       login({
         id: response.data.id,
         username: response.data.username,
@@ -50,6 +54,9 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const response = await authService.googleAuth(idToken);
+
+      // Güvenlik: Önceki oturumdan kalan cache'li verileri temizle
+      queryClient.clear();
 
       login({
         id: response.data.id,
