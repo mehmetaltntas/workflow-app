@@ -154,11 +154,80 @@
   flex: 1;
 }
 
+/* Bottom row */
+.board-card__bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.board-card__bottom-left {
+  display: flex;
+  align-items: center;
+}
+
 /* Bottom icons */
 .board-card__bottom-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  margin-top: 8px;
+}
+
+/* ===== Board Type Badge ===== */
+.board-card__type-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: default;
+  transition: all 150ms ease;
+}
+
+.board-card__type-badge--team {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.board-card__type-badge--individual {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+/* Tooltip */
+.board-card__type-badge-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.board-card__type-badge--team .board-card__type-badge-tooltip {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.board-card__type-badge--individual .board-card__type-badge-tooltip {
+  background: #8b5cf6;
+  color: #fff;
+}
+
+.board-card__type-badge:hover .board-card__type-badge-tooltip {
+  opacity: 1;
 }

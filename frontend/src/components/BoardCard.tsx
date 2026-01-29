@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS } from "../constants";
-import { Info, ExternalLink, Pin, PinOff, User, Users } from "lucide-react";
+import { Info, ExternalLink, Pin, PinOff } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
 import "./BoardCard.css";
@@ -38,24 +38,11 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
   const isTeam = board.boardType === 'TEAM';
   const boardTypeBadge = (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '4px',
-        fontSize: '11px',
-        fontWeight: 600,
-        padding: '2px 8px',
-        borderRadius: '9999px',
-        lineHeight: 1,
-        whiteSpace: 'nowrap' as const,
-        color: isTeam ? '#3b82f6' : '#8b5cf6',
-        background: isTeam ? 'rgba(59,130,246,0.12)' : 'rgba(139,92,246,0.12)',
-        border: `1px solid ${isTeam ? 'rgba(59,130,246,0.25)' : 'rgba(139,92,246,0.25)'}`,
-      }}
-    >
-      {isTeam ? <Users size={12} strokeWidth={2.5} /> : <User size={12} strokeWidth={2.5} />}
-      {isTeam ? 'Ekip' : 'Bireysel'}
+    <span className={`board-card__type-badge ${isTeam ? 'board-card__type-badge--team' : 'board-card__type-badge--individual'}`}>
+      {isTeam ? 'E' : 'B'}
+      <span className="board-card__type-badge-tooltip">
+        {isTeam ? 'Ekip' : 'Bireysel'}
+      </span>
     </span>
   );
 
@@ -143,16 +130,11 @@ const BoardCard: React.FC<BoardCardProps> = ({
           {board.name}
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-          {/* Board Type Badge */}
-          {showTypeBadge && boardTypeBadge}
-
-          <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
-            <ActionMenu
-              items={menuItems}
-              triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
-            />
-          </div>
+        <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
+          <ActionMenu
+            items={menuItems}
+            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
+          />
         </div>
       </div>
 
@@ -166,30 +148,36 @@ const BoardCard: React.FC<BoardCardProps> = ({
       {/* Spacer */}
       <div className="board-card__spacer" />
 
-      {/* Bottom Icons */}
-      <div className="board-card__bottom-actions" onClick={(e) => e.stopPropagation()}>
-        {onShowInfo && (
-          <button
-            onClick={onShowInfo}
-            className="board-card__icon-btn"
-            title="Pano Bilgileri"
-          >
-            <Info size={18} strokeWidth={2.5} />
-          </button>
-        )}
+      {/* Bottom Row: Type Badge (left) + Icons (right) */}
+      <div className="board-card__bottom-row">
+        <div className="board-card__bottom-left">
+          {showTypeBadge && boardTypeBadge}
+        </div>
 
-        {board.link && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(board.link, '_blank', 'noopener,noreferrer');
-            }}
-            className="board-card__icon-btn"
-            title="Bağlantıya Git"
-          >
-            <ExternalLink size={18} strokeWidth={2.5} />
-          </button>
-        )}
+        <div className="board-card__bottom-actions" onClick={(e) => e.stopPropagation()}>
+          {onShowInfo && (
+            <button
+              onClick={onShowInfo}
+              className="board-card__icon-btn"
+              title="Pano Bilgileri"
+            >
+              <Info size={18} strokeWidth={2.5} />
+            </button>
+          )}
+
+          {board.link && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(board.link, '_blank', 'noopener,noreferrer');
+              }}
+              className="board-card__icon-btn"
+              title="Bağlantıya Git"
+            >
+              <ExternalLink size={18} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

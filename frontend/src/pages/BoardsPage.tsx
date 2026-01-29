@@ -313,6 +313,7 @@ const BoardsPage = () => {
                           navigate(`/boards/info/${board.slug}`, { state: { from: '/boards' } });
                         }}
                         viewMode={viewMode === 'list' ? 'list' : 'grid'}
+                        showTypeBadge
                       />
                     </div>
                   ))}
