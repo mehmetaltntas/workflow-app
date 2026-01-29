@@ -64,7 +64,7 @@ const UserSearchBar = () => {
         <input
           type="text"
           className="search-bar__input"
-          placeholder="Kullanici ara..."
+          placeholder="Kullanıcı ara..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
@@ -76,10 +76,10 @@ const UserSearchBar = () => {
       {isOpen && (
         <div className="search-bar__dropdown">
           {isLoading && (
-            <div className="search-bar__loading">Araniyor...</div>
+            <div className="search-bar__loading">Aranıyor...</div>
           )}
           {!isLoading && results.length === 0 && debouncedQuery.length >= 2 && (
-            <div className="search-bar__empty">Kullanici bulunamadi</div>
+            <div className="search-bar__empty">Kullanıcı bulunamadı</div>
           )}
           {!isLoading && results.map((user) => (
             <button

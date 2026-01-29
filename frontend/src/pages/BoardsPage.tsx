@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Board } from "../types";
-import { Layout, Plus, FolderOpen, Search, TrendingUp, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Layout, Plus, FolderOpen, Search, ArrowRight } from "lucide-react";
 
 import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useCreateBoard, useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
@@ -44,15 +44,6 @@ const BoardsPage = () => {
     });
     return counts;
   }, [boards]);
-
-  // Istatistikler
-  const stats = useMemo(() => {
-    const total = boards.length;
-    const completed = statusCounts["TAMAMLANDI"] || 0;
-    const inProgress = statusCounts["DEVAM_EDIYOR"] || 0;
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, inProgress, completionRate };
-  }, [boards, statusCounts]);
 
   // Yeni pano olusturma
   const handleCreateBoard = async (name: string, status: string, link?: string, description?: string, deadline?: string, category?: string, boardType?: 'INDIVIDUAL' | 'TEAM') => {
@@ -179,46 +170,13 @@ const BoardsPage = () => {
               <div>
                 <h1 className="boards-page__title">Panolarım</h1>
                 <p className="boards-page__subtitle">
-                  {stats.total} pano &middot; {stats.inProgress} aktif
+                  {boards.length} pano &middot; {statusCounts["DEVAM_EDIYOR"] || 0} aktif
                 </p>
               </div>
             </div>
 
             {/* Stats Cards & Panel Toggle */}
             <div className="boards-page__controls">
-              {/* Completion Rate */}
-              <div className="boards-page__stat-card boards-page__stat-card--completion">
-                <TrendingUp size={18} color={colors.semantic.success} />
-                <div>
-                  <div className="boards-page__stat-value" style={{ color: colors.semantic.success }}>
-                    %{stats.completionRate}
-                  </div>
-                  <div className="boards-page__stat-label">Tamamlanma</div>
-                </div>
-              </div>
-
-              {/* Completed */}
-              <div className="boards-page__stat-card boards-page__stat-card--completed">
-                <CheckCircle2 size={18} color={colors.status.completed} />
-                <div>
-                  <div className="boards-page__stat-value" style={{ color: colors.status.completed }}>
-                    {stats.completed}
-                  </div>
-                  <div className="boards-page__stat-label">Tamamlandı</div>
-                </div>
-              </div>
-
-              {/* In Progress */}
-              <div className="boards-page__stat-card boards-page__stat-card--in-progress">
-                <Clock size={18} color={colors.status.inProgress} />
-                <div>
-                  <div className="boards-page__stat-value" style={{ color: colors.status.inProgress }}>
-                    {stats.inProgress}
-                  </div>
-                  <div className="boards-page__stat-label">Devam Ediyor</div>
-                </div>
-              </div>
-
               {/* Yeni Pano Button */}
               <button onClick={openCreateModal} className="boards-page__create-btn">
                 <Plus size={18} strokeWidth={2.5} />

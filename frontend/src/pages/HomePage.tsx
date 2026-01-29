@@ -7,8 +7,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
   Home,
   Pin,
-  Sparkles,
-  Clock,
   ArrowRight,
   Users,
   User,
@@ -123,13 +121,6 @@ const HomePage = () => {
     [activeAssignedBoards]
   );
 
-  // Istatistikler
-  const stats = useMemo(() => {
-    const total = activeBoards.length;
-    const pinned = pinnedBoards.length;
-    return { total, pinned };
-  }, [activeBoards, pinnedBoards]);
-
   const handleEdit = (board: Board) => {
     setEditingBoard(board);
     setIsEditModalOpen(true);
@@ -241,47 +232,8 @@ const HomePage = () => {
         {/* Header */}
         <div className="home-page__header">
           <div className="home-page__header-top">
-            {/* Title Section */}
-            <div className="home-page__title-section">
-              <div className="home-page__title-icon">
-                <Home color={colors.brand.primary} size={24} />
-              </div>
-              <div>
-                <h1 className="home-page__title">
-                  Hoş Geldin!
-                  <Sparkles size={24} color={colors.semantic.warning} />
-                </h1>
-                <p className="home-page__subtitle">
-                  İşte üzerinde çalıştığın aktif projeler
-                </p>
-              </div>
-            </div>
-
-            {/* Stats Cards & Panel Toggle */}
+            {/* View & Sort Controls */}
             <div className="home-page__controls">
-              {/* Total Active */}
-              <div className="home-page__stat-card home-page__stat-card--active">
-                <Clock size={18} color={colors.status.inProgress} />
-                <div>
-                  <div className="home-page__stat-value home-page__stat-value--active">
-                    {stats.total}
-                  </div>
-                  <div className="home-page__stat-label">Aktif Proje</div>
-                </div>
-              </div>
-
-              {/* Pinned Count */}
-              <div className="home-page__stat-card home-page__stat-card--pinned">
-                <Pin size={18} color={isLight ? colors.brand.primary : colors.semantic.warning} />
-                <div>
-                  <div className="home-page__stat-value home-page__stat-value--pinned">
-                    {stats.pinned}/{MAX_PINNED_BOARDS}
-                  </div>
-                  <div className="home-page__stat-label">Sabitlenmiş</div>
-                </div>
-              </div>
-
-              {/* View & Sort Controls */}
               <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
               <SortDropdown
                 sortField={sortField}
