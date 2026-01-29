@@ -26,7 +26,8 @@ public class BoardMemberAssignment {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_member_id", nullable = false)
+    @JoinColumn(name = "board_member_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_bma_board_member"))
     private BoardMember boardMember;
 
     @Enumerated(EnumType.STRING)
