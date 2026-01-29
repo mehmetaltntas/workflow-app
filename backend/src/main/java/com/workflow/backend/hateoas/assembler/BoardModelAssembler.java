@@ -81,6 +81,14 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
             model.setMembers(Collections.emptyList());
         }
 
+        // Convert pending members (PENDING + REJECTED invitations, owner only)
+        if (dto.getPendingMembers() != null) {
+            List<BoardMemberModel> pendingMemberModels = dto.getPendingMembers().stream()
+                    .map(boardMemberAssembler::toModel)
+                    .collect(Collectors.toList());
+            model.setPendingMembers(pendingMemberModels);
+        }
+
         // Self link (by slug)
         model.add(linkTo(methodOn(BoardController.class).getBoardDetails(dto.getSlug()))
                 .withSelfRel());
