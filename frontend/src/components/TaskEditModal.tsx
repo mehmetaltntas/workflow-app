@@ -348,7 +348,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
                       transition: `all ${animation.duration.normal}`,
                       borderRadius: radius.sm,
                     }}
-                    className="group-hover/subtask:!opacity-100"
+                    className="group-hover/subtask:opacity-100!"
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = 'var(--primary)';
                       e.currentTarget.style.background = colors.brand.primaryLight;
@@ -377,7 +377,7 @@ export const TaskEditModal: React.FC<TaskEditModalProps> = ({ task, onClose, onS
                       transition: `all ${animation.duration.normal}`,
                       borderRadius: radius.sm,
                     }}
-                    className="group-hover/subtask:!opacity-100"
+                    className="group-hover/subtask:opacity-100!"
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = 'var(--danger)';
                       e.currentTarget.style.background = colors.semantic.dangerLight;

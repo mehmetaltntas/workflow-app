@@ -3,8 +3,6 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.NotificationResponse;
 import com.workflow.backend.entity.*;
 import com.workflow.backend.exception.ResourceNotFoundException;
-import com.workflow.backend.repository.BoardMemberRepository;
-import com.workflow.backend.repository.ConnectionRepository;
 import com.workflow.backend.repository.NotificationRepository;
 import com.workflow.backend.repository.UserProfilePictureRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +26,6 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final ConnectionRepository connectionRepository;
-    private final BoardMemberRepository boardMemberRepository;
     private final UserProfilePictureRepository profilePictureRepository;
     private final CurrentUserService currentUserService;
 
