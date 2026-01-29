@@ -11,6 +11,13 @@ export const useAcceptedConnections = () => {
   });
 };
 
+export const usePendingRequests = () => {
+  return useQuery({
+    queryKey: queryKeys.connections.pending,
+    queryFn: () => connectionService.getPendingRequests(),
+  });
+};
+
 export const useRemoveConnection = () => {
   const queryClient = useQueryClient();
 
@@ -61,6 +68,7 @@ export const useAcceptConnectionRequest = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.connections.pending });
+      queryClient.invalidateQueries({ queryKey: queryKeys.connections.accepted });
       queryClient.invalidateQueries({ queryKey: queryKeys.connections.count });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount });

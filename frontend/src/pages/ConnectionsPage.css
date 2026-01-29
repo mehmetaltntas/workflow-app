@@ -125,6 +125,105 @@
   margin: 0;
 }
 
+/* Pending Requests Section */
+.connections-page__pending-section {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.connections-page__section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.connections-page__section-header-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(255, 183, 77, 0.18), rgba(255, 183, 77, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 183, 77, 0.2);
+}
+
+.connections-page__section-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.connections-page__pending-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  color: #fff;
+  background: var(--warning, #f59e0b);
+  margin-left: 2px;
+}
+
+/* Request Actions */
+.connections-page__request-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.connections-page__accept-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.08);
+  color: #22c55e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.connections-page__accept-btn:hover {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.connections-page__accept-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.connections-page__reject-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.06);
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.connections-page__reject-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.connections-page__reject-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Connection List */
 .connections-page__list {
   display: flex;

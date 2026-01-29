@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
-import { Users, AlertCircle } from "lucide-react";
-import { useAcceptedConnections, useRemoveConnection } from "../hooks/queries/useConnectionMutations";
+import { Users, AlertCircle, UserPlus, Check, X } from "lucide-react";
+import { useAcceptedConnections, useRemoveConnection, usePendingRequests, useAcceptConnectionRequest, useRejectConnectionRequest } from "../hooks/queries/useConnectionMutations";
 import { useAuthStore } from "../stores/authStore";
 import "./ConnectionsPage.css";
 
 const ConnectionsPage = () => {
   const { data: connections, isLoading, error } = useAcceptedConnections();
+  const { data: pendingRequests, isLoading: pendingLoading } = usePendingRequests();
   const removeConnection = useRemoveConnection();
+  const acceptRequest = useAcceptConnectionRequest();
+  const rejectRequest = useRejectConnectionRequest();
   const currentUsername = useAuthStore((state) => state.username);
 
   if (isLoading) {
@@ -43,6 +46,71 @@ const ConnectionsPage = () => {
         <h1 className="connections-page__title">Agim</h1>
         <span className="connections-page__count">{connections?.length ?? 0}</span>
       </div>
+
+      {/* Pending Requests */}
+      {!pendingLoading && pendingRequests && pendingRequests.length > 0 && (
+        <div className="connections-page__pending-section">
+          <div className="connections-page__section-header">
+            <div className="connections-page__section-header-icon">
+              <UserPlus size={18} color="var(--warning)" strokeWidth={2} />
+            </div>
+            <h2 className="connections-page__section-title">Baglanti Istekleri</h2>
+            <span className="connections-page__pending-badge">{pendingRequests.length}</span>
+          </div>
+          <div className="connections-page__list">
+            {pendingRequests.map((request) => {
+              const fullName = request.senderFirstName && request.senderLastName
+                ? `${request.senderFirstName} ${request.senderLastName}`
+                : null;
+              const initials = request.senderFirstName && request.senderLastName
+                ? `${request.senderFirstName.charAt(0)}${request.senderLastName.charAt(0)}`.toUpperCase()
+                : request.senderUsername.substring(0, 2).toUpperCase();
+
+              return (
+                <div key={request.id} className="connections-page__item">
+                  <div
+                    className="connections-page__avatar"
+                    style={request.senderProfilePicture ? {
+                      backgroundImage: `url(${request.senderProfilePicture})`,
+                      background: undefined,
+                    } : undefined}
+                  >
+                    {!request.senderProfilePicture && initials}
+                  </div>
+                  <div className="connections-page__user-info">
+                    {fullName && (
+                      <Link to={`/profile/${request.senderUsername}`} className="connections-page__fullname-link">
+                        {fullName}
+                      </Link>
+                    )}
+                    <Link to={`/profile/${request.senderUsername}`} className="connections-page__username-link">
+                      @{request.senderUsername}
+                    </Link>
+                  </div>
+                  <div className="connections-page__request-actions">
+                    <button
+                      className="connections-page__accept-btn"
+                      onClick={() => acceptRequest.mutate(request.id)}
+                      disabled={acceptRequest.isPending || rejectRequest.isPending}
+                    >
+                      <Check size={16} />
+                      Kabul Et
+                    </button>
+                    <button
+                      className="connections-page__reject-btn"
+                      onClick={() => rejectRequest.mutate(request.id)}
+                      disabled={acceptRequest.isPending || rejectRequest.isPending}
+                    >
+                      <X size={16} />
+                      Reddet
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {!connections || connections.length === 0 ? (
