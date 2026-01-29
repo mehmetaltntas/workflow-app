@@ -18,6 +18,12 @@ public class ConnectionResponse {
     @Schema(description = "Gonderen kullanici adi", example = "johndoe")
     private String senderUsername;
 
+    @Schema(description = "Gonderen adi", example = "John")
+    private String senderFirstName;
+
+    @Schema(description = "Gonderen soyadi", example = "Doe")
+    private String senderLastName;
+
     @Schema(description = "Gonderen profil resmi")
     private String senderProfilePicture;
 
@@ -26,6 +32,12 @@ public class ConnectionResponse {
 
     @Schema(description = "Alan kullanici adi", example = "janedoe")
     private String receiverUsername;
+
+    @Schema(description = "Alan adi", example = "Jane")
+    private String receiverFirstName;
+
+    @Schema(description = "Alan soyadi", example = "Doe")
+    private String receiverLastName;
 
     @Schema(description = "Alan profil resmi")
     private String receiverProfilePicture;

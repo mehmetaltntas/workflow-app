@@ -14,9 +14,13 @@ public class ConnectionModel extends RepresentationModel<ConnectionModel> {
     private Long id;
     private Long senderId;
     private String senderUsername;
+    private String senderFirstName;
+    private String senderLastName;
     private String senderProfilePicture;
     private Long receiverId;
     private String receiverUsername;
+    private String receiverFirstName;
+    private String receiverLastName;
     private String receiverProfilePicture;
     private String status;
     private LocalDateTime createdAt;

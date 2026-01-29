@@ -21,9 +21,13 @@ public class ConnectionModelAssembler extends RepresentationModelAssemblerSuppor
         model.setId(dto.getId());
         model.setSenderId(dto.getSenderId());
         model.setSenderUsername(dto.getSenderUsername());
+        model.setSenderFirstName(dto.getSenderFirstName());
+        model.setSenderLastName(dto.getSenderLastName());
         model.setSenderProfilePicture(dto.getSenderProfilePicture());
         model.setReceiverId(dto.getReceiverId());
         model.setReceiverUsername(dto.getReceiverUsername());
+        model.setReceiverFirstName(dto.getReceiverFirstName());
+        model.setReceiverLastName(dto.getReceiverLastName());
         model.setReceiverProfilePicture(dto.getReceiverProfilePicture());
         model.setStatus(dto.getStatus());
         model.setCreatedAt(dto.getCreatedAt());
