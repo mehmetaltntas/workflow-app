@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, UserPlus, User as UserIcon, Check, RefreshCw } from "lucide-react";
 import type { BoardMember } from "../types";
@@ -11,7 +11,7 @@ import { typography, spacing, radius, colors, cssVars, animation } from "../styl
 interface AddBoardMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddMember: (userId: number) => void;
+  onAddMember: (userId: number) => Promise<void>;
   existingMembers: BoardMember[];
   pendingMembers: BoardMember[];
 }
@@ -30,6 +30,29 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
   const currentUsername = useAuthStore((s) => s.username);
 
   const { data: connections = [], isLoading } = useAcceptedConnections();
+
+  // Track locally invited user IDs for immediate UI feedback
+  const [locallyInvitedIds, setLocallyInvitedIds] = useState<Set<number>>(new Set());
+
+  // Reset local state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setLocallyInvitedIds(new Set());
+    }
+  }, [isOpen]);
+
+  const handleInvite = async (userId: number) => {
+    setLocallyInvitedIds((prev) => new Set(prev).add(userId));
+    try {
+      await onAddMember(userId);
+    } catch {
+      setLocallyInvitedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
 
   // Focus trap
   useEffect(() => {
@@ -211,8 +234,8 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                 const pendingMember = pendingMemberMap.get(otherUserId);
                 const invitationStatus = pendingMember?.status; // 'PENDING' | 'REJECTED' | undefined
 
-                const isPending = invitationStatus === "PENDING";
-                const isRejected = invitationStatus === "REJECTED";
+                const isPending = invitationStatus === "PENDING" || locallyInvitedIds.has(otherUserId);
+                const isRejected = !locallyInvitedIds.has(otherUserId) && invitationStatus === "REJECTED";
 
                 return (
                   <div
@@ -297,7 +320,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                     ) : isRejected ? (
                       /* Davet reddedilmiş - tekrar davet et */
                       <button
-                        onClick={() => onAddMember(otherUserId)}
+                        onClick={() => handleInvite(otherUserId)}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -319,7 +342,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                     ) : (
                       /* Yeni davet */
                       <button
-                        onClick={() => onAddMember(otherUserId)}
+                        onClick={() => handleInvite(otherUserId)}
                         style={{
                           display: "flex",
                           alignItems: "center",

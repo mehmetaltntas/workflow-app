@@ -52,8 +52,8 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
 
   const members = board.members || [];
 
-  const handleAddMember = (userId: number) => {
-    addMemberMutation.mutate(userId);
+  const handleAddMember = async (userId: number) => {
+    await addMemberMutation.mutateAsync(userId);
   };
 
   const handleRemoveMember = (memberId: number) => {
