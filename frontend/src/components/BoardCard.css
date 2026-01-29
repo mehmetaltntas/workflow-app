@@ -54,25 +54,6 @@
   gap: 8px;
 }
 
-.board-card__icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 100ms;
-}
-
-.board-card__icon-btn:hover {
-  background: var(--bg-active);
-  border-color: var(--border-strong);
-  transform: scale(1.05);
-}
 
 /* ===== Grid View ===== */
 .board-card--grid {
@@ -117,6 +98,20 @@
   letter-spacing: -0.01em;
 }
 
+/* Clickable title hover effect */
+.board-card__name--clickable {
+  cursor: pointer;
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+
+.board-card__name--clickable:hover {
+  color: var(--primary);
+  text-decoration-color: var(--primary);
+}
+
 .board-card__top-actions {
   display: flex;
   align-items: center;
@@ -143,80 +138,4 @@
   flex: 1;
 }
 
-/* Bottom row */
-.board-card__bottom-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
 
-.board-card__bottom-left {
-  display: flex;
-  align-items: center;
-}
-
-/* Bottom icons */
-.board-card__bottom-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-/* ===== Board Type Badge ===== */
-.board-card__type-badge {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: default;
-  transition: all 150ms ease;
-}
-
-.board-card__type-badge--team {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-}
-
-.board-card__type-badge--individual {
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.25);
-}
-
-/* Tooltip */
-.board-card__type-badge-tooltip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 150ms ease;
-}
-
-.board-card__type-badge--team .board-card__type-badge-tooltip {
-  background: #3b82f6;
-  color: #fff;
-}
-
-.board-card__type-badge--individual .board-card__type-badge-tooltip {
-  background: #8b5cf6;
-  color: #fff;
-}
-
-.board-card__type-badge:hover .board-card__type-badge-tooltip {
-  opacity: 1;
-}

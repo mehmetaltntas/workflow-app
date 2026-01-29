@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS } from "../constants";
-import { Info, Pin, PinOff } from "lucide-react";
+import { Pin, PinOff } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
 import "./BoardCard.css";
@@ -16,7 +16,6 @@ interface BoardCardProps {
   canPin?: boolean;
   viewMode?: 'grid' | 'list';
   accentColor?: string;
-  showTypeBadge?: boolean;
 }
 
 const BoardCard: React.FC<BoardCardProps> = ({
@@ -29,22 +28,11 @@ const BoardCard: React.FC<BoardCardProps> = ({
   canPin = true,
   viewMode = 'grid',
   accentColor,
-  showTypeBadge = false,
 }) => {
   const statusColor = accentColor || STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
   // CSS custom property for dynamic status color
   const statusStyle = { '--board-status-color': statusColor } as React.CSSProperties;
-
-  const isTeam = board.boardType === 'TEAM';
-  const boardTypeBadge = (
-    <span className={`board-card__type-badge ${isTeam ? 'board-card__type-badge--team' : 'board-card__type-badge--individual'}`}>
-      {isTeam ? 'E' : 'B'}
-      <span className="board-card__type-badge-tooltip">
-        {isTeam ? 'Ekip' : 'Bireysel'}
-      </span>
-    </span>
-  );
 
   // Action menu items olustur
   const menuItems: ActionMenuItem[] = [
@@ -73,12 +61,17 @@ const BoardCard: React.FC<BoardCardProps> = ({
         <div className="board-card__status-bar" />
 
         {/* Board Name */}
-        <h3 className="board-card__name--list">
+        <h3
+          className="board-card__name--list board-card__name--clickable"
+          onClick={(e) => {
+            if (onShowInfo) {
+              e.stopPropagation();
+              onShowInfo();
+            }
+          }}
+        >
           {board.name}
         </h3>
-
-        {/* Board Type Badge */}
-        {showTypeBadge && boardTypeBadge}
 
         {/* Actions */}
         <div className="board-card__actions" onClick={(e) => e.stopPropagation()}>
@@ -86,17 +79,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
             items={menuItems}
             triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
           />
-
-          {onShowInfo && (
-            <button
-              onClick={onShowInfo}
-              className="board-card__icon-btn"
-              title="Pano Bilgileri"
-            >
-              <Info size={18} />
-            </button>
-          )}
-
         </div>
       </div>
     );
@@ -113,7 +95,15 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
       {/* Top Row: Title + Actions */}
       <div className="board-card__top-row">
-        <h3 className="board-card__name--grid">
+        <h3
+          className="board-card__name--grid board-card__name--clickable"
+          onClick={(e) => {
+            if (onShowInfo) {
+              e.stopPropagation();
+              onShowInfo();
+            }
+          }}
+        >
           {board.name}
         </h3>
 
@@ -134,26 +124,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
 
       {/* Spacer */}
       <div className="board-card__spacer" />
-
-      {/* Bottom Row: Type Badge (left) + Icons (right) */}
-      <div className="board-card__bottom-row">
-        <div className="board-card__bottom-left">
-          {showTypeBadge && boardTypeBadge}
-        </div>
-
-        <div className="board-card__bottom-actions" onClick={(e) => e.stopPropagation()}>
-          {onShowInfo && (
-            <button
-              onClick={onShowInfo}
-              className="board-card__icon-btn"
-              title="Pano Bilgileri"
-            >
-              <Info size={18} strokeWidth={2.5} />
-            </button>
-          )}
-
-        </div>
-      </div>
     </div>
   );
 };

@@ -153,6 +153,46 @@
   box-shadow: 0 6px 16px rgba(77, 171, 247, 0.25);
 }
 
+/* Board Type Filter */
+.boards-page__type-filter {
+  display: flex;
+  align-items: center;
+  background: var(--bg-secondary);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+
+.boards-page__type-filter-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.boards-page__type-filter-btn:hover {
+  color: var(--text-main);
+  background: var(--bg-hover);
+}
+
+.boards-page__type-filter-btn--active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(77, 171, 247, 0.25);
+}
+
+.boards-page__type-filter-btn--active:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
 /* Board Groups */
 .boards-page__groups {
   display: flex;

@@ -26,6 +26,7 @@ const BoardsPage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | 'INDIVIDUAL' | 'TEAM'>('ALL');
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
@@ -91,7 +92,11 @@ const BoardsPage = () => {
     setIsEditModalOpen(true);
   };
 
-  const filteredBoards = boards.filter(b => statusFilter === "ALL" || (b.status || "PLANLANDI") === statusFilter);
+  const filteredBoards = boards.filter(b => {
+    if (statusFilter !== "ALL" && (b.status || "PLANLANDI") !== statusFilter) return false;
+    if (boardTypeFilter !== "ALL" && (b.boardType || "INDIVIDUAL") !== boardTypeFilter) return false;
+    return true;
+  });
 
   // Loading State
   if (loading) {
@@ -185,6 +190,20 @@ const BoardsPage = () => {
 
               {/* View & Filter Controls */}
               <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
+
+              {/* Board Type Filter */}
+              <div className="boards-page__type-filter">
+                {([['ALL', 'Hepsi'], ['INDIVIDUAL', 'Bireysel'], ['TEAM', 'Ekip']] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    className={`boards-page__type-filter-btn ${boardTypeFilter === value ? 'boards-page__type-filter-btn--active' : ''}`}
+                    onClick={() => setBoardTypeFilter(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               <StatusFilterDropdown
                 value={statusFilter}
                 onChange={setStatusFilter}
@@ -195,15 +214,15 @@ const BoardsPage = () => {
         </div>
 
         {/* Filtered Empty State */}
-        {filteredBoards.length === 0 && statusFilter !== "ALL" && (
+        {filteredBoards.length === 0 && (statusFilter !== "ALL" || boardTypeFilter !== "ALL") && (
           <EmptyState
             icon={<Search size={36} strokeWidth={1.5} />}
             title="Bu filtrede pano bulunamadı"
-            description={`"${STATUS_LABELS[statusFilter]}" durumunda pano bulunmuyor. Filtreyi değiştirmeyi veya yeni pano oluşturmayı deneyin.`}
+            description="Seçili filtrelere uygun pano bulunmuyor. Filtreleri değiştirmeyi veya yeni pano oluşturmayı deneyin."
             variant="filtered"
             action={{
               label: "Tüm Panoları Göster",
-              onClick: () => setStatusFilter("ALL"),
+              onClick: () => { setStatusFilter("ALL"); setBoardTypeFilter("ALL"); },
             }}
           />
         )}
@@ -271,7 +290,6 @@ const BoardsPage = () => {
                           navigate(`/boards/info/${board.slug}`, { state: { from: '/boards' } });
                         }}
                         viewMode={viewMode === 'list' ? 'list' : 'grid'}
-                        showTypeBadge
                       />
                     </div>
                   ))}

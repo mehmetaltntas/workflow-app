@@ -174,7 +174,7 @@ const HomePage = () => {
   }
 
   // Board karti render fonksiyonu
-  const renderBoardCard = (board: Board, showTypeBadge: boolean, index: number, groupIndex: number) => {
+  const renderBoardCard = (board: Board, index: number, groupIndex: number) => {
     const boardIsPinned = pinnedBoardIds.includes(board.id);
     const boardCanPin = pinnedBoardIds.length < MAX_PINNED_BOARDS;
     return (
@@ -192,7 +192,6 @@ const HomePage = () => {
           isPinned={boardIsPinned}
           canPin={boardCanPin}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}
-          showTypeBadge={showTypeBadge}
         />
       </div>
     );
@@ -264,7 +263,7 @@ const HomePage = () => {
 
                 {/* Pinned Cards - show type badge */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {pinnedBoards.map((board, index) => renderBoardCard(board, true, index, 0))}
+                  {pinnedBoards.map((board, index) => renderBoardCard(board, index, 0))}
                 </div>
               </div>
             )}
@@ -299,7 +298,7 @@ const HomePage = () => {
 
                 {/* Cards - max 10 */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {sortedIndividualBoards.slice(0, 10).map((board, index) => renderBoardCard(board, false, index, 1))}
+                  {sortedIndividualBoards.slice(0, 10).map((board, index) => renderBoardCard(board, index, 1))}
                 </div>
               </div>
             )}

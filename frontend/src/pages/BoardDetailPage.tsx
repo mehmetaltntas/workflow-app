@@ -8,7 +8,7 @@ import { queryKeys } from "../lib/queryClient";
 import type { Board, Task, TaskList, Subtask, Priority, Label } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, X, ArrowUp, ArrowDown, Tag, Home, ChevronRight } from "lucide-react";
+import { ArrowLeft, X, ArrowUp, ArrowDown, Tag, Home, ChevronRight, Info } from "lucide-react";
 import { MillerColumn, type MillerColumnItem } from "../components/MillerColumn";
 import { MillerPreviewPanel } from "../components/MillerPreviewPanel";
 import { subtaskService } from "../services/api";
@@ -1016,6 +1016,30 @@ const BoardDetailPage = () => {
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {/* Bilgi Button */}
+          <button
+            onClick={() => navigate(`/boards/info/${slug}`, { state: { from: `/boards/${slug}` } })}
+            className="header-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.borderDefault}`,
+              background: colors.bgElevated,
+              color: colors.textSecondary,
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <Info size={14} />
+            Bilgi
+          </button>
+
           {/* Labels Button - only visible to owner */}
           {isOwner && (
             <button
