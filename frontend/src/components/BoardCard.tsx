@@ -1,7 +1,7 @@
 import React from "react";
 import type { Board } from "../types";
 import { STATUS_COLORS } from "../constants";
-import { Info, ExternalLink, Pin, PinOff } from "lucide-react";
+import { Info, Pin, PinOff } from "lucide-react";
 import { ActionMenu } from "./ActionMenu";
 import type { ActionMenuItem } from "./ActionMenu";
 import "./BoardCard.css";
@@ -97,18 +97,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
             </button>
           )}
 
-          {board.link && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(board.link, '_blank', 'noopener,noreferrer');
-              }}
-              className="board-card__icon-btn"
-              title="Bağlantıya Git"
-            >
-              <ExternalLink size={18} />
-            </button>
-          )}
         </div>
       </div>
     );
@@ -164,18 +152,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
             </button>
           )}
 
-          {board.link && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(board.link, '_blank', 'noopener,noreferrer');
-              }}
-              className="board-card__icon-btn"
-              title="Bağlantıya Git"
-            >
-              <ExternalLink size={18} strokeWidth={2.5} />
-            </button>
-          )}
         </div>
       </div>
     </div>
