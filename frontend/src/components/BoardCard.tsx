@@ -121,8 +121,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
       className="board-card board-card--grid"
       style={statusStyle}
     >
-      {/* Visual Accent */}
-      <div className="board-card__accent" />
+      {/* Visual Accent - removed for clean card design */}
 
       {/* Top Row: Title + Actions */}
       <div className="board-card__top-row">
