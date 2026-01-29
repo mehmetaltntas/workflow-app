@@ -345,6 +345,25 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
               <span style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted }}>@{board.ownerName}</span>
             </span>
 
+            {/* Oluşturulma Tarihi */}
+            {board.createdAt && (
+              <>
+                <span style={metaLabelStyle}>
+                  <Calendar size={12} />
+                  Oluşturulma
+                </span>
+                <span style={metaValueStyle}>
+                  <span style={{ fontWeight: typography.fontWeight.semibold }}>
+                    {new Date(board.createdAt).toLocaleDateString('tr-TR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </span>
+              </>
+            )}
+
             {/* Son Tarih */}
             {hasDeadline && deadlineInfo && (
               <>

@@ -122,30 +122,6 @@ const BoardInfoPage = () => {
           >
             Pano Bilgileri
           </h1>
-          <p
-            style={{
-              fontSize: typography.fontSize.sm,
-              color: cssVars.textMuted,
-              margin: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: spacing[2],
-            }}
-          >
-            <span>{board.name}</span>
-            {board.createdAt && (
-              <>
-                <span style={{ color: cssVars.textMuted, opacity: 0.4 }}>·</span>
-                <span>
-                  {new Date(board.createdAt).toLocaleDateString("tr-TR", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </>
-            )}
-          </p>
         </div>
       </div>
 
