@@ -2,10 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.*;
 import com.workflow.backend.exception.InvalidVerificationCodeException;
-import com.workflow.backend.entity.AuthProvider;
-import com.workflow.backend.entity.RefreshToken;
-import com.workflow.backend.entity.User;
-import com.workflow.backend.entity.UserProfilePicture;
+import com.workflow.backend.entity.*;;
 import com.workflow.backend.exception.DuplicateResourceException;
 import com.workflow.backend.exception.InvalidCredentialsException;
 import com.workflow.backend.exception.ResourceNotFoundException;
@@ -30,6 +27,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserProfilePictureRepository profilePictureRepository;
+    private final UserPrivacySettingsRepository privacySettingsRepository;
     private final ProfilePictureStorageService profilePictureStorageService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -274,15 +272,33 @@ public class UserService {
         response.setUsername(user.getUsername());
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
-        response.setIsProfilePublic(user.getIsProfilePublic());
+        response.setPrivacyMode(user.getPrivacyMode().name());
         response.setConnectionStatus(connectionStatus);
         response.setConnectionId(connectionId);
 
-        // Gizli profilde baglanti sayisi ve profil resmi gosterilmez (kendi profili haricinde)
-        if (Boolean.TRUE.equals(user.getIsProfilePublic()) || "SELF".equals(connectionStatus) || "ACCEPTED".equals(connectionStatus)) {
+        boolean isSelfOrConnected = "SELF".equals(connectionStatus) || "ACCEPTED".equals(connectionStatus);
+        PrivacyMode mode = user.getPrivacyMode();
+
+        if (mode == PrivacyMode.PUBLIC || isSelfOrConnected) {
+            // Tam gorunurluk
             response.setConnectionCount(connectionCount);
             response.setProfilePicture(getProfilePictureUrl(user.getId()));
+        } else if (mode == PrivacyMode.PRIVATE) {
+            // Granular gorunurluk
+            UserPrivacySettings settings = privacySettingsRepository.findByUserId(user.getId())
+                    .orElse(new UserPrivacySettings(user));
+            response.setProfilePicture(
+                    Boolean.TRUE.equals(settings.getShowProfilePicture()) ? getProfilePictureUrl(user.getId()) : null
+            );
+            response.setConnectionCount(
+                    Boolean.TRUE.equals(settings.getShowConnectionCount()) ? connectionCount : null
+            );
+
+            // Granular ayarlari response'a ekle (frontend hangi bolumu gosterecegini bilsin)
+            PrivacySettingsResponse privacyResponse = buildPrivacySettingsResponse(user.getPrivacyMode(), settings);
+            response.setPrivacySettings(privacyResponse);
         } else {
+            // HIDDEN mod - baglanti disindakilere profil resmi ve baglanti sayisi gosterilmez
             response.setConnectionCount(null);
             response.setProfilePicture(null);
         }
@@ -292,14 +308,65 @@ public class UserService {
 
     // GIZLILIK AYARI GUNCELLE
     @Transactional
-    public void updatePrivacy(Long userId, UpdatePrivacyRequest request) {
+    public PrivacySettingsResponse updatePrivacy(Long userId, UpdatePrivacyRequest request) {
         authorizationService.verifyUserOwnership(userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", userId));
 
-        user.setIsProfilePublic(request.getIsProfilePublic());
+        user.setPrivacyMode(request.getPrivacyMode());
+
+        // PRIVATE modunda granular ayarlari kaydet/guncelle
+        if (request.getPrivacyMode() == PrivacyMode.PRIVATE && request.getGranularSettings() != null) {
+            UserPrivacySettings settings = privacySettingsRepository.findByUserId(userId)
+                    .orElse(new UserPrivacySettings(user));
+
+            UpdatePrivacyRequest.GranularPrivacySettings gs = request.getGranularSettings();
+            if (gs.getShowProfilePicture() != null) settings.setShowProfilePicture(gs.getShowProfilePicture());
+            if (gs.getShowOverallProgress() != null) settings.setShowOverallProgress(gs.getShowOverallProgress());
+            if (gs.getShowBoardStats() != null) settings.setShowBoardStats(gs.getShowBoardStats());
+            if (gs.getShowListStats() != null) settings.setShowListStats(gs.getShowListStats());
+            if (gs.getShowTaskStats() != null) settings.setShowTaskStats(gs.getShowTaskStats());
+            if (gs.getShowSubtaskStats() != null) settings.setShowSubtaskStats(gs.getShowSubtaskStats());
+            if (gs.getShowTeamBoardStats() != null) settings.setShowTeamBoardStats(gs.getShowTeamBoardStats());
+            if (gs.getShowTopCategories() != null) settings.setShowTopCategories(gs.getShowTopCategories());
+            if (gs.getShowConnectionCount() != null) settings.setShowConnectionCount(gs.getShowConnectionCount());
+
+            settings.setUser(user);
+            privacySettingsRepository.save(settings);
+        }
+
         userRepository.save(user);
+        return getPrivacySettings(userId);
+    }
+
+    // GIZLILIK AYARLARINI GETIR
+    public PrivacySettingsResponse getPrivacySettings(Long userId) {
+        authorizationService.verifyUserOwnership(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanici", "id", userId));
+
+        UserPrivacySettings settings = privacySettingsRepository.findByUserId(userId)
+                .orElse(new UserPrivacySettings(user));
+
+        return buildPrivacySettingsResponse(user.getPrivacyMode(), settings);
+    }
+
+    // Yardimci: PrivacySettingsResponse olustur
+    private PrivacySettingsResponse buildPrivacySettingsResponse(PrivacyMode mode, UserPrivacySettings settings) {
+        PrivacySettingsResponse response = new PrivacySettingsResponse();
+        response.setPrivacyMode(mode);
+        response.setShowProfilePicture(settings.getShowProfilePicture());
+        response.setShowOverallProgress(settings.getShowOverallProgress());
+        response.setShowBoardStats(settings.getShowBoardStats());
+        response.setShowListStats(settings.getShowListStats());
+        response.setShowTaskStats(settings.getShowTaskStats());
+        response.setShowSubtaskStats(settings.getShowSubtaskStats());
+        response.setShowTeamBoardStats(settings.getShowTeamBoardStats());
+        response.setShowTopCategories(settings.getShowTopCategories());
+        response.setShowConnectionCount(settings.getShowConnectionCount());
+        return response;
     }
 
     // KULLANICI PROFIL ISTATISTIKLERINI GETIR
@@ -315,13 +382,14 @@ public class UserService {
 
         Long targetUserId = targetUser.getId();
 
-        // Erisim kontrolu: SELF, ACCEPTED baglanti veya herkese acik profil
+        // Erisim kontrolu: SELF, ACCEPTED baglanti, herkese acik veya ozel profil
         String connectionStatus = connectionService.getConnectionStatus(currentUserId, targetUserId);
         boolean isSelf = "SELF".equals(connectionStatus);
         boolean isConnected = "ACCEPTED".equals(connectionStatus);
-        boolean isPublic = Boolean.TRUE.equals(targetUser.getIsProfilePublic());
+        PrivacyMode mode = targetUser.getPrivacyMode();
 
-        if (!isSelf && !isConnected && !isPublic) {
+        // HIDDEN modda sadece SELF ve ACCEPTED erisebilir
+        if (mode == PrivacyMode.HIDDEN && !isSelf && !isConnected) {
             throw new UnauthorizedAccessException("kullanıcı istatistikleri", targetUserId);
         }
 
@@ -419,6 +487,38 @@ public class UserService {
             topCategories.add(new UserProfileStatsResponse.CategoryStat(category, count));
         }
         response.setTopCategories(topCategories);
+
+        // PRIVATE modda granular filtreleme uygula (SELF ve ACCEPTED haric)
+        if (mode == PrivacyMode.PRIVATE && !isSelf && !isConnected) {
+            UserPrivacySettings settings = privacySettingsRepository.findByUserId(targetUserId)
+                    .orElse(new UserPrivacySettings(targetUser));
+
+            if (!Boolean.TRUE.equals(settings.getShowOverallProgress())) {
+                response.setOverallProgress(0);
+            }
+            if (!Boolean.TRUE.equals(settings.getShowBoardStats())) {
+                response.setTotalBoards(0);
+                response.setBoardsByStatus(null);
+            }
+            if (!Boolean.TRUE.equals(settings.getShowListStats())) {
+                response.setTotalLists(0);
+                response.setCompletedLists(0);
+            }
+            if (!Boolean.TRUE.equals(settings.getShowTaskStats())) {
+                response.setTotalTasks(0);
+                response.setCompletedTasks(0);
+            }
+            if (!Boolean.TRUE.equals(settings.getShowSubtaskStats())) {
+                response.setTotalSubtasks(0);
+                response.setCompletedSubtasks(0);
+            }
+            if (!Boolean.TRUE.equals(settings.getShowTeamBoardStats())) {
+                response.setTeamBoardCount(0);
+            }
+            if (!Boolean.TRUE.equals(settings.getShowTopCategories())) {
+                response.setTopCategories(List.of());
+            }
+        }
 
         return response;
     }

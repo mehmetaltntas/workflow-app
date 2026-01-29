@@ -160,6 +160,36 @@ export interface UserSearchResult extends HateoasModel {
   profilePicture?: string | null;
 }
 
+// Gizlilik modu
+export type PrivacyMode = 'HIDDEN' | 'PUBLIC' | 'PRIVATE';
+
+// Detayli gizlilik ayarlari
+export interface GranularPrivacySettings {
+  showProfilePicture: boolean;
+  showOverallProgress: boolean;
+  showBoardStats: boolean;
+  showListStats: boolean;
+  showTaskStats: boolean;
+  showSubtaskStats: boolean;
+  showTeamBoardStats: boolean;
+  showTopCategories: boolean;
+  showConnectionCount: boolean;
+}
+
+// Gizlilik ayarlari yaniti
+export interface PrivacySettingsResponse {
+  privacyMode: PrivacyMode;
+  showProfilePicture?: boolean;
+  showOverallProgress?: boolean;
+  showBoardStats?: boolean;
+  showListStats?: boolean;
+  showTaskStats?: boolean;
+  showSubtaskStats?: boolean;
+  showTeamBoardStats?: boolean;
+  showTopCategories?: boolean;
+  showConnectionCount?: boolean;
+}
+
 // Kullanici profil bilgileri
 export interface UserProfile extends HateoasModel {
   id: number;
@@ -167,7 +197,8 @@ export interface UserProfile extends HateoasModel {
   firstName?: string;
   lastName?: string;
   profilePicture?: string | null;
-  isProfilePublic: boolean;
+  privacyMode: PrivacyMode;
+  privacySettings?: PrivacySettingsResponse | null;
   connectionCount: number | null;
   connectionStatus: ConnectionStatus;
   connectionId: number | null;

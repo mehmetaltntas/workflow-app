@@ -21,14 +21,22 @@ const UserProfilePage = () => {
   const { username } = useParams<{ username: string }>();
   const { data: profile, isLoading, error } = useUserProfile(username);
 
-  const isPrivate = profile
-    ? !profile.isProfilePublic && profile.connectionStatus !== "SELF" && profile.connectionStatus !== "ACCEPTED"
+  // HIDDEN modda profil tamamen gizli (SELF ve ACCEPTED haric)
+  const isHidden = profile
+    ? profile.privacyMode === 'HIDDEN' && profile.connectionStatus !== "SELF" && profile.connectionStatus !== "ACCEPTED"
     : true;
+
+  // PRIVATE modda granular kontrol (SELF ve ACCEPTED her seyi gorur)
+  const isPrivateMode = profile
+    ? profile.privacyMode === 'PRIVATE' && profile.connectionStatus !== "SELF" && profile.connectionStatus !== "ACCEPTED"
+    : false;
+
+  const ps = profile?.privacySettings;
 
   const { data: stats, isLoading: statsLoading } = useUserProfileStats(
     username,
     profile?.connectionStatus,
-    profile?.isProfilePublic
+    profile?.privacyMode
   );
 
   if (isLoading) {
@@ -172,7 +180,7 @@ const UserProfilePage = () => {
         )}
 
         {/* Connection Count */}
-        {!isPrivate && profile.connectionCount !== null && (
+        {!isHidden && profile.connectionCount !== null && (
           <div
             style={{
               display: "flex",
@@ -195,7 +203,7 @@ const UserProfilePage = () => {
         )}
 
         {/* Private Profile Notice */}
-        {isPrivate && (
+        {isHidden && (
           <div
             style={{
               display: "flex",
@@ -225,8 +233,8 @@ const UserProfilePage = () => {
         </div>
       </div>
 
-      {/* Stats Sections - only shown when profile is not private */}
-      {!isPrivate && stats && (
+      {/* Stats Sections - only shown when profile is not hidden */}
+      {!isHidden && stats && (
         <>
           {/* Section Title */}
           <h2
@@ -242,6 +250,7 @@ const UserProfilePage = () => {
           </h2>
 
           {/* Overall Progress Section */}
+          {(!isPrivateMode || ps?.showOverallProgress) && (
           <div
             style={{
               background: cssVars.bgCard,
@@ -338,6 +347,7 @@ const UserProfilePage = () => {
               <span>{stats.totalTasks + stats.totalSubtasks} toplam</span>
             </div>
           </div>
+          )}
 
           {/* Summary Cards Grid */}
           <div
@@ -348,14 +358,17 @@ const UserProfilePage = () => {
               marginBottom: spacing[8],
             }}
           >
+            {(!isPrivateMode || ps?.showBoardStats) && (
             <StatCard
               icon={LayoutDashboard}
               title="Panolar"
               value={stats.totalBoards}
-              subtitle={`${stats.boardsByStatus.DEVAM_EDIYOR} devam ediyor`}
+              subtitle={`${stats.boardsByStatus?.DEVAM_EDIYOR ?? 0} devam ediyor`}
               color={colors.brand.primary}
               bgColor={colors.brand.primaryLight}
             />
+            )}
+            {(!isPrivateMode || ps?.showListStats) && (
             <StatCard
               icon={List}
               title="Listeler"
@@ -364,6 +377,8 @@ const UserProfilePage = () => {
               color={colors.semantic.info}
               bgColor={colors.semantic.infoLight}
             />
+            )}
+            {(!isPrivateMode || ps?.showTaskStats) && (
             <StatCard
               icon={CheckSquare}
               title="Gorevler"
@@ -372,6 +387,8 @@ const UserProfilePage = () => {
               color={colors.semantic.success}
               bgColor={colors.semantic.successLight}
             />
+            )}
+            {(!isPrivateMode || ps?.showSubtaskStats) && (
             <StatCard
               icon={ListTodo}
               title="Alt Gorevler"
@@ -380,6 +397,7 @@ const UserProfilePage = () => {
               color={colors.semantic.warning}
               bgColor={colors.semantic.warningLight}
             />
+            )}
           </div>
 
           {/* Detailed Sections */}
@@ -391,6 +409,7 @@ const UserProfilePage = () => {
             }}
           >
             {/* Board Status Distribution */}
+            {(!isPrivateMode || ps?.showBoardStats) && stats.boardsByStatus && (
             <div
               style={{
                 background: cssVars.bgCard,
@@ -458,9 +477,10 @@ const UserProfilePage = () => {
                 ))}
               </div>
             </div>
+            )}
 
             {/* Team Board Stats */}
-            {stats.teamBoardCount > 0 && (
+            {(!isPrivateMode || ps?.showTeamBoardStats) && stats.teamBoardCount > 0 && (
               <div
                 style={{
                   background: cssVars.bgCard,
@@ -530,6 +550,7 @@ const UserProfilePage = () => {
             )}
 
             {/* Top Categories */}
+            {(!isPrivateMode || ps?.showTopCategories) && (
             <div
               style={{
                 background: cssVars.bgCard,
@@ -646,12 +667,13 @@ const UserProfilePage = () => {
                 )}
               </div>
             </div>
+            )}
           </div>
         </>
       )}
 
       {/* Stats Loading Indicator */}
-      {!isPrivate && statsLoading && (
+      {!isHidden && statsLoading && (
         <div
           style={{
             display: "flex",

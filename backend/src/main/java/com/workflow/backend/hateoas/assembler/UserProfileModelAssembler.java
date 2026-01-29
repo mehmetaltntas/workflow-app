@@ -20,8 +20,11 @@ public class UserProfileModelAssembler extends RepresentationModelAssemblerSuppo
         UserProfileModel model = new UserProfileModel();
         model.setId(dto.getId());
         model.setUsername(dto.getUsername());
+        model.setFirstName(dto.getFirstName());
+        model.setLastName(dto.getLastName());
         model.setProfilePicture(dto.getProfilePicture());
-        model.setIsProfilePublic(dto.getIsProfilePublic());
+        model.setPrivacyMode(dto.getPrivacyMode());
+        model.setPrivacySettings(dto.getPrivacySettings());
         model.setConnectionCount(dto.getConnectionCount());
         model.setConnectionStatus(dto.getConnectionStatus());
         model.setConnectionId(dto.getConnectionId());

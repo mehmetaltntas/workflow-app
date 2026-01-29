@@ -12,8 +12,8 @@ import java.util.List;
 @Table(name = "users") // 2. SQL'de tablonun adı 'users' olsun
 @Getter
 @Setter
-@ToString(exclude = {"boards", "profilePicture"})
-@EqualsAndHashCode(exclude = {"boards", "profilePicture"})
+@ToString(exclude = {"boards", "profilePicture", "privacySettings"})
+@EqualsAndHashCode(exclude = {"boards", "profilePicture", "privacySettings"})
 public class User {
 
     @Id // Bu sütun Primary Key'dir
@@ -52,8 +52,12 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UserProfilePicture profilePicture;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Boolean isProfilePublic = false;
+    private PrivacyMode privacyMode = PrivacyMode.HIDDEN;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UserPrivacySettings privacySettings;
 
     private LocalDateTime deletionScheduledAt;
 

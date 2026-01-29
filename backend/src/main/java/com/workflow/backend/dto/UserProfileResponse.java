@@ -22,8 +22,11 @@ public class UserProfileResponse {
     @Schema(description = "Profil resmi (Base64 encoded)")
     private String profilePicture;
 
-    @Schema(description = "Profil herkese acik mi", example = "true")
-    private Boolean isProfilePublic;
+    @Schema(description = "Gizlilik modu: HIDDEN, PUBLIC, PRIVATE")
+    private String privacyMode;
+
+    @Schema(description = "Detayli gizlilik ayarlari (PRIVATE modunda doldurulur)")
+    private PrivacySettingsResponse privacySettings;
 
     @Schema(description = "Baglanti sayisi", example = "5")
     private Long connectionCount;

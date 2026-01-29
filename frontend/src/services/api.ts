@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from "axios";
-import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata, UserSearchResult, UserProfile, UserProfileStats, Connection, Notification, BoardMember } from "../types";
+import type { PagedResponse, Board, Task, TaskList, Label, Subtask, User, PageMetadata, UserSearchResult, UserProfile, UserProfileStats, Connection, Notification, BoardMember, PrivacyMode, GranularPrivacySettings, PrivacySettingsResponse } from "../types";
 import { useAuthStore } from "../stores/authStore";
 
 // 1. Temel Ayarlar
@@ -333,8 +333,13 @@ export const userService = {
     const response = await apiClient.get<UserProfile>(`/users/profile/${encodeURIComponent(username)}`);
     return extractEntity<UserProfile>(response);
   },
-  updatePrivacy: async (userId: number, data: { isProfilePublic: boolean }): Promise<void> => {
-    await apiClient.put(`/users/${userId}/privacy`, data);
+  getPrivacySettings: async (userId: number): Promise<PrivacySettingsResponse> => {
+    const response = await apiClient.get<PrivacySettingsResponse>(`/users/${userId}/privacy`);
+    return response.data;
+  },
+  updatePrivacy: async (userId: number, data: { privacyMode: PrivacyMode; granularSettings?: Partial<GranularPrivacySettings> }): Promise<PrivacySettingsResponse> => {
+    const response = await apiClient.put<PrivacySettingsResponse>(`/users/${userId}/privacy`, data);
+    return response.data;
   },
   getUserProfileStats: async (username: string): Promise<UserProfileStats> => {
     const response = await apiClient.get<UserProfileStats>(`/users/profile/${encodeURIComponent(username)}/stats`);

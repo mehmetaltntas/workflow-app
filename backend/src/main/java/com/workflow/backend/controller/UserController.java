@@ -184,19 +184,35 @@ public class UserController {
         return ResponseEntity.ok(stats);
     }
 
+    @Operation(summary = "Gizlilik ayarlarini getir", description = "Kullanicinin mevcut gizlilik ayarlarini dondurur")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Gizlilik ayarlari getirildi",
+                    content = @Content(schema = @Schema(implementation = PrivacySettingsResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Kimlik dogrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Yetki yok")
+    })
+    @GetMapping("/{id}/privacy")
+    public ResponseEntity<PrivacySettingsResponse> getPrivacySettings(
+            @Parameter(description = "Kullanici ID") @PathVariable Long id) {
+        verifyCurrentUser(id);
+        PrivacySettingsResponse response = userService.getPrivacySettings(id);
+        return ResponseEntity.ok(response);
+    }
+
     @Operation(summary = "Gizlilik ayarini guncelle", description = "Kullanicinin profil gizlilik ayarini gunceller")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Gizlilik ayari guncellendi"),
+            @ApiResponse(responseCode = "200", description = "Gizlilik ayari guncellendi",
+                    content = @Content(schema = @Schema(implementation = PrivacySettingsResponse.class))),
             @ApiResponse(responseCode = "401", description = "Kimlik dogrulama gerekli"),
             @ApiResponse(responseCode = "403", description = "Yetki yok")
     })
     @PutMapping("/{id}/privacy")
-    public ResponseEntity<Void> updatePrivacy(
+    public ResponseEntity<PrivacySettingsResponse> updatePrivacy(
             @Parameter(description = "Kullanici ID") @PathVariable Long id,
             @Valid @RequestBody UpdatePrivacyRequest request) {
         verifyCurrentUser(id);
-        userService.updatePrivacy(id, request);
-        return ResponseEntity.ok().build();
+        PrivacySettingsResponse response = userService.updatePrivacy(id, request);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Hesap silme zamanlama", description = "Kullanicinin hesabini 30 gun sonra silinmek uzere zamanlar")

@@ -21,7 +21,7 @@ import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 
 const ProfilePage = () => {
   const username = useAuthStore((state) => state.username) || "Kullanici";
-  const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", true);
+  const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", "PUBLIC");
   const { data: profile } = useUserProfile(username);
   const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
   const initials = profile?.firstName && profile?.lastName

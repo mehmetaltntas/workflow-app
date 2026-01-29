@@ -1,17 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { userService } from '../../services/api';
 import { queryKeys } from '../../lib/queryClient';
-import type { ConnectionStatus } from '../../types';
+import type { ConnectionStatus, PrivacyMode } from '../../types';
 
 export const useUserProfileStats = (
   username: string | undefined,
   connectionStatus: ConnectionStatus | undefined,
-  isProfilePublic: boolean | undefined
+  privacyMode: PrivacyMode | undefined
 ) => {
   const canView =
     connectionStatus === 'SELF' ||
     connectionStatus === 'ACCEPTED' ||
-    isProfilePublic === true;
+    privacyMode === 'PUBLIC' ||
+    privacyMode === 'PRIVATE';
 
   return useQuery({
     queryKey: queryKeys.userProfileStats(username || ''),
