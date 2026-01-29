@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, UserPlus, User as UserIcon } from "lucide-react";
+import { X, UserPlus, User as UserIcon, Check, RefreshCw } from "lucide-react";
 import type { BoardMember } from "../types";
 import { useAcceptedConnections } from "../hooks/queries/useConnectionMutations";
 import { useAuthStore } from "../stores/authStore";
@@ -13,6 +13,7 @@ interface AddBoardMemberModalProps {
   onClose: () => void;
   onAddMember: (userId: number) => void;
   existingMembers: BoardMember[];
+  pendingMembers: BoardMember[];
 }
 
 const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
@@ -20,6 +21,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
   onClose,
   onAddMember,
   existingMembers,
+  pendingMembers,
 }) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
@@ -75,13 +77,18 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Filter connections: exclude already-added members
-  const existingUserIds = new Set(existingMembers.map((m) => m.userId));
+  // Build maps for existing (ACCEPTED) and pending/rejected members by userId
+  const acceptedUserIds = new Set(existingMembers.map((m) => m.userId));
+  const pendingMemberMap = new Map<number, BoardMember>();
+  for (const pm of pendingMembers) {
+    if (pm.userId) pendingMemberMap.set(pm.userId, pm);
+  }
+
+  // Filter connections: exclude ACCEPTED members only (PENDING and REJECTED are shown with status)
   const availableConnections = connections.filter((conn) => {
-    // Find the "other" user in the connection
     const otherUserId =
       conn.senderUsername === currentUsername ? conn.receiverId : conn.senderId;
-    return !existingUserIds.has(otherUserId);
+    return !acceptedUserIds.has(otherUserId);
   });
 
   return createPortal(
@@ -200,6 +207,13 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                   ? conn.receiverProfilePicture
                   : conn.senderProfilePicture;
 
+                // Determine invitation status
+                const pendingMember = pendingMemberMap.get(otherUserId);
+                const invitationStatus = pendingMember?.status; // 'PENDING' | 'REJECTED' | undefined
+
+                const isPending = invitationStatus === "PENDING";
+                const isRejected = invitationStatus === "REJECTED";
+
                 return (
                   <div
                     key={conn.id}
@@ -260,26 +274,71 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                         {otherUsername}
                       </span>
                     </div>
-                    <button
-                      onClick={() => onAddMember(otherUserId)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: spacing[1.5],
-                        padding: `${spacing[2]} ${spacing[4]}`,
-                        borderRadius: radius.lg,
-                        border: "none",
-                        background: colors.brand.primary,
-                        color: "#fff",
-                        cursor: "pointer",
-                        fontWeight: typography.fontWeight.semibold,
-                        fontSize: typography.fontSize.sm,
-                        transition: `background ${animation.duration.fast}`,
-                      }}
-                    >
-                      <UserPlus size={14} />
-                      Davet Et
-                    </button>
+
+                    {isPending ? (
+                      /* Davet gönderilmiş - bekleniyor */
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[1.5],
+                          padding: `${spacing[2]} ${spacing[4]}`,
+                          borderRadius: radius.lg,
+                          border: "none",
+                          background: colors.semantic.warning + "18",
+                          color: colors.semantic.warning,
+                          fontWeight: typography.fontWeight.semibold,
+                          fontSize: typography.fontSize.sm,
+                        }}
+                      >
+                        <Check size={14} />
+                        Davet Edildi
+                      </span>
+                    ) : isRejected ? (
+                      /* Davet reddedilmiş - tekrar davet et */
+                      <button
+                        onClick={() => onAddMember(otherUserId)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[1.5],
+                          padding: `${spacing[2]} ${spacing[4]}`,
+                          borderRadius: radius.lg,
+                          border: "none",
+                          background: colors.semantic.danger + "15",
+                          color: colors.semantic.danger,
+                          cursor: "pointer",
+                          fontWeight: typography.fontWeight.semibold,
+                          fontSize: typography.fontSize.sm,
+                          transition: `background ${animation.duration.fast}`,
+                        }}
+                      >
+                        <RefreshCw size={14} />
+                        Tekrar Davet Et
+                      </button>
+                    ) : (
+                      /* Yeni davet */
+                      <button
+                        onClick={() => onAddMember(otherUserId)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[1.5],
+                          padding: `${spacing[2]} ${spacing[4]}`,
+                          borderRadius: radius.lg,
+                          border: "none",
+                          background: colors.brand.primary,
+                          color: "#fff",
+                          cursor: "pointer",
+                          fontWeight: typography.fontWeight.semibold,
+                          fontSize: typography.fontSize.sm,
+                          transition: `background ${animation.duration.fast}`,
+                        }}
+                      >
+                        <UserPlus size={14} />
+                        Davet Et
+                      </button>
+                    )}
                   </div>
                 );
               })}

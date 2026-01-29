@@ -53,9 +53,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const members = board.members || [];
 
   const handleAddMember = (userId: number) => {
-    addMemberMutation.mutate(userId, {
-      onSuccess: () => setShowAddModal(false),
-    });
+    addMemberMutation.mutate(userId);
   };
 
   const handleRemoveMember = (memberId: number) => {
@@ -403,6 +401,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         onClose={() => setShowAddModal(false)}
         onAddMember={handleAddMember}
         existingMembers={members}
+        pendingMembers={board.pendingMembers || []}
       />
 
       <AssignMemberModal

@@ -59,15 +59,29 @@ public class BoardMemberService {
             throw new BadRequestException("Pano sahibi zaten tam yetkiye sahiptir.");
         }
 
-        // Zaten üye mi?
-        if (boardMemberRepository.existsByBoardIdAndUserId(boardId, userId)) {
-            throw new DuplicateResourceException("Pano üyesi", "userId", userId);
-        }
-
         // Kabul edilmiş bağlantı kontrolü
         Long currentUserId = currentUserService.getCurrentUserId();
         if (!connectionRepository.existsBetweenUsersWithStatus(currentUserId, userId, ConnectionStatus.ACCEPTED)) {
             throw new BadRequestException("Bu kullanıcıyla kabul edilmiş bir bağlantınız bulunmamaktadır.");
+        }
+
+        // Mevcut üyelik kaydı kontrolü (REJECTED ise tekrar davet et, PENDING/ACCEPTED ise hata)
+        java.util.Optional<BoardMember> existingMember = boardMemberRepository.findByBoardIdAndUserId(boardId, userId);
+        if (existingMember.isPresent()) {
+            BoardMember existing = existingMember.get();
+            if (existing.getStatus() == BoardMemberStatus.REJECTED) {
+                // Reddedilmiş daveti tekrar PENDING yap
+                existing.setStatus(BoardMemberStatus.PENDING);
+                BoardMember saved = boardMemberRepository.save(existing);
+
+                // Davet bildirimi gönder
+                User currentUser = currentUserService.getCurrentUser();
+                String message = currentUser.getUsername() + " sizi \"" + board.getName() + "\" panosuna sorumlu kişi olarak davet etti.";
+                notificationService.createNotification(user, currentUser, NotificationType.BOARD_MEMBER_INVITATION, message, saved.getId());
+
+                return mapToDto(saved);
+            }
+            throw new DuplicateResourceException("Pano üyesi", "userId", userId);
         }
 
         BoardMember member = new BoardMember();
@@ -339,8 +353,9 @@ public class BoardMemberService {
         // Davet bildirimini sil
         notificationRepository.deleteByReferenceIdAndType(memberId, NotificationType.BOARD_MEMBER_INVITATION);
 
-        // BoardMember kaydını sil
-        boardMemberRepository.delete(member);
+        // Durumu REJECTED olarak güncelle (tekrar davet edilebilmesi için kayıt korunur)
+        member.setStatus(BoardMemberStatus.REJECTED);
+        boardMemberRepository.save(member);
     }
 
     // Bekleyen davetleri getir

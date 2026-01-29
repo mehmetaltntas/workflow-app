@@ -35,4 +35,7 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
 
     @Query("SELECT bm FROM BoardMember bm JOIN FETCH bm.user JOIN FETCH bm.board b JOIN FETCH b.user WHERE bm.user.id = :userId AND bm.status = 'PENDING'")
     List<BoardMember> findPendingByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT bm FROM BoardMember bm JOIN FETCH bm.user WHERE bm.board.id = :boardId AND bm.status IN ('PENDING', 'REJECTED')")
+    List<BoardMember> findPendingAndRejectedByBoardIdWithUser(@Param("boardId") Long boardId);
 }

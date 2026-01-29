@@ -110,7 +110,7 @@ export interface BoardMember extends HateoasModel {
   firstName?: string;
   lastName?: string;
   profilePicture?: string | null;
-  status?: 'PENDING' | 'ACCEPTED';
+  status?: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   createdAt: string;
   assignments?: BoardMemberAssignment[];
 }
@@ -134,6 +134,7 @@ export interface Board extends HateoasModel {
   taskLists: TaskList[]; // İçinde listeler dizisi var
   labels?: Label[]; // Panoya ait etiketler
   members?: BoardMember[]; // Pano üyeleri (sorumlu kişiler)
+  pendingMembers?: BoardMember[]; // Bekleyen ve reddedilen davetler (sadece pano sahibi için)
   boardType?: 'INDIVIDUAL' | 'TEAM';
 }
 
