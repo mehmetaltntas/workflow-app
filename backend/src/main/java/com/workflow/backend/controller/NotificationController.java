@@ -12,9 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.PagedModel;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +35,7 @@ public class NotificationController {
 
     @Operation(summary = "Bildirimleri sayfalanmis olarak getir")
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getNotifications(
+    public ResponseEntity<PagedModel<NotificationModel>> getNotifications(
             @Parameter(description = "Sayfa numarasi (0-indexed)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Sayfa boyutu") @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 100));
@@ -40,13 +43,20 @@ public class NotificationController {
         List<NotificationModel> models = resultPage.getContent().stream()
                 .map(notificationAssembler::toModel)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(Map.of(
-                "content", models,
-                "page", resultPage.getNumber(),
-                "size", resultPage.getSize(),
-                "totalElements", resultPage.getTotalElements(),
-                "totalPages", resultPage.getTotalPages()
-        ));
+
+        PagedModel.PageMetadata metadata = new PagedModel.PageMetadata(
+                resultPage.getSize(),
+                resultPage.getNumber(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages()
+        );
+
+        PagedModel<NotificationModel> pagedModel = PagedModel.of(models, metadata);
+        pagedModel.add(linkTo(methodOn(NotificationController.class)
+                .getNotifications(page, size))
+                .withSelfRel());
+
+        return ResponseEntity.ok(pagedModel);
     }
 
     @Operation(summary = "Okunmamis bildirim sayisini getir")

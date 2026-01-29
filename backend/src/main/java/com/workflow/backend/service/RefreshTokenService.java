@@ -12,6 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.hibernate.Hibernate;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -79,7 +81,7 @@ public class RefreshTokenService {
         }
         refreshToken = verifyExpiration(refreshToken);
         // Lazy proxy'yi transaction içinde initialize et
-        refreshToken.getUser().getId();
+        Hibernate.initialize(refreshToken.getUser());
         return refreshToken;
     }
 
