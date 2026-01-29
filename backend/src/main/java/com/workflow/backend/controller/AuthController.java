@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,7 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final GoogleAuthService googleAuthService;
     private final EmailVerificationService emailVerificationService;
+    private final Environment environment;
 
     @Operation(summary = "Kullanıcı adı müsaitlik kontrolü", description = "Verilen kullanıcı adının kullanılabilir olup olmadığını kontrol eder")
     @ApiResponses(value = {
@@ -205,10 +207,16 @@ public class AuthController {
 
     // --- Cookie helper methods ---
 
+    private boolean isSecureCookie() {
+        return !java.util.Arrays.asList(environment.getActiveProfiles()).contains("dev");
+    }
+
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        boolean secure = isSecureCookie();
+
         Cookie accessCookie = new Cookie("access_token", accessToken);
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
+        accessCookie.setSecure(secure);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(900); // 15 minutes (matches JWT access token expiry)
         accessCookie.setAttribute("SameSite", "Lax");
@@ -217,7 +225,7 @@ public class AuthController {
         if (refreshToken != null) {
             Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
             refreshCookie.setHttpOnly(true);
-            refreshCookie.setSecure(true);
+            refreshCookie.setSecure(secure);
             refreshCookie.setPath("/auth");
             refreshCookie.setMaxAge(604800); // 7 days (matches refresh token expiry)
             refreshCookie.setAttribute("SameSite", "Lax");
@@ -226,9 +234,11 @@ public class AuthController {
     }
 
     private void clearTokenCookies(HttpServletResponse response) {
+        boolean secure = isSecureCookie();
+
         Cookie accessCookie = new Cookie("access_token", "");
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
+        accessCookie.setSecure(secure);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(0);
         accessCookie.setAttribute("SameSite", "Lax");
@@ -236,7 +246,7 @@ public class AuthController {
 
         Cookie refreshCookie = new Cookie("refresh_token", "");
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
+        refreshCookie.setSecure(secure);
         refreshCookie.setPath("/auth");
         refreshCookie.setMaxAge(0);
         refreshCookie.setAttribute("SameSite", "Lax");
