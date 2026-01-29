@@ -1,5 +1,5 @@
 import { User, Check, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useNotifications } from "../hooks/queries/useNotifications";
 import { useAcceptConnectionRequest, useRejectConnectionRequest } from "../hooks/queries/useConnectionMutations";
 import { useAcceptBoardMemberInvitation, useRejectBoardMemberInvitation } from "../hooks/queries/useBoardMemberInvitationMutations";
@@ -136,6 +136,16 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="notification-dropdown__footer">
+        <Link
+          to="/notifications"
+          className="notification-dropdown__see-all"
+          onClick={onClose}
+        >
+          Tum Bildirimleri Gor
+        </Link>
       </div>
     </div>
   );

@@ -48,50 +48,6 @@ public class NotificationService {
         Page<Notification> notificationPage = notificationRepository.findByRecipientIdPaged(currentUserId, pageable);
         List<Notification> notifications = notificationPage.getContent();
 
-        // Artik PENDING olmayan baglanti isteklerinin bildirimlerini filtrele
-        List<Long> connectionRequestRefIds = notifications.stream()
-                .filter(n -> n.getType() == NotificationType.CONNECTION_REQUEST && n.getReferenceId() != null)
-                .map(Notification::getReferenceId)
-                .toList();
-
-        if (!connectionRequestRefIds.isEmpty()) {
-            Set<Long> pendingConnectionIds = connectionRepository.findAllById(connectionRequestRefIds).stream()
-                    .filter(c -> c.getStatus() == ConnectionStatus.PENDING)
-                    .map(c -> c.getId())
-                    .collect(Collectors.toSet());
-
-            notifications = notifications.stream()
-                    .filter(n -> {
-                        if (n.getType() == NotificationType.CONNECTION_REQUEST && n.getReferenceId() != null) {
-                            return pendingConnectionIds.contains(n.getReferenceId());
-                        }
-                        return true;
-                    })
-                    .toList();
-        }
-
-        // PENDING olmayan board member davet bildirimlerini filtrele
-        List<Long> boardMemberInvitationRefIds = notifications.stream()
-                .filter(n -> n.getType() == NotificationType.BOARD_MEMBER_INVITATION && n.getReferenceId() != null)
-                .map(Notification::getReferenceId)
-                .toList();
-
-        if (!boardMemberInvitationRefIds.isEmpty()) {
-            Set<Long> pendingMemberIds = boardMemberRepository.findAllById(boardMemberInvitationRefIds).stream()
-                    .filter(bm -> bm.getStatus() == BoardMemberStatus.PENDING)
-                    .map(BoardMember::getId)
-                    .collect(Collectors.toSet());
-
-            notifications = notifications.stream()
-                    .filter(n -> {
-                        if (n.getType() == NotificationType.BOARD_MEMBER_INVITATION && n.getReferenceId() != null) {
-                            return pendingMemberIds.contains(n.getReferenceId());
-                        }
-                        return true;
-                    })
-                    .toList();
-        }
-
         // Profil resimlerini toplu olarak ön-yükle (N+1 sorgu önleme)
         Set<Long> actorIds = notifications.stream()
                 .map(n -> n.getActor().getId())
@@ -130,6 +86,19 @@ public class NotificationService {
     public void markAllAsRead() {
         Long currentUserId = currentUserService.getCurrentUserId();
         notificationRepository.markAllAsReadByRecipientId(currentUserId);
+    }
+
+    @Transactional
+    public void deleteNotification(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bildirim", "id", notificationId));
+
+        Long currentUserId = currentUserService.getCurrentUserId();
+        if (!notification.getRecipient().getId().equals(currentUserId)) {
+            throw new ResourceNotFoundException("Bildirim", "id", notificationId);
+        }
+
+        notificationRepository.delete(notification);
     }
 
     @Transactional

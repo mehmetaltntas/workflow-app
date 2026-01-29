@@ -448,6 +448,9 @@ export const notificationService = {
   markAllAsRead: async (): Promise<void> => {
     await apiClient.put("/notifications/read-all");
   },
+  deleteNotification: async (notificationId: number): Promise<void> => {
+    await apiClient.delete(`/notifications/${notificationId}`);
+  },
 };
 
 // RESPONSE INTERCEPTOR (Cevap Kontrolü + Token Yenileme)

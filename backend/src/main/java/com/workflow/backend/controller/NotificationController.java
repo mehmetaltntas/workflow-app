@@ -81,4 +81,12 @@ public class NotificationController {
         notificationService.markAllAsRead();
         return ResponseEntity.ok().build();
     }
+
+    @Operation(summary = "Bildirimi sil")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(
+            @Parameter(description = "Bildirim ID") @PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.noContent().build();
+    }
 }
