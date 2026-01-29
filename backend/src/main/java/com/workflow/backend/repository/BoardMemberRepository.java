@@ -19,7 +19,7 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
 
     boolean existsByBoardIdAndUserId(Long boardId, Long userId);
 
-    @Query("SELECT CASE WHEN COUNT(bm) > 0 THEN true ELSE false END FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.user.id = :userId AND bm.status = 'ACCEPTED'")
+    @Query("SELECT CASE WHEN COUNT(bm) > 0 THEN true ELSE false END FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
     boolean existsAcceptedByBoardIdAndUserId(@Param("boardId") Long boardId, @Param("userId") Long userId);
 
     @Query("SELECT bm FROM BoardMember bm JOIN FETCH bm.user WHERE bm.board.id = :boardId AND bm.user.id = :userId")
@@ -27,7 +27,7 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
 
     void deleteByBoardIdAndUserId(Long boardId, Long userId);
 
-    @Query("SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED'")
+    @Query("SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
     List<Board> findAcceptedBoardsByUserId(@Param("userId") Long userId);
 
     @Query("SELECT bm FROM BoardMember bm WHERE bm.id = :id AND bm.status = 'PENDING'")
