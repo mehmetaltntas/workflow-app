@@ -268,6 +268,7 @@ public class BoardMemberService {
      * @return true if owner, false if assigned member
      * @throws UnauthorizedAccessException eğer ne sahip ne de atanmış üye ise
      */
+    @Transactional(readOnly = true)
     public boolean verifyAccessToTask(Long taskId) {
         Long currentUserId = currentUserService.getCurrentUserId();
 
@@ -294,6 +295,7 @@ public class BoardMemberService {
      * @return true if owner, false if assigned member
      * @throws UnauthorizedAccessException eğer ne sahip ne de atanmış üye ise
      */
+    @Transactional(readOnly = true)
     public boolean verifyAccessToTaskList(Long taskListId) {
         Long currentUserId = currentUserService.getCurrentUserId();
 
