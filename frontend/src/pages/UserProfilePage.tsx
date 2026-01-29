@@ -97,10 +97,10 @@ const UserProfilePage = () => {
             marginBottom: spacing[2],
           }}
         >
-          Kullanici Bulunamadi
+          Kullanıcı Bulunamadı
         </h2>
         <p style={{ fontSize: typography.fontSize.lg, color: cssVars.textMuted }}>
-          Bu kullanici adi ile kayitli bir hesap bulunamadi.
+          Bu kullanıcı adı ile kayıtlı bir hesap bulunamadı.
         </p>
       </div>
     );
@@ -197,7 +197,7 @@ const UserProfilePage = () => {
                 color: cssVars.textMuted,
               }}
             >
-              <strong style={{ color: cssVars.textMain }}>{profile.connectionCount}</strong> baglanti
+              <strong style={{ color: cssVars.textMain }}>{profile.connectionCount}</strong> bağlantı
             </span>
           </div>
         )}
@@ -246,7 +246,7 @@ const UserProfilePage = () => {
               marginBottom: spacing[6],
             }}
           >
-            {profile.username} kullanicisinin istatistikleri
+            {profile.username} kullanıcısının istatistikleri
           </h2>
 
           {/* Overall Progress Section */}
@@ -291,7 +291,7 @@ const UserProfilePage = () => {
                       margin: 0,
                     }}
                   >
-                    Genel Ilerleme
+                    Genel İlerleme
                   </h3>
                   <p
                     style={{
@@ -300,7 +300,7 @@ const UserProfilePage = () => {
                       margin: 0,
                     }}
                   >
-                    Tum gorevler ve alt gorevler
+                    Tüm görevler ve alt görevler
                   </p>
                 </div>
               </div>
@@ -343,7 +343,7 @@ const UserProfilePage = () => {
                 color: cssVars.textMuted,
               }}
             >
-              <span>{stats.completedTasks + stats.completedSubtasks} tamamlandi</span>
+              <span>{stats.completedTasks + stats.completedSubtasks} tamamlandı</span>
               <span>{stats.totalTasks + stats.totalSubtasks} toplam</span>
             </div>
           </div>
@@ -373,7 +373,7 @@ const UserProfilePage = () => {
               icon={List}
               title="Listeler"
               value={stats.totalLists}
-              subtitle={`${stats.completedLists} tamamlandi`}
+              subtitle={`${stats.completedLists} tamamlandı`}
               color={colors.semantic.info}
               bgColor={colors.semantic.infoLight}
             />
@@ -381,9 +381,9 @@ const UserProfilePage = () => {
             {(!isPrivateMode || ps?.showTaskStats) && (
             <StatCard
               icon={CheckSquare}
-              title="Gorevler"
+              title="Görevler"
               value={stats.totalTasks}
-              subtitle={`${stats.completedTasks} tamamlandi`}
+              subtitle={`${stats.completedTasks} tamamlandı`}
               color={colors.semantic.success}
               bgColor={colors.semantic.successLight}
             />
@@ -391,9 +391,9 @@ const UserProfilePage = () => {
             {(!isPrivateMode || ps?.showSubtaskStats) && (
             <StatCard
               icon={ListTodo}
-              title="Alt Gorevler"
+              title="Alt Görevler"
               value={stats.totalSubtasks}
-              subtitle={`${stats.completedSubtasks} tamamlandi`}
+              subtitle={`${stats.completedSubtasks} tamamlandı`}
               color={colors.semantic.warning}
               bgColor={colors.semantic.warningLight}
             />
@@ -431,7 +431,7 @@ const UserProfilePage = () => {
                 }}
               >
                 <LayoutDashboard size={20} />
-                Pano Durumlari
+                Pano Durumları
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
                 {Object.entries(stats.boardsByStatus).map(([status, count]) => (
@@ -572,7 +572,7 @@ const UserProfilePage = () => {
                 }}
               >
                 <Tag size={20} />
-                Populer Kategoriler
+                Popüler Kategoriler
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
                 {stats.topCategories.length === 0 ? (
@@ -585,7 +585,7 @@ const UserProfilePage = () => {
                       margin: 0,
                     }}
                   >
-                    Henuz kategorili pano bulunmuyor
+                    Henüz kategorili pano bulunmuyor
                   </p>
                 ) : (
                   stats.topCategories.map((item, index) => {

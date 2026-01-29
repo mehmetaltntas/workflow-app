@@ -20,7 +20,7 @@ import { queryKeys } from "../lib/queryClient";
 import { STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS } from "../constants";
 
 const ProfilePage = () => {
-  const username = useAuthStore((state) => state.username) || "Kullanici";
+  const username = useAuthStore((state) => state.username) || "Kullanıcı";
   const { data: stats, isLoading, error } = useUserProfileStats(username, "SELF", "PUBLIC");
   const { data: profile } = useUserProfile(username);
   const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
@@ -95,7 +95,7 @@ const ProfilePage = () => {
             marginBottom: spacing[2],
           }}
         >
-          Bir Hata Olustu
+          Bir Hata Oluştu
         </h2>
         <p
           style={{
@@ -103,7 +103,7 @@ const ProfilePage = () => {
             color: cssVars.textMuted,
           }}
         >
-          Istatistikler yuklenemedi
+          İstatistikler yüklenemedi
         </p>
       </div>
     );
@@ -177,16 +177,6 @@ const ProfilePage = () => {
             >
               @{username}
             </p>
-            <p
-              style={{
-                fontSize: typography.fontSize.lg,
-                color: cssVars.textMuted,
-                margin: 0,
-                marginTop: spacing[1],
-              }}
-            >
-              Calisma alani istatistikleriniz
-            </p>
             <Link
               to="/connections"
               style={{
@@ -199,7 +189,7 @@ const ProfilePage = () => {
             >
               <Users size={16} color={cssVars.textMuted} />
               <span style={{ fontSize: typography.fontSize.base, color: cssVars.textMuted }}>
-                <strong style={{ color: cssVars.textMain }}>{connectionCount}</strong> baglanti
+                <strong style={{ color: cssVars.textMain }}>{connectionCount}</strong> bağlantı
               </span>
             </Link>
           </div>
@@ -247,7 +237,7 @@ const ProfilePage = () => {
                   margin: 0,
                 }}
               >
-                Genel Ilerleme
+                Genel İlerleme
               </h2>
               <p
                 style={{
@@ -256,7 +246,7 @@ const ProfilePage = () => {
                   margin: 0,
                 }}
               >
-                Tum gorevler ve alt gorevler
+                Tüm görevler ve alt görevler
               </p>
             </div>
           </div>
@@ -299,7 +289,7 @@ const ProfilePage = () => {
             color: cssVars.textMuted,
           }}
         >
-          <span>{stats.completedTasks + stats.completedSubtasks} tamamlandi</span>
+          <span>{stats.completedTasks + stats.completedSubtasks} tamamlandı</span>
           <span>{stats.totalTasks + stats.totalSubtasks} toplam</span>
         </div>
       </div>
@@ -325,23 +315,23 @@ const ProfilePage = () => {
           icon={List}
           title="Listeler"
           value={stats.totalLists}
-          subtitle={`${stats.completedLists} tamamlandi`}
+          subtitle={`${stats.completedLists} tamamlandı`}
           color={colors.semantic.info}
           bgColor={colors.semantic.infoLight}
         />
         <StatCard
           icon={CheckSquare}
-          title="Gorevler"
+          title="Görevler"
           value={stats.totalTasks}
-          subtitle={`${stats.completedTasks} tamamlandi`}
+          subtitle={`${stats.completedTasks} tamamlandı`}
           color={colors.semantic.success}
           bgColor={colors.semantic.successLight}
         />
         <StatCard
           icon={ListTodo}
-          title="Alt Gorevler"
+          title="Alt Görevler"
           value={stats.totalSubtasks}
-          subtitle={`${stats.completedSubtasks} tamamlandi`}
+          subtitle={`${stats.completedSubtasks} tamamlandı`}
           color={colors.semantic.warning}
           bgColor={colors.semantic.warningLight}
         />
@@ -377,7 +367,7 @@ const ProfilePage = () => {
             }}
           >
             <LayoutDashboard size={20} />
-            Pano Durumlari
+            Pano Durumları
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
             {Object.entries(stats.boardsByStatus).map(([status, count]) => (
@@ -516,7 +506,7 @@ const ProfilePage = () => {
             }}
           >
             <Tag size={20} />
-            Populer Kategoriler
+            Popüler Kategoriler
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
             {stats.topCategories.length === 0 ? (
@@ -529,7 +519,7 @@ const ProfilePage = () => {
                   margin: 0,
                 }}
               >
-                Henuz kategorili pano bulunmuyor
+                Henüz kategorili pano bulunmuyor
               </p>
             ) : (
               stats.topCategories.map((item, index) => {
