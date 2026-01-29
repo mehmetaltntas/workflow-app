@@ -2,13 +2,26 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { boardMemberService } from '../../services/api';
 import { queryKeys } from '../../lib/queryClient';
 import toast from 'react-hot-toast';
+import type { Board, BoardMember } from '../../types';
 
 export const useAddBoardMember = (boardId: number, slug: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (userId: number) => boardMemberService.addMember(boardId, userId),
-    onSuccess: () => {
+    onSuccess: (data: BoardMember) => {
+      // Immediately update board detail cache with the new pending member
+      queryClient.setQueryData(queryKeys.boards.detail(slug), (oldBoard: Board | undefined) => {
+        if (!oldBoard) return oldBoard;
+        const pendingMembers = [...(oldBoard.pendingMembers || [])];
+        const existingIdx = pendingMembers.findIndex((m) => m.userId === data.userId);
+        if (existingIdx >= 0) {
+          pendingMembers[existingIdx] = data;
+        } else {
+          pendingMembers.push(data);
+        }
+        return { ...oldBoard, pendingMembers };
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
       queryClient.invalidateQueries({ queryKey: queryKeys.boardMembers.list(boardId) });
       toast.success('Davet gönderildi');
