@@ -87,7 +87,6 @@ const SettingsPage = () => {
   const [isDeletionLoading, setIsDeletionLoading] = useState(false);
 
   const userId = useAuthStore((state) => state.userId);
-  const updateAuthUsername = useAuthStore((state) => state.updateUsername);
   const login = useAuthStore((state) => state.login);
   const deletionScheduledAt = useAuthStore((state) => state.deletionScheduledAt);
   const setDeletionScheduledAt = useAuthStore((state) => state.setDeletionScheduledAt);
@@ -257,16 +256,14 @@ const SettingsPage = () => {
 
       const updatedUser = await userService.updateProfile(userId, data);
 
-      if (updatedUser.username) {
-        // Kullanıcı adı değiştiyse oturumu güncelle (token'lar cookie'de, backend tarafında yenilenir)
-        login({
-          id: userId,
-          username: updatedUser.username,
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          deletionScheduledAt: updatedUser.deletionScheduledAt,
-        });
-      }
+      // Profil güncellendiğinde store'u her zaman güncelle (navbar için gerekli)
+      login({
+        id: userId,
+        username: updatedUser.username,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        deletionScheduledAt: updatedUser.deletionScheduledAt,
+      });
 
       if (updatedUser.username) {
         setOriginalUsername(updatedUser.username);
