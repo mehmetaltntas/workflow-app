@@ -19,6 +19,7 @@ import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import { typography, spacing, radius, colors, cssVars, animation } from "../styles/tokens";
 import { calculateBoardProgress } from "../utils/progressCalculation";
 import BoardMembersSection from "./BoardMembersSection";
+import TaskAssignmentSection from "./TaskAssignmentSection";
 
 interface BoardInfoPanelProps {
   board: Board | null;
@@ -514,6 +515,9 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
 
       {/* Board Members Section — only for TEAM boards */}
       {board.boardType === 'TEAM' && <BoardMembersSection board={board} />}
+
+      {/* Task Assignment Section — only for TEAM boards */}
+      {board.boardType === 'TEAM' && <TaskAssignmentSection board={board} />}
 
       {/* CSS Animation */}
       <style>{`
