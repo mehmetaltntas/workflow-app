@@ -242,6 +242,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
 
     for (const member of members) {
       for (const assignment of member.assignments || []) {
+        if (assignment.targetType === 'TASK') continue;
         updates.push({ member, assignment });
       }
     }
