@@ -4,10 +4,6 @@ import {
   X,
   Target,
   ListChecks,
-  CheckSquare,
-  Layers,
-  ChevronDown,
-  ChevronRight,
   Trash2,
   ToggleLeft,
   ToggleRight,
@@ -29,14 +25,10 @@ interface AssignMemberModalProps {
 
 const TARGET_TYPE_LABELS: Record<string, string> = {
   LIST: "Liste",
-  TASK: "Gorev",
-  SUBTASK: "Alt Gorev",
 };
 
 const TARGET_TYPE_ICONS: Record<string, React.ReactNode> = {
   LIST: <ListChecks size={14} />,
-  TASK: <CheckSquare size={14} />,
-  SUBTASK: <Layers size={14} />,
 };
 
 const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
@@ -52,8 +44,6 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
   const themeColors = getThemeColors(theme);
   const isLight = theme === "light";
   const modalRef = useRef<HTMLDivElement>(null);
-  const [expandedLists, setExpandedLists] = useState<Set<number>>(new Set());
-  const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
   const [selectedTargets, setSelectedTargets] = useState<{ targetType: string; targetId: number }[]>([]);
   const [bulkMode, setBulkMode] = useState(false);
 
@@ -83,7 +73,7 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
 
   if (!isOpen || !member) return null;
 
-  const assignments = member.assignments || [];
+  const assignments = (member.assignments || []).filter((a) => a.targetType === "LIST");
   const assignedSet = new Set(
     assignments.map((a) => `${a.targetType}:${a.targetId}`)
   );
@@ -118,24 +108,6 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
     onCreateBulkAssignment(member.id, selectedTargets);
     setSelectedTargets([]);
     setBulkMode(false);
-  };
-
-  const toggleList = (listId: number) => {
-    setExpandedLists((prev) => {
-      const next = new Set(prev);
-      if (next.has(listId)) next.delete(listId);
-      else next.add(listId);
-      return next;
-    });
-  };
-
-  const toggleTask = (taskId: number) => {
-    setExpandedTasks((prev) => {
-      const next = new Set(prev);
-      if (next.has(taskId)) next.delete(taskId);
-      else next.add(taskId);
-      return next;
-    });
   };
 
   const itemStyle = (isActive: boolean, isChecked?: boolean): React.CSSProperties => ({
@@ -425,33 +397,24 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
             <div style={{ display: "flex", flexDirection: "column", gap: spacing[1] }}>
               {board.taskLists.map((list) => {
                 const listAssigned = isAssigned("LIST", list.id);
-                const listExpanded = expandedLists.has(list.id);
                 const listSelected = isSelected("LIST", list.id);
 
                 return (
                   <div key={list.id}>
-                    {/* List item */}
                     <div style={itemStyle(listAssigned, listSelected)}>
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
                           gap: spacing[2],
-                          cursor: "pointer",
+                          cursor: bulkMode && !listAssigned ? "pointer" : "default",
                           flex: 1,
                         }}
-                        onClick={() => toggleList(list.id)}
+                        onClick={() => {
+                          if (bulkMode) toggleSelection("LIST", list.id);
+                        }}
                       >
                         {bulkMode && renderCheckbox("LIST", list.id)}
-                        {list.tasks && list.tasks.length > 0 ? (
-                          listExpanded ? (
-                            <ChevronDown size={16} color={cssVars.textMuted} />
-                          ) : (
-                            <ChevronRight size={16} color={cssVars.textMuted} />
-                          )
-                        ) : (
-                          <span style={{ width: 16 }} />
-                        )}
                         <ListChecks size={16} color={listAssigned ? colors.brand.primary : cssVars.textMuted} />
                         <span
                           style={{
@@ -465,109 +428,6 @@ const AssignMemberModal: React.FC<AssignMemberModalProps> = ({
                       </div>
                       {!bulkMode && renderActionButton("LIST", list.id)}
                     </div>
-
-                    {/* Tasks */}
-                    {listExpanded &&
-                      list.tasks &&
-                      list.tasks.map((task) => {
-                        const taskAssigned = isAssigned("TASK", task.id);
-                        const taskExpanded = expandedTasks.has(task.id);
-                        const taskSelected = isSelected("TASK", task.id);
-
-                        return (
-                          <div key={task.id} style={{ paddingLeft: spacing[6] }}>
-                            <div style={itemStyle(taskAssigned, taskSelected)}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: spacing[2],
-                                  cursor: "pointer",
-                                  flex: 1,
-                                }}
-                                onClick={() => toggleTask(task.id)}
-                              >
-                                {bulkMode && renderCheckbox("TASK", task.id)}
-                                {task.subtasks && task.subtasks.length > 0 ? (
-                                  taskExpanded ? (
-                                    <ChevronDown size={14} color={cssVars.textMuted} />
-                                  ) : (
-                                    <ChevronRight size={14} color={cssVars.textMuted} />
-                                  )
-                                ) : (
-                                  <span style={{ width: 14 }} />
-                                )}
-                                <CheckSquare
-                                  size={14}
-                                  color={taskAssigned ? colors.brand.primary : cssVars.textMuted}
-                                />
-                                <span
-                                  style={{
-                                    fontSize: typography.fontSize.sm,
-                                    fontWeight: typography.fontWeight.medium,
-                                    color: taskAssigned ? colors.brand.primary : cssVars.textMain,
-                                  }}
-                                >
-                                  {task.title}
-                                </span>
-                              </div>
-                              {!bulkMode && renderActionButton("TASK", task.id)}
-                            </div>
-
-                            {/* Subtasks */}
-                            {taskExpanded &&
-                              task.subtasks &&
-                              task.subtasks.map((subtask) => {
-                                const subtaskAssigned = isAssigned("SUBTASK", subtask.id);
-                                const subtaskSelected = isSelected("SUBTASK", subtask.id);
-
-                                return (
-                                  <div
-                                    key={subtask.id}
-                                    style={{ paddingLeft: spacing[6] }}
-                                  >
-                                    <div style={itemStyle(subtaskAssigned, subtaskSelected)}>
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: spacing[2],
-                                          flex: 1,
-                                          cursor: bulkMode && !subtaskAssigned ? "pointer" : "default",
-                                        }}
-                                        onClick={() => {
-                                          if (bulkMode) toggleSelection("SUBTASK", subtask.id);
-                                        }}
-                                      >
-                                        {bulkMode && renderCheckbox("SUBTASK", subtask.id)}
-                                        <span style={{ width: 14 }} />
-                                        <Layers
-                                          size={14}
-                                          color={
-                                            subtaskAssigned
-                                              ? colors.brand.primary
-                                              : cssVars.textMuted
-                                          }
-                                        />
-                                        <span
-                                          style={{
-                                            fontSize: typography.fontSize.sm,
-                                            color: subtaskAssigned
-                                              ? colors.brand.primary
-                                              : cssVars.textMain,
-                                          }}
-                                        >
-                                          {subtask.title}
-                                        </span>
-                                      </div>
-                                      {!bulkMode && renderActionButton("SUBTASK", subtask.id)}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        );
-                      })}
                   </div>
                 );
               })}

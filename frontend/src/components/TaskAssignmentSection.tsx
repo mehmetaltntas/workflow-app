@@ -3,10 +3,6 @@ import { createPortal } from "react-dom";
 import {
   Target,
   ListChecks,
-  CheckSquare,
-  Layers,
-  ChevronDown,
-  ChevronRight,
   Search,
   Users,
   BarChart3,
@@ -14,6 +10,7 @@ import {
   Check,
   UserCircle,
   X,
+  ChevronDown,
 } from "lucide-react";
 import type { Board, BoardMember, BoardMemberAssignment } from "../types";
 import { useAuthStore } from "../stores/authStore";
@@ -45,14 +42,6 @@ interface PopoverState {
 
 type AssignmentFilter = "all" | "assigned" | "unassigned";
 
-// ─── Constants ───────────────────────────────────────────
-
-const TARGET_TYPE_ICONS: Record<string, React.ReactNode> = {
-  LIST: <ListChecks size={15} />,
-  TASK: <CheckSquare size={14} />,
-  SUBTASK: <Layers size={13} />,
-};
-
 // ─── Component ───────────────────────────────────────────
 
 const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) => {
@@ -66,8 +55,6 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
   const [searchText, setSearchText] = useState("");
   const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>("all");
   const [memberFilter, setMemberFilter] = useState<number | null>(null);
-  const [expandedLists, setExpandedLists] = useState<Set<number>>(new Set());
-  const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
   const [activePopover, setActivePopover] = useState<PopoverState | null>(null);
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const memberDropdownRef = useRef<HTMLDivElement>(null);
@@ -86,6 +73,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
 
     for (const member of members) {
       for (const assignment of member.assignments || []) {
+        if (assignment.targetType !== "LIST") continue;
         const key = `${assignment.targetType}:${assignment.targetId}`;
         if (!map.has(key)) map.set(key, []);
         map.get(key)!.push({ member, assignment });
@@ -93,24 +81,21 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
       }
     }
 
-    // Count total items
-    let totalItems = 0;
-    for (const list of board.taskLists || []) {
-      totalItems++;
-      for (const task of list.tasks || []) {
-        totalItems++;
-        totalItems += (task.subtasks || []).length;
-      }
-    }
+    // Count total items (only lists)
+    let totalItems = (board.taskLists || []).length;
 
-    const assignedItemCount = map.size;
+    // Only count LIST-type assignments for stats
+    let assignedItemCount = 0;
+    for (const list of board.taskLists || []) {
+      if (map.has(`LIST:${list.id}`)) assignedItemCount++;
+    }
     const unassignedItems = totalItems - assignedItemCount;
     const coverage = totalItems > 0 ? Math.round((assignedItemCount / totalItems) * 100) : 0;
 
     const memberWorkloads = members
       .map((m) => ({
         member: m,
-        count: (m.assignments || []).length,
+        count: (m.assignments || []).filter((a) => a.targetType === "LIST").length,
       }))
       .sort((a, b) => b.count - a.count);
 
@@ -136,80 +121,23 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
     const lists = board.taskLists || [];
     const search = searchText.toLowerCase().trim();
 
-    return lists
-      .map((list) => {
-        const filteredTasks = (list.tasks || [])
-          .map((task) => {
-            const filteredSubtasks = (task.subtasks || []).filter((subtask) => {
-              if (search && !subtask.title.toLowerCase().includes(search)) return false;
-              const key = `SUBTASK:${subtask.id}`;
-              const hasAssignee = assignmentMap.has(key);
-              if (assignmentFilter === "assigned" && !hasAssignee) return false;
-              if (assignmentFilter === "unassigned" && hasAssignee) return false;
-              if (memberFilter !== null) {
-                const assignees = assignmentMap.get(key) || [];
-                if (!assignees.some((a) => a.member.id === memberFilter)) return false;
-              }
-              return true;
-            });
+    return lists.filter((list) => {
+      const listKey = `LIST:${list.id}`;
+      const listHasAssignee = assignmentMap.has(listKey);
+      const listMatchesSearch = !search || list.name.toLowerCase().includes(search);
+      const listMatchesFilter =
+        assignmentFilter === "all" ||
+        (assignmentFilter === "assigned" && listHasAssignee) ||
+        (assignmentFilter === "unassigned" && !listHasAssignee);
+      const listMatchesMember =
+        memberFilter === null ||
+        (assignmentMap.get(listKey) || []).some((a) => a.member.id === memberFilter);
 
-            return { ...task, subtasks: filteredSubtasks };
-          })
-          .filter((task) => {
-            const taskKey = `TASK:${task.id}`;
-            const taskHasAssignee = assignmentMap.has(taskKey);
-            const taskMatchesSearch = !search || task.title.toLowerCase().includes(search);
-            const taskMatchesFilter =
-              assignmentFilter === "all" ||
-              (assignmentFilter === "assigned" && taskHasAssignee) ||
-              (assignmentFilter === "unassigned" && !taskHasAssignee);
-            const taskMatchesMember =
-              memberFilter === null ||
-              (assignmentMap.get(taskKey) || []).some((a) => a.member.id === memberFilter);
-
-            // Keep task if it matches OR has matching subtasks
-            const hasMatchingSubtasks = task.subtasks && task.subtasks.length > 0;
-            return (taskMatchesSearch && taskMatchesFilter && taskMatchesMember) || hasMatchingSubtasks;
-          });
-
-        return { ...list, tasks: filteredTasks };
-      })
-      .filter((list) => {
-        const listKey = `LIST:${list.id}`;
-        const listHasAssignee = assignmentMap.has(listKey);
-        const listMatchesSearch = !search || list.name.toLowerCase().includes(search);
-        const listMatchesFilter =
-          assignmentFilter === "all" ||
-          (assignmentFilter === "assigned" && listHasAssignee) ||
-          (assignmentFilter === "unassigned" && !listHasAssignee);
-        const listMatchesMember =
-          memberFilter === null ||
-          (assignmentMap.get(listKey) || []).some((a) => a.member.id === memberFilter);
-
-        const hasMatchingTasks = list.tasks && list.tasks.length > 0;
-        return (listMatchesSearch && listMatchesFilter && listMatchesMember) || hasMatchingTasks;
-      });
+      return listMatchesSearch && listMatchesFilter && listMatchesMember;
+    });
   }, [board.taskLists, searchText, assignmentFilter, memberFilter, assignmentMap]);
 
   // ─── Handlers ───────────────────────────────────────────
-
-  const toggleList = (listId: number) => {
-    setExpandedLists((prev) => {
-      const next = new Set(prev);
-      if (next.has(listId)) next.delete(listId);
-      else next.add(listId);
-      return next;
-    });
-  };
-
-  const toggleTask = (taskId: number) => {
-    setExpandedTasks((prev) => {
-      const next = new Set(prev);
-      if (next.has(taskId)) next.delete(taskId);
-      else next.add(taskId);
-      return next;
-    });
-  };
 
   const handleOpenPopover = (
     e: React.MouseEvent,
@@ -400,17 +328,8 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
     );
   };
 
-  const renderItemRow = (
-    targetType: string,
-    targetId: number,
-    name: string,
-    icon: React.ReactNode,
-    depth: number,
-    hasChildren: boolean,
-    isExpanded: boolean,
-    onToggle: () => void
-  ) => {
-    const key = `${targetType}:${targetId}`;
+  const renderListRow = (listId: number, name: string) => {
+    const key = `LIST:${listId}`;
     const hasAssignee = assignmentMap.has(key);
 
     return (
@@ -420,7 +339,6 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
           alignItems: "center",
           justifyContent: "space-between",
           padding: `${spacing[2]} ${spacing[3]}`,
-          paddingLeft: `calc(${spacing[3]} + ${depth * 24}px)`,
           borderRadius: radius.md,
           background: hasAssignee
             ? isLight
@@ -438,19 +356,8 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
             gap: spacing[2],
             flex: 1,
             minWidth: 0,
-            cursor: hasChildren ? "pointer" : "default",
           }}
-          onClick={hasChildren ? onToggle : undefined}
         >
-          {hasChildren ? (
-            isExpanded ? (
-              <ChevronDown size={14} color={cssVars.textMuted} style={{ flexShrink: 0 }} />
-            ) : (
-              <ChevronRight size={14} color={cssVars.textMuted} style={{ flexShrink: 0 }} />
-            )
-          ) : (
-            <span style={{ width: 14, flexShrink: 0 }} />
-          )}
           <span
             style={{
               color: hasAssignee ? colors.brand.primary : cssVars.textMuted,
@@ -459,12 +366,12 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
               flexShrink: 0,
             }}
           >
-            {icon}
+            <ListChecks size={15} />
           </span>
           <span
             style={{
-              fontSize: depth === 0 ? typography.fontSize.base : typography.fontSize.sm,
-              fontWeight: depth === 0 ? typography.fontWeight.semibold : typography.fontWeight.medium,
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
               color: hasAssignee ? colors.brand.primary : cssVars.textMain,
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -475,7 +382,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
           </span>
         </div>
 
-        {renderAssignees(targetType, targetId, name)}
+        {renderAssignees("LIST", listId, name)}
       </div>
     );
   };
@@ -737,7 +644,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
             <Search size={14} color={cssVars.textMuted} />
             <input
               type="text"
-              placeholder="Görev ara..."
+              placeholder="Liste ara..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               style={{
@@ -1016,64 +923,11 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
               </p>
             </div>
           ) : (
-            filteredTaskLists.map((list) => {
-              const listExpanded = expandedLists.has(list.id);
-              const hasTasks = list.tasks && list.tasks.length > 0;
-
-              return (
-                <div key={list.id}>
-                  {renderItemRow(
-                    "LIST",
-                    list.id,
-                    list.name,
-                    TARGET_TYPE_ICONS.LIST,
-                    0,
-                    !!hasTasks,
-                    listExpanded,
-                    () => toggleList(list.id)
-                  )}
-
-                  {listExpanded &&
-                    list.tasks &&
-                    list.tasks.map((task) => {
-                      const taskExpanded = expandedTasks.has(task.id);
-                      const hasSubtasks = task.subtasks && task.subtasks.length > 0;
-
-                      return (
-                        <div key={task.id}>
-                          {renderItemRow(
-                            "TASK",
-                            task.id,
-                            task.title,
-                            TARGET_TYPE_ICONS.TASK,
-                            1,
-                            !!hasSubtasks,
-                            taskExpanded,
-                            () => toggleTask(task.id)
-                          )}
-
-                          {taskExpanded &&
-                            task.subtasks &&
-                            task.subtasks.map((subtask) => (
-                              <div key={subtask.id}>
-                                {renderItemRow(
-                                  "SUBTASK",
-                                  subtask.id,
-                                  subtask.title,
-                                  TARGET_TYPE_ICONS.SUBTASK,
-                                  2,
-                                  false,
-                                  false,
-                                  () => {}
-                                )}
-                              </div>
-                            ))}
-                        </div>
-                      );
-                    })}
-                </div>
-              );
-            })
+            filteredTaskLists.map((list) => (
+              <div key={list.id}>
+                {renderListRow(list.id, list.name)}
+              </div>
+            ))
           )}
         </div>
       </div>
