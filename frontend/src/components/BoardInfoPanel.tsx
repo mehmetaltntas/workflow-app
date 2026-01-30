@@ -24,6 +24,8 @@ import { typography, spacing, radius, colors, cssVars, animation, shadows } from
 import { calculateBoardProgress } from "../utils/progressCalculation";
 import BoardMembersSection from "./BoardMembersSection";
 import TaskAssignmentSection from "./TaskAssignmentSection";
+import AddBoardMemberModal from "./AddBoardMemberModal";
+import { useAddBoardMember } from "../hooks/queries/useBoardMembers";
 
 interface BoardInfoPanelProps {
   board: Board | null;
@@ -145,6 +147,12 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   const isTeamBoard = board?.boardType === 'TEAM';
   type TabKey = 'info' | 'assignments' | 'updates';
   const [activeTab, setActiveTab] = useState<TabKey>('info');
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+
+  const addMemberMutation = useAddBoardMember(board?.id ?? 0, board?.slug ?? '');
+  const handleAddMember = async (userId: number) => {
+    await addMemberMutation.mutateAsync(userId);
+  };
 
   const stats = useMemo(() => board ? calculateBoardStats(board) : null, [board]);
   const deadlineInfo = useMemo(() => board ? getDeadlineInfo(board.deadline) : null, [board]);
@@ -286,37 +294,73 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
             >
               {board.name}
             </h2>
-            {board.isOwner && onEdit && (
-              <button
-                onClick={onEdit}
-                title="Panoyu Düzenle"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: spacing[8],
-                  height: spacing[8],
-                  borderRadius: radius.lg,
-                  border: `1px solid ${themeColors.borderDefault}`,
-                  background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-                  color: cssVars.textMuted,
-                  cursor: "pointer",
-                  transition: `all ${animation.duration.fast}`,
-                  flexShrink: 0,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = colors.brand.primary;
-                  e.currentTarget.style.borderColor = colors.brand.primary;
-                  e.currentTarget.style.background = colors.brand.primaryLight;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = cssVars.textMuted;
-                  e.currentTarget.style.borderColor = themeColors.borderDefault;
-                  e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
-                }}
-              >
-                <Pencil size={16} />
-              </button>
+            {board.isOwner && (
+              <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5], flexShrink: 0 }}>
+                {isTeamBoard && (
+                  <button
+                    onClick={() => setShowAddMemberModal(true)}
+                    title="Panoya Üye Ekle"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: spacing[8],
+                      height: spacing[8],
+                      borderRadius: radius.lg,
+                      border: `1px solid ${themeColors.borderDefault}`,
+                      background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+                      color: cssVars.textMuted,
+                      cursor: "pointer",
+                      transition: `all ${animation.duration.fast}`,
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = colors.brand.primary;
+                      e.currentTarget.style.borderColor = colors.brand.primary;
+                      e.currentTarget.style.background = colors.brand.primaryLight;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = cssVars.textMuted;
+                      e.currentTarget.style.borderColor = themeColors.borderDefault;
+                      e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
+                    }}
+                  >
+                    <UserPlus size={16} />
+                  </button>
+                )}
+                {onEdit && (
+                  <button
+                    onClick={onEdit}
+                    title="Panoyu Düzenle"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: spacing[8],
+                      height: spacing[8],
+                      borderRadius: radius.lg,
+                      border: `1px solid ${themeColors.borderDefault}`,
+                      background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+                      color: cssVars.textMuted,
+                      cursor: "pointer",
+                      transition: `all ${animation.duration.fast}`,
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = colors.brand.primary;
+                      e.currentTarget.style.borderColor = colors.brand.primary;
+                      e.currentTarget.style.background = colors.brand.primaryLight;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = cssVars.textMuted;
+                      e.currentTarget.style.borderColor = themeColors.borderDefault;
+                      e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
+                    }}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+              </div>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexWrap: "wrap" }}>
@@ -900,6 +944,16 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           }
         }
       `}</style>
+
+      {/* Add Member Modal */}
+      {isTeamBoard && board.isOwner && (
+        <AddBoardMemberModal
+          isOpen={showAddMemberModal}
+          onClose={() => setShowAddMemberModal(false)}
+          onAddMember={handleAddMember}
+          existingMembers={board.members || []}
+        />
+      )}
     </div>
   );
 };
