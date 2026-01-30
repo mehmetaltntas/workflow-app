@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Clock,
   LayoutDashboard,
+  ChevronRight,
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
@@ -16,6 +17,19 @@ import { colors } from '../styles/tokens';
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import "./AssignedBoardsPage.css";
 
+type StatusFilter = "DEVAM_EDIYOR" | "PLANLANDI" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI" | "HEPSI";
+
+const BOARDS_PER_SECTION = 10;
+
+const STATUS_FILTER_OPTIONS: { key: StatusFilter; label: string }[] = [
+  { key: "DEVAM_EDIYOR", label: "Devam Ediyor" },
+  { key: "PLANLANDI", label: "Planlandı" },
+  { key: "TAMAMLANDI", label: "Tamamlandı" },
+  { key: "DURDURULDU", label: "Beklemede" },
+  { key: "BIRAKILDI", label: "İptal Edildi" },
+  { key: "HEPSI", label: "Hepsi" },
+];
+
 const TeamPage = () => {
   const navigate = useNavigate();
   const { data: assignedBoards = [], isLoading: loadingAssigned } = useAssignedBoardsQuery();
@@ -24,6 +38,7 @@ const TeamPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("DEVAM_EDIYOR");
 
   const loading = loadingAssigned || loadingTeam;
 
@@ -34,45 +49,43 @@ const TeamPage = () => {
     }
   }, [loading]);
 
-  // Status bazli gruplama helper
-  const groupByStatus = (boards: Board[]) => {
-    const groups: Record<string, Board[]> = {};
-
-    boards.forEach(board => {
-      const status = board.status || "PLANLANDI";
-      if (!groups[status]) groups[status] = [];
-      groups[status].push(board);
+  const sortBoards = (boards: Board[]) => {
+    return [...boards].sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case 'alphabetic':
+          comparison = a.name.localeCompare(b.name, 'tr');
+          break;
+        case 'date':
+          comparison = a.id - b.id;
+          break;
+        case 'deadline':
+          if (!a.deadline && !b.deadline) comparison = 0;
+          else if (!a.deadline) comparison = 1;
+          else if (!b.deadline) comparison = -1;
+          else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+          break;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
-
-    // Her grubu sirala
-    Object.values(groups).forEach(group => {
-      group.sort((a, b) => {
-        let comparison = 0;
-        switch (sortField) {
-          case 'alphabetic':
-            comparison = a.name.localeCompare(b.name, 'tr');
-            break;
-          case 'date':
-            comparison = a.id - b.id;
-            break;
-          case 'deadline':
-            if (!a.deadline && !b.deadline) comparison = 0;
-            else if (!a.deadline) comparison = 1;
-            else if (!b.deadline) comparison = -1;
-            else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-            break;
-        }
-        return sortDirection === 'asc' ? comparison : -comparison;
-      });
-    });
-
-    return groups;
   };
 
-  const groupedAssigned = useMemo(() => groupByStatus(assignedBoards), [assignedBoards, sortField, sortDirection]);
-  const groupedTeam = useMemo(() => groupByStatus(myTeamBoards), [myTeamBoards, sortField, sortDirection]);
+  const filterByStatus = (boards: Board[]) => {
+    if (statusFilter === "HEPSI") return boards;
+    return boards.filter(b => (b.status || "PLANLANDI") === statusFilter);
+  };
 
-  // Istatistikler
+  // Filtrelenmiş ve sıralanmış panolar
+  const filteredCreated = useMemo(
+    () => sortBoards(filterByStatus(myTeamBoards)),
+    [myTeamBoards, statusFilter, sortField, sortDirection]
+  );
+  const filteredJoined = useMemo(
+    () => sortBoards(filterByStatus(assignedBoards)),
+    [assignedBoards, statusFilter, sortField, sortDirection]
+  );
+
+  // İstatistikler
   const stats = useMemo(() => {
     const totalAssigned = assignedBoards.length;
     const totalTeam = myTeamBoards.length;
@@ -81,60 +94,24 @@ const TeamPage = () => {
     return { totalAssigned, totalTeam, total: totalAssigned + totalTeam, active: activeAssigned + activeTeam };
   }, [assignedBoards, myTeamBoards]);
 
-  // Status siralamasi
-  const statusOrder = ["DEVAM_EDIYOR", "PLANLANDI", "DURDURULDU", "TAMAMLANDI", "BIRAKILDI"];
-
-  const renderBoardGroups = (groupedBoards: Record<string, Board[]>, fromPath: string) => (
-    <div className="assigned-page__groups">
-      {statusOrder.map((statusKey, groupIndex) => {
-        const boardsInGroup = groupedBoards[statusKey];
-        if (!boardsInGroup || boardsInGroup.length === 0) return null;
-
-        return (
-          <div
-            key={statusKey}
-            className={`assigned-page__group ${isVisible ? "assigned-page__group--visible" : "assigned-page__group--hidden"}`}
-            style={{ transitionDelay: `${groupIndex * 100}ms` }}
-          >
-            {/* Group Header */}
-            <div className="assigned-page__group-header">
-              <div
-                className="assigned-page__group-dot"
-                style={{
-                  background: STATUS_COLORS[statusKey],
-                  boxShadow: `0 0 12px ${STATUS_COLORS[statusKey]}50`,
-                }}
-              />
-              <h2 className="assigned-page__group-title">
-                {STATUS_LABELS[statusKey]}
-              </h2>
-              <span className="assigned-page__group-count">
-                {boardsInGroup.length}
-              </span>
-            </div>
-
-            {/* Cards */}
-            <div className={viewMode === 'list' ? "assigned-page__card-list" : "assigned-page__card-grid"}>
-              {boardsInGroup.map((board, cardIndex) => (
-                <div
-                  key={board.id}
-                  className={`assigned-page__card-wrapper ${isVisible ? "assigned-page__card-wrapper--visible" : "assigned-page__card-wrapper--hidden"}`}
-                  style={{ transitionDelay: `${(groupIndex * 100) + (cardIndex * 50)}ms` }}
-                >
-                  <BoardCard
-                    board={board}
-                    onClick={() => navigate(`/boards/${board.slug}`, { state: { from: fromPath } })}
-                    onEdit={() => {}}
-                    onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: fromPath } })}
-                    viewMode={viewMode === 'list' ? 'list' : 'grid'}
-                    accentColor={colors.assigned.primary}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+  const renderBoardList = (boards: Board[], fromPath: string) => (
+    <div className={viewMode === 'list' ? "assigned-page__card-list" : "assigned-page__card-grid"}>
+      {boards.slice(0, BOARDS_PER_SECTION).map((board, cardIndex) => (
+        <div
+          key={board.id}
+          className={`assigned-page__card-wrapper ${isVisible ? "assigned-page__card-wrapper--visible" : "assigned-page__card-wrapper--hidden"}`}
+          style={{ transitionDelay: `${cardIndex * 50}ms` }}
+        >
+          <BoardCard
+            board={board}
+            onClick={() => navigate(`/boards/${board.slug}`, { state: { from: fromPath } })}
+            onEdit={() => {}}
+            onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: fromPath } })}
+            viewMode={viewMode === 'list' ? 'list' : 'grid'}
+            accentColor={colors.assigned.primary}
+          />
+        </div>
+      ))}
     </div>
   );
 
@@ -194,7 +171,6 @@ const TeamPage = () => {
           <div className="assigned-page__header-top">
             {/* Title Section */}
             <div className="assigned-page__title-section">
-              {/* Geri butonu */}
               <button
                 onClick={() => navigate("/home")}
                 style={{
@@ -220,14 +196,13 @@ const TeamPage = () => {
               <div>
                 <h1 className="assigned-page__title">Ekip</h1>
                 <p className="assigned-page__subtitle">
-                  Atandığınız ve ekip özellikli panolarınız
+                  Oluşturduğunuz ve katıldığınız ekip panoları
                 </p>
               </div>
             </div>
 
             {/* Stats & Controls */}
             <div className="assigned-page__controls">
-              {/* Total */}
               <div className="assigned-page__stat-card assigned-page__stat-card--total">
                 <Users size={18} color={colors.assigned.primary} />
                 <div>
@@ -238,7 +213,6 @@ const TeamPage = () => {
                 </div>
               </div>
 
-              {/* Active */}
               <div className="assigned-page__stat-card assigned-page__stat-card--active">
                 <Clock size={18} color={colors.status.inProgress} />
                 <div>
@@ -258,35 +232,83 @@ const TeamPage = () => {
               />
             </div>
           </div>
+
+          {/* Status Filter */}
+          <div className="team-page__filters">
+            {STATUS_FILTER_OPTIONS.map(({ key, label }) => {
+              const isActive = statusFilter === key;
+              const statusColor = key !== "HEPSI" ? STATUS_COLORS[key] : colors.assigned.primary;
+              return (
+                <button
+                  key={key}
+                  className={`team-page__filter-chip ${isActive ? "team-page__filter-chip--active" : ""}`}
+                  onClick={() => setStatusFilter(key)}
+                  style={isActive ? {
+                    borderColor: statusColor,
+                    background: `${statusColor}15`,
+                    color: statusColor,
+                  } : undefined}
+                >
+                  {key !== "HEPSI" && (
+                    <span
+                      className="team-page__filter-dot"
+                      style={{ background: statusColor }}
+                    />
+                  )}
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Section: Atandigim Panolar */}
-        {assignedBoards.length > 0 && (
-          <div className="team-page__section">
-            <div className="team-page__section-header">
-              <div className="team-page__section-icon">
-                <Users size={20} color={colors.assigned.primary} />
-              </div>
-              <h2 className="team-page__section-title">Atandığım Panolar</h2>
-              <span className="assigned-page__group-count">{assignedBoards.length}</span>
+        {/* Section: Oluşturduklarım */}
+        <div className="team-page__section">
+          <div className="team-page__section-header">
+            <div className="team-page__section-icon team-page__section-icon--team">
+              <LayoutDashboard size={20} color={colors.assigned.primary} />
             </div>
-            {renderBoardGroups(groupedAssigned, '/team')}
+            <h2 className="team-page__section-title">Oluşturduklarım</h2>
+            <span className="assigned-page__group-count">{filteredCreated.length}</span>
+            {filteredCreated.length > BOARDS_PER_SECTION && (
+              <button className="team-page__more-btn" onClick={() => {}}>
+                Daha Fazla
+                <ChevronRight size={16} />
+              </button>
+            )}
           </div>
-        )}
+          {filteredCreated.length > 0 ? (
+            renderBoardList(filteredCreated, '/team')
+          ) : (
+            <div className="team-page__section-empty">
+              Bu filtrede oluşturduğunuz pano bulunmuyor.
+            </div>
+          )}
+        </div>
 
-        {/* Section: Takim Panolarim */}
-        {myTeamBoards.length > 0 && (
-          <div className="team-page__section">
-            <div className="team-page__section-header">
-              <div className="team-page__section-icon team-page__section-icon--team">
-                <LayoutDashboard size={20} color={colors.assigned.primary} />
-              </div>
-              <h2 className="team-page__section-title">Ekip Panolarım</h2>
-              <span className="assigned-page__group-count">{myTeamBoards.length}</span>
+        {/* Section: Katıldıklarım */}
+        <div className="team-page__section">
+          <div className="team-page__section-header">
+            <div className="team-page__section-icon">
+              <Users size={20} color={colors.assigned.primary} />
             </div>
-            {renderBoardGroups(groupedTeam, '/team')}
+            <h2 className="team-page__section-title">Katıldıklarım</h2>
+            <span className="assigned-page__group-count">{filteredJoined.length}</span>
+            {filteredJoined.length > BOARDS_PER_SECTION && (
+              <button className="team-page__more-btn" onClick={() => {}}>
+                Daha Fazla
+                <ChevronRight size={16} />
+              </button>
+            )}
           </div>
-        )}
+          {filteredJoined.length > 0 ? (
+            renderBoardList(filteredJoined, '/team')
+          ) : (
+            <div className="team-page__section-empty">
+              Bu filtrede katıldığınız pano bulunmuyor.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
