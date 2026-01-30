@@ -12,7 +12,7 @@ import BoardCard from "../components/BoardCard";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
 import { StatusFilterDropdown } from "../components/ui/StatusFilterDropdown";
-import { STATUS_LABELS, STATUS_COLORS } from "../constants";
+import { STATUS_LABELS, STATUS_COLORS, STATUS_SLUGS } from "../constants";
 import { colors } from '../styles/tokens';
 import "./AssignedBoardsPage.css";
 
@@ -111,7 +111,7 @@ const TeamPage = () => {
                 <h3 className="team-page__status-subtitle">{STATUS_LABELS[status]}</h3>
                 <span className="assigned-page__group-count">{grouped[status].length}</span>
                 {grouped[status].length > BOARDS_PER_STATUS_IN_ALL && (
-                  <button className="team-page__more-btn" onClick={() => {}}>
+                  <button className="team-page__more-btn" onClick={() => navigate(`/boards/status/${STATUS_SLUGS[status]}?type=TEAM`)}>
                     Daha Fazla
                     <ChevronRight size={16} />
                   </button>
@@ -233,7 +233,7 @@ const TeamPage = () => {
             <h2 className="team-page__section-title">Oluşturduklarım</h2>
             <span className="assigned-page__group-count">{filteredCreated.length}</span>
             {statusFilter !== "ALL" && filteredCreated.length > BOARDS_PER_SECTION && (
-              <button className="team-page__more-btn" onClick={() => {}}>
+              <button className="team-page__more-btn" onClick={() => navigate(`/boards/status/${STATUS_SLUGS[statusFilter]}?type=TEAM`)}>
                 Daha Fazla
                 <ChevronRight size={16} />
               </button>
@@ -257,7 +257,7 @@ const TeamPage = () => {
             <h2 className="team-page__section-title">Katıldıklarım</h2>
             <span className="assigned-page__group-count">{filteredJoined.length}</span>
             {statusFilter !== "ALL" && filteredJoined.length > BOARDS_PER_SECTION && (
-              <button className="team-page__more-btn" onClick={() => {}}>
+              <button className="team-page__more-btn" onClick={() => navigate(`/boards/status/${STATUS_SLUGS[statusFilter]}?type=TEAM`)}>
                 Daha Fazla
                 <ChevronRight size={16} />
               </button>

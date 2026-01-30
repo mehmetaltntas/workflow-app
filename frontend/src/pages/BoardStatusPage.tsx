@@ -29,7 +29,11 @@ const BoardStatusPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | 'INDIVIDUAL' | 'TEAM'>('ALL');
+  const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | 'INDIVIDUAL' | 'TEAM'>(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam === 'TEAM' || typeParam === 'INDIVIDUAL') return typeParam;
+    return 'ALL';
+  });
 
   const statusKey = statusSlug ? SLUG_TO_STATUS[statusSlug] : undefined;
   const statusLabel = statusKey ? STATUS_LABELS[statusKey] : undefined;
