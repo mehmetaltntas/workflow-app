@@ -119,12 +119,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
         )}
       </div>
 
-      {/* Description */}
-      {board.description && board.status !== "DEVAM_EDIYOR" && (
-        <p className="board-card__description">
-          {board.description}
-        </p>
-      )}
 
       {/* Spacer */}
       <div className="board-card__spacer" />
