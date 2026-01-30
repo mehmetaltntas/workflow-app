@@ -42,7 +42,11 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const removeMemberMutation = useRemoveBoardMember(board.id, board.slug);
   const updateRoleMutation = useUpdateBoardMemberRole(board.id, board.slug);
 
-  const members = board.members || [];
+  const members = [...(board.members || [])].sort((a, b) => {
+    if (a.role === 'MODERATOR' && b.role !== 'MODERATOR') return -1;
+    if (a.role !== 'MODERATOR' && b.role === 'MODERATOR') return 1;
+    return 0;
+  });
   const moderatorCount = members.filter(m => m.role === 'MODERATOR').length;
 
   const handleAddMember = async (userId: number) => {
