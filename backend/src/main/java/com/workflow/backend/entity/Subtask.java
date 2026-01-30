@@ -1,13 +1,17 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "subtasks")
-@Data
+@Getter
+@Setter
 @EqualsAndHashCode(exclude = {"task"})
+@ToString(exclude = {"task"})
 public class Subtask {
 
     @Id

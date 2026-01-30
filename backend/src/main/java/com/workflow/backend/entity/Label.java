@@ -1,8 +1,10 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -11,8 +13,10 @@ import java.util.Set;
 @Table(name = "labels", indexes = {
     @Index(name = "idx_labels_board_id", columnList = "board_id")
 })
-@Data
+@Getter
+@Setter
 @EqualsAndHashCode(exclude = {"tasks", "board"})
+@ToString(exclude = {"tasks", "board"})
 public class Label {
 
     @Id

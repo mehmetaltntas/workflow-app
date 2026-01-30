@@ -1,5 +1,6 @@
 package com.workflow.backend.dto;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.URL;
@@ -27,6 +28,7 @@ public class TaskListDto {
 
     private LocalDate dueDate;
 
+    @Pattern(regexp = "HIGH|MEDIUM|LOW|NONE", message = "Öncelik HIGH, MEDIUM, LOW veya NONE olmalı")
     private String priority; // HIGH, MEDIUM, LOW, NONE
 
     private LocalDateTime createdAt;

@@ -184,167 +184,149 @@ public class BoardService {
             response.setIsModerator(false);
         }
 
-        // Board Members (sadece ACCEPTED) - bağlantı durumuna göre profil bilgisi filtreleme
-        List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(board.getId());
-        if (boardMembers != null && !boardMembers.isEmpty()) {
-            // Üye ise, hangi üyelerle bağlantısı olduğunu toplu sorgu ile bul
-            Set<Long> connectedUserIds = null;
-            if (!isOwner) {
-                List<Long> memberUserIds = boardMembers.stream()
-                        .map(m -> m.getUser().getId())
-                        .filter(id -> !id.equals(currentUserId))
-                        .collect(Collectors.toList());
-                connectedUserIds = connectionService.getConnectedUserIds(currentUserId, memberUserIds);
-            }
-
-            // Batch: tüm üyelerin profil fotoğraflarını tek sorguda kontrol et
-            List<Long> allMemberUserIds = boardMembers.stream()
-                    .map(m -> m.getUser().getId()).toList();
-            Set<Long> membersWithPicture = new java.util.HashSet<>();
-            if (!allMemberUserIds.isEmpty()) {
-                profilePictureRepository.findFilePathsByUserIds(allMemberUserIds)
-                        .forEach(row -> membersWithPicture.add((Long) row[0]));
-            }
-
-            final Set<Long> finalConnectedUserIds = connectedUserIds;
-            final Set<Long> finalMembersWithPicture = membersWithPicture;
-            List<BoardMemberDto> memberDtos = boardMembers.stream().map(member -> {
-                BoardMemberDto memberDto = new BoardMemberDto();
-                memberDto.setId(member.getId());
-                memberDto.setUsername(member.getUser().getUsername());
-                memberDto.setRole(member.getRole() != null ? member.getRole().name() : "MEMBER");
-                memberDto.setCreatedAt(member.getCreatedAt());
-
-                Long memberUserId = member.getUser().getId();
-                boolean showProfile = isOwner
-                        || memberUserId.equals(currentUserId)
-                        || (finalConnectedUserIds != null && finalConnectedUserIds.contains(memberUserId));
-
-                if (showProfile) {
-                    memberDto.setUserId(memberUserId);
-                    memberDto.setFirstName(member.getUser().getFirstName());
-                    memberDto.setLastName(member.getUser().getLastName());
-                    memberDto.setProfilePicture(
-                            finalMembersWithPicture.contains(memberUserId)
-                                    ? "/users/" + memberUserId + "/profile-picture" : null);
-                }
-                // showProfile false ise userId, firstName, lastName, profilePicture null kalır
-
-                if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
-                    memberDto.setAssignments(member.getAssignments().stream().map(assignment -> {
-                        BoardMemberAssignmentDto aDto = new BoardMemberAssignmentDto();
-                        aDto.setId(assignment.getId());
-                        aDto.setTargetType(assignment.getTargetType().name());
-                        aDto.setTargetId(assignment.getTargetId());
-                        aDto.setCreatedAt(assignment.getCreatedAt());
-                        return aDto;
-                    }).collect(Collectors.toList()));
-                }
-                return memberDto;
-            }).collect(Collectors.toList());
-            response.setMembers(memberDtos);
-        } else {
-            response.setMembers(Collections.emptyList());
-        }
-
-        // Board Labels (@BatchSize ile batch yüklenir)
-        if (board.getLabels() != null && !board.getLabels().isEmpty()) {
-            List<LabelDto> labelDtos = board.getLabels().stream().map(label -> {
-                LabelDto labelDto = new LabelDto();
-                labelDto.setId(label.getId());
-                labelDto.setName(label.getName());
-                labelDto.setColor(label.getColor());
-                labelDto.setIsDefault(label.getIsDefault());
-                return labelDto;
-            }).collect(Collectors.toList());
-            response.setLabels(labelDtos);
-        }
-
-        // TaskLists (@BatchSize ile batch yüklenir)
-        if (board.getTaskLists() != null) {
-            List<TaskListDto> listDtos = board.getTaskLists().stream().map(taskList -> {
-                TaskListDto listDto = new TaskListDto();
-                listDto.setId(taskList.getId());
-                listDto.setVersion(taskList.getVersion());
-                listDto.setName(taskList.getName());
-                listDto.setDescription(taskList.getDescription());
-                listDto.setLink(taskList.getLink());
-                listDto.setIsCompleted(taskList.getIsCompleted());
-                listDto.setDueDate(taskList.getDueDate());
-                listDto.setPriority(taskList.getPriority() != null ? taskList.getPriority().name() : null);
-
-                // Oluşturulma tarihi
-                listDto.setCreatedAt(taskList.getCreatedAt());
-
-                // TaskList Labels (@BatchSize ile batch yüklenir)
-                if (taskList.getLabels() != null && !taskList.getLabels().isEmpty()) {
-                    List<LabelDto> listLabelDtos = taskList.getLabels().stream().map(label -> {
-                        LabelDto labelDto = new LabelDto();
-                        labelDto.setId(label.getId());
-                        labelDto.setName(label.getName());
-                        labelDto.setColor(label.getColor());
-                        labelDto.setIsDefault(label.getIsDefault());
-                        return labelDto;
-                    }).collect(Collectors.toList());
-                    listDto.setLabels(listLabelDtos);
-                }
-
-                // Tasks (@BatchSize ile batch yüklenir)
-                if (taskList.getTasks() != null) {
-                    List<TaskDto> taskDtos = taskList.getTasks().stream().map(task -> {
-                        TaskDto taskDto = new TaskDto();
-                        taskDto.setId(task.getId());
-                        taskDto.setVersion(task.getVersion());
-                        taskDto.setTitle(task.getTitle());
-                        taskDto.setDescription(task.getDescription());
-                        taskDto.setPosition(task.getPosition());
-                        taskDto.setLink(task.getLink());
-                        taskDto.setIsCompleted(task.getIsCompleted());
-                        taskDto.setCreatedAt(task.getCreatedAt());
-                        taskDto.setDueDate(task.getDueDate());
-                        taskDto.setPriority(task.getPriority());
-
-                        // Task Labels (@BatchSize ile batch yüklenir)
-                        if (task.getLabels() != null && !task.getLabels().isEmpty()) {
-                            taskDto.setLabels(task.getLabels().stream().map(label -> {
-                                LabelDto labelDto = new LabelDto();
-                                labelDto.setId(label.getId());
-                                labelDto.setName(label.getName());
-                                labelDto.setColor(label.getColor());
-                                labelDto.setIsDefault(label.getIsDefault());
-                                return labelDto;
-                            }).collect(Collectors.toList()));
-                        }
-
-                        // Subtasks (@BatchSize ile batch yüklenir)
-                        if (task.getSubtasks() != null && !task.getSubtasks().isEmpty()) {
-                            taskDto.setSubtasks(task.getSubtasks().stream().map(subtask -> {
-                                SubtaskDto subtaskDto = new SubtaskDto();
-                                subtaskDto.setId(subtask.getId());
-                                subtaskDto.setVersion(subtask.getVersion());
-                                subtaskDto.setTitle(subtask.getTitle());
-                                subtaskDto.setIsCompleted(subtask.getIsCompleted());
-                                subtaskDto.setPosition(subtask.getPosition());
-                                subtaskDto.setDescription(subtask.getDescription());
-                                subtaskDto.setLink(subtask.getLink());
-                                subtaskDto.setCreatedAt(subtask.getCreatedAt());
-                                return subtaskDto;
-                            }).collect(Collectors.toList()));
-                        }
-
-                        return taskDto;
-                    }).collect(Collectors.toList());
-
-                    listDto.setTasks(taskDtos);
-                }
-
-                return listDto;
-            }).collect(Collectors.toList());
-
-            response.setTaskLists(listDtos);
-        }
+        response.setMembers(mapMembers(board.getId(), isOwner, currentUserId));
+        response.setLabels(mapLabels(board.getLabels()));
+        response.setTaskLists(mapTaskLists(board.getTaskLists()));
 
         return response;
+    }
+
+    private List<BoardMemberDto> mapMembers(Long boardId, boolean isOwner, Long currentUserId) {
+        List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(boardId);
+        if (boardMembers == null || boardMembers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Üye ise, hangi üyelerle bağlantısı olduğunu toplu sorgu ile bul
+        Set<Long> connectedUserIds = null;
+        if (!isOwner) {
+            List<Long> memberUserIds = boardMembers.stream()
+                    .map(m -> m.getUser().getId())
+                    .filter(id -> !id.equals(currentUserId))
+                    .collect(Collectors.toList());
+            connectedUserIds = connectionService.getConnectedUserIds(currentUserId, memberUserIds);
+        }
+
+        // Batch: tüm üyelerin profil fotoğraflarını tek sorguda kontrol et
+        List<Long> allMemberUserIds = boardMembers.stream()
+                .map(m -> m.getUser().getId()).toList();
+        Set<Long> membersWithPicture = new java.util.HashSet<>();
+        if (!allMemberUserIds.isEmpty()) {
+            profilePictureRepository.findFilePathsByUserIds(allMemberUserIds)
+                    .forEach(row -> membersWithPicture.add((Long) row[0]));
+        }
+
+        final Set<Long> finalConnectedUserIds = connectedUserIds;
+        return boardMembers.stream().map(member -> {
+            BoardMemberDto memberDto = new BoardMemberDto();
+            memberDto.setId(member.getId());
+            memberDto.setUsername(member.getUser().getUsername());
+            memberDto.setRole(member.getRole() != null ? member.getRole().name() : "MEMBER");
+            memberDto.setCreatedAt(member.getCreatedAt());
+
+            Long memberUserId = member.getUser().getId();
+            boolean showProfile = isOwner
+                    || memberUserId.equals(currentUserId)
+                    || (finalConnectedUserIds != null && finalConnectedUserIds.contains(memberUserId));
+
+            if (showProfile) {
+                memberDto.setUserId(memberUserId);
+                memberDto.setFirstName(member.getUser().getFirstName());
+                memberDto.setLastName(member.getUser().getLastName());
+                memberDto.setProfilePicture(
+                        membersWithPicture.contains(memberUserId)
+                                ? "/users/" + memberUserId + "/profile-picture" : null);
+            }
+
+            if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
+                memberDto.setAssignments(member.getAssignments().stream().map(assignment -> {
+                    BoardMemberAssignmentDto aDto = new BoardMemberAssignmentDto();
+                    aDto.setId(assignment.getId());
+                    aDto.setTargetType(assignment.getTargetType().name());
+                    aDto.setTargetId(assignment.getTargetId());
+                    aDto.setCreatedAt(assignment.getCreatedAt());
+                    return aDto;
+                }).collect(Collectors.toList()));
+            }
+            return memberDto;
+        }).collect(Collectors.toList());
+    }
+
+    private LabelDto mapLabel(com.workflow.backend.entity.Label label) {
+        LabelDto labelDto = new LabelDto();
+        labelDto.setId(label.getId());
+        labelDto.setName(label.getName());
+        labelDto.setColor(label.getColor());
+        labelDto.setIsDefault(label.getIsDefault());
+        return labelDto;
+    }
+
+    private List<LabelDto> mapLabels(java.util.Collection<com.workflow.backend.entity.Label> labels) {
+        if (labels == null || labels.isEmpty()) {
+            return null;
+        }
+        return labels.stream().map(this::mapLabel).collect(Collectors.toList());
+    }
+
+    private List<TaskListDto> mapTaskLists(java.util.Collection<com.workflow.backend.entity.TaskList> taskLists) {
+        if (taskLists == null) {
+            return null;
+        }
+        return taskLists.stream().map(taskList -> {
+            TaskListDto listDto = new TaskListDto();
+            listDto.setId(taskList.getId());
+            listDto.setVersion(taskList.getVersion());
+            listDto.setName(taskList.getName());
+            listDto.setDescription(taskList.getDescription());
+            listDto.setLink(taskList.getLink());
+            listDto.setIsCompleted(taskList.getIsCompleted());
+            listDto.setDueDate(taskList.getDueDate());
+            listDto.setPriority(taskList.getPriority() != null ? taskList.getPriority().name() : null);
+            listDto.setCreatedAt(taskList.getCreatedAt());
+            listDto.setLabels(mapLabels(taskList.getLabels()));
+            listDto.setTasks(mapTasks(taskList.getTasks()));
+            return listDto;
+        }).collect(Collectors.toList());
+    }
+
+    private List<TaskDto> mapTasks(java.util.Collection<com.workflow.backend.entity.Task> tasks) {
+        if (tasks == null) {
+            return null;
+        }
+        return tasks.stream().map(task -> {
+            TaskDto taskDto = new TaskDto();
+            taskDto.setId(task.getId());
+            taskDto.setVersion(task.getVersion());
+            taskDto.setTitle(task.getTitle());
+            taskDto.setDescription(task.getDescription());
+            taskDto.setPosition(task.getPosition());
+            taskDto.setLink(task.getLink());
+            taskDto.setIsCompleted(task.getIsCompleted());
+            taskDto.setCreatedAt(task.getCreatedAt());
+            taskDto.setDueDate(task.getDueDate());
+            taskDto.setPriority(task.getPriority());
+            taskDto.setLabels(mapLabels(task.getLabels()));
+            taskDto.setSubtasks(mapSubtasks(task.getSubtasks()));
+            return taskDto;
+        }).collect(Collectors.toList());
+    }
+
+    private List<SubtaskDto> mapSubtasks(java.util.Collection<com.workflow.backend.entity.Subtask> subtasks) {
+        if (subtasks == null || subtasks.isEmpty()) {
+            return null;
+        }
+        return subtasks.stream().map(subtask -> {
+            SubtaskDto subtaskDto = new SubtaskDto();
+            subtaskDto.setId(subtask.getId());
+            subtaskDto.setVersion(subtask.getVersion());
+            subtaskDto.setTitle(subtask.getTitle());
+            subtaskDto.setIsCompleted(subtask.getIsCompleted());
+            subtaskDto.setPosition(subtask.getPosition());
+            subtaskDto.setDescription(subtask.getDescription());
+            subtaskDto.setLink(subtask.getLink());
+            subtaskDto.setCreatedAt(subtask.getCreatedAt());
+            return subtaskDto;
+        }).collect(Collectors.toList());
     }
 
     // Entity -> DTO Çevirici (Liste sayfası için - nested entity'ler yok, N+1 sorgu yok)
@@ -428,10 +410,14 @@ public class BoardService {
 
         if (request.getStatus() != null)
             board.setStatus(request.getStatus());
-        board.setLink(request.getLink());
-        board.setDescription(request.getDescription());
-        board.setDeadline(request.getDeadline());
-        board.setCategory(request.getCategory());
+        if (request.getLink() != null)
+            board.setLink(request.getLink());
+        if (request.getDescription() != null)
+            board.setDescription(request.getDescription());
+        if (request.getDeadline() != null)
+            board.setDeadline(request.getDeadline());
+        if (request.getCategory() != null)
+            board.setCategory(request.getCategory());
         if (request.getBoardType() != null) {
             board.setBoardType(BoardType.valueOf(request.getBoardType()));
         }

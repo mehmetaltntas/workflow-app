@@ -237,6 +237,7 @@ public class TaskService {
     }
 
     // LİSTE SİL
+    @Transactional
     public void deleteTaskList(Long listId) {
         // Kullanıcı sadece kendi listesini silebilir
         authorizationService.verifyTaskListOwnership(listId);

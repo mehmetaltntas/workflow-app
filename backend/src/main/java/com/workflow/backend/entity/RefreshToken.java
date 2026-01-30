@@ -1,7 +1,10 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import java.time.Instant;
 
 @Entity
@@ -9,7 +12,10 @@ import java.time.Instant;
     @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id"),
     @Index(name = "idx_refresh_tokens_token", columnList = "token")
 })
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(exclude = {"user"})
+@ToString(exclude = {"user"})
 public class RefreshToken {
 
     @Id

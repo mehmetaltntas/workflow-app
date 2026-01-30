@@ -4,6 +4,7 @@ import com.workflow.backend.dto.*;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.exception.ResourceNotFoundException;
 import com.workflow.backend.security.JwtService;
+import com.workflow.backend.util.CookieUtils;
 import com.workflow.backend.service.EmailVerificationService;
 import com.workflow.backend.service.GoogleAuthService;
 import com.workflow.backend.service.PasswordResetService;
@@ -20,6 +21,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +50,7 @@ public class AuthController {
     @GetMapping("/check-username")
     public ResponseEntity<Map<String, Boolean>> checkUsername(
             @Parameter(description = "Kontrol edilecek kullanıcı adı", required = true)
-            @RequestParam String username) {
+            @RequestParam @Size(max = 50) String username) {
         boolean available = userService.isUsernameAvailable(username);
         return ResponseEntity.ok(Map.of("available", available));
     }
@@ -114,7 +116,7 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<Map<String, String>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        String requestRefreshToken = extractCookieValue(request, "refresh_token");
+        String requestRefreshToken = CookieUtils.extractCookieValue(request, "refresh_token");
 
         if (requestRefreshToken == null) {
             return ResponseEntity.status(401).body(Map.of("message", "Refresh token bulunamadı"));
@@ -144,7 +146,7 @@ public class AuthController {
             HttpServletResponse response) {
 
         // Refresh token cookie'sinden sadece bu oturumun token'ını sil
-        String refreshToken = extractCookieValue(request, "refresh_token");
+        String refreshToken = CookieUtils.extractCookieValue(request, "refresh_token");
         if (refreshToken != null) {
             refreshTokenService.deleteByToken(refreshToken);
         }
@@ -251,16 +253,5 @@ public class AuthController {
         refreshCookie.setMaxAge(0);
         refreshCookie.setAttribute("SameSite", "Lax");
         response.addCookie(refreshCookie);
-    }
-
-    private String extractCookieValue(HttpServletRequest request, String cookieName) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookieName.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
     }
 }

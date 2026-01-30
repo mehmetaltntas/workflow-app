@@ -180,15 +180,26 @@ public class GoogleAuthService {
         String baseUsername = name != null ? name.replaceAll("\\s+", "").toLowerCase() :
                 email.split("@")[0].toLowerCase();
 
-        String username = baseUsername;
-        int counter = 1;
-
-        // Benzersiz username bulana kadar numara ekle (case-insensitive kontrol)
-        while (userRepository.findByUsernameIgnoreCase(username) != null) {
-            username = baseUsername + counter;
-            counter++;
+        // Minimum uzunluk kontrolü
+        if (baseUsername.length() < 3) {
+            baseUsername = baseUsername + "user";
         }
 
+        // Username regex kontrolü (alfanumerik, nokta, alt çizgi)
+        baseUsername = baseUsername.replaceAll("[^a-z0-9._]", "");
+
+        // Hızlı unique username üretimi: random suffix
+        String username = baseUsername;
+        if (userRepository.findByUsernameIgnoreCase(username) != null) {
+            username = baseUsername + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000, 9999);
+            // Son kontrol — hala çakışırsa retry
+            int maxAttempts = 5;
+            int attempt = 0;
+            while (userRepository.findByUsernameIgnoreCase(username) != null && attempt < maxAttempts) {
+                username = baseUsername + java.util.concurrent.ThreadLocalRandom.current().nextInt(10000, 99999);
+                attempt++;
+            }
+        }
         return username;
     }
 

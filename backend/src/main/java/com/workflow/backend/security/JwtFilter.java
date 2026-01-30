@@ -1,10 +1,10 @@
 package com.workflow.backend.security;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.backend.exception.GlobalExceptionHandler;
+import com.workflow.backend.util.CookieUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
         // 1. Header kontrolü: "Bearer " ile mi başlıyor? Yoksa cookie'den oku
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             // Try cookie if no Authorization header
-            jwt = extractCookieValue(request, "access_token");
+            jwt = CookieUtils.extractCookieValue(request, "access_token");
             if (jwt == null) {
                 filterChain.doFilter(request, response);
                 return;
@@ -96,16 +96,5 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private String extractCookieValue(HttpServletRequest request, String cookieName) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookieName.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
     }
 }

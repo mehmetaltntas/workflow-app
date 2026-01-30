@@ -1,7 +1,10 @@
 package com.workflow.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.Instant;
 
@@ -9,7 +12,10 @@ import java.time.Instant;
 @Table(name = "password_reset_tokens", indexes = {
     @Index(name = "idx_prt_user_id", columnList = "user_id")
 })
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(exclude = {"user"})
+@ToString(exclude = {"user"})
 public class PasswordResetToken {
 
     @Id

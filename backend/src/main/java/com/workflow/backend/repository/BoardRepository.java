@@ -11,6 +11,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
+
+    interface StatusCount {
+        String getStatus();
+        Long getCount();
+    }
+
+    interface CategoryCount {
+        String getCategory();
+        Long getCount();
+    }
+
     // Özel sorgu: Bir kullanıcı ID'sine ait tüm panoları getir
     List<Board> findByUserId(Long userId);
 
@@ -35,12 +46,12 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     boolean existsByIdAndUserId(Long boardId, Long userId);
 
     // Profil istatistikleri: Status bazinda board sayilari
-    @Query("SELECT b.status, COUNT(b) FROM Board b WHERE b.user.id = :userId GROUP BY b.status")
-    List<Object[]> countByStatusForUser(@Param("userId") Long userId);
+    @Query("SELECT b.status AS status, COUNT(b) AS count FROM Board b WHERE b.user.id = :userId GROUP BY b.status")
+    List<StatusCount> countByStatusForUser(@Param("userId") Long userId);
 
     // Profil istatistikleri: Kategori bazinda board sayilari
-    @Query("SELECT b.category, COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.category IS NOT NULL GROUP BY b.category ORDER BY COUNT(b) DESC")
-    List<Object[]> countByCategoryForUser(@Param("userId") Long userId);
+    @Query("SELECT b.category AS category, COUNT(b) AS count FROM Board b WHERE b.user.id = :userId AND b.category IS NOT NULL GROUP BY b.category ORDER BY COUNT(b) DESC")
+    List<CategoryCount> countByCategoryForUser(@Param("userId") Long userId);
 
     // Profil istatistikleri: Toplam board sayisi
     long countByUserId(Long userId);
@@ -50,12 +61,12 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     long countTeamBoardsByUserId(@Param("userId") Long userId);
 
     // Profil istatistikleri: Bireysel panolarin status bazinda sayilari
-    @Query("SELECT b.status, COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.INDIVIDUAL GROUP BY b.status")
-    List<Object[]> countIndividualByStatusForUser(@Param("userId") Long userId);
+    @Query("SELECT b.status AS status, COUNT(b) AS count FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.INDIVIDUAL GROUP BY b.status")
+    List<StatusCount> countIndividualByStatusForUser(@Param("userId") Long userId);
 
     // Profil istatistikleri: Takim panolarinin status bazinda sayilari
-    @Query("SELECT b.status, COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM GROUP BY b.status")
-    List<Object[]> countTeamByStatusForUser(@Param("userId") Long userId);
+    @Query("SELECT b.status AS status, COUNT(b) AS count FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM GROUP BY b.status")
+    List<StatusCount> countTeamByStatusForUser(@Param("userId") Long userId);
 
     // Kullanicinin kendi TEAM tipindeki panolarini getir
     @EntityGraph(attributePaths = {"user"})
