@@ -102,6 +102,10 @@ const Layout = () => {
               <LayoutDashboard size={16} strokeWidth={2} />
               <span>Panolarım</span>
             </Link>
+            <Link to="/team" className={`nav-pill ${isActive("/team") ? "active" : ""}`}>
+              <UserCheck size={16} strokeWidth={2} />
+              <span>Ekip</span>
+            </Link>
             <Link to="/calendar" className={`nav-pill ${isActive("/calendar") ? "active" : ""}`}>
               <Calendar size={16} strokeWidth={2} />
               <span>Takvim</span>
@@ -113,10 +117,6 @@ const Layout = () => {
             <Link to="/connections" className={`nav-pill ${isActive("/connections") ? "active" : ""}`}>
               <Users size={16} strokeWidth={2} />
               <span>Ağım</span>
-            </Link>
-            <Link to="/team" className={`nav-pill ${isActive("/team") ? "active" : ""}`}>
-              <UserCheck size={16} strokeWidth={2} />
-              <span>Ekip</span>
             </Link>
             <Link to="/notifications" className={`nav-pill ${isActive("/notifications") ? "active" : ""}`}>
               <Bell size={16} strokeWidth={2} />
