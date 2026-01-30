@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   Target,
@@ -293,11 +293,11 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
           width: size,
           height: size,
           borderRadius: radius.full,
-          background: colors.assigned.light,
+          background: colors.brand.primaryLight,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: colors.assigned.primary,
+          color: colors.brand.primary,
           fontWeight: typography.fontWeight.bold,
           fontSize,
           flexShrink: 0,
@@ -322,8 +322,8 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
           cursor: isOwner ? "pointer" : "default",
           padding: `${spacing[0.5]} ${spacing[1.5]}`,
           borderRadius: radius.full,
-          background: assignees.length > 0 ? colors.assigned.bg : "transparent",
-          border: `1px solid ${assignees.length > 0 ? colors.assigned.border : isOwner ? themeColors.borderDefault : "transparent"}`,
+          background: assignees.length > 0 ? colors.brand.primaryLight : "transparent",
+          border: `1px solid ${assignees.length > 0 ? `${colors.brand.primary}20` : isOwner ? themeColors.borderDefault : "transparent"}`,
           transition: `all ${animation.duration.fast}`,
           minHeight: "28px",
         }}
@@ -348,7 +348,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                     width: 22,
                     height: 22,
                     borderRadius: radius.full,
-                    background: colors.assigned.primary,
+                    background: colors.brand.primary,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -366,7 +366,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
               style={{
                 fontSize: typography.fontSize.xs,
                 fontWeight: typography.fontWeight.semibold,
-                color: colors.assigned.primary,
+                color: cssVars.textMuted,
               }}
             >
               {assignees.length}
@@ -424,10 +424,10 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
           borderRadius: radius.md,
           background: hasAssignee
             ? isLight
-              ? colors.assigned.bg
-              : `${colors.assigned.primary}06`
+              ? `${colors.brand.primary}06`
+              : `${colors.brand.primary}06`
             : "transparent",
-          borderLeft: hasAssignee ? `3px solid ${colors.assigned.primary}` : `3px solid transparent`,
+          borderLeft: hasAssignee ? `3px solid ${colors.brand.primary}40` : `3px solid transparent`,
           transition: `all ${animation.duration.fast}`,
         }}
       >
@@ -453,7 +453,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
           )}
           <span
             style={{
-              color: hasAssignee ? colors.assigned.primary : cssVars.textMuted,
+              color: hasAssignee ? colors.brand.primary : cssVars.textMuted,
               display: "flex",
               alignItems: "center",
               flexShrink: 0,
@@ -465,7 +465,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
             style={{
               fontSize: depth === 0 ? typography.fontSize.base : typography.fontSize.sm,
               fontWeight: depth === 0 ? typography.fontWeight.semibold : typography.fontWeight.medium,
-              color: hasAssignee ? colors.assigned.primary : cssVars.textMain,
+              color: hasAssignee ? colors.brand.primary : cssVars.textMain,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -516,7 +516,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
-              <Target size={16} color={colors.assigned.primary} />
+              <Target size={16} color={cssVars.textMuted} />
               <span style={sectionLabelStyle}>Görev Atamaları</span>
             </div>
           </div>
@@ -537,16 +537,16 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                 gap: spacing[1.5],
                 padding: `${spacing[1.5]} ${spacing[3]}`,
                 borderRadius: radius.full,
-                background: colors.assigned.bg,
-                border: `1px solid ${colors.assigned.border}`,
+                background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${themeColors.borderDefault}`,
               }}
             >
-              <BarChart3 size={13} color={colors.assigned.primary} />
+              <BarChart3 size={13} color={cssVars.textMuted} />
               <span
                 style={{
                   fontSize: typography.fontSize.xs,
                   fontWeight: typography.fontWeight.semibold,
-                  color: colors.assigned.primary,
+                  color: cssVars.textMuted,
                 }}
               >
                 {stats.totalAssignments} Atama
@@ -686,7 +686,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                           width: `${barWidth}%`,
                           background:
                             count > 0
-                              ? `linear-gradient(90deg, ${colors.assigned.primary}, ${colors.assigned.primaryHover})`
+                              ? `linear-gradient(90deg, ${colors.brand.primary}80, ${colors.brand.primaryHover}80)`
                               : "transparent",
                           borderRadius: radius.full,
                           transition: `width ${animation.duration.slow}`,
@@ -697,7 +697,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                       style={{
                         fontSize: typography.fontSize.xs,
                         fontWeight: typography.fontWeight.bold,
-                        color: count > 0 ? colors.assigned.primary : cssVars.textMuted,
+                        color: cssVars.textMuted,
                         minWidth: spacing[6],
                         textAlign: "right",
                       }}
@@ -808,7 +808,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                         : "transparent",
                     color:
                       assignmentFilter === tab.key
-                        ? colors.assigned.primary
+                        ? cssVars.textMain
                         : cssVars.textMuted,
                     fontWeight:
                       assignmentFilter === tab.key
@@ -837,14 +837,14 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                     gap: spacing[1.5],
                     padding: `${spacing[1]} ${spacing[2.5]}`,
                     borderRadius: radius.lg,
-                    border: `1px solid ${memberFilter !== null ? colors.assigned.border : themeColors.borderDefault}`,
+                    border: `1px solid ${memberFilter !== null ? `${colors.brand.primary}20` : themeColors.borderDefault}`,
                     background:
                       memberFilter !== null
-                        ? colors.assigned.bg
+                        ? colors.brand.primaryLight
                         : "transparent",
                     color:
                       memberFilter !== null
-                        ? colors.assigned.primary
+                        ? colors.brand.primary
                         : cssVars.textMuted,
                     cursor: "pointer",
                     fontSize: typography.fontSize.xs,
@@ -906,7 +906,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                       {memberFilter === null && (
                         <Check
                           size={13}
-                          color={colors.assigned.primary}
+                          color={colors.brand.primary}
                           style={{ marginLeft: "auto" }}
                         />
                       )}
@@ -967,7 +967,7 @@ const TaskAssignmentSection: React.FC<TaskAssignmentSectionProps> = ({ board }) 
                           {memberFilter === member.id && (
                             <Check
                               size={13}
-                              color={colors.assigned.primary}
+                              color={colors.brand.primary}
                               style={{ marginLeft: "auto", flexShrink: 0 }}
                             />
                           )}
@@ -1272,8 +1272,8 @@ const QuickAssignPopover: React.FC<QuickAssignPopoverProps> = ({
                 border: "none",
                 background: isAssigned
                   ? isLight
-                    ? colors.assigned.bg
-                    : `${colors.assigned.primary}10`
+                    ? colors.brand.primaryLight
+                    : `${colors.brand.primary}10`
                   : "transparent",
                 color: cssVars.textMain,
                 cursor: "pointer",
@@ -1292,7 +1292,7 @@ const QuickAssignPopover: React.FC<QuickAssignPopoverProps> = ({
                   fontWeight: isAssigned
                     ? typography.fontWeight.semibold
                     : typography.fontWeight.normal,
-                  color: isAssigned ? colors.assigned.primary : cssVars.textMain,
+                  color: isAssigned ? colors.brand.primary : cssVars.textMain,
                 }}
               >
                 {memberName}
@@ -1303,7 +1303,7 @@ const QuickAssignPopover: React.FC<QuickAssignPopoverProps> = ({
                     width: 20,
                     height: 20,
                     borderRadius: radius.full,
-                    background: colors.assigned.primary,
+                    background: colors.brand.primary,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",

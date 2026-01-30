@@ -8,7 +8,6 @@ import {
   ExternalLink,
   FileText,
   BarChart3,
-  Clock,
   AlertTriangle,
   FolderOpen,
   User,
@@ -369,15 +368,11 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
             {hasDeadline && deadlineInfo && (
               <>
                 <span style={metaLabelStyle}>
-                  {deadlineInfo.label === 'Gecikmiş' ? (
-                    <AlertTriangle size={12} color={deadlineInfo.color} />
-                  ) : (
-                    <Calendar size={12} color={deadlineInfo.color} />
-                  )}
-                  <span style={{ color: deadlineInfo.color }}>Son Tarih</span>
+                  <Calendar size={12} />
+                  Son Tarih
                 </span>
                 <span style={metaValueStyle}>
-                  <span style={{ fontWeight: typography.fontWeight.semibold, color: deadlineInfo.color }}>
+                  <span style={{ fontWeight: typography.fontWeight.semibold }}>
                     {new Date(board.deadline!).toLocaleDateString('tr-TR', {
                       day: 'numeric',
                       month: 'short',
@@ -386,18 +381,10 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
                   </span>
                   <span
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: spacing[1],
                       fontSize: typography.fontSize.xs,
-                      fontWeight: typography.fontWeight.bold,
-                      color: deadlineInfo.color,
-                      background: `${deadlineInfo.color}12`,
-                      padding: `${spacing[0.5]} ${spacing[2]}`,
-                      borderRadius: radius.sm,
+                      color: cssVars.textMuted,
                     }}
                   >
-                    <Clock size={10} />
                     {deadlineInfo.label === 'Gecikmiş'
                       ? `${deadlineInfo.days} gün gecikmiş`
                       : deadlineInfo.label === 'Bugün'

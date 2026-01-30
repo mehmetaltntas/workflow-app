@@ -3,10 +3,6 @@ import {
   Users,
   UserPlus,
   X,
-  Target,
-  ListChecks,
-  CheckSquare,
-  Layers,
 } from "lucide-react";
 import type { Board, BoardMember } from "../types";
 import { useAuthStore } from "../stores/authStore";
@@ -16,23 +12,13 @@ import { typography, spacing, radius, colors, cssVars, animation } from "../styl
 import {
   useAddBoardMember,
   useRemoveBoardMember,
-  useCreateAssignment,
-  useCreateBulkAssignment,
-  useRemoveAssignment,
 } from "../hooks/queries/useBoardMembers";
 import AddBoardMemberModal from "./AddBoardMemberModal";
-import AssignMemberModal from "./AssignMemberModal";
 import { ConfirmationModal } from "./ConfirmationModal";
 
 interface BoardMembersSectionProps {
   board: Board;
 }
-
-const TARGET_TYPE_ICONS: Record<string, React.ReactNode> = {
-  LIST: <ListChecks size={12} />,
-  TASK: <CheckSquare size={12} />,
-  SUBTASK: <Layers size={12} />,
-};
 
 const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const { theme } = useTheme();
@@ -42,15 +28,10 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const isOwner = board.ownerName === currentUsername;
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<BoardMember | null>(null);
   const [memberToRemove, setMemberToRemove] = useState<BoardMember | null>(null);
 
   const addMemberMutation = useAddBoardMember(board.id, board.slug);
   const removeMemberMutation = useRemoveBoardMember(board.id, board.slug);
-  const createAssignmentMutation = useCreateAssignment(board.id, board.slug);
-  const createBulkAssignmentMutation = useCreateBulkAssignment(board.id, board.slug);
-  const removeAssignmentMutation = useRemoveAssignment(board.id, board.slug);
 
   const members = board.members || [];
 
@@ -67,23 +48,6 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
       removeMemberMutation.mutate(memberToRemove.id);
       setMemberToRemove(null);
     }
-  };
-
-  const handleOpenAssign = (member: BoardMember) => {
-    setSelectedMember(member);
-    setShowAssignModal(true);
-  };
-
-  const handleCreateAssignment = (memberId: number, targetType: string, targetId: number) => {
-    createAssignmentMutation.mutate({ memberId, targetType, targetId });
-  };
-
-  const handleRemoveAssignment = (memberId: number, assignmentId: number) => {
-    removeAssignmentMutation.mutate({ memberId, assignmentId });
-  };
-
-  const handleCreateBulkAssignment = (memberId: number, assignments: { targetType: string; targetId: number }[]) => {
-    createBulkAssignmentMutation.mutate({ memberId, assignments });
   };
 
   const sectionLabelStyle: React.CSSProperties = {
@@ -230,173 +194,100 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                 key={member.id}
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: spacing[1.5],
+                  alignItems: "center",
+                  justifyContent: "space-between",
                   padding: spacing[3],
                   borderRadius: radius.md,
                   border: `1px solid ${themeColors.borderDefault}`,
                   background: isLight ? "transparent" : "rgba(255,255,255,0.02)",
                 }}
               >
-                {/* Member row */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    gap: spacing[2.5],
                   }}
                 >
-                  <div
+                  {member.profilePicture ? (
+                    <img
+                      src={member.profilePicture}
+                      alt={member.username}
+                      style={{
+                        width: spacing[8],
+                        height: spacing[8],
+                        borderRadius: radius.full,
+                        objectFit: "cover",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: spacing[8],
+                        height: spacing[8],
+                        borderRadius: radius.full,
+                        background: colors.brand.primaryLight,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: colors.brand.primary,
+                        fontWeight: typography.fontWeight.bold,
+                        fontSize: typography.fontSize.xs,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {member.firstName && member.lastName
+                        ? `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`.toUpperCase()
+                        : member.username.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <span
+                      style={{
+                        fontSize: typography.fontSize.base,
+                        fontWeight: typography.fontWeight.semibold,
+                        color: cssVars.textMain,
+                        display: "block",
+                      }}
+                    >
+                      {board.boardType === 'TEAM' && member.firstName && member.lastName
+                        ? `${member.firstName} ${member.lastName}`
+                        : member.username}
+                    </span>
+                    {board.boardType === 'TEAM' && member.firstName && member.lastName && (
+                      <span
+                        style={{
+                          fontSize: typography.fontSize.xs,
+                          color: cssVars.textMuted,
+                        }}
+                      >
+                        @{member.username}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {isOwner && (
+                  <button
+                    onClick={() => handleRemoveMember(member)}
+                    title="Üyeyi kaldır"
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: spacing[2.5],
+                      justifyContent: "center",
+                      width: spacing[7],
+                      height: spacing[7],
+                      borderRadius: radius.md,
+                      border: `1px solid ${colors.semantic.danger}30`,
+                      background: "transparent",
+                      color: colors.semantic.danger,
+                      cursor: "pointer",
+                      transition: `all ${animation.duration.fast}`,
                     }}
                   >
-                    {member.profilePicture ? (
-                      <img
-                        src={member.profilePicture}
-                        alt={member.username}
-                        style={{
-                          width: spacing[8],
-                          height: spacing[8],
-                          borderRadius: radius.full,
-                          objectFit: "cover",
-                          flexShrink: 0,
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: spacing[8],
-                          height: spacing[8],
-                          borderRadius: radius.full,
-                          background: colors.brand.primaryLight,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: colors.brand.primary,
-                          fontWeight: typography.fontWeight.bold,
-                          fontSize: typography.fontSize.xs,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {member.firstName && member.lastName
-                          ? `${member.firstName.charAt(0)}${member.lastName.charAt(0)}`.toUpperCase()
-                          : member.username.substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <span
-                        style={{
-                          fontSize: typography.fontSize.base,
-                          fontWeight: typography.fontWeight.semibold,
-                          color: cssVars.textMain,
-                          display: "block",
-                        }}
-                      >
-                        {board.boardType === 'TEAM' && member.firstName && member.lastName
-                          ? `${member.firstName} ${member.lastName}`
-                          : member.username}
-                      </span>
-                      {board.boardType === 'TEAM' && member.firstName && member.lastName && (
-                        <span
-                          style={{
-                            fontSize: typography.fontSize.xs,
-                            color: cssVars.textMuted,
-                          }}
-                        >
-                          @{member.username}
-                        </span>
-                      )}
-                      {member.assignments && member.assignments.length > 0 && (
-                        <span
-                          style={{
-                            fontSize: typography.fontSize.xs,
-                            color: cssVars.textMuted,
-                            marginLeft: board.boardType === 'TEAM' ? spacing[2] : undefined,
-                          }}
-                        >
-                          {board.boardType === 'TEAM' ? `· ${member.assignments.length} atama` : `${member.assignments.length} atama`}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {isOwner && (
-                    <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
-                      <button
-                        onClick={() => handleOpenAssign(member)}
-                        title="Atama yap"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: spacing[7],
-                          height: spacing[7],
-                          borderRadius: radius.md,
-                          border: `1px solid ${themeColors.borderDefault}`,
-                          background: "transparent",
-                          color: colors.brand.primary,
-                          cursor: "pointer",
-                          transition: `all ${animation.duration.fast}`,
-                        }}
-                      >
-                        <Target size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleRemoveMember(member)}
-                        title="Üyeyi kaldir"
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: spacing[7],
-                          height: spacing[7],
-                          borderRadius: radius.md,
-                          border: `1px solid ${colors.semantic.danger}30`,
-                          background: "transparent",
-                          color: colors.semantic.danger,
-                          cursor: "pointer",
-                          transition: `all ${animation.duration.fast}`,
-                        }}
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Assignments badges */}
-                {member.assignments && member.assignments.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: spacing[1],
-                      paddingTop: spacing[0.5],
-                    }}
-                  >
-                    {member.assignments.map((a) => (
-                      <span
-                        key={a.id}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: spacing[1],
-                          fontSize: typography.fontSize.xs,
-                          fontWeight: typography.fontWeight.medium,
-                          color: colors.brand.primary,
-                          background: colors.brand.primaryLight,
-                          padding: `${spacing[0.5]} ${spacing[2]}`,
-                          borderRadius: radius.full,
-                        }}
-                      >
-                        {TARGET_TYPE_ICONS[a.targetType]}
-                        {a.targetName || `#${a.targetId}`}
-                      </span>
-                    ))}
-                  </div>
+                    <X size={14} />
+                  </button>
                 )}
               </div>
             ))}
@@ -411,16 +302,6 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         onAddMember={handleAddMember}
         existingMembers={members}
         pendingMembers={board.pendingMembers || []}
-      />
-
-      <AssignMemberModal
-        isOpen={showAssignModal}
-        onClose={() => setShowAssignModal(false)}
-        member={selectedMember}
-        board={board}
-        onCreateAssignment={handleCreateAssignment}
-        onRemoveAssignment={handleRemoveAssignment}
-        onCreateBulkAssignment={handleCreateBulkAssignment}
       />
 
       <ConfirmationModal
