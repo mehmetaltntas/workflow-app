@@ -49,6 +49,14 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query("SELECT COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM")
     long countTeamBoardsByUserId(@Param("userId") Long userId);
 
+    // Profil istatistikleri: Bireysel panolarin status bazinda sayilari
+    @Query("SELECT b.status, COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.INDIVIDUAL GROUP BY b.status")
+    List<Object[]> countIndividualByStatusForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Takim panolarinin status bazinda sayilari
+    @Query("SELECT b.status, COUNT(b) FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM GROUP BY b.status")
+    List<Object[]> countTeamByStatusForUser(@Param("userId") Long userId);
+
     // Kullanicinin kendi TEAM tipindeki panolarini getir
     @EntityGraph(attributePaths = {"user"})
     @Query("SELECT b FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM")

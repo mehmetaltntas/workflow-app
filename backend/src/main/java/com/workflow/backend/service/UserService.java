@@ -415,6 +415,34 @@ public class UserService {
         }
         response.setBoardsByStatus(boardsByStatus);
 
+        // Bireysel panolarin status dagilimi
+        Map<String, Integer> individualBoardsByStatus = new LinkedHashMap<>();
+        individualBoardsByStatus.put("PLANLANDI", 0);
+        individualBoardsByStatus.put("DEVAM_EDIYOR", 0);
+        individualBoardsByStatus.put("TAMAMLANDI", 0);
+        individualBoardsByStatus.put("DURDURULDU", 0);
+        individualBoardsByStatus.put("BIRAKILDI", 0);
+        for (Object[] row : boardRepository.countIndividualByStatusForUser(targetUserId)) {
+            String status = (String) row[0];
+            int count = ((Long) row[1]).intValue();
+            individualBoardsByStatus.put(status, count);
+        }
+        response.setIndividualBoardsByStatus(individualBoardsByStatus);
+
+        // Takim panolarinin status dagilimi
+        Map<String, Integer> teamBoardsByStatus = new LinkedHashMap<>();
+        teamBoardsByStatus.put("PLANLANDI", 0);
+        teamBoardsByStatus.put("DEVAM_EDIYOR", 0);
+        teamBoardsByStatus.put("TAMAMLANDI", 0);
+        teamBoardsByStatus.put("DURDURULDU", 0);
+        teamBoardsByStatus.put("BIRAKILDI", 0);
+        for (Object[] row : boardRepository.countTeamByStatusForUser(targetUserId)) {
+            String status = (String) row[0];
+            int count = ((Long) row[1]).intValue();
+            teamBoardsByStatus.put(status, count);
+        }
+        response.setTeamBoardsByStatus(teamBoardsByStatus);
+
         // Liste istatistikleri
         List<Object[]> listStatsResult = taskListRepository.countStatsForUser(targetUserId);
         Object[] listStats = listStatsResult.isEmpty() ? new Object[]{0L, 0L} : listStatsResult.get(0);
@@ -499,6 +527,7 @@ public class UserService {
             if (!Boolean.TRUE.equals(settings.getShowBoardStats())) {
                 response.setTotalBoards(0);
                 response.setBoardsByStatus(null);
+                response.setIndividualBoardsByStatus(null);
             }
             if (!Boolean.TRUE.equals(settings.getShowListStats())) {
                 response.setTotalLists(0);
@@ -514,6 +543,7 @@ public class UserService {
             }
             if (!Boolean.TRUE.equals(settings.getShowTeamBoardStats())) {
                 response.setTeamBoardCount(0);
+                response.setTeamBoardsByStatus(null);
             }
             if (!Boolean.TRUE.equals(settings.getShowTopCategories())) {
                 response.setTopCategories(List.of());

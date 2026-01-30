@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import {
   Users,
+  User,
   Lock,
   AlertCircle,
   LayoutDashboard,
@@ -408,8 +409,8 @@ const UserProfilePage = () => {
               gap: spacing[6],
             }}
           >
-            {/* Board Status Distribution */}
-            {(!isPrivateMode || ps?.showBoardStats) && stats.boardsByStatus && (
+            {/* Bireysel Panolar */}
+            {(!isPrivateMode || ps?.showBoardStats) && stats.individualBoardsByStatus && (
             <div
               style={{
                 background: cssVars.bgCard,
@@ -430,11 +431,20 @@ const UserProfilePage = () => {
                   gap: spacing[2],
                 }}
               >
-                <LayoutDashboard size={20} />
-                Pano Durumları
+                <User size={20} />
+                Bireysel Panolar
+                <span
+                  style={{
+                    fontSize: typography.fontSize.base,
+                    fontWeight: typography.fontWeight.medium,
+                    color: cssVars.textMuted,
+                  }}
+                >
+                  ({stats.totalBoards - stats.teamBoardCount})
+                </span>
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-                {Object.entries(stats.boardsByStatus).map(([status, count]) => (
+                {Object.entries(stats.individualBoardsByStatus).map(([status, count]) => (
                   <div
                     key={status}
                     style={{
@@ -479,8 +489,8 @@ const UserProfilePage = () => {
             </div>
             )}
 
-            {/* Team Board Stats */}
-            {(!isPrivateMode || ps?.showTeamBoardStats) && stats.teamBoardCount > 0 && (
+            {/* Ekip Panoları */}
+            {(!isPrivateMode || ps?.showTeamBoardStats) && stats.teamBoardsByStatus && stats.teamBoardCount > 0 && (
               <div
                 style={{
                   background: cssVars.bgCard,
@@ -502,49 +512,59 @@ const UserProfilePage = () => {
                   }}
                 >
                   <Users size={20} />
-                  Ekip Panosu
+                  Ekip Panoları
+                  <span
+                    style={{
+                      fontSize: typography.fontSize.base,
+                      fontWeight: typography.fontWeight.medium,
+                      color: cssVars.textMuted,
+                    }}
+                  >
+                    ({stats.teamBoardCount})
+                  </span>
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: `${spacing[3]} ${spacing[4]}`,
-                      background: cssVars.bgHover,
-                      borderRadius: radius.lg,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.brand.primary }} />
-                      <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
-                        Ekip Panoları
+                  {Object.entries(stats.teamBoardsByStatus).map(([status, count]) => (
+                    <div
+                      key={status}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: `${spacing[3]} ${spacing[4]}`,
+                        background: cssVars.bgHover,
+                        borderRadius: radius.lg,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+                        <div
+                          style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: radius.full,
+                            background: STATUS_COLORS[status],
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.lg,
+                            color: cssVars.textMain,
+                          }}
+                        >
+                          {STATUS_LABELS[status]}
+                        </span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: typography.fontSize.xl,
+                          fontWeight: typography.fontWeight.semibold,
+                          color: cssVars.textMain,
+                        }}
+                      >
+                        {count}
                       </span>
                     </div>
-                    <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>
-                      {stats.teamBoardCount}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: `${spacing[3]} ${spacing[4]}`,
-                      background: cssVars.bgHover,
-                      borderRadius: radius.lg,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-                      <div style={{ width: "10px", height: "10px", borderRadius: radius.full, background: colors.semantic.info }} />
-                      <span style={{ fontSize: typography.fontSize.lg, color: cssVars.textMain }}>
-                        Bireysel Panolar
-                      </span>
-                    </div>
-                    <span style={{ fontSize: typography.fontSize.xl, fontWeight: typography.fontWeight.semibold, color: cssVars.textMain }}>
-                      {stats.totalBoards - stats.teamBoardCount}
-                    </span>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}

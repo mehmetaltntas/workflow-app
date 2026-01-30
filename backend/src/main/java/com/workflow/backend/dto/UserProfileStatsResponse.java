@@ -12,6 +12,8 @@ public class UserProfileStatsResponse {
 
     private int totalBoards;
     private Map<String, Integer> boardsByStatus; // PLANLANDI, DEVAM_EDIYOR, TAMAMLANDI, DURDURULDU, BIRAKILDI
+    private Map<String, Integer> individualBoardsByStatus; // Bireysel panolarin status dagilimi
+    private Map<String, Integer> teamBoardsByStatus; // Takim panolarinin status dagilimi
     private int totalLists;
     private int completedLists;
     private int totalTasks;

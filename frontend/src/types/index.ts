@@ -224,15 +224,19 @@ export interface Connection extends HateoasModel {
 }
 
 // Kullanici profil istatistikleri
+export interface BoardStatusCounts {
+  PLANLANDI: number;
+  DEVAM_EDIYOR: number;
+  TAMAMLANDI: number;
+  DURDURULDU: number;
+  BIRAKILDI: number;
+}
+
 export interface UserProfileStats {
   totalBoards: number;
-  boardsByStatus: {
-    PLANLANDI: number;
-    DEVAM_EDIYOR: number;
-    TAMAMLANDI: number;
-    DURDURULDU: number;
-    BIRAKILDI: number;
-  };
+  boardsByStatus: BoardStatusCounts;
+  individualBoardsByStatus: BoardStatusCounts | null;
+  teamBoardsByStatus: BoardStatusCounts | null;
   totalLists: number;
   completedLists: number;
   totalTasks: number;
