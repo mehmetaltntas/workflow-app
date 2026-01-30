@@ -27,7 +27,6 @@ const HomePage = () => {
   const isLight = theme === 'light';
 
   const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
-  const unpinBoard = useUIStore((state) => state.unpinBoard);
   const togglePinBoard = useUIStore((state) => state.togglePinBoard);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
@@ -169,6 +168,9 @@ const HomePage = () => {
             ? () => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })
             : () => handleShowInfo(board)
           }
+          onTogglePin={() => togglePinBoard(board.id)}
+          isPinned={pinnedBoardIds.includes(board.id)}
+          canPin={pinnedBoardIds.length < MAX_PINNED_BOARDS}
           viewMode={viewMode === 'list' ? 'list' : 'grid'}
           accentColor={colors.assigned.primary}
         />
