@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +41,7 @@ public class BoardService {
     private final AuthorizationService authorizationService;
     private final LabelService labelService;
     private final ConnectionService connectionService;
+    private final CacheManager cacheManager;
 
     // PANO OLUŞTURMA
     @Transactional
@@ -85,6 +87,8 @@ public class BoardService {
 
         // 5. Varsayılan etiketleri oluştur (Kolay, Orta, Zor)
         labelService.createDefaultLabelsForBoard(savedBoard);
+
+        evictProfileStatsCache(user.getUsername());
 
         // 6. Response'a çevir
         return mapToResponse(savedBoard);
@@ -369,7 +373,14 @@ public class BoardService {
     public void deleteBoard(Long boardId) {
         // Kullanıcı sadece kendi panosunu silebilir
         authorizationService.verifyBoardOwnership(boardId);
+
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", boardId));
+        String username = board.getUser().getUsername();
+
         boardRepository.deleteById(boardId);
+
+        evictProfileStatsCache(username);
     }
 
     // PANO ADI GÜNCELLE
@@ -403,6 +414,9 @@ public class BoardService {
         }
 
         Board savedBoard = boardRepository.save(board);
+
+        evictProfileStatsCache(board.getUser().getUsername());
+
         return mapToResponse(savedBoard);
     }
 
@@ -416,7 +430,17 @@ public class BoardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", boardId));
         board.setStatus(newStatus);
         Board savedBoard = boardRepository.save(board);
+
+        evictProfileStatsCache(board.getUser().getUsername());
+
         return mapToResponse(savedBoard);
+    }
+
+    private void evictProfileStatsCache(String username) {
+        var cache = cacheManager.getCache("profileStats");
+        if (cache != null && username != null) {
+            cache.evict(username.toLowerCase(Locale.ROOT));
+        }
     }
 
     // YENİ: Slug üretici yardımcı metot

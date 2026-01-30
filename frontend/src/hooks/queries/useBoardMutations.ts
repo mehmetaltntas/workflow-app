@@ -16,6 +16,7 @@ interface BoardListResponse {
 export const useCreateBoard = () => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.userId);
+  const username = useAuthStore((state) => state.username);
 
   return useMutation({
     mutationFn: async (data: {
@@ -36,6 +37,9 @@ export const useCreateBoard = () => {
     onSuccess: () => {
       // Invalidate and refetch boards list
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (username) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
+      }
       toast.success('Pano oluşturuldu');
     },
     onError: (error) => {
@@ -56,6 +60,7 @@ export const useCreateBoard = () => {
 export const useUpdateBoard = () => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.userId);
+  const username = useAuthStore((state) => state.username);
 
   return useMutation({
     mutationFn: async ({
@@ -122,6 +127,9 @@ export const useUpdateBoard = () => {
     onSettled: () => {
       // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (username) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
+      }
     },
   });
 };
@@ -132,6 +140,7 @@ export const useUpdateBoard = () => {
 export const useDeleteBoard = () => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.userId);
+  const username = useAuthStore((state) => state.username);
 
   return useMutation({
     mutationFn: async (boardId: number) => {
@@ -176,6 +185,9 @@ export const useDeleteBoard = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (username) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
+      }
     },
   });
 };
@@ -186,6 +198,7 @@ export const useDeleteBoard = () => {
 export const useUpdateBoardStatus = () => {
   const queryClient = useQueryClient();
   const userId = useAuthStore((state) => state.userId);
+  const username = useAuthStore((state) => state.username);
 
   return useMutation({
     mutationFn: async ({
@@ -233,6 +246,9 @@ export const useUpdateBoardStatus = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (username) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
+      }
     },
   });
 };
