@@ -4,7 +4,6 @@ import { useAssignedBoardsQuery, useMyTeamBoardsQuery } from "../hooks/queries/u
 import {
   Users,
   ArrowLeft,
-  Clock,
   LayoutDashboard,
   ChevronRight,
 } from "lucide-react";
@@ -12,23 +11,11 @@ import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
-import { SortDropdown, type SortField, type SortDirection } from "../components/ui/SortDropdown";
+import { StatusFilterDropdown } from "../components/ui/StatusFilterDropdown";
 import { colors } from '../styles/tokens';
-import { STATUS_COLORS, STATUS_LABELS } from "../constants";
 import "./AssignedBoardsPage.css";
 
-type StatusFilter = "DEVAM_EDIYOR" | "PLANLANDI" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI" | "HEPSI";
-
 const BOARDS_PER_SECTION = 10;
-
-const STATUS_FILTER_OPTIONS: { key: StatusFilter; label: string }[] = [
-  { key: "DEVAM_EDIYOR", label: "Devam Ediyor" },
-  { key: "PLANLANDI", label: "Planlandı" },
-  { key: "TAMAMLANDI", label: "Tamamlandı" },
-  { key: "DURDURULDU", label: "Beklemede" },
-  { key: "BIRAKILDI", label: "İptal Edildi" },
-  { key: "HEPSI", label: "Hepsi" },
-];
 
 const TeamPage = () => {
   const navigate = useNavigate();
@@ -36,9 +23,7 @@ const TeamPage = () => {
   const { data: myTeamBoards = [], isLoading: loadingTeam } = useMyTeamBoardsQuery();
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortField, setSortField] = useState<SortField>('alphabetic');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("DEVAM_EDIYOR");
+  const [statusFilter, setStatusFilter] = useState("DEVAM_EDIYOR");
 
   const loading = loadingAssigned || loadingTeam;
 
@@ -49,50 +34,30 @@ const TeamPage = () => {
     }
   }, [loading]);
 
-  const sortBoards = (boards: Board[]) => {
-    return [...boards].sort((a, b) => {
-      let comparison = 0;
-      switch (sortField) {
-        case 'alphabetic':
-          comparison = a.name.localeCompare(b.name, 'tr');
-          break;
-        case 'date':
-          comparison = a.id - b.id;
-          break;
-        case 'deadline':
-          if (!a.deadline && !b.deadline) comparison = 0;
-          else if (!a.deadline) comparison = 1;
-          else if (!b.deadline) comparison = -1;
-          else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-          break;
-      }
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-  };
-
   const filterByStatus = (boards: Board[]) => {
-    if (statusFilter === "HEPSI") return boards;
+    if (statusFilter === "ALL") return boards;
     return boards.filter(b => (b.status || "PLANLANDI") === statusFilter);
   };
 
-  // Filtrelenmiş ve sıralanmış panolar
+  // Dropdown için status sayıları (her iki bölümün toplamı)
+  const statusCounts = useMemo(() => {
+    const allBoards = [...myTeamBoards, ...assignedBoards];
+    const counts: Record<string, number> = {};
+    allBoards.forEach(b => {
+      const status = b.status || "PLANLANDI";
+      counts[status] = (counts[status] || 0) + 1;
+    });
+    return counts;
+  }, [myTeamBoards, assignedBoards]);
+
   const filteredCreated = useMemo(
-    () => sortBoards(filterByStatus(myTeamBoards)),
-    [myTeamBoards, statusFilter, sortField, sortDirection]
+    () => filterByStatus(myTeamBoards),
+    [myTeamBoards, statusFilter]
   );
   const filteredJoined = useMemo(
-    () => sortBoards(filterByStatus(assignedBoards)),
-    [assignedBoards, statusFilter, sortField, sortDirection]
+    () => filterByStatus(assignedBoards),
+    [assignedBoards, statusFilter]
   );
-
-  // İstatistikler
-  const stats = useMemo(() => {
-    const totalAssigned = assignedBoards.length;
-    const totalTeam = myTeamBoards.length;
-    const activeAssigned = assignedBoards.filter(b => b.status === "DEVAM_EDIYOR").length;
-    const activeTeam = myTeamBoards.filter(b => b.status === "DEVAM_EDIYOR").length;
-    return { totalAssigned, totalTeam, total: totalAssigned + totalTeam, active: activeAssigned + activeTeam };
-  }, [assignedBoards, myTeamBoards]);
 
   const renderBoardList = (boards: Board[], fromPath: string) => (
     <div className={viewMode === 'list' ? "assigned-page__card-list" : "assigned-page__card-grid"}>
@@ -201,64 +166,15 @@ const TeamPage = () => {
               </div>
             </div>
 
-            {/* Stats & Controls */}
+            {/* Controls */}
             <div className="assigned-page__controls">
-              <div className="assigned-page__stat-card assigned-page__stat-card--total">
-                <Users size={18} color={colors.assigned.primary} />
-                <div>
-                  <div className="assigned-page__stat-value" style={{ color: colors.assigned.primary }}>
-                    {stats.total}
-                  </div>
-                  <div className="assigned-page__stat-label">Toplam</div>
-                </div>
-              </div>
-
-              <div className="assigned-page__stat-card assigned-page__stat-card--active">
-                <Clock size={18} color={colors.status.inProgress} />
-                <div>
-                  <div className="assigned-page__stat-value" style={{ color: colors.status.inProgress }}>
-                    {stats.active}
-                  </div>
-                  <div className="assigned-page__stat-label">Aktif</div>
-                </div>
-              </div>
-
               <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
-              <SortDropdown
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSortFieldChange={setSortField}
-                onSortDirectionChange={setSortDirection}
+              <StatusFilterDropdown
+                value={statusFilter}
+                onChange={setStatusFilter}
+                counts={statusCounts}
               />
             </div>
-          </div>
-
-          {/* Status Filter */}
-          <div className="team-page__filters">
-            {STATUS_FILTER_OPTIONS.map(({ key, label }) => {
-              const isActive = statusFilter === key;
-              const statusColor = key !== "HEPSI" ? STATUS_COLORS[key] : colors.assigned.primary;
-              return (
-                <button
-                  key={key}
-                  className={`team-page__filter-chip ${isActive ? "team-page__filter-chip--active" : ""}`}
-                  onClick={() => setStatusFilter(key)}
-                  style={isActive ? {
-                    borderColor: statusColor,
-                    background: `${statusColor}15`,
-                    color: statusColor,
-                  } : undefined}
-                >
-                  {key !== "HEPSI" && (
-                    <span
-                      className="team-page__filter-dot"
-                      style={{ background: statusColor }}
-                    />
-                  )}
-                  {label}
-                </button>
-              );
-            })}
           </div>
         </div>
 

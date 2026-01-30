@@ -207,47 +207,6 @@
   justify-content: center;
 }
 
-/* ===== Team Page Filter Styles ===== */
-.team-page__filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.team-page__filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 200ms ease;
-  white-space: nowrap;
-}
-
-.team-page__filter-chip:hover {
-  border-color: var(--border-strong);
-  color: var(--text-main);
-  background: var(--bg-hover);
-}
-
-.team-page__filter-chip--active {
-  font-weight: 600;
-}
-
-.team-page__filter-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
-
 /* ===== Team Page Section Styles ===== */
 .team-page__section {
   margin-bottom: 48px;
