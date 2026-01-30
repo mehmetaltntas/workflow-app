@@ -75,14 +75,26 @@ public class BoardService {
         board.setUser(user); // "Bu panonun sahibi bu kullanıcıdır" dedik.
 
         // 4. Kaydet (race condition koruması: slug çakışırsa rastgele suffix ile tekrar dene)
-        Board savedBoard;
-        try {
-            savedBoard = boardRepository.save(board);
-        } catch (DataIntegrityViolationException e) {
-            // Retry with random suffix
-            String retrySlug = slug + "-" + UUID.randomUUID().toString().substring(0, 6);
-            board.setSlug(retrySlug);
-            savedBoard = boardRepository.save(board);
+        Board savedBoard = null;
+        int maxRetries = 3;
+        DataIntegrityViolationException lastException = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                savedBoard = boardRepository.save(board);
+                lastException = null;
+                break;
+            } catch (DataIntegrityViolationException e) {
+                lastException = e;
+                if (attempt < maxRetries) {
+                    String retrySlug = slug + "-" + UUID.randomUUID().toString().substring(0, 6);
+                    board.setSlug(retrySlug);
+                } else {
+                    throw new DuplicateResourceException("Pano oluşturulamadı, lütfen tekrar deneyin.");
+                }
+            }
+        }
+        if (lastException != null) {
+            throw new DuplicateResourceException("Pano oluşturulamadı, lütfen tekrar deneyin.");
         }
 
         // 5. Varsayılan etiketleri oluştur (Kolay, Orta, Zor)
@@ -185,7 +197,17 @@ public class BoardService {
                 connectedUserIds = connectionService.getConnectedUserIds(currentUserId, memberUserIds);
             }
 
+            // Batch: tüm üyelerin profil fotoğraflarını tek sorguda kontrol et
+            List<Long> allMemberUserIds = boardMembers.stream()
+                    .map(m -> m.getUser().getId()).toList();
+            Set<Long> membersWithPicture = new java.util.HashSet<>();
+            if (!allMemberUserIds.isEmpty()) {
+                profilePictureRepository.findFilePathsByUserIds(allMemberUserIds)
+                        .forEach(row -> membersWithPicture.add((Long) row[0]));
+            }
+
             final Set<Long> finalConnectedUserIds = connectedUserIds;
+            final Set<Long> finalMembersWithPicture = membersWithPicture;
             List<BoardMemberDto> memberDtos = boardMembers.stream().map(member -> {
                 BoardMemberDto memberDto = new BoardMemberDto();
                 memberDto.setId(member.getId());
@@ -203,8 +225,8 @@ public class BoardService {
                     memberDto.setFirstName(member.getUser().getFirstName());
                     memberDto.setLastName(member.getUser().getLastName());
                     memberDto.setProfilePicture(
-                            profilePictureRepository.findFilePathByUserId(memberUserId)
-                                    .map(fp -> "/users/" + memberUserId + "/profile-picture").orElse(null));
+                            finalMembersWithPicture.contains(memberUserId)
+                                    ? "/users/" + memberUserId + "/profile-picture" : null);
                 }
                 // showProfile false ise userId, firstName, lastName, profilePicture null kalır
 
@@ -370,6 +392,7 @@ public class BoardService {
     }
 
     // PANO SİL
+    @Transactional
     public void deleteBoard(Long boardId) {
         // Kullanıcı sadece kendi panosunu silebilir
         authorizationService.verifyBoardOwnership(boardId);

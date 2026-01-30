@@ -17,7 +17,7 @@ public class TaskListDto {
     @Size(min = 1, max = 100, message = "Liste adı 1-100 karakter arasında olmalıdır")
     private String name;
 
-    @Size(max = 500, message = "Açıklama en fazla 500 karakter olabilir")
+    @Size(max = 100, message = "Açıklama en fazla 100 karakter olabilir")
     private String description;
 
     @URL(message = "Geçerli bir URL giriniz")

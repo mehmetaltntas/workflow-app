@@ -103,7 +103,9 @@ public class PasswordResetService {
             return false;
         }
 
-        if (!token.getCode().equals(code)) {
+        if (!java.security.MessageDigest.isEqual(
+                token.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                code.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
             token.setAttempts(token.getAttempts() + 1);
             tokenRepository.save(token);
             logger.warn("Kod hatali: {} (deneme: {})", email, token.getAttempts());

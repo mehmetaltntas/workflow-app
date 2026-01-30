@@ -21,7 +21,6 @@ public class User {
     private Long id;
 
     @Version
-    @Column(nullable = false)
     private Long version = 0L;
 
     @Column(unique = true, nullable = false) // Aynı username'den bir daha olamaz ve boş olamaz

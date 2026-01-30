@@ -237,6 +237,9 @@ public class UserService {
         // Yeni şifre güncelle
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+
+        // ÖNEMLİ: Mevcut refresh token'ları iptal et
+        refreshTokenService.deleteAllByUsername(user.getUsername());
     }
 
     // KULLANICI ARAMA
@@ -247,11 +250,23 @@ public class UserService {
         // Max 10 sonuc
         List<User> limited = users.size() > 10 ? users.subList(0, 10) : users;
 
+        // Batch: tüm profil fotoğraflarını tek sorguda kontrol et
+        List<Long> userIds = limited.stream().map(User::getId).toList();
+        Set<Long> usersWithPicture = new java.util.HashSet<>();
+        if (!userIds.isEmpty()) {
+            profilePictureRepository.findFilePathsByUserIds(userIds)
+                    .forEach(row -> usersWithPicture.add((Long) row[0]));
+        }
+
         return limited.stream().map(user -> {
             UserSearchResponse response = new UserSearchResponse();
             response.setId(user.getId());
             response.setUsername(user.getUsername());
-            response.setProfilePicture(getProfilePictureUrl(user.getId()));
+            response.setProfilePicture(
+                usersWithPicture.contains(user.getId())
+                    ? "/users/" + user.getId() + "/profile-picture"
+                    : null
+            );
             return response;
         }).toList();
     }

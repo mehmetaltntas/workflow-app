@@ -23,7 +23,6 @@ public class Connection {
     private Long id;
 
     @Version
-    @Column(nullable = false)
     private Long version = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)

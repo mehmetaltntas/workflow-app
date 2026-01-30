@@ -48,7 +48,7 @@ public class JwtProperties {
     }
 
     public static class RefreshToken {
-        private long expiration = 604800000; // 7 days default
+        private long expiration = 259200000; // 3 days default (matches application.properties)
 
         public long getExpiration() {
             return expiration;

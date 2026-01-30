@@ -15,7 +15,6 @@ public class Subtask {
     private Long id;
 
     @Version
-    @Column(nullable = false)
     private Long version = 0L;
 
     @Column(nullable = false)

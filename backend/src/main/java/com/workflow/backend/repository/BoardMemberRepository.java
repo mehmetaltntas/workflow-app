@@ -27,7 +27,7 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
 
     void deleteByBoardIdAndUserId(Long boardId, Long userId);
 
-    @Query("SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
+    @Query("SELECT b FROM Board b JOIN FETCH b.user WHERE b IN (SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM)")
     List<Board> findAcceptedBoardsByUserId(@Param("userId") Long userId);
 
     @Query("SELECT COUNT(bm) FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.role = com.workflow.backend.entity.BoardMemberRole.MODERATOR")

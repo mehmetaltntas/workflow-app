@@ -15,7 +15,6 @@ public class UserPrivacySettings {
     private Long id;
 
     @Version
-    @Column(nullable = false)
     private Long version = 0L;
 
     @OneToOne(fetch = FetchType.LAZY)

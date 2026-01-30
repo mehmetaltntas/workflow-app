@@ -222,6 +222,78 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Optimistic lock çakışmalarını yakala (409 Conflict)
+     */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLockException(
+            org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+        logger.warn("Eşzamanlı güncelleme çakışması: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Çakışma Hatası",
+                "Bu kayıt başka bir kullanıcı tarafından güncellenmiş. Lütfen sayfayı yenileyip tekrar deneyin.",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
+     * Veri bütünlüğü ihlallerini yakala (409 Conflict)
+     */
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        logger.warn("Veri bütünlüğü hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Veri Çakışması",
+                "Bu işlem mevcut verilerle çakışıyor. Lütfen girdiğiniz bilgileri kontrol edin.",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
+     * Parametre tipi uyumsuzluklarını yakala (400 Bad Request)
+     */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        logger.warn("Parametre tipi hatası: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Geçersiz Parametre",
+                "'" + ex.getName() + "' parametresi geçersiz format içeriyor.",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
+     * Okunamayan istek gövdelerini yakala (400 Bad Request)
+     */
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+            org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        logger.warn("Okunamayan istek gövdesi: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Geçersiz İstek",
+                "İstek gövdesi geçerli bir JSON formatında değil.",
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    /**
      * Genel RuntimeException'ları yakala (Fallback)
      */
     @ExceptionHandler(RuntimeException.class)

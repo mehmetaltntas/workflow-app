@@ -227,7 +227,7 @@ public class AuthController {
             refreshCookie.setHttpOnly(true);
             refreshCookie.setSecure(secure);
             refreshCookie.setPath("/auth");
-            refreshCookie.setMaxAge(604800); // 7 days (matches refresh token expiry)
+            refreshCookie.setMaxAge(259200); // 3 days (matches jwt.refresh-token.expiration)
             refreshCookie.setAttribute("SameSite", "Lax");
             response.addCookie(refreshCookie);
         }
