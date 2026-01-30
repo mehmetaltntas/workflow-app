@@ -12,10 +12,14 @@ import BoardCard from "../components/BoardCard";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
 import { StatusFilterDropdown } from "../components/ui/StatusFilterDropdown";
+import { STATUS_LABELS, STATUS_COLORS } from "../constants";
 import { colors } from '../styles/tokens';
 import "./AssignedBoardsPage.css";
 
 const BOARDS_PER_SECTION = 10;
+const BOARDS_PER_STATUS_IN_ALL = 5;
+
+const STATUS_ORDER = ["DEVAM_EDIYOR", "PLANLANDI", "TAMAMLANDI", "DURDURULDU", "BIRAKILDI"];
 
 const TeamPage = () => {
   const navigate = useNavigate();
@@ -59,9 +63,19 @@ const TeamPage = () => {
     [assignedBoards, statusFilter]
   );
 
-  const renderBoardList = (boards: Board[], fromPath: string) => (
+  const groupByStatus = (boards: Board[]) => {
+    const grouped: Record<string, Board[]> = {};
+    boards.forEach(board => {
+      const status = board.status || "PLANLANDI";
+      if (!grouped[status]) grouped[status] = [];
+      grouped[status].push(board);
+    });
+    return grouped;
+  };
+
+  const renderBoardCards = (boards: Board[], fromPath: string, limit: number) => (
     <div className={viewMode === 'list' ? "assigned-page__card-list" : "assigned-page__card-grid"}>
-      {boards.slice(0, BOARDS_PER_SECTION).map((board, cardIndex) => (
+      {boards.slice(0, limit).map((board, cardIndex) => (
         <div
           key={board.id}
           className={`assigned-page__card-wrapper ${isVisible ? "assigned-page__card-wrapper--visible" : "assigned-page__card-wrapper--hidden"}`}
@@ -79,6 +93,38 @@ const TeamPage = () => {
       ))}
     </div>
   );
+
+  const renderBoardList = (boards: Board[], fromPath: string) => {
+    if (statusFilter === "ALL") {
+      const grouped = groupByStatus(boards);
+      const statusesWithBoards = STATUS_ORDER.filter(s => grouped[s]?.length > 0);
+      if (statusesWithBoards.length === 0) return null;
+      return (
+        <div className="team-page__status-groups">
+          {statusesWithBoards.map(status => (
+            <div key={status} className="team-page__status-group">
+              <div className="team-page__status-subheader">
+                <span
+                  className="team-page__status-dot"
+                  style={{ background: STATUS_COLORS[status] }}
+                />
+                <h3 className="team-page__status-subtitle">{STATUS_LABELS[status]}</h3>
+                <span className="assigned-page__group-count">{grouped[status].length}</span>
+                {grouped[status].length > BOARDS_PER_STATUS_IN_ALL && (
+                  <button className="team-page__more-btn" onClick={() => {}}>
+                    Daha Fazla
+                    <ChevronRight size={16} />
+                  </button>
+                )}
+              </div>
+              {renderBoardCards(grouped[status], fromPath, BOARDS_PER_STATUS_IN_ALL)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return renderBoardCards(boards, fromPath, BOARDS_PER_SECTION);
+  };
 
   if (loading) {
     return (
@@ -186,7 +232,7 @@ const TeamPage = () => {
             </div>
             <h2 className="team-page__section-title">Oluşturduklarım</h2>
             <span className="assigned-page__group-count">{filteredCreated.length}</span>
-            {filteredCreated.length > BOARDS_PER_SECTION && (
+            {statusFilter !== "ALL" && filteredCreated.length > BOARDS_PER_SECTION && (
               <button className="team-page__more-btn" onClick={() => {}}>
                 Daha Fazla
                 <ChevronRight size={16} />
@@ -210,7 +256,7 @@ const TeamPage = () => {
             </div>
             <h2 className="team-page__section-title">Katıldıklarım</h2>
             <span className="assigned-page__group-count">{filteredJoined.length}</span>
-            {filteredJoined.length > BOARDS_PER_SECTION && (
+            {statusFilter !== "ALL" && filteredJoined.length > BOARDS_PER_SECTION && (
               <button className="team-page__more-btn" onClick={() => {}}>
                 Daha Fazla
                 <ChevronRight size={16} />

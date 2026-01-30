@@ -276,3 +276,38 @@
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* Status Sub-groups (for "All" filter) */
+.team-page__status-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.team-page__status-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.team-page__status-subheader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.team-page__status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.team-page__status-subtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
