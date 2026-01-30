@@ -54,7 +54,7 @@ public class UserService {
     }
 
     // KAYIT OLMA İŞLEMİ
-    public UserResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
         // Kullanici adi ve email her zaman kucuk harfle saklanir
         String username = request.getUsername().toLowerCase();
         String email = request.getEmail().toLowerCase();
@@ -95,14 +95,16 @@ public class UserService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
 
         // 6. Response DTO'ya cevirip don (yeni kayit, profil resmi yok)
-        UserResponse response = mapToResponse(savedUser, null);
-        response.setToken(accessToken);
-        response.setRefreshToken(refreshToken.getToken());
-        return response;
+        UserResponse userResponse = mapToResponse(savedUser, null);
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setUser(userResponse);
+        authResponse.setToken(accessToken);
+        authResponse.setRefreshToken(refreshToken.getToken());
+        return authResponse;
     }
 
     // GIRIS YAPMA ISLEMI
-    public UserResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         // 1. Kullanıcıyı bul (case-insensitive)
         User user = userRepository.findByUsernameIgnoreCase(request.getUsername());
 
@@ -130,10 +132,12 @@ public class UserService {
 
         // 5. Giris basarili, bilgileri ve token'lari don
         String profilePictureUrl = getProfilePictureUrl(user.getId());
-        UserResponse response = mapToResponse(user, profilePictureUrl);
-        response.setToken(accessToken);
-        response.setRefreshToken(refreshToken.getToken());
-        return response;
+        UserResponse userResponse = mapToResponse(user, profilePictureUrl);
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setUser(userResponse);
+        authResponse.setToken(accessToken);
+        authResponse.setRefreshToken(refreshToken.getToken());
+        return authResponse;
     }
 
     // KULLANICI BILGILERINI GETIR
@@ -151,7 +155,7 @@ public class UserService {
 
     // PROFIL GUNCELLEME ISLEMI
     @Transactional
-    public UserResponse updateProfile(Long id, UpdateProfileRequest request) {
+    public AuthResponse updateProfile(Long id, UpdateProfileRequest request) {
         // Kullanici sadece kendi profilini guncelleyebilir
         authorizationService.verifyUserOwnership(id);
 
@@ -202,17 +206,20 @@ public class UserService {
 
         // Profil resmi URL'ini al
         String profilePictureUrl = getProfilePictureUrl(id);
-        UserResponse response = mapToResponse(savedUser, profilePictureUrl);
+        UserResponse userResponse = mapToResponse(savedUser, profilePictureUrl);
+
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setUser(userResponse);
 
         // Kullanici adi degistiyse yeni token'lar uret
         if (usernameChanged) {
             String accessToken = jwtService.generateAccessToken(savedUser.getUsername(), savedUser.getId());
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
-            response.setToken(accessToken);
-            response.setRefreshToken(refreshToken.getToken());
+            authResponse.setToken(accessToken);
+            authResponse.setRefreshToken(refreshToken.getToken());
         }
 
-        return response;
+        return authResponse;
     }
 
     // ŞİFRE GÜNCELLEME İŞLEMİ
@@ -249,6 +256,31 @@ public class UserService {
                 org.springframework.data.domain.PageRequest.of(0, 10));
 
         // Batch: tüm profil fotoğraflarını tek sorguda kontrol et
+        List<Long> userIds = users.stream().map(User::getId).toList();
+        Set<Long> usersWithPicture = new java.util.HashSet<>();
+        if (!userIds.isEmpty()) {
+            profilePictureRepository.findFilePathsByUserIds(userIds)
+                    .forEach(row -> usersWithPicture.add((Long) row[0]));
+        }
+
+        return users.stream().map(user -> {
+            UserSearchResponse response = new UserSearchResponse();
+            response.setId(user.getId());
+            response.setUsername(user.getUsername());
+            response.setProfilePicture(
+                usersWithPicture.contains(user.getId())
+                    ? "/users/" + user.getId() + "/profile-picture"
+                    : null
+            );
+            return response;
+        }).toList();
+    }
+
+    public List<UserSearchResponse> searchUsers(String query, int limit) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        List<User> users = userRepository.searchByUsername(query, currentUserId,
+                org.springframework.data.domain.PageRequest.of(0, limit));
+
         List<Long> userIds = users.stream().map(User::getId).toList();
         Set<Long> usersWithPicture = new java.util.HashSet<>();
         if (!userIds.isEmpty()) {
@@ -691,7 +723,7 @@ public class UserService {
         response.setLastName(user.getLastName());
         response.setProfilePicture(profilePictureUrl);
         response.setDeletionScheduledAt(user.getDeletionScheduledAt());
-        // Token burada set edilmiyor, yukarida metot icinde ediliyor.
+        // Token bilgileri AuthResponse icinde donuluyor, UserResponse'da token alani yok.
         return response;
     }
 }

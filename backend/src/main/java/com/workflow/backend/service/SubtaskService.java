@@ -2,6 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.CreateSubtaskRequest;
 import com.workflow.backend.dto.SubtaskDto;
+import com.workflow.backend.dto.UpdateSubtaskRequest;
 import com.workflow.backend.entity.AssignmentTargetType;
 import com.workflow.backend.entity.Subtask;
 import com.workflow.backend.entity.Task;
@@ -71,7 +72,7 @@ public class SubtaskService {
 
     // Alt görevi güncelle
     @Transactional
-    public SubtaskDto updateSubtask(Long subtaskId, SubtaskDto request) {
+    public SubtaskDto updateSubtask(Long subtaskId, UpdateSubtaskRequest request) {
         // Kullanıcı sadece kendi alt görevini güncelleyebilir
         authorizationService.verifySubtaskOwnership(subtaskId);
 

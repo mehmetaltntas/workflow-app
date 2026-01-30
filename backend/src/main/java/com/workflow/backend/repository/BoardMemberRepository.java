@@ -2,6 +2,8 @@ package com.workflow.backend.repository;
 
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.BoardMember;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,6 +31,10 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
 
     @Query("SELECT b FROM Board b JOIN FETCH b.user WHERE b IN (SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM)")
     List<Board> findAcceptedBoardsByUserId(@Param("userId") Long userId);
+
+    @Query(value = "SELECT b FROM Board b JOIN FETCH b.user WHERE b IN (SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM)",
+           countQuery = "SELECT COUNT(b) FROM Board b WHERE b IN (SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM)")
+    Page<Board> findAcceptedBoardsByUserId(@Param("userId") Long userId, Pageable pageable);
 
     @Query("SELECT COUNT(bm) FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.role = com.workflow.backend.entity.BoardMemberRole.MODERATOR")
     long countModeratorsByBoardId(@Param("boardId") Long boardId);

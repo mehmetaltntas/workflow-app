@@ -72,4 +72,21 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @EntityGraph(attributePaths = {"user"})
     @Query("SELECT b FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM")
     List<Board> findTeamBoardsByUserId(@Param("userId") Long userId);
+
+    // Paginated: Kullanicinin kendi TEAM tipindeki panolarini getir
+    @EntityGraph(attributePaths = {"user"})
+    @Query("SELECT b FROM Board b WHERE b.user.id = :userId AND b.boardType = com.workflow.backend.entity.BoardType.TEAM")
+    Page<Board> findTeamBoardsByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    // Filtered + Paginated board list
+    @EntityGraph(attributePaths = {"user"})
+    @Query("SELECT b FROM Board b WHERE b.user.id = :userId " +
+           "AND (:status IS NULL OR b.status = :status) " +
+           "AND (:category IS NULL OR b.category = :category) " +
+           "AND (:boardType IS NULL OR b.boardType = :boardType)")
+    Page<Board> findByUserIdFiltered(@Param("userId") Long userId,
+                                      @Param("status") String status,
+                                      @Param("category") String category,
+                                      @Param("boardType") com.workflow.backend.entity.BoardType boardType,
+                                      Pageable pageable);
 }

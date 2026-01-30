@@ -1,7 +1,7 @@
 package com.workflow.backend.controller;
 
-import com.workflow.backend.dto.AddBoardMemberRequest;
-import com.workflow.backend.dto.BoardMemberDto;
+import com.workflow.backend.dto.CreateBoardMemberRequest;
+import com.workflow.backend.dto.BoardMemberResponse;
 import com.workflow.backend.dto.BulkCreateAssignmentRequest;
 import com.workflow.backend.dto.CreateAssignmentRequest;
 import com.workflow.backend.dto.UpdateBoardMemberRoleRequest;
@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,21 +44,29 @@ public class BoardMemberController {
     })
     @GetMapping
     public ResponseEntity<CollectionModel<BoardMemberModel>> getMembers(
-            @Parameter(description = "Pano ID") @PathVariable Long boardId) {
-        List<BoardMemberDto> members = boardMemberService.getMembers(boardId);
-        List<BoardMemberModel> memberModels = members.stream()
+            @Parameter(description = "Pano ID") @PathVariable Long boardId,
+            @Parameter(description = "Sayfa numarası") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Sayfa boyutu") @RequestParam(defaultValue = "50") int size) {
+        List<BoardMemberResponse> members = boardMemberService.getMembers(boardId);
+
+        // Simple pagination via subList
+        int start = Math.min(page * size, members.size());
+        int end = Math.min(start + size, members.size());
+        List<BoardMemberResponse> pagedMembers = members.subList(start, end);
+
+        List<BoardMemberModel> memberModels = pagedMembers.stream()
                 .map(boardMemberAssembler::toModel)
                 .collect(Collectors.toList());
 
         CollectionModel<BoardMemberModel> collectionModel = CollectionModel.of(memberModels);
-        collectionModel.add(linkTo(methodOn(BoardMemberController.class).getMembers(boardId)).withSelfRel());
+        collectionModel.add(linkTo(methodOn(BoardMemberController.class).getMembers(boardId, page, size)).withSelfRel());
 
         return ResponseEntity.ok(collectionModel);
     }
 
     @Operation(summary = "Pano üyesi ekle", description = "Kabul edilmiş bağlantılardan panoya sorumlu kişi ekler")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Üye eklendi"),
+            @ApiResponse(responseCode = "201", description = "Üye eklendi"),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
             @ApiResponse(responseCode = "403", description = "Bu panoya üye ekleme yetkiniz yok"),
@@ -66,10 +75,10 @@ public class BoardMemberController {
     @PostMapping
     public ResponseEntity<BoardMemberModel> addMember(
             @Parameter(description = "Pano ID") @PathVariable Long boardId,
-            @Valid @RequestBody AddBoardMemberRequest request) {
-        BoardMemberDto result = boardMemberService.addMember(boardId, request.getUserId());
+            @Valid @RequestBody CreateBoardMemberRequest request) {
+        BoardMemberResponse result = boardMemberService.addMember(boardId, request.getUserId());
         BoardMemberModel model = boardMemberAssembler.toModel(result);
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Pano üyesini kaldır", description = "Panodan bir sorumlu kişiyi çıkarır")
@@ -100,14 +109,14 @@ public class BoardMemberController {
             @Parameter(description = "Pano ID") @PathVariable Long boardId,
             @Parameter(description = "Üye ID") @PathVariable Long memberId,
             @Valid @RequestBody UpdateBoardMemberRoleRequest request) {
-        BoardMemberDto result = boardMemberService.updateMemberRole(boardId, memberId, request.getRole());
+        BoardMemberResponse result = boardMemberService.updateMemberRole(boardId, memberId, request.getRole());
         BoardMemberModel model = boardMemberAssembler.toModel(result);
         return ResponseEntity.ok(model);
     }
 
     @Operation(summary = "Üyeye atama yap", description = "Üyeye liste/görev/alt görev atama yapar")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Atama yapıldı"),
+            @ApiResponse(responseCode = "201", description = "Atama yapıldı"),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
             @ApiResponse(responseCode = "403", description = "Bu panoda atama yapma yetkiniz yok"),
@@ -120,17 +129,17 @@ public class BoardMemberController {
             @Valid @RequestBody CreateAssignmentRequest request) {
         boardMemberService.createAssignment(boardId, memberId, request);
         // Güncel üye bilgilerini döndür
-        BoardMemberDto updatedMember = boardMemberService.getMembers(boardId).stream()
+        BoardMemberResponse updatedMember = boardMemberService.getMembers(boardId).stream()
                 .filter(m -> m.getId().equals(memberId))
                 .findFirst()
                 .orElseThrow();
         BoardMemberModel model = boardMemberAssembler.toModel(updatedMember);
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Toplu atama yap", description = "Üyeye birden fazla liste/görev/alt görev atama yapar")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Atamalar yapıldı"),
+            @ApiResponse(responseCode = "201", description = "Atamalar yapıldı"),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
             @ApiResponse(responseCode = "403", description = "Bu panoda atama yapma yetkiniz yok")
@@ -141,12 +150,12 @@ public class BoardMemberController {
             @Parameter(description = "Üye ID") @PathVariable Long memberId,
             @Valid @RequestBody BulkCreateAssignmentRequest request) {
         boardMemberService.createBulkAssignment(boardId, memberId, request);
-        BoardMemberDto updatedMember = boardMemberService.getMembers(boardId).stream()
+        BoardMemberResponse updatedMember = boardMemberService.getMembers(boardId).stream()
                 .filter(m -> m.getId().equals(memberId))
                 .findFirst()
                 .orElseThrow();
         BoardMemberModel model = boardMemberAssembler.toModel(updatedMember);
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Atama kaldır", description = "Üyeden bir atamayı kaldırır")

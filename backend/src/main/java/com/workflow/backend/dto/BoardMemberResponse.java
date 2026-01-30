@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class BoardMemberDto {
+public class BoardMemberResponse {
     private Long id;
     private Long userId;
     private String username;
@@ -16,5 +16,5 @@ public class BoardMemberDto {
     private String status;
     private String role;
     private LocalDateTime createdAt;
-    private List<BoardMemberAssignmentDto> assignments;
+    private List<BoardMemberAssignmentResponse> assignments;
 }

@@ -2,6 +2,7 @@ package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.CreateSubtaskRequest;
 import com.workflow.backend.dto.SubtaskDto;
+import com.workflow.backend.dto.UpdateSubtaskRequest;
 import com.workflow.backend.hateoas.assembler.SubtaskModelAssembler;
 import com.workflow.backend.hateoas.model.SubtaskModel;
 import com.workflow.backend.service.SubtaskService;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +38,7 @@ public class SubtaskController {
 
     @Operation(summary = "Alt görev oluştur", description = "Göreve yeni bir alt görev ekler")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Alt görev oluşturuldu",
+            @ApiResponse(responseCode = "201", description = "Alt görev oluşturuldu",
                     content = @Content(schema = @Schema(implementation = SubtaskModel.class))),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
@@ -51,7 +53,7 @@ public class SubtaskController {
         model.add(linkTo(methodOn(SubtaskController.class).getSubtasksByTask(request.getTaskId()))
                 .withRel("task-subtasks"));
 
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Alt görev güncelle", description = "Mevcut bir alt görevi günceller")
@@ -66,7 +68,7 @@ public class SubtaskController {
     @PutMapping("/{id}")
     public ResponseEntity<SubtaskModel> updateSubtask(
             @Parameter(description = "Alt görev ID") @PathVariable Long id,
-            @Valid @RequestBody SubtaskDto request) {
+            @Valid @RequestBody UpdateSubtaskRequest request) {
         SubtaskDto result = subtaskService.updateSubtask(id, request);
         SubtaskModel model = subtaskAssembler.toModel(result);
         return ResponseEntity.ok(model);

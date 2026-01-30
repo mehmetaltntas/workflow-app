@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class BoardMemberAssignmentDto {
+public class BoardMemberAssignmentResponse {
     private Long id;
     private String targetType;
     private Long targetId;

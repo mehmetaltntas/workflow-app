@@ -20,7 +20,7 @@ public class BoardResponse {
     private java.time.LocalDateTime createdAt; // Oluşturulma tarihi
     private List<TaskListDto> taskLists; // YENİ EKLENDİ: Panodaki listeler
     private List<LabelDto> labels; // Panoya ait etiketler
-    private List<BoardMemberDto> members; // Pano üyeleri (sorumlu kişiler)
+    private List<BoardMemberResponse> members; // Pano üyeleri (sorumlu kişiler)
     private String boardType;
     private Boolean isOwner; // Mevcut kullanıcı pano sahibi mi?
     private Boolean isModerator; // Mevcut kullanıcı moderatör mü?

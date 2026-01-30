@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.workflow.backend.dto.AuthResponse;
 import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.entity.AuthProvider;
 import com.workflow.backend.entity.RefreshToken;
@@ -56,7 +57,7 @@ public class GoogleAuthService {
      * Google ID Token ile giris yapar veya yeni kullanici olusturur
      */
     @Transactional
-    public UserResponse authenticateWithGoogle(String idToken) {
+    public AuthResponse authenticateWithGoogle(String idToken) {
         if (verifier == null) {
             throw new ConfigurationException("Google OAuth yapılandırılmamış");
         }
@@ -91,18 +92,22 @@ public class GoogleAuthService {
             String profilePictureUrl = profilePictureRepository.findFilePathByUserId(user.getId())
                     .map(fp -> "/users/" + user.getId() + "/profile-picture").orElse(null);
 
-            // Response olustur
-            UserResponse response = new UserResponse();
-            response.setId(user.getId());
-            response.setUsername(user.getUsername());
-            response.setEmail(user.getEmail());
-            response.setFirstName(user.getFirstName());
-            response.setLastName(user.getLastName());
-            response.setProfilePicture(profilePictureUrl);
-            response.setToken(accessToken);
-            response.setRefreshToken(refreshToken.getToken());
+            // UserResponse olustur (token bilgileri icermiyor)
+            UserResponse userResponse = new UserResponse();
+            userResponse.setId(user.getId());
+            userResponse.setUsername(user.getUsername());
+            userResponse.setEmail(user.getEmail());
+            userResponse.setFirstName(user.getFirstName());
+            userResponse.setLastName(user.getLastName());
+            userResponse.setProfilePicture(profilePictureUrl);
 
-            return response;
+            // AuthResponse olustur (token bilgileri burada)
+            AuthResponse authResponse = new AuthResponse();
+            authResponse.setUser(userResponse);
+            authResponse.setToken(accessToken);
+            authResponse.setRefreshToken(refreshToken.getToken());
+
+            return authResponse;
 
         } catch (ConfigurationException | InvalidCredentialsException e) {
             throw e;

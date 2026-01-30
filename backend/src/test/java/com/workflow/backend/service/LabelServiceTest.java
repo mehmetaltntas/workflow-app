@@ -2,7 +2,7 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
-import com.workflow.backend.dto.TaskListUsageDto;
+import com.workflow.backend.dto.TaskListUsageResponse;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.TaskList;
@@ -275,7 +275,7 @@ class LabelServiceTest {
             when(taskListRepository.findByLabelsContaining(testLabel)).thenReturn(List.of(taskList1, taskList2));
 
             // Act
-            List<TaskListUsageDto> result = labelService.getLabelUsage(1L);
+            List<TaskListUsageResponse> result = labelService.getLabelUsage(1L);
 
             // Assert
             assertThat(result).hasSize(2);
@@ -292,7 +292,7 @@ class LabelServiceTest {
             when(taskListRepository.findByLabelsContaining(testLabel)).thenReturn(List.of());
 
             // Act
-            List<TaskListUsageDto> result = labelService.getLabelUsage(1L);
+            List<TaskListUsageResponse> result = labelService.getLabelUsage(1L);
 
             // Assert
             assertThat(result).isEmpty();

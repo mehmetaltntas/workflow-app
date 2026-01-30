@@ -1,7 +1,7 @@
 package com.workflow.backend.hateoas.assembler;
 
 import com.workflow.backend.controller.BoardMemberController;
-import com.workflow.backend.dto.BoardMemberDto;
+import com.workflow.backend.dto.BoardMemberResponse;
 import com.workflow.backend.hateoas.model.BoardMemberModel;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
 import org.springframework.stereotype.Component;
@@ -10,14 +10,14 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Component
-public class BoardMemberModelAssembler extends RepresentationModelAssemblerSupport<BoardMemberDto, BoardMemberModel> {
+public class BoardMemberModelAssembler extends RepresentationModelAssemblerSupport<BoardMemberResponse, BoardMemberModel> {
 
     public BoardMemberModelAssembler() {
         super(BoardMemberController.class, BoardMemberModel.class);
     }
 
     @Override
-    public BoardMemberModel toModel(BoardMemberDto dto) {
+    public BoardMemberModel toModel(BoardMemberResponse dto) {
         BoardMemberModel model = new BoardMemberModel();
         model.setId(dto.getId());
         model.setUserId(dto.getUserId());

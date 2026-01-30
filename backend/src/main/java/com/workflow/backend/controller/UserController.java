@@ -20,9 +20,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -49,6 +52,7 @@ public class UserController {
     private final UserProfileModelAssembler userProfileAssembler;
     private final UserProfilePictureRepository profilePictureRepository;
     private final ProfilePictureStorageService profilePictureStorageService;
+    private final org.springframework.core.env.Environment environment;
 
     private void verifyCurrentUser(Long userId) {
         Long currentUserId = currentUserService.getCurrentUserId();
@@ -108,10 +112,17 @@ public class UserController {
     @PutMapping("/{id}/profile")
     public ResponseEntity<UserModel> updateProfile(
             @Parameter(description = "Kullanıcı ID") @PathVariable Long id,
-            @Valid @RequestBody UpdateProfileRequest request) {
+            @Valid @RequestBody UpdateProfileRequest request,
+            HttpServletResponse httpResponse) {
         verifyCurrentUser(id);
-        UserResponse updated = userService.updateProfile(id, request);
-        UserModel model = userAssembler.toModel(updated);
+        AuthResponse result = userService.updateProfile(id, request);
+
+        // Kullanici adi degistiyse yeni token'lari cookie olarak set et
+        if (result.getToken() != null) {
+            addTokenCookies(httpResponse, result.getToken(), result.getRefreshToken());
+        }
+
+        UserModel model = userAssembler.toModel(result.getUser());
         return ResponseEntity.ok(model);
     }
 
@@ -132,7 +143,7 @@ public class UserController {
 
         RepresentationModel<?> response = new RepresentationModel<>();
         response.add(linkTo(methodOn(UserController.class).getUser(id)).withRel("user"));
-        response.add(linkTo(methodOn(UserController.class).updateProfile(id, null)).withRel("update-profile"));
+        response.add(linkTo(methodOn(UserController.class).updateProfile(id, null, null)).withRel("update-profile"));
 
         return ResponseEntity.ok(response);
     }
@@ -144,11 +155,13 @@ public class UserController {
     })
     @GetMapping("/search")
     public ResponseEntity<CollectionModel<UserSearchModel>> searchUsers(
-            @Parameter(description = "Arama sorgusu") @RequestParam("q") String query) {
+            @Parameter(description = "Arama sorgusu") @RequestParam("q") String query,
+            @Parameter(description = "Sayfa boyutu (max 20)") @RequestParam(defaultValue = "10") int size) {
         if (query == null || query.trim().length() < 2) {
             return ResponseEntity.ok(CollectionModel.empty());
         }
-        List<UserSearchResponse> results = userService.searchUsers(query.trim());
+        int safeSize = Math.min(Math.max(size, 1), 20);
+        List<UserSearchResponse> results = userService.searchUsers(query.trim(), safeSize);
         List<UserSearchModel> models = results.stream()
                 .map(userSearchAssembler::toModel)
                 .collect(Collectors.toList());
@@ -178,10 +191,15 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Kullanici bulunamadi")
     })
     @GetMapping("/profile/{username}/stats")
-    public ResponseEntity<UserProfileStatsResponse> getUserProfileStats(
+    public ResponseEntity<EntityModel<UserProfileStatsResponse>> getUserProfileStats(
             @Parameter(description = "Kullanici adi") @PathVariable String username) {
         UserProfileStatsResponse stats = userService.getUserProfileStats(username);
-        return ResponseEntity.ok(stats);
+
+        EntityModel<UserProfileStatsResponse> model = EntityModel.of(stats,
+                linkTo(methodOn(UserController.class).getUserProfileStats(username)).withSelfRel(),
+                linkTo(methodOn(UserController.class).getUserProfile(username)).withRel("profile"));
+
+        return ResponseEntity.ok(model);
     }
 
     @Operation(summary = "Gizlilik ayarlarini getir", description = "Kullanicinin mevcut gizlilik ayarlarini dondurur")
@@ -192,11 +210,17 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Yetki yok")
     })
     @GetMapping("/{id}/privacy")
-    public ResponseEntity<PrivacySettingsResponse> getPrivacySettings(
+    public ResponseEntity<EntityModel<PrivacySettingsResponse>> getPrivacySettings(
             @Parameter(description = "Kullanici ID") @PathVariable Long id) {
         verifyCurrentUser(id);
         PrivacySettingsResponse response = userService.getPrivacySettings(id);
-        return ResponseEntity.ok(response);
+
+        EntityModel<PrivacySettingsResponse> model = EntityModel.of(response,
+                linkTo(methodOn(UserController.class).getPrivacySettings(id)).withSelfRel(),
+                linkTo(methodOn(UserController.class).updatePrivacy(id, null)).withRel("update-privacy"),
+                linkTo(methodOn(UserController.class).getUser(id)).withRel("user"));
+
+        return ResponseEntity.ok(model);
     }
 
     @Operation(summary = "Gizlilik ayarini guncelle", description = "Kullanicinin profil gizlilik ayarini gunceller")
@@ -207,12 +231,17 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Yetki yok")
     })
     @PutMapping("/{id}/privacy")
-    public ResponseEntity<PrivacySettingsResponse> updatePrivacy(
+    public ResponseEntity<EntityModel<PrivacySettingsResponse>> updatePrivacy(
             @Parameter(description = "Kullanici ID") @PathVariable Long id,
             @Valid @RequestBody UpdatePrivacyRequest request) {
         verifyCurrentUser(id);
         PrivacySettingsResponse response = userService.updatePrivacy(id, request);
-        return ResponseEntity.ok(response);
+
+        EntityModel<PrivacySettingsResponse> model = EntityModel.of(response,
+                linkTo(methodOn(UserController.class).getPrivacySettings(id)).withSelfRel(),
+                linkTo(methodOn(UserController.class).getUser(id)).withRel("user"));
+
+        return ResponseEntity.ok(model);
     }
 
     @Operation(summary = "Hesap silme zamanlama", description = "Kullanicinin hesabini 30 gun sonra silinmek uzere zamanlar")
@@ -247,5 +276,33 @@ public class UserController {
         UserResponse result = userService.cancelDeletion(id);
         UserModel model = userAssembler.toModel(result);
         return ResponseEntity.ok(model);
+    }
+
+    // --- Cookie helper methods ---
+
+    private boolean isSecureCookie() {
+        return !java.util.Arrays.asList(environment.getActiveProfiles()).contains("dev");
+    }
+
+    private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        boolean secure = isSecureCookie();
+
+        Cookie accessCookie = new Cookie("access_token", accessToken);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(secure);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(900); // 15 minutes
+        accessCookie.setAttribute("SameSite", "Lax");
+        response.addCookie(accessCookie);
+
+        if (refreshToken != null) {
+            Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setSecure(secure);
+            refreshCookie.setPath("/auth");
+            refreshCookie.setMaxAge(259200); // 3 days
+            refreshCookie.setAttribute("SameSite", "Lax");
+            response.addCookie(refreshCookie);
+        }
     }
 }

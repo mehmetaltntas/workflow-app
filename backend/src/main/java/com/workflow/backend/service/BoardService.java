@@ -43,6 +43,22 @@ public class BoardService {
     private final ConnectionService connectionService;
     private final CacheManager cacheManager;
 
+    /**
+     * Board'u slug veya ID ile çözer. Önce Long olarak parse etmeyi dener (ID),
+     * başarısız olursa slug olarak arar.
+     */
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Board resolveBoard(String identifier) {
+        try {
+            Long id = Long.parseLong(identifier);
+            return boardRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", id));
+        } catch (NumberFormatException e) {
+            return boardRepository.findBySlug(identifier)
+                    .orElseThrow(() -> new ResourceNotFoundException("Pano", "slug", identifier));
+        }
+    }
+
     // PANO OLUŞTURMA
     @Transactional
     public BoardResponse createBoard(CreateBoardRequest request) {
@@ -191,7 +207,7 @@ public class BoardService {
         return response;
     }
 
-    private List<BoardMemberDto> mapMembers(Long boardId, boolean isOwner, Long currentUserId) {
+    private List<BoardMemberResponse> mapMembers(Long boardId, boolean isOwner, Long currentUserId) {
         List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(boardId);
         if (boardMembers == null || boardMembers.isEmpty()) {
             return Collections.emptyList();
@@ -218,7 +234,7 @@ public class BoardService {
 
         final Set<Long> finalConnectedUserIds = connectedUserIds;
         return boardMembers.stream().map(member -> {
-            BoardMemberDto memberDto = new BoardMemberDto();
+            BoardMemberResponse memberDto = new BoardMemberResponse();
             memberDto.setId(member.getId());
             memberDto.setUsername(member.getUser().getUsername());
             memberDto.setRole(member.getRole() != null ? member.getRole().name() : "MEMBER");
@@ -240,7 +256,7 @@ public class BoardService {
 
             if (member.getAssignments() != null && !member.getAssignments().isEmpty()) {
                 memberDto.setAssignments(member.getAssignments().stream().map(assignment -> {
-                    BoardMemberAssignmentDto aDto = new BoardMemberAssignmentDto();
+                    BoardMemberAssignmentResponse aDto = new BoardMemberAssignmentResponse();
                     aDto.setId(assignment.getId());
                     aDto.setTargetType(assignment.getTargetType().name());
                     aDto.setTargetId(assignment.getTargetId());
@@ -365,12 +381,44 @@ public class BoardService {
         return boards.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
+    // Paginated: Kullanıcının sorumlu olarak atandığı panoları getir
+    @Transactional
+    public PaginatedResponse<BoardResponse> getAssignedBoards(Pageable pageable) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Page<Board> page = boardMemberRepository.findAcceptedBoardsByUserId(currentUserId, pageable);
+        List<BoardResponse> content = page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return new PaginatedResponse<>(content, page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(), page.isFirst(), page.isLast());
+    }
+
     // Kullanıcının kendi oluşturduğu TEAM tipindeki panoları getir
     @Transactional
     public List<BoardResponse> getMyTeamBoards() {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<Board> boards = boardRepository.findTeamBoardsByUserId(currentUserId);
         return boards.stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    // Paginated: Kullanıcının kendi oluşturduğu TEAM tipindeki panoları getir
+    @Transactional
+    public PaginatedResponse<BoardResponse> getMyTeamBoards(Pageable pageable) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Page<Board> page = boardRepository.findTeamBoardsByUserId(currentUserId, pageable);
+        List<BoardResponse> content = page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return new PaginatedResponse<>(content, page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(), page.isFirst(), page.isLast());
+    }
+
+    // Filtered + Paginated board list
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public PaginatedResponse<BoardResponse> getAllBoardsFiltered(Long userId, String status,
+            String category, String boardType, Pageable pageable) {
+        authorizationService.verifyUserOwnership(userId);
+        BoardType type = boardType != null ? BoardType.valueOf(boardType) : null;
+        Page<Board> page = boardRepository.findByUserIdFiltered(userId, status, category, type, pageable);
+        List<BoardResponse> content = page.getContent().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return new PaginatedResponse<>(content, page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages(), page.isFirst(), page.isLast());
     }
 
     // PANO SİL

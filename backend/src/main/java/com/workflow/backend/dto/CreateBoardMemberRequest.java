@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AddBoardMemberRequest {
+public class CreateBoardMemberRequest {
     @NotNull
     private Long userId;
 }

@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Tag(name = "Tasks", description = "Görev (task) ve liste (task list) işlemleri")
 @SecurityRequirement(name = "bearerAuth")
@@ -39,7 +41,7 @@ public class TaskController {
 
     @Operation(summary = "Yeni liste oluştur", description = "Panoya yeni bir görev listesi (sütun) ekler")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Liste oluşturuldu",
+            @ApiResponse(responseCode = "201", description = "Liste oluşturuldu",
                     content = @Content(schema = @Schema(implementation = TaskListModel.class))),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek veya bu isimde liste zaten var"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
@@ -50,7 +52,7 @@ public class TaskController {
     public ResponseEntity<TaskListModel> createTaskList(@Valid @RequestBody CreateTaskListRequest request) {
         TaskListDto result = taskService.createTaskList(request);
         TaskListModel model = taskListAssembler.toModel(result);
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Liste güncelle", description = "Mevcut bir listeyi günceller")
@@ -65,7 +67,7 @@ public class TaskController {
     @PutMapping("/lists/{id}")
     public ResponseEntity<TaskListModel> updateTaskList(
             @Parameter(description = "Liste ID") @PathVariable Long id,
-            @Valid @RequestBody TaskListDto request) {
+            @Valid @RequestBody UpdateTaskListRequest request) {
         TaskListDto result = taskService.updateTaskList(id, request);
         TaskListModel model = taskListAssembler.toModel(result);
         return ResponseEntity.ok(model);
@@ -89,7 +91,7 @@ public class TaskController {
 
     @Operation(summary = "Yeni görev oluştur", description = "Listeye yeni bir görev (kart) ekler")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Görev oluşturuldu",
+            @ApiResponse(responseCode = "201", description = "Görev oluşturuldu",
                     content = @Content(schema = @Schema(implementation = TaskModel.class))),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek veya bu isimde görev zaten var"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
@@ -100,7 +102,7 @@ public class TaskController {
     public ResponseEntity<TaskModel> createTask(@Valid @RequestBody CreateTaskRequest request) {
         TaskDto result = taskService.createTask(request);
         TaskModel model = taskAssembler.toModel(result);
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Görev güncelle", description = "Mevcut bir görevi günceller")
@@ -115,7 +117,7 @@ public class TaskController {
     @PutMapping("/tasks/{id}")
     public ResponseEntity<TaskModel> updateTask(
             @Parameter(description = "Görev ID") @PathVariable Long id,
-            @Valid @RequestBody TaskDto request) {
+            @Valid @RequestBody UpdateTaskRequest request) {
         TaskDto result = taskService.updateTask(id, request);
         TaskModel model = taskAssembler.toModel(result);
         return ResponseEntity.ok(model);

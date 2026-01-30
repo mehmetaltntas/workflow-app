@@ -246,7 +246,7 @@ public class TaskService {
 
     // LİSTE GÜNCELLE
     @Transactional
-    public TaskListDto updateTaskList(Long listId, TaskListDto request) {
+    public TaskListDto updateTaskList(Long listId, UpdateTaskListRequest request) {
         // Pano sahibi VEYA atanmış üye (üye sadece isCompleted değiştirebilir)
         boolean isOwner = boardMemberService.verifyAccessToTaskList(listId);
 
@@ -361,7 +361,7 @@ public class TaskService {
 
     // GÖREV GÜNCELLE
     @Transactional
-    public TaskDto updateTask(Long taskId, TaskDto request) {
+    public TaskDto updateTask(Long taskId, UpdateTaskRequest request) {
         // Pano sahibi VEYA atanmış üye (üye sadece isCompleted değiştirebilir)
         boolean isOwner = boardMemberService.verifyAccessToTask(taskId);
 

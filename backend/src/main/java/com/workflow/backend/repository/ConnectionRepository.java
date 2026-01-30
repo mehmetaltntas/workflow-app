@@ -37,6 +37,14 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE c.sender.id = :senderId AND c.status = :status ORDER BY c.createdAt DESC")
     List<Connection> findBySenderIdAndStatus(@Param("senderId") Long senderId, @Param("status") ConnectionStatus status);
 
+    @Query(value = "SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE c.receiver.id = :receiverId AND c.status = :status ORDER BY c.createdAt DESC",
+            countQuery = "SELECT COUNT(c) FROM Connection c WHERE c.receiver.id = :receiverId AND c.status = :status")
+    Page<Connection> findByReceiverIdAndStatus(@Param("receiverId") Long receiverId, @Param("status") ConnectionStatus status, Pageable pageable);
+
+    @Query(value = "SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE c.sender.id = :senderId AND c.status = :status ORDER BY c.createdAt DESC",
+            countQuery = "SELECT COUNT(c) FROM Connection c WHERE c.sender.id = :senderId AND c.status = :status")
+    Page<Connection> findBySenderIdAndStatus(@Param("senderId") Long senderId, @Param("status") ConnectionStatus status, Pageable pageable);
+
     @Query("SELECT c FROM Connection c JOIN FETCH c.sender JOIN FETCH c.receiver WHERE (c.sender.id = :userId OR c.receiver.id = :userId) AND c.status = 'ACCEPTED' ORDER BY c.updatedAt DESC")
     List<Connection> findAcceptedByUserId(@Param("userId") Long userId);
 

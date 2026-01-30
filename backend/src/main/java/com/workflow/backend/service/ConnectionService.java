@@ -235,10 +235,22 @@ public class ConnectionService {
         return pending.stream().map(this::mapToResponse).toList();
     }
 
+    public Page<ConnectionResponse> getPendingRequests(Pageable pageable) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Page<Connection> page = connectionRepository.findByReceiverIdAndStatus(currentUserId, ConnectionStatus.PENDING, pageable);
+        return page.map(this::mapToResponse);
+    }
+
     public List<ConnectionResponse> getSentRequests() {
         Long currentUserId = currentUserService.getCurrentUserId();
         List<Connection> sent = connectionRepository.findBySenderIdAndStatus(currentUserId, ConnectionStatus.PENDING);
         return sent.stream().map(this::mapToResponse).toList();
+    }
+
+    public Page<ConnectionResponse> getSentRequests(Pageable pageable) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Page<Connection> page = connectionRepository.findBySenderIdAndStatus(currentUserId, ConnectionStatus.PENDING, pageable);
+        return page.map(this::mapToResponse);
     }
 
     public List<ConnectionResponse> getAcceptedConnections() {

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class TaskListUsageDto {
+public class TaskListUsageResponse {
     private Long id;
     private String name;
 }

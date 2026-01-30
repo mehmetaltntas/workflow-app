@@ -2,7 +2,8 @@ package com.workflow.backend.service;
 
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
-import com.workflow.backend.dto.TaskListUsageDto;
+import com.workflow.backend.dto.TaskListUsageResponse;
+import com.workflow.backend.dto.UpdateLabelRequest;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.TaskList;
@@ -70,7 +71,7 @@ public class LabelService {
 
     // Etiket güncelle
     @Transactional
-    public LabelDto updateLabel(Long labelId, LabelDto request) {
+    public LabelDto updateLabel(Long labelId, UpdateLabelRequest request) {
         // Kullanıcı sadece kendi etiketini güncelleyebilir
         authorizationService.verifyLabelOwnership(labelId);
 
@@ -118,7 +119,7 @@ public class LabelService {
     }
 
     // Etiketin kullanıldığı listeleri getir
-    public List<TaskListUsageDto> getLabelUsage(Long labelId) {
+    public List<TaskListUsageResponse> getLabelUsage(Long labelId) {
         // Kullanıcı sadece kendi etiketinin kullanımını görebilir
         authorizationService.verifyLabelOwnership(labelId);
 
@@ -128,7 +129,7 @@ public class LabelService {
         List<TaskList> affectedLists = taskListRepository.findByLabelsContaining(label);
 
         return affectedLists.stream()
-                .map(list -> new TaskListUsageDto(list.getId(), list.getName()))
+                .map(list -> new TaskListUsageResponse(list.getId(), list.getName()))
                 .toList();
     }
 

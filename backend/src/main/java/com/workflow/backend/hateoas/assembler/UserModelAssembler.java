@@ -23,8 +23,6 @@ public class UserModelAssembler extends RepresentationModelAssemblerSupport<User
         model.setUsername(dto.getUsername());
         model.setEmail(dto.getEmail());
         model.setProfilePicture(dto.getProfilePicture());
-        model.setToken(dto.getToken());
-        model.setRefreshToken(dto.getRefreshToken());
         model.setDeletionScheduledAt(dto.getDeletionScheduledAt());
 
         // Self link
@@ -32,7 +30,7 @@ public class UserModelAssembler extends RepresentationModelAssemblerSupport<User
                 .withSelfRel());
 
         // Update profile link
-        model.add(linkTo(methodOn(UserController.class).updateProfile(dto.getId(), null))
+        model.add(linkTo(methodOn(UserController.class).updateProfile(dto.getId(), null, null))
                 .withRel("update-profile"));
 
         // Update password link
@@ -40,7 +38,7 @@ public class UserModelAssembler extends RepresentationModelAssemblerSupport<User
                 .withRel("update-password"));
 
         // User's boards link
-        model.add(linkTo(methodOn(BoardController.class).getUserBoards(dto.getId(), 0, 10, "id", "desc"))
+        model.add(linkTo(methodOn(BoardController.class).getUserBoards(dto.getId(), 0, 10, "id", "desc", null, null, null))
                 .withRel("boards"));
 
         // Create board link

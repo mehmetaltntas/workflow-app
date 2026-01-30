@@ -76,7 +76,7 @@ public class NotificationController {
     }
 
     @Operation(summary = "Tum bildirimleri okundu olarak isaretle")
-    @PutMapping("/read-all")
+    @PatchMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead() {
         notificationService.markAllAsRead();
         return ResponseEntity.ok().build();

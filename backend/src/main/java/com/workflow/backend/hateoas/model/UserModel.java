@@ -14,7 +14,5 @@ public class UserModel extends RepresentationModel<UserModel> {
     private String username;
     private String email;
     private String profilePicture;
-    private String token;
-    private String refreshToken;
     private LocalDateTime deletionScheduledAt;
 }

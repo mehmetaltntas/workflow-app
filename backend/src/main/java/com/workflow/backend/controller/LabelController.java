@@ -2,7 +2,8 @@ package com.workflow.backend.controller;
 
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
-import com.workflow.backend.dto.TaskListUsageDto;
+import com.workflow.backend.dto.TaskListUsageResponse;
+import com.workflow.backend.dto.UpdateLabelRequest;
 import com.workflow.backend.hateoas.assembler.LabelModelAssembler;
 import com.workflow.backend.hateoas.model.LabelModel;
 import com.workflow.backend.service.LabelService;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,7 +64,7 @@ public class LabelController {
 
     @Operation(summary = "Yeni etiket oluştur", description = "Panoya yeni bir etiket ekler (maksimum 10 etiket)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Etiket oluşturuldu",
+            @ApiResponse(responseCode = "201", description = "Etiket oluşturuldu",
                     content = @Content(schema = @Schema(implementation = LabelModel.class))),
             @ApiResponse(responseCode = "400", description = "Geçersiz istek, bu isimde etiket zaten var veya maksimum limite ulaşıldı"),
             @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
@@ -77,7 +79,7 @@ public class LabelController {
         model.add(linkTo(methodOn(LabelController.class).getLabelsByBoard(request.getBoardId()))
                 .withRel("board-labels"));
 
-        return ResponseEntity.ok(model);
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @Operation(summary = "Etiket güncelle", description = "Mevcut bir etiketin adını veya rengini günceller")
@@ -92,7 +94,7 @@ public class LabelController {
     @PutMapping("/{id}")
     public ResponseEntity<LabelModel> updateLabel(
             @Parameter(description = "Etiket ID") @PathVariable Long id,
-            @Valid @RequestBody LabelDto request) {
+            @Valid @RequestBody UpdateLabelRequest request) {
         LabelDto result = labelService.updateLabel(id, request);
         LabelModel model = labelAssembler.toModel(result);
         return ResponseEntity.ok(model);
@@ -120,9 +122,14 @@ public class LabelController {
             @ApiResponse(responseCode = "404", description = "Etiket bulunamadı")
     })
     @GetMapping("/{id}/usage")
-    public ResponseEntity<List<TaskListUsageDto>> getLabelUsage(
+    public ResponseEntity<CollectionModel<TaskListUsageResponse>> getLabelUsage(
             @Parameter(description = "Etiket ID") @PathVariable Long id) {
-        List<TaskListUsageDto> usage = labelService.getLabelUsage(id);
-        return ResponseEntity.ok(usage);
+        List<TaskListUsageResponse> usage = labelService.getLabelUsage(id);
+
+        CollectionModel<TaskListUsageResponse> collectionModel = CollectionModel.of(usage);
+        collectionModel.add(linkTo(methodOn(LabelController.class).getLabelUsage(id)).withSelfRel());
+        collectionModel.add(linkTo(methodOn(LabelController.class).updateLabel(id, null)).withRel("label"));
+
+        return ResponseEntity.ok(collectionModel);
     }
 }

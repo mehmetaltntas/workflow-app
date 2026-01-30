@@ -1,7 +1,7 @@
 package com.workflow.backend.service;
 
-import com.workflow.backend.dto.BoardMemberAssignmentDto;
-import com.workflow.backend.dto.BoardMemberDto;
+import com.workflow.backend.dto.BoardMemberAssignmentResponse;
+import com.workflow.backend.dto.BoardMemberResponse;
 import com.workflow.backend.dto.BulkCreateAssignmentRequest;
 import com.workflow.backend.dto.CreateAssignmentRequest;
 import com.workflow.backend.entity.*;
@@ -38,7 +38,7 @@ public class BoardMemberService {
 
     // Üye ekle
     @Transactional
-    public BoardMemberDto addMember(Long boardId, Long userId) {
+    public BoardMemberResponse addMember(Long boardId, Long userId) {
         // Pano sahibi veya moderatör üye ekleyebilir
         verifyBoardOwnerOrModerator(boardId);
 
@@ -96,7 +96,7 @@ public class BoardMemberService {
 
     // Pano üyelerini getir (sadece ACCEPTED) - bağlantı durumuna göre profil filtreleme
     @Transactional(readOnly = true)
-    public List<BoardMemberDto> getMembers(Long boardId) {
+    public List<BoardMemberResponse> getMembers(Long boardId) {
         // Pano sahibi veya üye görebilir
         verifyBoardOwnerOrMember(boardId);
 
@@ -134,7 +134,7 @@ public class BoardMemberService {
 
     // Atama oluştur
     @Transactional
-    public BoardMemberAssignmentDto createAssignment(Long boardId, Long memberId, CreateAssignmentRequest request) {
+    public BoardMemberAssignmentResponse createAssignment(Long boardId, Long memberId, CreateAssignmentRequest request) {
         // Sadece pano sahibi atama yapabilir
         authorizationService.verifyBoardOwnership(boardId);
 
@@ -171,7 +171,7 @@ public class BoardMemberService {
 
     // Toplu atama oluştur
     @Transactional
-    public List<BoardMemberAssignmentDto> createBulkAssignment(Long boardId, Long memberId, BulkCreateAssignmentRequest request) {
+    public List<BoardMemberAssignmentResponse> createBulkAssignment(Long boardId, Long memberId, BulkCreateAssignmentRequest request) {
         return request.getAssignments().stream()
                 .map(assignmentRequest -> createAssignment(boardId, memberId, assignmentRequest))
                 .collect(Collectors.toList());
@@ -294,7 +294,7 @@ public class BoardMemberService {
 
     // Üye rolünü güncelle (sadece pano sahibi)
     @Transactional
-    public BoardMemberDto updateMemberRole(Long boardId, Long memberId, String roleName) {
+    public BoardMemberResponse updateMemberRole(Long boardId, Long memberId, String roleName) {
         authorizationService.verifyBoardOwnership(boardId);
 
         BoardMemberRole newRole;
@@ -388,18 +388,18 @@ public class BoardMemberService {
     }
 
     // Entity -> DTO (tam profil bilgisi - geriye uyumlu)
-    private BoardMemberDto mapToDto(BoardMember member) {
+    private BoardMemberResponse mapToDto(BoardMember member) {
         return mapToDto(member, true);
     }
 
     // Entity -> DTO (profil bilgisi filtrelemeli)
-    private BoardMemberDto mapToDto(BoardMember member, boolean showProfileInfo) {
+    private BoardMemberResponse mapToDto(BoardMember member, boolean showProfileInfo) {
         return mapToDto(member, showProfileInfo, null);
     }
 
     // Entity -> DTO (ön-yüklenmiş profil resimleri ile)
-    private BoardMemberDto mapToDto(BoardMember member, boolean showProfileInfo, Map<Long, String> profilePictureMap) {
-        BoardMemberDto dto = new BoardMemberDto();
+    private BoardMemberResponse mapToDto(BoardMember member, boolean showProfileInfo, Map<Long, String> profilePictureMap) {
+        BoardMemberResponse dto = new BoardMemberResponse();
         dto.setId(member.getId());
         dto.setUsername(member.getUser().getUsername());
         dto.setStatus(member.getStatus().name());
@@ -428,8 +428,8 @@ public class BoardMemberService {
         return dto;
     }
 
-    private BoardMemberAssignmentDto mapAssignmentToDto(BoardMemberAssignment assignment) {
-        BoardMemberAssignmentDto dto = new BoardMemberAssignmentDto();
+    private BoardMemberAssignmentResponse mapAssignmentToDto(BoardMemberAssignment assignment) {
+        BoardMemberAssignmentResponse dto = new BoardMemberAssignmentResponse();
         dto.setId(assignment.getId());
         dto.setTargetType(assignment.getTargetType().name());
         dto.setTargetId(assignment.getTargetId());

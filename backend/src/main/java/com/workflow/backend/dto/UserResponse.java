@@ -26,12 +26,6 @@ public class UserResponse {
     @Schema(description = "Profil resmi (Base64 encoded)")
     private String profilePicture;
 
-    @Schema(description = "Access Token (15 dakika geçerli)")
-    private String token;
-
-    @Schema(description = "Refresh Token (7 gün geçerli)")
-    private String refreshToken;
-
     @Schema(description = "Hesap silme zamanlama tarihi")
     private LocalDateTime deletionScheduledAt;
 }

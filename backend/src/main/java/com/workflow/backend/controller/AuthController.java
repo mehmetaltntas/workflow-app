@@ -86,11 +86,9 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) {
-        UserResponse result = userService.register(request);
+        AuthResponse result = userService.register(request);
         addTokenCookies(response, result.getToken(), result.getRefreshToken());
-        result.setToken(null);
-        result.setRefreshToken(null);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(result.getUser());
     }
 
     @Operation(summary = "Kullanıcı girişi", description = "Kullanıcı adı ve şifre ile giriş yapar, JWT token döner")
@@ -102,11 +100,9 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-        UserResponse result = userService.login(request);
+        AuthResponse result = userService.login(request);
         addTokenCookies(response, result.getToken(), result.getRefreshToken());
-        result.setToken(null);
-        result.setRefreshToken(null);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(result.getUser());
     }
 
     @Operation(summary = "Token yenileme", description = "Refresh token ile yeni access token alır")
@@ -200,11 +196,9 @@ public class AuthController {
     })
     @PostMapping("/google")
     public ResponseEntity<UserResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request, HttpServletResponse response) {
-        UserResponse result = googleAuthService.authenticateWithGoogle(request.getIdToken());
+        AuthResponse result = googleAuthService.authenticateWithGoogle(request.getIdToken());
         addTokenCookies(response, result.getToken(), result.getRefreshToken());
-        result.setToken(null);
-        result.setRefreshToken(null);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(result.getUser());
     }
 
     // --- Cookie helper methods ---

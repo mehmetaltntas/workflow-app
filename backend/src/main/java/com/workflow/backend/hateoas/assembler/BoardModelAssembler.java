@@ -87,15 +87,15 @@ public class BoardModelAssembler extends RepresentationModelAssemblerSupport<Boa
                 .withSelfRel());
 
         // Update link
-        model.add(linkTo(methodOn(BoardController.class).updateBoard(dto.getId(), null))
+        model.add(linkTo(methodOn(BoardController.class).updateBoard(String.valueOf(dto.getId()), null))
                 .withRel("update"));
 
         // Delete link
-        model.add(linkTo(methodOn(BoardController.class).deleteBoard(dto.getId()))
+        model.add(linkTo(methodOn(BoardController.class).deleteBoard(String.valueOf(dto.getId())))
                 .withRel("delete"));
 
         // Update status link
-        model.add(linkTo(methodOn(BoardController.class).updateBoardStatus(dto.getId(), null))
+        model.add(linkTo(methodOn(BoardController.class).updateBoardStatus(String.valueOf(dto.getId()), null))
                 .withRel("update-status"));
 
         // Create task list link
