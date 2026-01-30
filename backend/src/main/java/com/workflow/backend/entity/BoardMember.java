@@ -46,6 +46,11 @@ public class BoardMember {
     @ColumnDefault("'ACCEPTED'")
     private BoardMemberStatus status = BoardMemberStatus.ACCEPTED;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @ColumnDefault("'MEMBER'")
+    private BoardMemberRole role = BoardMemberRole.MEMBER;
+
     @OneToMany(mappedBy = "boardMember", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 20)
     private List<BoardMemberAssignment> assignments = new ArrayList<>();

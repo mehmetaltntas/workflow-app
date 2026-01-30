@@ -111,6 +111,7 @@ export interface BoardMember extends HateoasModel {
   lastName?: string;
   profilePicture?: string | null;
   status?: 'ACCEPTED';
+  role?: 'MEMBER' | 'MODERATOR';
   createdAt: string;
   assignments?: BoardMemberAssignment[];
 }
@@ -130,6 +131,7 @@ export interface Board extends HateoasModel {
   ownerFirstName?: string;
   ownerLastName?: string;
   isOwner?: boolean; // Mevcut kullanıcı pano sahibi mi
+  isModerator?: boolean; // Mevcut kullanıcı moderatör mü
   currentUserId?: number; // Mevcut kullanıcının ID'si
   taskLists: TaskList[]; // İçinde listeler dizisi var
   labels?: Label[]; // Panoya ait etiketler

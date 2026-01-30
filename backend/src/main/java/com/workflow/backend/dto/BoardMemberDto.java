@@ -14,6 +14,7 @@ public class BoardMemberDto {
     private String lastName;
     private String profilePicture;
     private String status;
+    private String role;
     private LocalDateTime createdAt;
     private List<BoardMemberAssignmentDto> assignments;
 }

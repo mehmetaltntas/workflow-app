@@ -24,6 +24,7 @@ public class BoardMemberModelAssembler extends RepresentationModelAssemblerSuppo
         model.setUsername(dto.getUsername());
         model.setProfilePicture(dto.getProfilePicture());
         model.setStatus(dto.getStatus());
+        model.setRole(dto.getRole());
         model.setCreatedAt(dto.getCreatedAt());
 
         if (dto.getAssignments() != null) {

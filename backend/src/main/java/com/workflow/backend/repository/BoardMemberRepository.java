@@ -30,4 +30,10 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
     @Query("SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
     List<Board> findAcceptedBoardsByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT COUNT(bm) FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.role = com.workflow.backend.entity.BoardMemberRole.MODERATOR")
+    long countModeratorsByBoardId(@Param("boardId") Long boardId);
+
+    @Query("SELECT CASE WHEN COUNT(bm) > 0 THEN true ELSE false END FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.user.id = :userId AND bm.role = com.workflow.backend.entity.BoardMemberRole.MODERATOR AND bm.status = 'ACCEPTED'")
+    boolean isModeratorOnBoard(@Param("boardId") Long boardId, @Param("userId") Long userId);
+
 }

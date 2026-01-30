@@ -30,5 +30,6 @@ public class BoardModel extends RepresentationModel<BoardModel> {
     private String ownerLastName;
     private String boardType;
     private Boolean isOwner;
+    private Boolean isModerator;
     private Long currentUserId;
 }

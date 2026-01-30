@@ -418,6 +418,10 @@ export const boardMemberService = {
   removeAssignment: async (boardId: number, memberId: number, assignmentId: number): Promise<void> => {
     await apiClient.delete(`/boards/${boardId}/members/${memberId}/assignments/${assignmentId}`);
   },
+  updateMemberRole: async (boardId: number, memberId: number, role: 'MEMBER' | 'MODERATOR'): Promise<BoardMember> => {
+    const response = await apiClient.put<BoardMember>(`/boards/${boardId}/members/${memberId}/role`, { role });
+    return extractEntity<BoardMember>(response);
+  },
 };
 
 // 12. Bildirim İşlemleri

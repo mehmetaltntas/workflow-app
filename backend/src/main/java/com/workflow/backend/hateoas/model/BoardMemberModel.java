@@ -17,6 +17,7 @@ public class BoardMemberModel extends RepresentationModel<BoardMemberModel> {
     private String username;
     private String profilePicture;
     private String status;
+    private String role;
     private LocalDateTime createdAt;
     private List<BoardMemberAssignmentModel> assignments;
 

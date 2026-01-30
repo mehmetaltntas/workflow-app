@@ -4,6 +4,7 @@ import com.workflow.backend.dto.AddBoardMemberRequest;
 import com.workflow.backend.dto.BoardMemberDto;
 import com.workflow.backend.dto.BulkCreateAssignmentRequest;
 import com.workflow.backend.dto.CreateAssignmentRequest;
+import com.workflow.backend.dto.UpdateBoardMemberRoleRequest;
 import com.workflow.backend.hateoas.assembler.BoardMemberModelAssembler;
 import com.workflow.backend.hateoas.model.BoardMemberModel;
 import com.workflow.backend.service.BoardMemberService;
@@ -84,6 +85,24 @@ public class BoardMemberController {
             @Parameter(description = "Üye ID") @PathVariable Long memberId) {
         boardMemberService.removeMember(boardId, memberId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Üye rolünü güncelle", description = "Pano üyesinin rolünü günceller (MEMBER/MODERATOR)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rol güncellendi"),
+            @ApiResponse(responseCode = "400", description = "Geçersiz rol veya maksimum moderatör sayısına ulaşıldı"),
+            @ApiResponse(responseCode = "401", description = "Kimlik doğrulama gerekli"),
+            @ApiResponse(responseCode = "403", description = "Bu panoda rol güncelleme yetkiniz yok"),
+            @ApiResponse(responseCode = "404", description = "Üye bulunamadı")
+    })
+    @PutMapping("/{memberId}/role")
+    public ResponseEntity<BoardMemberModel> updateMemberRole(
+            @Parameter(description = "Pano ID") @PathVariable Long boardId,
+            @Parameter(description = "Üye ID") @PathVariable Long memberId,
+            @Valid @RequestBody UpdateBoardMemberRoleRequest request) {
+        BoardMemberDto result = boardMemberService.updateMemberRole(boardId, memberId, request.getRole());
+        BoardMemberModel model = boardMemberAssembler.toModel(result);
+        return ResponseEntity.ok(model);
     }
 
     @Operation(summary = "Üyeye atama yap", description = "Üyeye liste/görev/alt görev atama yapar")

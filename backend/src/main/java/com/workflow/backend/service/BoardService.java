@@ -161,6 +161,13 @@ public class BoardService {
         response.setIsOwner(isOwner);
         response.setCurrentUserId(currentUserId);
 
+        // Mevcut kullanıcının moderatör olup olmadığını kontrol et
+        if (!isOwner) {
+            response.setIsModerator(boardMemberRepository.isModeratorOnBoard(board.getId(), currentUserId));
+        } else {
+            response.setIsModerator(false);
+        }
+
         // Board Members (sadece ACCEPTED) - bağlantı durumuna göre profil bilgisi filtreleme
         List<BoardMember> boardMembers = boardMemberRepository.findAcceptedByBoardIdWithUser(board.getId());
         if (boardMembers != null && !boardMembers.isEmpty()) {
@@ -179,6 +186,7 @@ public class BoardService {
                 BoardMemberDto memberDto = new BoardMemberDto();
                 memberDto.setId(member.getId());
                 memberDto.setUsername(member.getUser().getUsername());
+                memberDto.setRole(member.getRole() != null ? member.getRole().name() : "MEMBER");
                 memberDto.setCreatedAt(member.getCreatedAt());
 
                 Long memberUserId = member.getUser().getId();

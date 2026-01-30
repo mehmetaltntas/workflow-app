@@ -23,5 +23,6 @@ public class BoardResponse {
     private List<BoardMemberDto> members; // Pano üyeleri (sorumlu kişiler)
     private String boardType;
     private Boolean isOwner; // Mevcut kullanıcı pano sahibi mi?
+    private Boolean isModerator; // Mevcut kullanıcı moderatör mü?
     private Long currentUserId; // Mevcut kullanıcı ID'si
 }

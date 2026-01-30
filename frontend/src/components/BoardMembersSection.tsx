@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import {
   Users,
   UserPlus,
-  X,
+  Shield,
+  ShieldOff,
+  UserMinus,
 } from "lucide-react";
 import type { Board, BoardMember } from "../types";
 import { useAuthStore } from "../stores/authStore";
@@ -12,9 +14,13 @@ import { typography, spacing, radius, colors, cssVars, animation } from "../styl
 import {
   useAddBoardMember,
   useRemoveBoardMember,
+  useUpdateBoardMemberRole,
 } from "../hooks/queries/useBoardMembers";
 import AddBoardMemberModal from "./AddBoardMemberModal";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { ActionMenu } from "./ActionMenu";
+import type { ActionMenuItem } from "./ActionMenu";
+import toast from "react-hot-toast";
 
 interface BoardMembersSectionProps {
   board: Board;
@@ -26,14 +32,18 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
   const isLight = theme === "light";
   const currentUsername = useAuthStore((s) => s.username);
   const isOwner = board.ownerName === currentUsername;
+  const isModerator = board.isModerator ?? false;
+  const canAddMembers = isOwner || isModerator;
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<BoardMember | null>(null);
 
   const addMemberMutation = useAddBoardMember(board.id, board.slug);
   const removeMemberMutation = useRemoveBoardMember(board.id, board.slug);
+  const updateRoleMutation = useUpdateBoardMemberRole(board.id, board.slug);
 
   const members = board.members || [];
+  const moderatorCount = members.filter(m => m.role === 'MODERATOR').length;
 
   const handleAddMember = async (userId: number) => {
     await addMemberMutation.mutateAsync(userId);
@@ -48,6 +58,41 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
       removeMemberMutation.mutate(memberToRemove.id);
       setMemberToRemove(null);
     }
+  };
+
+  const getMenuItems = (member: BoardMember): ActionMenuItem[] => {
+    const items: ActionMenuItem[] = [];
+
+    if (member.role === 'MODERATOR') {
+      items.push({
+        label: "Moderatörlükten Çıkar",
+        icon: ShieldOff,
+        variant: "default",
+        onClick: () => updateRoleMutation.mutate({ memberId: member.id, role: 'MEMBER' }),
+      });
+    } else {
+      items.push({
+        label: "Moderatör Yap",
+        icon: Shield,
+        variant: "success",
+        onClick: () => {
+          if (moderatorCount >= 2) {
+            toast.error('Bir panoda en fazla 2 moderatör olabilir.');
+            return;
+          }
+          updateRoleMutation.mutate({ memberId: member.id, role: 'MODERATOR' });
+        },
+      });
+    }
+
+    items.push({
+      label: "Üyeyi Kaldır",
+      icon: UserMinus,
+      variant: "danger",
+      onClick: () => handleRemoveMember(member),
+    });
+
+    return items;
   };
 
   const sectionLabelStyle: React.CSSProperties = {
@@ -95,7 +140,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
               </span>
             )}
           </div>
-          {isOwner && (
+          {canAddMembers && (
             <button
               onClick={() => setShowAddModal(true)}
               style={{
@@ -175,7 +220,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
             >
               Henüz üye eklenmemiş
             </p>
-            {isOwner && (
+            {canAddMembers && (
               <p
                 style={{
                   fontSize: typography.fontSize.xs,
@@ -192,6 +237,7 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
             {members.map((member) => (
               <div
                 key={member.id}
+                className="group"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -243,18 +289,35 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                     </div>
                   )}
                   <div>
-                    <span
-                      style={{
-                        fontSize: typography.fontSize.base,
-                        fontWeight: typography.fontWeight.semibold,
-                        color: cssVars.textMain,
-                        display: "block",
-                      }}
-                    >
-                      {board.boardType === 'TEAM' && member.firstName && member.lastName
-                        ? `${member.firstName} ${member.lastName}`
-                        : member.username}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5] }}>
+                      <span
+                        style={{
+                          fontSize: typography.fontSize.base,
+                          fontWeight: typography.fontWeight.semibold,
+                          color: cssVars.textMain,
+                        }}
+                      >
+                        {board.boardType === 'TEAM' && member.firstName && member.lastName
+                          ? `${member.firstName} ${member.lastName}`
+                          : member.username}
+                      </span>
+                      {member.role === 'MODERATOR' && (
+                        <span style={{
+                          fontSize: typography.fontSize.xs,
+                          fontWeight: typography.fontWeight.bold,
+                          color: colors.semantic.success,
+                          background: `${colors.semantic.success}18`,
+                          padding: `${spacing[0.5]} ${spacing[2]}`,
+                          borderRadius: radius.full,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: spacing[1],
+                        }}>
+                          <Shield size={10} />
+                          Moderatör
+                        </span>
+                      )}
+                    </div>
                     {board.boardType === 'TEAM' && member.firstName && member.lastName && (
                       <span
                         style={{
@@ -269,25 +332,12 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
                 </div>
 
                 {isOwner && (
-                  <button
-                    onClick={() => handleRemoveMember(member)}
-                    title="Üyeyi kaldır"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: spacing[7],
-                      height: spacing[7],
-                      borderRadius: radius.md,
-                      border: `1px solid ${colors.semantic.danger}30`,
-                      background: "transparent",
-                      color: colors.semantic.danger,
-                      cursor: "pointer",
-                      transition: `all ${animation.duration.fast}`,
-                    }}
-                  >
-                    <X size={14} />
-                  </button>
+                  <ActionMenu
+                    items={getMenuItems(member)}
+                    iconSize={14}
+                    horizontal
+                    dropdownPosition="right"
+                  />
                 )}
               </div>
             ))}

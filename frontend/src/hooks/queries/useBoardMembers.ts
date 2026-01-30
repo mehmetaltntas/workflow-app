@@ -98,6 +98,24 @@ export const useCreateBulkAssignment = (boardId: number, slug: string) => {
   });
 };
 
+export const useUpdateBoardMemberRole = (boardId: number, slug: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ memberId, role }: { memberId: number; role: 'MEMBER' | 'MODERATOR' }) =>
+      boardMemberService.updateMemberRole(boardId, memberId, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.boardMembers.list(boardId) });
+      toast.success('Üye rolü güncellendi');
+    },
+    onError: (error) => {
+      const err = error as { response?: { data?: string } };
+      toast.error(err.response?.data || 'Rol güncellenemedi');
+    },
+  });
+};
+
 export const useRemoveAssignment = (boardId: number, slug: string) => {
   const queryClient = useQueryClient();
 

@@ -39,8 +39,8 @@ public class BoardMemberService {
     // Üye ekle
     @Transactional
     public BoardMemberDto addMember(Long boardId, Long userId) {
-        // Sadece pano sahibi üye ekleyebilir
-        authorizationService.verifyBoardOwnership(boardId);
+        // Pano sahibi veya moderatör üye ekleyebilir
+        verifyBoardOwnerOrModerator(boardId);
 
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pano", "id", boardId));
@@ -292,6 +292,49 @@ public class BoardMemberService {
         throw new UnauthorizedAccessException("liste", taskListId);
     }
 
+    // Üye rolünü güncelle (sadece pano sahibi)
+    @Transactional
+    public BoardMemberDto updateMemberRole(Long boardId, Long memberId, String roleName) {
+        authorizationService.verifyBoardOwnership(boardId);
+
+        BoardMemberRole newRole;
+        try {
+            newRole = BoardMemberRole.valueOf(roleName);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Geçersiz rol: " + roleName + ". Geçerli değerler: MEMBER, MODERATOR");
+        }
+
+        BoardMember member = boardMemberRepository.findById(memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pano üyesi", "id", memberId));
+
+        if (!member.getBoard().getId().equals(boardId)) {
+            throw new BadRequestException("Bu üye belirtilen panoya ait değil.");
+        }
+
+        if (newRole == BoardMemberRole.MODERATOR && member.getRole() != BoardMemberRole.MODERATOR) {
+            long currentModeratorCount = boardMemberRepository.countModeratorsByBoardId(boardId);
+            if (currentModeratorCount >= 2) {
+                throw new BadRequestException("Bir panoda en fazla 2 moderatör olabilir.");
+            }
+        }
+
+        member.setRole(newRole);
+        BoardMember saved = boardMemberRepository.save(member);
+        return mapToDto(saved);
+    }
+
+    // Pano sahibi VEYA moderatör kontrolü (üye ekleme için)
+    public void verifyBoardOwnerOrModerator(Long boardId) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        if (boardRepository.existsByIdAndUserId(boardId, currentUserId)) {
+            return; // Pano sahibi
+        }
+        if (boardMemberRepository.isModeratorOnBoard(boardId, currentUserId)) {
+            return; // Moderatör
+        }
+        throw new UnauthorizedAccessException("pano", boardId);
+    }
+
     // Pano sahibi VEYA üye kontrolü (görüntüleme için)
     public void verifyBoardOwnerOrMember(Long boardId) {
         Long currentUserId = currentUserService.getCurrentUserId();
@@ -360,6 +403,7 @@ public class BoardMemberService {
         dto.setId(member.getId());
         dto.setUsername(member.getUser().getUsername());
         dto.setStatus(member.getStatus().name());
+        dto.setRole(member.getRole() != null ? member.getRole().name() : "MEMBER");
         dto.setCreatedAt(member.getCreatedAt());
 
         if (showProfileInfo) {
