@@ -878,7 +878,7 @@ interface CompactStatCellProps {
   themeColors: ReturnType<typeof getThemeColors>;
 }
 
-const CompactStatCell: React.FC<CompactStatCellProps> = ({ icon, label, completed, total, overdue, color, isLight, themeColors }) => {
+const CompactStatCell: React.FC<CompactStatCellProps> = ({ icon, label, completed, total, overdue, color, themeColors }) => {
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
