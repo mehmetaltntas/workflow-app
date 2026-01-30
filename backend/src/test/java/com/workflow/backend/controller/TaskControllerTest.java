@@ -77,8 +77,8 @@ class TaskControllerTest {
     class TaskListTests {
 
         @Test
-        @DisplayName("Should create task list and return 200")
-        void createTaskList_ValidRequest_Returns200() {
+        @DisplayName("Should create task list and return 201")
+        void createTaskList_ValidRequest_Returns201() {
             // Arrange
             CreateTaskListRequest request = new CreateTaskListRequest();
             request.setBoardId(1L);
@@ -91,7 +91,7 @@ class TaskControllerTest {
             ResponseEntity<TaskListModel> response = taskController.createTaskList(request);
 
             // Assert
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getStatusCode().value()).isEqualTo(201);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getId()).isEqualTo(1L);
             assertThat(response.getBody().getName()).isEqualTo("To Do");
@@ -101,7 +101,7 @@ class TaskControllerTest {
         @DisplayName("Should update task list and return 200")
         void updateTaskList_ValidRequest_Returns200() {
             // Arrange
-            TaskListDto updateRequest = new TaskListDto();
+            UpdateTaskListRequest updateRequest = new UpdateTaskListRequest();
             updateRequest.setName("Done");
 
             TaskListDto updatedResponse = new TaskListDto();
@@ -112,7 +112,7 @@ class TaskControllerTest {
             updatedModel.setId(1L);
             updatedModel.setName("Done");
 
-            when(taskService.updateTaskList(eq(1L), any(TaskListDto.class))).thenReturn(updatedResponse);
+            when(taskService.updateTaskList(eq(1L), any(UpdateTaskListRequest.class))).thenReturn(updatedResponse);
             when(taskListAssembler.toModel(any(TaskListDto.class))).thenReturn(updatedModel);
 
             // Act
@@ -156,8 +156,8 @@ class TaskControllerTest {
     class TaskTests {
 
         @Test
-        @DisplayName("Should create task and return 200")
-        void createTask_ValidRequest_Returns200() {
+        @DisplayName("Should create task and return 201")
+        void createTask_ValidRequest_Returns201() {
             // Arrange
             CreateTaskRequest request = new CreateTaskRequest();
             request.setTaskListId(1L);
@@ -171,7 +171,7 @@ class TaskControllerTest {
             ResponseEntity<TaskModel> response = taskController.createTask(request);
 
             // Assert
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getStatusCode().value()).isEqualTo(201);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getId()).isEqualTo(1L);
             assertThat(response.getBody().getTitle()).isEqualTo("Test Task");
@@ -182,7 +182,7 @@ class TaskControllerTest {
         @DisplayName("Should update task and return 200")
         void updateTask_ValidRequest_Returns200() {
             // Arrange
-            TaskDto updateRequest = new TaskDto();
+            UpdateTaskRequest updateRequest = new UpdateTaskRequest();
             updateRequest.setTitle("Updated Task");
             updateRequest.setIsCompleted(true);
 
@@ -196,7 +196,7 @@ class TaskControllerTest {
             updatedModel.setTitle("Updated Task");
             updatedModel.setIsCompleted(true);
 
-            when(taskService.updateTask(eq(1L), any(TaskDto.class))).thenReturn(updatedResponse);
+            when(taskService.updateTask(eq(1L), any(UpdateTaskRequest.class))).thenReturn(updatedResponse);
             when(taskAssembler.toModel(any(TaskDto.class))).thenReturn(updatedModel);
 
             // Act

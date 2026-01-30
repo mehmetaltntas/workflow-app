@@ -4,9 +4,14 @@ import com.workflow.backend.dto.BoardResponse;
 import com.workflow.backend.dto.CreateBoardRequest;
 import com.workflow.backend.dto.PaginatedResponse;
 import com.workflow.backend.dto.UpdateBoardRequest;
+import com.workflow.backend.dto.UpdateBoardStatusRequest;
+import com.workflow.backend.entity.Board;
+import com.workflow.backend.entity.User;
 import com.workflow.backend.hateoas.assembler.BoardModelAssembler;
+import com.workflow.backend.hateoas.assembler.LabelModelAssembler;
 import com.workflow.backend.hateoas.model.BoardModel;
 import com.workflow.backend.service.BoardService;
+import com.workflow.backend.service.LabelService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,15 +42,32 @@ class BoardControllerTest {
     @Mock
     private BoardModelAssembler boardAssembler;
 
+    @Mock
+    private LabelService labelService;
+
+    @Mock
+    private LabelModelAssembler labelAssembler;
+
     @InjectMocks
     private BoardController boardController;
 
     private CreateBoardRequest createBoardRequest;
     private BoardResponse boardResponse;
     private BoardModel boardModel;
+    private Board boardEntity;
 
     @BeforeEach
     void setUp() {
+        User testUser = new User();
+        testUser.setId(1L);
+        testUser.setUsername("testuser");
+
+        boardEntity = new Board();
+        boardEntity.setId(1L);
+        boardEntity.setName("Test Board");
+        boardEntity.setSlug("test-board");
+        boardEntity.setUser(testUser);
+
         createBoardRequest = new CreateBoardRequest();
         createBoardRequest.setName("Test Board");
         createBoardRequest.setStatus("PLANLANDI");
@@ -72,8 +95,8 @@ class BoardControllerTest {
     class CreateBoardTests {
 
         @Test
-        @DisplayName("Should create board and return 200")
-        void createBoard_ValidRequest_Returns200() {
+        @DisplayName("Should create board and return 201")
+        void createBoard_ValidRequest_Returns201() {
             // Arrange
             when(boardService.createBoard(any(CreateBoardRequest.class))).thenReturn(boardResponse);
             when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(boardModel);
@@ -82,7 +105,7 @@ class BoardControllerTest {
             ResponseEntity<BoardModel> response = boardController.createBoard(createBoardRequest);
 
             // Assert
-            assertThat(response.getStatusCode().value()).isEqualTo(200);
+            assertThat(response.getStatusCode().value()).isEqualTo(201);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getId()).isEqualTo(1L);
             assertThat(response.getBody().getName()).isEqualTo("Test Board");
@@ -121,12 +144,12 @@ class BoardControllerTest {
                     true
             );
 
-            when(boardService.getAllBoards(eq(1L), any(Pageable.class))).thenReturn(paginatedResponse);
+            when(boardService.getAllBoardsFiltered(eq(1L), isNull(), isNull(), isNull(), any(Pageable.class))).thenReturn(paginatedResponse);
             when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(boardModel);
 
             // Act
             ResponseEntity<PagedModel<BoardModel>> response =
-                    boardController.getUserBoards(1L, 0, 10, "id", "desc");
+                    boardController.getUserBoards(1L, 0, 10, "id", "desc", null, null, null);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -193,11 +216,12 @@ class BoardControllerTest {
             updatedModel.setName("Updated Board");
             updatedModel.setStatus("DEVAM_EDIYOR");
 
+            when(boardService.resolveBoard("1")).thenReturn(boardEntity);
             when(boardService.updateBoard(eq(1L), any(UpdateBoardRequest.class))).thenReturn(updatedResponse);
             when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(updatedModel);
 
             // Act
-            ResponseEntity<BoardModel> response = boardController.updateBoard(1L, updateRequest);
+            ResponseEntity<BoardModel> response = boardController.updateBoard("1", updateRequest);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -215,10 +239,11 @@ class BoardControllerTest {
         @DisplayName("Should delete board and return 204")
         void deleteBoard_ValidId_Returns204() {
             // Arrange
+            when(boardService.resolveBoard("1")).thenReturn(boardEntity);
             doNothing().when(boardService).deleteBoard(1L);
 
             // Act
-            ResponseEntity<Void> response = boardController.deleteBoard(1L);
+            ResponseEntity<Void> response = boardController.deleteBoard("1");
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(204);
@@ -242,11 +267,15 @@ class BoardControllerTest {
             updatedModel.setId(1L);
             updatedModel.setStatus("TAMAMLANDI");
 
+            when(boardService.resolveBoard("1")).thenReturn(boardEntity);
             when(boardService.updateBoardStatus(eq(1L), any(String.class))).thenReturn(updatedResponse);
             when(boardAssembler.toModel(any(BoardResponse.class))).thenReturn(updatedModel);
 
+            UpdateBoardStatusRequest statusRequest = new UpdateBoardStatusRequest();
+            statusRequest.setStatus("TAMAMLANDI");
+
             // Act
-            ResponseEntity<BoardModel> response = boardController.updateBoardStatus(1L, "TAMAMLANDI");
+            ResponseEntity<BoardModel> response = boardController.updateBoardStatus("1", statusRequest);
 
             // Assert
             assertThat(response.getStatusCode().value()).isEqualTo(200);

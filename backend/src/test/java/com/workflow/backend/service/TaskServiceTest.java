@@ -45,6 +45,9 @@ class TaskServiceTest {
     @Mock
     private AuthorizationService authorizationService;
 
+    @Mock
+    private BoardMemberService boardMemberService;
+
     @InjectMocks
     private TaskService taskService;
 
@@ -100,7 +103,7 @@ class TaskServiceTest {
             request.setDescription("Description");
 
             doNothing().when(authorizationService).verifyTaskListOwnership(1L);
-            when(taskListRepository.findById(1L)).thenReturn(Optional.of(testTaskList));
+            when(taskListRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testTaskList));
             when(taskRepository.existsByTitleAndTaskList("New Task", testTaskList)).thenReturn(false);
             when(taskRepository.findMaxPositionByListId(1L)).thenReturn(0);
             when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> {
@@ -127,7 +130,7 @@ class TaskServiceTest {
             request.setTitle("New Task");
 
             doNothing().when(authorizationService).verifyTaskListOwnership(1L);
-            when(taskListRepository.findById(1L)).thenReturn(Optional.of(testTaskList));
+            when(taskListRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testTaskList));
             when(taskRepository.existsByTitleAndTaskList("New Task", testTaskList)).thenReturn(false);
             when(taskRepository.findMaxPositionByListId(1L)).thenReturn(5);
             when(taskRepository.save(any(Task.class))).thenAnswer(invocation -> {
@@ -152,13 +155,13 @@ class TaskServiceTest {
             request.setTitle("Existing Task");
 
             doNothing().when(authorizationService).verifyTaskListOwnership(1L);
-            when(taskListRepository.findById(1L)).thenReturn(Optional.of(testTaskList));
+            when(taskListRepository.findByIdWithLock(1L)).thenReturn(Optional.of(testTaskList));
             when(taskRepository.existsByTitleAndTaskList("Existing Task", testTaskList)).thenReturn(true);
 
             // Act & Assert
             assertThatThrownBy(() -> taskService.createTask(request))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Bu görev isminden bu listede zaten var");
+                    .hasMessageContaining("zaten mevcut");
 
             verify(taskRepository, never()).save(any(Task.class));
         }
@@ -234,8 +237,8 @@ class TaskServiceTest {
 
             doNothing().when(authorizationService).verifyTaskListOwnership(1L);
             when(taskListRepository.findById(1L)).thenReturn(Optional.of(testTaskList));
-            when(taskRepository.findById(1L)).thenReturn(Optional.of(testTask));
-            when(taskRepository.save(any(Task.class))).thenReturn(testTask);
+            when(taskRepository.findAllById(List.of(1L))).thenReturn(List.of(testTask));
+            when(taskRepository.saveAll(anyList())).thenReturn(List.of(testTask));
             when(taskRepository.findByTaskListIdOrderByPositionAsc(1L)).thenReturn(List.of(testTask));
 
             // Act
@@ -275,12 +278,12 @@ class TaskServiceTest {
         @DisplayName("Should update task successfully")
         void updateTask_Success() {
             // Arrange
-            TaskDto updateRequest = new TaskDto();
+            UpdateTaskRequest updateRequest = new UpdateTaskRequest();
             updateRequest.setTitle("Updated Title");
             updateRequest.setDescription("Updated description");
             updateRequest.setIsCompleted(true);
 
-            doNothing().when(authorizationService).verifyTaskOwnership(1L);
+            when(boardMemberService.verifyAccessToTask(1L)).thenReturn(true);
             when(taskRepository.findById(1L)).thenReturn(Optional.of(testTask));
             when(taskRepository.save(any(Task.class))).thenReturn(testTask);
 

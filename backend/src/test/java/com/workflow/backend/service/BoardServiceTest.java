@@ -6,7 +6,9 @@ import com.workflow.backend.dto.PaginatedResponse;
 import com.workflow.backend.dto.UpdateBoardRequest;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.User;
+import com.workflow.backend.repository.BoardMemberRepository;
 import com.workflow.backend.repository.BoardRepository;
+import com.workflow.backend.repository.UserProfilePictureRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +39,12 @@ class BoardServiceTest {
     private BoardRepository boardRepository;
 
     @Mock
+    private BoardMemberRepository boardMemberRepository;
+
+    @Mock
+    private UserProfilePictureRepository profilePictureRepository;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @Mock
@@ -42,6 +52,15 @@ class BoardServiceTest {
 
     @Mock
     private LabelService labelService;
+
+    @Mock
+    private ConnectionService connectionService;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache mockCache;
 
     @InjectMocks
     private BoardService boardService;
@@ -52,6 +71,8 @@ class BoardServiceTest {
 
     @BeforeEach
     void setUp() {
+        lenient().when(cacheManager.getCache(anyString())).thenReturn(mockCache);
+
         testUser = new User();
         testUser.setId(1L);
         testUser.setUsername("testuser");
@@ -129,7 +150,7 @@ class BoardServiceTest {
             // Act & Assert
             assertThatThrownBy(() -> boardService.createBoard(createBoardRequest))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Bu isimde bir pano zaten var");
+                    .hasMessageContaining("zaten mevcut");
 
             verify(boardRepository, never()).save(any(Board.class));
         }
@@ -170,7 +191,7 @@ class BoardServiceTest {
         void getBoardDetails_Success() {
             // Arrange
             when(boardRepository.findBySlugWithUser("test-board")).thenReturn(Optional.of(testBoard));
-            doNothing().when(authorizationService).verifyBoardOwnership(1L);
+            when(currentUserService.getCurrentUserId()).thenReturn(1L); // Same as board owner
 
             // Act
             BoardResponse response = boardService.getBoardDetails("test-board");
@@ -229,6 +250,7 @@ class BoardServiceTest {
         void deleteBoard_Success() {
             // Arrange
             doNothing().when(authorizationService).verifyBoardOwnership(1L);
+            when(boardRepository.findById(1L)).thenReturn(Optional.of(testBoard));
             doNothing().when(boardRepository).deleteById(1L);
 
             // Act

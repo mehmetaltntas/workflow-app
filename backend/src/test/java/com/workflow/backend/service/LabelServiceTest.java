@@ -3,6 +3,7 @@ package com.workflow.backend.service;
 import com.workflow.backend.dto.CreateLabelRequest;
 import com.workflow.backend.dto.LabelDto;
 import com.workflow.backend.dto.TaskListUsageResponse;
+import com.workflow.backend.dto.UpdateLabelRequest;
 import com.workflow.backend.entity.Board;
 import com.workflow.backend.entity.Label;
 import com.workflow.backend.entity.TaskList;
@@ -152,7 +153,7 @@ class LabelServiceTest {
             // Act & Assert
             assertThatThrownBy(() -> labelService.createLabel(request))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Bu isimde bir etiket zaten var");
+                    .hasMessageContaining("zaten mevcut");
 
             verify(labelRepository, never()).save(any(Label.class));
         }
@@ -184,7 +185,7 @@ class LabelServiceTest {
         @DisplayName("Should update label successfully")
         void updateLabel_Success() {
             // Arrange
-            LabelDto updateRequest = new LabelDto();
+            UpdateLabelRequest updateRequest = new UpdateLabelRequest();
             updateRequest.setName("Updated Bug");
             updateRequest.setColor("#ff00ff");
 
@@ -205,7 +206,7 @@ class LabelServiceTest {
         @DisplayName("Should throw exception when new name already exists")
         void updateLabel_DuplicateName_ThrowsException() {
             // Arrange
-            LabelDto updateRequest = new LabelDto();
+            UpdateLabelRequest updateRequest = new UpdateLabelRequest();
             updateRequest.setName("Feature");
             updateRequest.setColor("#00ff00");
 
@@ -216,7 +217,7 @@ class LabelServiceTest {
             // Act & Assert
             assertThatThrownBy(() -> labelService.updateLabel(1L, updateRequest))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Bu isimde bir etiket zaten var");
+                    .hasMessageContaining("zaten mevcut");
         }
     }
 

@@ -1,11 +1,15 @@
 package com.workflow.backend.controller;
 
+import com.workflow.backend.dto.AuthResponse;
 import com.workflow.backend.dto.LoginRequest;
 import com.workflow.backend.dto.RegisterRequest;
 import com.workflow.backend.dto.UserResponse;
 import com.workflow.backend.entity.RefreshToken;
 import com.workflow.backend.entity.User;
 import com.workflow.backend.security.JwtService;
+import com.workflow.backend.service.EmailVerificationService;
+import com.workflow.backend.service.GoogleAuthService;
+import com.workflow.backend.service.PasswordResetService;
 import com.workflow.backend.service.RefreshTokenService;
 import com.workflow.backend.service.UserService;
 import jakarta.servlet.http.Cookie;
@@ -19,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
@@ -29,7 +34,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +53,18 @@ class AuthControllerTest {
     private JwtService jwtService;
 
     @Mock
+    private PasswordResetService passwordResetService;
+
+    @Mock
+    private GoogleAuthService googleAuthService;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
+    @Mock
+    private Environment environment;
+
+    @Mock
     private HttpServletRequest mockRequest;
 
     @Mock
@@ -56,10 +75,12 @@ class AuthControllerTest {
 
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
-    private UserResponse userResponse;
+    private AuthResponse authResponse;
 
     @BeforeEach
     void setUp() {
+        lenient().when(environment.getActiveProfiles()).thenReturn(new String[]{});
+
         registerRequest = new RegisterRequest();
         registerRequest.setUsername("testuser");
         registerRequest.setEmail("test@example.com");
@@ -69,12 +90,15 @@ class AuthControllerTest {
         loginRequest.setUsername("testuser");
         loginRequest.setPassword("Password123!");
 
-        userResponse = new UserResponse();
+        UserResponse userResponse = new UserResponse();
         userResponse.setId(1L);
         userResponse.setUsername("testuser");
         userResponse.setEmail("test@example.com");
-        userResponse.setToken("accessToken");
-        userResponse.setRefreshToken("refreshToken");
+
+        authResponse = new AuthResponse();
+        authResponse.setUser(userResponse);
+        authResponse.setToken("accessToken");
+        authResponse.setRefreshToken("refreshToken");
     }
 
     @Nested
@@ -85,7 +109,7 @@ class AuthControllerTest {
         @DisplayName("Should register user and return 200 with user data (tokens in cookies)")
         void register_ValidRequest_Returns200() {
             // Arrange
-            when(userService.register(any(RegisterRequest.class))).thenReturn(userResponse);
+            when(userService.register(any(RegisterRequest.class))).thenReturn(authResponse);
 
             // Act
             ResponseEntity<UserResponse> response = authController.register(registerRequest, mockResponse);
@@ -95,11 +119,8 @@ class AuthControllerTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getId()).isEqualTo(1L);
             assertThat(response.getBody().getUsername()).isEqualTo("testuser");
-            // Tokens should be null in response body (set as httpOnly cookies instead)
-            assertThat(response.getBody().getToken()).isNull();
-            assertThat(response.getBody().getRefreshToken()).isNull();
-            // Verify cookies were set
-            verify(mockResponse).addCookie(any(Cookie.class));
+            // Verify cookies were set (access_token + refresh_token)
+            verify(mockResponse, times(2)).addCookie(any(Cookie.class));
         }
 
         @Test
@@ -124,7 +145,7 @@ class AuthControllerTest {
         @DisplayName("Should login user and set tokens as cookies")
         void login_ValidCredentials_SetsCookies() {
             // Arrange
-            when(userService.login(any(LoginRequest.class))).thenReturn(userResponse);
+            when(userService.login(any(LoginRequest.class))).thenReturn(authResponse);
 
             // Act
             ResponseEntity<UserResponse> response = authController.login(loginRequest, mockResponse);
@@ -133,11 +154,8 @@ class AuthControllerTest {
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getUsername()).isEqualTo("testuser");
-            // Tokens should be null in response body (set as httpOnly cookies instead)
-            assertThat(response.getBody().getToken()).isNull();
-            assertThat(response.getBody().getRefreshToken()).isNull();
-            // Verify cookies were set
-            verify(mockResponse).addCookie(any(Cookie.class));
+            // Verify cookies were set (access_token + refresh_token)
+            verify(mockResponse, times(2)).addCookie(any(Cookie.class));
         }
 
         @Test
