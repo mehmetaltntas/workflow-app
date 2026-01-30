@@ -408,11 +408,11 @@ public class UserService {
         // Tum panolarin status dagilimi (sahip olunan panolar)
         Map<String, Integer> boardsByStatus = initStatusMap();
         for (Object[] row : boardRepository.countByStatusForUser(targetUserId)) {
-            boardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
+            boardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), (a, b) -> a + b);
         }
         // Uye olunan ekip panolarini da ekle
         for (Object[] row : boardMemberRepository.countMemberTeamBoardsByStatus(targetUserId)) {
-            boardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
+            boardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), (a, b) -> a + b);
         }
         response.setBoardsByStatus(boardsByStatus);
 
@@ -426,10 +426,10 @@ public class UserService {
         // Takim panolarinin status dagilimi (sahip olunan + uye olunan)
         Map<String, Integer> teamBoardsByStatus = initStatusMap();
         for (Object[] row : boardRepository.countTeamByStatusForUser(targetUserId)) {
-            teamBoardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
+            teamBoardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), (a, b) -> a + b);
         }
         for (Object[] row : boardMemberRepository.countMemberTeamBoardsByStatus(targetUserId)) {
-            teamBoardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
+            teamBoardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), (a, b) -> a + b);
         }
         response.setTeamBoardsByStatus(teamBoardsByStatus);
 
