@@ -33,8 +33,8 @@ const ConnectionsPage = () => {
           <div className="connections-page__error-icon">
             <AlertCircle size={32} color="var(--danger)" />
           </div>
-          <h2 className="connections-page__error-title">Bir Hata Olustu</h2>
-          <p className="connections-page__error-text">Baglantilar yuklenirken bir hata olustu.</p>
+          <h2 className="connections-page__error-title">Bir Hata Oluştu</h2>
+          <p className="connections-page__error-text">Bağlantılar yüklenirken bir hata oluştu.</p>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ const ConnectionsPage = () => {
         <div className="connections-page__header-icon">
           <Users size={22} color="var(--primary)" strokeWidth={2} />
         </div>
-        <h1 className="connections-page__title">Agim</h1>
+        <h1 className="connections-page__title">Ağım</h1>
         <span className="connections-page__count">{connections?.length ?? 0}</span>
       </div>
 
@@ -58,7 +58,7 @@ const ConnectionsPage = () => {
             <div className="connections-page__section-header-icon">
               <UserPlus size={18} color="var(--warning)" strokeWidth={2} />
             </div>
-            <h2 className="connections-page__section-title">Baglanti Istekleri</h2>
+            <h2 className="connections-page__section-title">Bağlantı İstekleri</h2>
             <span className="connections-page__pending-badge">{pendingRequests.length}</span>
           </div>
           <div className="connections-page__list">
@@ -122,9 +122,9 @@ const ConnectionsPage = () => {
           <div className="connections-page__empty-icon">
             <Users size={32} color="var(--text-muted)" />
           </div>
-          <h2 className="connections-page__empty-title">Henuz baglantiniz yok</h2>
+          <h2 className="connections-page__empty-title">Henüz bağlantınız yok</h2>
           <p className="connections-page__empty-text">
-            Kullanicilari arayarak baglanti istegi gonderebilirsiniz.
+            Kullanıcıları arayarak bağlantı isteği gönderebilirsiniz.
           </p>
         </div>
       ) : (
