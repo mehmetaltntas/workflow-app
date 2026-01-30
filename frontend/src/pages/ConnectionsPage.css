@@ -300,26 +300,3 @@
   color: var(--primary);
 }
 
-/* Remove Button */
-.connections-page__remove-btn {
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  background: rgba(239, 68, 68, 0.06);
-  color: #ef4444;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 200ms ease;
-  flex-shrink: 0;
-}
-
-.connections-page__remove-btn:hover {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.connections-page__remove-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}

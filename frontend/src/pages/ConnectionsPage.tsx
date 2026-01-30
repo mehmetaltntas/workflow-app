@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, AlertCircle, UserPlus, Check, X } from "lucide-react";
+import { Users, AlertCircle, UserPlus, Check, X, UserX } from "lucide-react";
 import { useAcceptedConnections, useRemoveConnection, usePendingRequests, useAcceptConnectionRequest, useRejectConnectionRequest } from "../hooks/queries/useConnectionMutations";
 import { useAuthStore } from "../stores/authStore";
+import { ActionMenu } from "../components/ActionMenu";
+import { ConfirmationModal } from "../components/ConfirmationModal";
 import "./ConnectionsPage.css";
 
 const ConnectionsPage = () => {
@@ -11,6 +14,7 @@ const ConnectionsPage = () => {
   const acceptRequest = useAcceptConnectionRequest();
   const rejectRequest = useRejectConnectionRequest();
   const currentUsername = useAuthStore((state) => state.username);
+  const [connectionToRemove, setConnectionToRemove] = useState<{ id: number; displayName: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -157,18 +161,43 @@ const ConnectionsPage = () => {
                     @{otherUsername}
                   </Link>
                 </div>
-                <button
-                  className="connections-page__remove-btn"
-                  onClick={() => removeConnection.mutate(connection.id)}
-                  disabled={removeConnection.isPending}
-                >
-                  Kaldir
-                </button>
+                <ActionMenu
+                  items={[{
+                    label: "Bağlantıyı Kaldır",
+                    onClick: () => setConnectionToRemove({
+                      id: connection.id,
+                      displayName: fullName || otherUsername,
+                    }),
+                    variant: "danger",
+                    icon: UserX,
+                  }]}
+                  dropdownPosition="left"
+                />
               </div>
             );
           })}
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={!!connectionToRemove}
+        title="Bağlantıyı Kaldır"
+        message={
+          connectionToRemove
+            ? `${connectionToRemove.displayName} adlı kullanıcıyı bağlantılardan kaldırmak istediğinize emin misiniz? Endişelenmeyin, WorkFlow ${connectionToRemove.displayName} adlı kullanıcıyı bilgilendirmez.`
+            : ""
+        }
+        confirmText="Evet, Kaldır"
+        cancelText="İptal"
+        variant="danger"
+        onConfirm={() => {
+          if (connectionToRemove) {
+            removeConnection.mutate(connectionToRemove.id);
+          }
+          setConnectionToRemove(null);
+        }}
+        onCancel={() => setConnectionToRemove(null)}
+      />
     </div>
   );
 };
