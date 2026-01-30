@@ -36,4 +36,12 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
     @Query("SELECT CASE WHEN COUNT(bm) > 0 THEN true ELSE false END FROM BoardMember bm WHERE bm.board.id = :boardId AND bm.user.id = :userId AND bm.role = com.workflow.backend.entity.BoardMemberRole.MODERATOR AND bm.status = 'ACCEPTED'")
     boolean isModeratorOnBoard(@Param("boardId") Long boardId, @Param("userId") Long userId);
 
+    // Profil istatistikleri: Uye olunan ekip panosu sayisi (sahip olunmayanlar)
+    @Query("SELECT COUNT(bm) FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.user.id <> :userId")
+    long countMemberTeamBoards(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Uye olunan ekip panolarinin status dagilimi
+    @Query("SELECT bm.board.status, COUNT(bm) FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.user.id <> :userId GROUP BY bm.board.status")
+    List<Object[]> countMemberTeamBoardsByStatus(@Param("userId") Long userId);
+
 }

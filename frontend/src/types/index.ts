@@ -246,6 +246,20 @@ export interface UserProfileStats {
   overallProgress: number;
   topCategories: { category: string; count: number }[];
   teamBoardCount: number;
+  // Bireysel pano istatistikleri
+  individualTotalLists: number;
+  individualCompletedLists: number;
+  individualTotalTasks: number;
+  individualCompletedTasks: number;
+  individualTotalSubtasks: number;
+  individualCompletedSubtasks: number;
+  // Ekip pano istatistikleri (atanan ogeler)
+  teamTotalLists: number;
+  teamCompletedLists: number;
+  teamTotalTasks: number;
+  teamCompletedTasks: number;
+  teamTotalSubtasks: number;
+  teamCompletedSubtasks: number;
 }
 
 // Bildirim

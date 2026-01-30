@@ -374,7 +374,12 @@ const UserProfilePage = () => {
               icon={List}
               title="Listeler"
               value={stats.totalLists}
-              subtitle={`${stats.completedLists} tamamlandı`}
+              subtitle={
+                <>
+                  <div>{stats.individualTotalLists} Bireysel - {stats.individualCompletedLists} tamamlandı</div>
+                  <div>{stats.teamTotalLists} Ekip - {stats.teamCompletedLists} tamamlandı</div>
+                </>
+              }
               color={colors.semantic.info}
               bgColor={colors.semantic.infoLight}
             />
@@ -384,7 +389,12 @@ const UserProfilePage = () => {
               icon={CheckSquare}
               title="Görevler"
               value={stats.totalTasks}
-              subtitle={`${stats.completedTasks} tamamlandı`}
+              subtitle={
+                <>
+                  <div>{stats.individualTotalTasks} Bireysel - {stats.individualCompletedTasks} tamamlandı</div>
+                  <div>{stats.teamTotalTasks} Ekip - {stats.teamCompletedTasks} tamamlandı</div>
+                </>
+              }
               color={colors.semantic.success}
               bgColor={colors.semantic.successLight}
             />
@@ -394,7 +404,12 @@ const UserProfilePage = () => {
               icon={ListTodo}
               title="Alt Görevler"
               value={stats.totalSubtasks}
-              subtitle={`${stats.completedSubtasks} tamamlandı`}
+              subtitle={
+                <>
+                  <div>{stats.individualTotalSubtasks} Bireysel - {stats.individualCompletedSubtasks} tamamlandı</div>
+                  <div>{stats.teamTotalSubtasks} Ekip - {stats.teamCompletedSubtasks} tamamlandı</div>
+                </>
+              }
               color={colors.semantic.warning}
               bgColor={colors.semantic.warningLight}
             />

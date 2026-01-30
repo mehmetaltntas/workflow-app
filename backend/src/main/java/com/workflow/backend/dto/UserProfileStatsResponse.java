@@ -24,6 +24,22 @@ public class UserProfileStatsResponse {
     private int teamBoardCount;
     private List<CategoryStat> topCategories;
 
+    // Bireysel (individual) board istatistikleri
+    private int individualTotalLists;
+    private int individualCompletedLists;
+    private int individualTotalTasks;
+    private int individualCompletedTasks;
+    private int individualTotalSubtasks;
+    private int individualCompletedSubtasks;
+
+    // Ekip (team) board istatistikleri (atanan ogeleri icerir)
+    private int teamTotalLists;
+    private int teamCompletedLists;
+    private int teamTotalTasks;
+    private int teamCompletedTasks;
+    private int teamTotalSubtasks;
+    private int teamCompletedSubtasks;
+
     @Getter
     @Setter
     public static class CategoryStat {

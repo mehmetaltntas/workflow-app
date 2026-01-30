@@ -33,4 +33,12 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long> {
     // Profil istatistikleri: Toplam ve tamamlanan liste sayilari
     @Query("SELECT COUNT(tl), SUM(CASE WHEN tl.isCompleted = true THEN 1 ELSE 0 END) FROM TaskList tl WHERE tl.board.user.id = :userId")
     List<Object[]> countStatsForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Bireysel panolardaki liste sayilari
+    @Query("SELECT COUNT(tl), SUM(CASE WHEN tl.isCompleted = true THEN 1 ELSE 0 END) FROM TaskList tl WHERE tl.board.user.id = :userId AND tl.board.boardType = com.workflow.backend.entity.BoardType.INDIVIDUAL")
+    List<Object[]> countIndividualStatsForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Kullanicinin sahip oldugu ekip panolarindaki liste sayilari
+    @Query("SELECT COUNT(tl), SUM(CASE WHEN tl.isCompleted = true THEN 1 ELSE 0 END) FROM TaskList tl WHERE tl.board.user.id = :userId AND tl.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
+    List<Object[]> countOwnedTeamListStatsForUser(@Param("userId") Long userId);
 }

@@ -27,4 +27,12 @@ public interface SubtaskRepository extends JpaRepository<Subtask, Long> {
     // Profil istatistikleri: Toplam ve tamamlanan alt gorev sayilari
     @Query("SELECT COUNT(s), SUM(CASE WHEN s.isCompleted = true THEN 1 ELSE 0 END) FROM Subtask s WHERE s.task.taskList.board.user.id = :userId")
     List<Object[]> countStatsForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Bireysel panolardaki alt gorev sayilari
+    @Query("SELECT COUNT(s), SUM(CASE WHEN s.isCompleted = true THEN 1 ELSE 0 END) FROM Subtask s WHERE s.task.taskList.board.user.id = :userId AND s.task.taskList.board.boardType = com.workflow.backend.entity.BoardType.INDIVIDUAL")
+    List<Object[]> countIndividualStatsForUser(@Param("userId") Long userId);
+
+    // Profil istatistikleri: Kullanicinin sahip oldugu ekip panolarindaki alt gorev sayilari
+    @Query("SELECT COUNT(s), SUM(CASE WHEN s.isCompleted = true THEN 1 ELSE 0 END) FROM Subtask s WHERE s.task.taskList.board.user.id = :userId AND s.task.taskList.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
+    List<Object[]> countOwnedTeamSubtaskStatsForUser(@Param("userId") Long userId);
 }

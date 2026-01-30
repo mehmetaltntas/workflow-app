@@ -40,6 +40,8 @@ public class UserService {
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
     private final SubtaskRepository subtaskRepository;
+    private final BoardMemberRepository boardMemberRepository;
+    private final BoardMemberAssignmentRepository boardMemberAssignmentRepository;
 
     // KULLANICI ADI MÜSAİTLİK KONTROLÜ (case-insensitive)
     public boolean isUsernameAvailable(String username) {
@@ -395,81 +397,105 @@ public class UserService {
 
         UserProfileStatsResponse response = new UserProfileStatsResponse();
 
-        // Board istatistikleri
-        long totalBoards = boardRepository.countByUserId(targetUserId);
-        response.setTotalBoards((int) totalBoards);
+        // ===== BOARD ISTATISTIKLERI (sahip olunan + uye olunan ekip panolari) =====
+        long ownedTotalBoards = boardRepository.countByUserId(targetUserId);
+        long ownedTeamBoardCount = boardRepository.countTeamBoardsByUserId(targetUserId);
+        long memberTeamBoardCount = boardMemberRepository.countMemberTeamBoards(targetUserId);
 
-        long teamBoardCount = boardRepository.countTeamBoardsByUserId(targetUserId);
-        response.setTeamBoardCount((int) teamBoardCount);
+        response.setTotalBoards((int) (ownedTotalBoards + memberTeamBoardCount));
+        response.setTeamBoardCount((int) (ownedTeamBoardCount + memberTeamBoardCount));
 
-        Map<String, Integer> boardsByStatus = new LinkedHashMap<>();
-        boardsByStatus.put("PLANLANDI", 0);
-        boardsByStatus.put("DEVAM_EDIYOR", 0);
-        boardsByStatus.put("TAMAMLANDI", 0);
-        boardsByStatus.put("DURDURULDU", 0);
-        boardsByStatus.put("BIRAKILDI", 0);
+        // Tum panolarin status dagilimi (sahip olunan panolar)
+        Map<String, Integer> boardsByStatus = initStatusMap();
         for (Object[] row : boardRepository.countByStatusForUser(targetUserId)) {
-            String status = (String) row[0];
-            int count = ((Long) row[1]).intValue();
-            boardsByStatus.put(status, count);
+            boardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
+        }
+        // Uye olunan ekip panolarini da ekle
+        for (Object[] row : boardMemberRepository.countMemberTeamBoardsByStatus(targetUserId)) {
+            boardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
         }
         response.setBoardsByStatus(boardsByStatus);
 
         // Bireysel panolarin status dagilimi
-        Map<String, Integer> individualBoardsByStatus = new LinkedHashMap<>();
-        individualBoardsByStatus.put("PLANLANDI", 0);
-        individualBoardsByStatus.put("DEVAM_EDIYOR", 0);
-        individualBoardsByStatus.put("TAMAMLANDI", 0);
-        individualBoardsByStatus.put("DURDURULDU", 0);
-        individualBoardsByStatus.put("BIRAKILDI", 0);
+        Map<String, Integer> individualBoardsByStatus = initStatusMap();
         for (Object[] row : boardRepository.countIndividualByStatusForUser(targetUserId)) {
-            String status = (String) row[0];
-            int count = ((Long) row[1]).intValue();
-            individualBoardsByStatus.put(status, count);
+            individualBoardsByStatus.put((String) row[0], ((Long) row[1]).intValue());
         }
         response.setIndividualBoardsByStatus(individualBoardsByStatus);
 
-        // Takim panolarinin status dagilimi
-        Map<String, Integer> teamBoardsByStatus = new LinkedHashMap<>();
-        teamBoardsByStatus.put("PLANLANDI", 0);
-        teamBoardsByStatus.put("DEVAM_EDIYOR", 0);
-        teamBoardsByStatus.put("TAMAMLANDI", 0);
-        teamBoardsByStatus.put("DURDURULDU", 0);
-        teamBoardsByStatus.put("BIRAKILDI", 0);
+        // Takim panolarinin status dagilimi (sahip olunan + uye olunan)
+        Map<String, Integer> teamBoardsByStatus = initStatusMap();
         for (Object[] row : boardRepository.countTeamByStatusForUser(targetUserId)) {
-            String status = (String) row[0];
-            int count = ((Long) row[1]).intValue();
-            teamBoardsByStatus.put(status, count);
+            teamBoardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
+        }
+        for (Object[] row : boardMemberRepository.countMemberTeamBoardsByStatus(targetUserId)) {
+            teamBoardsByStatus.merge((String) row[0], ((Long) row[1]).intValue(), Integer::sum);
         }
         response.setTeamBoardsByStatus(teamBoardsByStatus);
 
-        // Liste istatistikleri
-        List<Object[]> listStatsResult = taskListRepository.countStatsForUser(targetUserId);
-        Object[] listStats = listStatsResult.isEmpty() ? new Object[]{0L, 0L} : listStatsResult.get(0);
-        int totalLists = listStats[0] != null ? ((Number) listStats[0]).intValue() : 0;
-        int completedLists = listStats[1] != null ? ((Number) listStats[1]).intValue() : 0;
+        // ===== BIREYSEL PANO ISTATISTIKLERI (sahip olunan bireysel panolar) =====
+        Object[] indListStats = extractStats(taskListRepository.countIndividualStatsForUser(targetUserId));
+        int individualTotalLists = asInt(indListStats[0]);
+        int individualCompletedLists = asInt(indListStats[1]);
+        response.setIndividualTotalLists(individualTotalLists);
+        response.setIndividualCompletedLists(individualCompletedLists);
+
+        Object[] indTaskStats = extractStats(taskRepository.countIndividualStatsForUser(targetUserId));
+        int individualTotalTasks = asInt(indTaskStats[0]);
+        int individualCompletedTasks = asInt(indTaskStats[1]);
+        response.setIndividualTotalTasks(individualTotalTasks);
+        response.setIndividualCompletedTasks(individualCompletedTasks);
+
+        Object[] indSubtaskStats = extractStats(subtaskRepository.countIndividualStatsForUser(targetUserId));
+        int individualTotalSubtasks = asInt(indSubtaskStats[0]);
+        int individualCompletedSubtasks = asInt(indSubtaskStats[1]);
+        response.setIndividualTotalSubtasks(individualTotalSubtasks);
+        response.setIndividualCompletedSubtasks(individualCompletedSubtasks);
+
+        // ===== EKIP PANO ISTATISTIKLERI =====
+        // Sahip olunan ekip panolari: tum ogeler sayilir
+        Object[] ownedTeamListStats = extractStats(taskListRepository.countOwnedTeamListStatsForUser(targetUserId));
+        Object[] ownedTeamTaskStats = extractStats(taskRepository.countOwnedTeamTaskStatsForUser(targetUserId));
+        Object[] ownedTeamSubtaskStats = extractStats(subtaskRepository.countOwnedTeamSubtaskStatsForUser(targetUserId));
+
+        // Uye olunan ekip panolari: sadece atanan ogeler sayilir
+        Object[] memberListStats = extractStats(boardMemberAssignmentRepository.countAssignedListStatsForMember(targetUserId));
+        Object[] memberTaskStats = extractStats(boardMemberAssignmentRepository.countAssignedTaskStatsForMember(targetUserId));
+        Object[] memberSubtaskStats = extractStats(boardMemberAssignmentRepository.countAssignedSubtaskStatsForMember(targetUserId));
+
+        // Ekip toplamları (sahip olunan + uye olunan)
+        int teamTotalLists = asInt(ownedTeamListStats[0]) + asInt(memberListStats[0]);
+        int teamCompletedLists = asInt(ownedTeamListStats[1]) + asInt(memberListStats[1]);
+        response.setTeamTotalLists(teamTotalLists);
+        response.setTeamCompletedLists(teamCompletedLists);
+
+        int teamTotalTasks = asInt(ownedTeamTaskStats[0]) + asInt(memberTaskStats[0]);
+        int teamCompletedTasks = asInt(ownedTeamTaskStats[1]) + asInt(memberTaskStats[1]);
+        response.setTeamTotalTasks(teamTotalTasks);
+        response.setTeamCompletedTasks(teamCompletedTasks);
+
+        int teamTotalSubtasks = asInt(ownedTeamSubtaskStats[0]) + asInt(memberSubtaskStats[0]);
+        int teamCompletedSubtasks = asInt(ownedTeamSubtaskStats[1]) + asInt(memberSubtaskStats[1]);
+        response.setTeamTotalSubtasks(teamTotalSubtasks);
+        response.setTeamCompletedSubtasks(teamCompletedSubtasks);
+
+        // ===== GENEL TOPLAMLAR (bireysel + ekip) =====
+        int totalLists = individualTotalLists + teamTotalLists;
+        int completedLists = individualCompletedLists + teamCompletedLists;
         response.setTotalLists(totalLists);
         response.setCompletedLists(completedLists);
 
-        // Gorev istatistikleri
-        List<Object[]> taskStatsResult = taskRepository.countStatsForUser(targetUserId);
-        Object[] taskStats = taskStatsResult.isEmpty() ? new Object[]{0L, 0L} : taskStatsResult.get(0);
-        int totalTasks = taskStats[0] != null ? ((Number) taskStats[0]).intValue() : 0;
-        int completedTasks = taskStats[1] != null ? ((Number) taskStats[1]).intValue() : 0;
+        int totalTasks = individualTotalTasks + teamTotalTasks;
+        int completedTasks = individualCompletedTasks + teamCompletedTasks;
         response.setTotalTasks(totalTasks);
         response.setCompletedTasks(completedTasks);
 
-        // Alt gorev istatistikleri
-        List<Object[]> subtaskStatsResult = subtaskRepository.countStatsForUser(targetUserId);
-        Object[] subtaskStats = subtaskStatsResult.isEmpty() ? new Object[]{0L, 0L} : subtaskStatsResult.get(0);
-        int totalSubtasks = subtaskStats[0] != null ? ((Number) subtaskStats[0]).intValue() : 0;
-        int completedSubtasks = subtaskStats[1] != null ? ((Number) subtaskStats[1]).intValue() : 0;
+        int totalSubtasks = individualTotalSubtasks + teamTotalSubtasks;
+        int completedSubtasks = individualCompletedSubtasks + teamCompletedSubtasks;
         response.setTotalSubtasks(totalSubtasks);
         response.setCompletedSubtasks(completedSubtasks);
 
-        // Leaf-node progress hesaplamasi
-        // Alt gorevi olan gorevlerde: alt gorevleri + parent gorevi say
-        // Alt gorevi olmayan gorevlerde: gorevi say
+        // ===== LEAF-NODE PROGRESS HESAPLAMASI =====
         List<Object[]> taskSubtaskInfo = taskRepository.findTaskSubtaskInfoForUser(targetUserId);
         int leafTotal = 0;
         int leafCompleted = 0;
@@ -481,30 +507,33 @@ public class UserService {
 
             if (subtaskCount > 0) {
                 tasksWithSubtasks++;
-                // Parent gorevi de say - tum subtask'lar bitse bile parent tamamlanmadiysa %100 olmaz
-                leafTotal++;
-                if (Boolean.TRUE.equals(isCompleted)) {
-                    leafCompleted++;
-                }
-            } else {
-                // Leaf node: gorev kendisi
-                leafTotal++;
-                if (Boolean.TRUE.equals(isCompleted)) {
-                    leafCompleted++;
-                }
+            }
+            leafTotal++;
+            if (Boolean.TRUE.equals(isCompleted)) {
+                leafCompleted++;
             }
         }
 
-        // Alt gorevi olan gorevlerin alt gorevlerini ekle
+        // Sahip olunan panolardaki alt gorevleri ekle
+        int ownedSubtasksTotal = asInt(indSubtaskStats[0]) + asInt(ownedTeamSubtaskStats[0]);
+        int ownedSubtasksCompleted = asInt(indSubtaskStats[1]) + asInt(ownedTeamSubtaskStats[1]);
         if (tasksWithSubtasks > 0) {
-            leafTotal += totalSubtasks;
-            leafCompleted += completedSubtasks;
+            leafTotal += ownedSubtasksTotal;
+            leafCompleted += ownedSubtasksCompleted;
         }
+
+        // Uye olunan panolardaki atanan gorev ve alt gorevleri de ekle
+        int memberTotalTasks = asInt(memberTaskStats[0]);
+        int memberCompletedTasks = asInt(memberTaskStats[1]);
+        int memberTotalSubtasks = asInt(memberSubtaskStats[0]);
+        int memberCompletedSubtasks = asInt(memberSubtaskStats[1]);
+        leafTotal += memberTotalTasks + memberTotalSubtasks;
+        leafCompleted += memberCompletedTasks + memberCompletedSubtasks;
 
         int overallProgress = leafTotal > 0 ? Math.round((float) leafCompleted / leafTotal * 100) : 0;
         response.setOverallProgress(overallProgress);
 
-        // Kategori istatistikleri (top 5)
+        // ===== KATEGORI ISTATISTIKLERI (top 5) =====
         List<Object[]> categoryData = boardRepository.countByCategoryForUser(targetUserId);
         List<UserProfileStatsResponse.CategoryStat> topCategories = new ArrayList<>();
         int limit = Math.min(categoryData.size(), 5);
@@ -516,7 +545,7 @@ public class UserService {
         }
         response.setTopCategories(topCategories);
 
-        // PRIVATE modda granular filtreleme uygula (SELF ve ACCEPTED haric)
+        // ===== PRIVATE MOD FILTRELEME =====
         if (mode == PrivacyMode.PRIVATE && !isSelf && !isConnected) {
             UserPrivacySettings settings = privacySettingsRepository.findByUserId(targetUserId)
                     .orElse(new UserPrivacySettings(targetUser));
@@ -532,18 +561,30 @@ public class UserService {
             if (!Boolean.TRUE.equals(settings.getShowListStats())) {
                 response.setTotalLists(0);
                 response.setCompletedLists(0);
+                response.setIndividualTotalLists(0);
+                response.setIndividualCompletedLists(0);
             }
             if (!Boolean.TRUE.equals(settings.getShowTaskStats())) {
                 response.setTotalTasks(0);
                 response.setCompletedTasks(0);
+                response.setIndividualTotalTasks(0);
+                response.setIndividualCompletedTasks(0);
             }
             if (!Boolean.TRUE.equals(settings.getShowSubtaskStats())) {
                 response.setTotalSubtasks(0);
                 response.setCompletedSubtasks(0);
+                response.setIndividualTotalSubtasks(0);
+                response.setIndividualCompletedSubtasks(0);
             }
             if (!Boolean.TRUE.equals(settings.getShowTeamBoardStats())) {
                 response.setTeamBoardCount(0);
                 response.setTeamBoardsByStatus(null);
+                response.setTeamTotalLists(0);
+                response.setTeamCompletedLists(0);
+                response.setTeamTotalTasks(0);
+                response.setTeamCompletedTasks(0);
+                response.setTeamTotalSubtasks(0);
+                response.setTeamCompletedSubtasks(0);
             }
             if (!Boolean.TRUE.equals(settings.getShowTopCategories())) {
                 response.setTopCategories(List.of());
@@ -551,6 +592,27 @@ public class UserService {
         }
 
         return response;
+    }
+
+    // Yardimci: Status map'i baslatir
+    private Map<String, Integer> initStatusMap() {
+        Map<String, Integer> map = new LinkedHashMap<>();
+        map.put("PLANLANDI", 0);
+        map.put("DEVAM_EDIYOR", 0);
+        map.put("TAMAMLANDI", 0);
+        map.put("DURDURULDU", 0);
+        map.put("BIRAKILDI", 0);
+        return map;
+    }
+
+    // Yardimci: Sorgu sonucundan istatistik dizisi cikarir
+    private Object[] extractStats(List<Object[]> result) {
+        return result.isEmpty() ? new Object[]{0L, 0L} : result.get(0);
+    }
+
+    // Yardimci: Object'i int'e cevirir (null-safe)
+    private int asInt(Object val) {
+        return val != null ? ((Number) val).intValue() : 0;
     }
 
     // HESAP SILME ZAMANLAMA
