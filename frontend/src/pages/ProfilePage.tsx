@@ -317,10 +317,16 @@ const ProfilePage = () => {
           title="Listeler"
           value={stats.totalLists}
           subtitle={
-            <>
-              <div>{stats.individualTotalLists} Bireysel - {stats.individualCompletedLists} tamamlandı</div>
-              <div>{stats.teamTotalLists} Ekip - {stats.teamCompletedLists} tamamlandı</div>
-            </>
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing[1] }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{stats.individualTotalLists} Bireysel</span>
+                <span>{stats.individualCompletedLists} Tamamlandı</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{stats.teamTotalLists} Ekip</span>
+                <span>{stats.teamCompletedLists} Tamamlandı</span>
+              </div>
+            </div>
           }
           color={colors.semantic.info}
           bgColor={colors.semantic.infoLight}
@@ -330,10 +336,16 @@ const ProfilePage = () => {
           title="Görevler"
           value={stats.totalTasks}
           subtitle={
-            <>
-              <div>{stats.individualTotalTasks} Bireysel - {stats.individualCompletedTasks} tamamlandı</div>
-              <div>{stats.teamTotalTasks} Ekip - {stats.teamCompletedTasks} tamamlandı</div>
-            </>
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing[1] }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{stats.individualTotalTasks} Bireysel</span>
+                <span>{stats.individualCompletedTasks} Tamamlandı</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{stats.teamTotalTasks} Ekip</span>
+                <span>{stats.teamCompletedTasks} Tamamlandı</span>
+              </div>
+            </div>
           }
           color={colors.semantic.success}
           bgColor={colors.semantic.successLight}
@@ -343,10 +355,16 @@ const ProfilePage = () => {
           title="Alt Görevler"
           value={stats.totalSubtasks}
           subtitle={
-            <>
-              <div>{stats.individualTotalSubtasks} Bireysel - {stats.individualCompletedSubtasks} tamamlandı</div>
-              <div>{stats.teamTotalSubtasks} Ekip - {stats.teamCompletedSubtasks} tamamlandı</div>
-            </>
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing[1] }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{stats.individualTotalSubtasks} Bireysel</span>
+                <span>{stats.individualCompletedSubtasks} Tamamlandı</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{stats.teamTotalSubtasks} Ekip</span>
+                <span>{stats.teamCompletedSubtasks} Tamamlandı</span>
+              </div>
+            </div>
           }
           color={colors.semantic.warning}
           bgColor={colors.semantic.warningLight}
