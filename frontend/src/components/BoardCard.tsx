@@ -74,12 +74,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
         </h3>
 
         {/* Actions */}
-        <div className="board-card__actions" onClick={(e) => e.stopPropagation()}>
-          <ActionMenu
-            items={menuItems}
-            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
-          />
-        </div>
+        {menuItems.length > 0 && (
+          <div className="board-card__actions" onClick={(e) => e.stopPropagation()}>
+            <ActionMenu
+              items={menuItems}
+              triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -107,12 +109,14 @@ const BoardCard: React.FC<BoardCardProps> = ({
           {board.name}
         </h3>
 
-        <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
-          <ActionMenu
-            items={menuItems}
-            triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
-          />
-        </div>
+        {menuItems.length > 0 && (
+          <div className="board-card__top-actions" onClick={(e) => e.stopPropagation()}>
+            <ActionMenu
+              items={menuItems}
+              triggerClassName="bg-white/5 hover:bg-white/10 border border-white/5"
+            />
+          </div>
+        )}
       </div>
 
       {/* Description */}

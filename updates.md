@@ -1,1 +1,0 @@
-1- Programda ki her kullanici icin ana sayfada Panolar Aktif Bireysel Panolar ve Aktif Ekip Panolari olarak ayrilmali. Her iki kategorinin Ana sayfada maksimum bulunma siniri 10 adet olmali. 10 adetten fazla oldugu zaman Daha fazla ile Panolarin o sayfasina Yonlendirilmeli.

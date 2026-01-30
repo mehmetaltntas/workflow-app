@@ -239,7 +239,7 @@ const HomePage = () => {
                   </span>
 
                   {/* Tumunu Gor linki */}
-                  {sortedIndividualBoards.length > 10 && (
+                  {sortedIndividualBoards.length > 5 && (
                     <button
                       onClick={() => navigate('/boards/status/devam-ediyor')}
                       className="home-page__view-all-btn"
@@ -250,9 +250,9 @@ const HomePage = () => {
                   )}
                 </div>
 
-                {/* Cards - max 10 */}
+                {/* Cards - max 5 */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {sortedIndividualBoards.slice(0, 10).map((board, index) => renderBoardCard(board, index, 1))}
+                  {sortedIndividualBoards.slice(0, 5).map((board, index) => renderBoardCard(board, index, 1))}
                 </div>
               </div>
             )}
@@ -274,7 +274,7 @@ const HomePage = () => {
                   </span>
 
                   {/* Tumunu Gor linki */}
-                  {sortedTeamBoards.length > 12 && (
+                  {sortedTeamBoards.length > 5 && (
                     <button
                       onClick={() => navigate('/team')}
                       className="home-page__view-all-btn"
@@ -285,9 +285,9 @@ const HomePage = () => {
                   )}
                 </div>
 
-                {/* Cards - max 12 */}
+                {/* Cards - max 5 */}
                 <div className={viewMode === 'list' ? "home-page__card-list" : "home-page__card-grid"}>
-                  {sortedTeamBoards.slice(0, 12).map((board, index) => renderTeamBoardCard(board, index, 2))}
+                  {sortedTeamBoards.slice(0, 5).map((board, index) => renderTeamBoardCard(board, index, 2))}
                 </div>
               </div>
             )}
