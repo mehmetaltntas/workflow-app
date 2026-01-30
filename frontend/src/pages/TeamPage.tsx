@@ -94,7 +94,7 @@ const TeamPage = () => {
     </div>
   );
 
-  const renderBoardList = (boards: Board[], fromPath: string) => {
+  const renderBoardList = (boards: Board[], fromPath: string, sectionSlug: string) => {
     if (statusFilter === "ALL") {
       const grouped = groupByStatus(boards);
       const statusesWithBoards = STATUS_ORDER.filter(s => grouped[s]?.length > 0);
@@ -111,7 +111,7 @@ const TeamPage = () => {
                 <h3 className="team-page__status-subtitle">{STATUS_LABELS[status]}</h3>
                 <span className="assigned-page__group-count">{grouped[status].length}</span>
                 {grouped[status].length > BOARDS_PER_STATUS_IN_ALL && (
-                  <button className="team-page__more-btn" onClick={() => navigate(`/boards/status/${STATUS_SLUGS[status]}?type=TEAM`)}>
+                  <button className="team-page__more-btn" onClick={() => navigate(`/team/status/${sectionSlug}/${STATUS_SLUGS[status]}`)}>
                     Daha Fazla
                     <ChevronRight size={16} />
                   </button>
@@ -233,14 +233,14 @@ const TeamPage = () => {
             <h2 className="team-page__section-title">Oluşturduklarım</h2>
             <span className="assigned-page__group-count">{filteredCreated.length}</span>
             {statusFilter !== "ALL" && filteredCreated.length > BOARDS_PER_SECTION && (
-              <button className="team-page__more-btn" onClick={() => navigate(`/boards/status/${STATUS_SLUGS[statusFilter]}?type=TEAM`)}>
+              <button className="team-page__more-btn" onClick={() => navigate(`/team/status/olusturduklarim/${STATUS_SLUGS[statusFilter]}`)}>
                 Daha Fazla
                 <ChevronRight size={16} />
               </button>
             )}
           </div>
           {filteredCreated.length > 0 ? (
-            renderBoardList(filteredCreated, '/team')
+            renderBoardList(filteredCreated, '/team', 'olusturduklarim')
           ) : (
             <div className="team-page__section-empty">
               Bu filtrede oluşturduğunuz pano bulunmuyor.
@@ -257,14 +257,14 @@ const TeamPage = () => {
             <h2 className="team-page__section-title">Katıldıklarım</h2>
             <span className="assigned-page__group-count">{filteredJoined.length}</span>
             {statusFilter !== "ALL" && filteredJoined.length > BOARDS_PER_SECTION && (
-              <button className="team-page__more-btn" onClick={() => navigate(`/boards/status/${STATUS_SLUGS[statusFilter]}?type=TEAM`)}>
+              <button className="team-page__more-btn" onClick={() => navigate(`/team/status/katildiklarim/${STATUS_SLUGS[statusFilter]}`)}>
                 Daha Fazla
                 <ChevronRight size={16} />
               </button>
             )}
           </div>
           {filteredJoined.length > 0 ? (
-            renderBoardList(filteredJoined, '/team')
+            renderBoardList(filteredJoined, '/team', 'katildiklarim')
           ) : (
             <div className="team-page__section-empty">
               Bu filtrede katıldığınız pano bulunmuyor.

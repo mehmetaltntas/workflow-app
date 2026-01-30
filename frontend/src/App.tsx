@@ -21,6 +21,7 @@ import BoardStatusPage from "./pages/BoardStatusPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import ConnectionsPage from "./pages/ConnectionsPage";
 import TeamPage from "./pages/TeamPage";
+import TeamStatusPage from "./pages/TeamStatusPage";
 import NotificationsPage from "./pages/NotificationsPage";
 
 // Miller route redirect helper
@@ -110,6 +111,7 @@ function App() {
               <Route path="/profile/:username" element={<UserProfilePage />} />
               <Route path="/connections" element={<ConnectionsPage />} />
               <Route path="/team" element={<TeamPage />} />
+              <Route path="/team/status/:section/:statusSlug" element={<TeamStatusPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
