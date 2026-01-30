@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAssignedBoardsQuery, useMyTeamBoardsQuery } from "../hooks/queries/useAssignedBoards";
-import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import {
   Users,
   ArrowLeft,
@@ -10,7 +9,6 @@ import {
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
-import BoardEditModal from "../components/BoardEditModal";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
 import { StatusFilterDropdown } from "../components/ui/StatusFilterDropdown";
@@ -31,11 +29,6 @@ const TeamPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [statusFilter, setStatusFilter] = useState("DEVAM_EDIYOR");
 
-  const updateBoardMutation = useUpdateBoard();
-  const deleteBoardMutation = useDeleteBoard();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
-
   const loading = loadingAssigned || loadingTeam;
 
   useEffect(() => {
@@ -44,38 +37,6 @@ const TeamPage = () => {
       return () => clearTimeout(timer);
     }
   }, [loading]);
-
-  const openEditModal = (board: Board) => {
-    setEditingBoard(board);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string; boardType?: 'INDIVIDUAL' | 'TEAM' }) => {
-    if (!editingBoard) return;
-    const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
-    await updateBoardMutation.mutateAsync({
-      boardId: editingBoard.id,
-      data: {
-        name: data.name,
-        status: data.status || editingBoard.status || "PLANLANDI",
-        link: data.link,
-        description: data.description,
-        deadline: formattedDeadline,
-        category: data.category,
-        boardType: data.boardType
-      }
-    });
-    setIsEditModalOpen(false);
-    setEditingBoard(null);
-  };
-
-  const handleDeleteBoard = () => {
-    if (editingBoard) {
-      deleteBoardMutation.mutate(editingBoard.id);
-      setIsEditModalOpen(false);
-      setEditingBoard(null);
-    }
-  };
 
   const filterByStatus = (boards: Board[]) => {
     if (statusFilter === "ALL") return boards;
@@ -123,7 +84,6 @@ const TeamPage = () => {
           <BoardCard
             board={board}
             onClick={() => navigate(`/boards/${board.slug}`, { state: { from: fromPath } })}
-            onEdit={() => openEditModal(board)}
             onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: fromPath } })}
             viewMode={viewMode === 'list' ? 'list' : 'grid'}
             accentColor={colors.assigned.primary}
@@ -312,27 +272,6 @@ const TeamPage = () => {
         </div>
       </div>
 
-      {/* Pano Düzenleme Modalı */}
-      {isEditModalOpen && editingBoard && (
-        <BoardEditModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingBoard(null);
-          }}
-          onSave={handleEditBoard}
-          onDelete={handleDeleteBoard}
-          initialData={{
-            name: editingBoard.name,
-            link: editingBoard.link,
-            description: editingBoard.description,
-            deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
-            status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
-            category: editingBoard.category,
-            boardType: editingBoard.boardType as "INDIVIDUAL" | "TEAM" | undefined
-          }}
-        />
-      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Board, BoardMember, BoardMemberAssignment } from "../types";
 import {
   ListChecks,
@@ -140,6 +141,7 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   onClose: _onClose,
   onEdit,
 }) => {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
@@ -294,74 +296,70 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
             >
               {board.name}
             </h2>
-            {board.isOwner && (
-              <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5], flexShrink: 0 }}>
-                {isTeamBoard && (
-                  <button
-                    onClick={() => setShowAddMemberModal(true)}
-                    title="Panoya Üye Ekle"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: spacing[8],
-                      height: spacing[8],
-                      borderRadius: radius.lg,
-                      border: `1px solid ${themeColors.borderDefault}`,
-                      background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-                      color: cssVars.textMuted,
-                      cursor: "pointer",
-                      transition: `all ${animation.duration.fast}`,
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = colors.brand.primary;
-                      e.currentTarget.style.borderColor = colors.brand.primary;
-                      e.currentTarget.style.background = colors.brand.primaryLight;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = cssVars.textMuted;
-                      e.currentTarget.style.borderColor = themeColors.borderDefault;
-                      e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
-                    }}
-                  >
-                    <UserPlus size={16} />
-                  </button>
-                )}
-                {onEdit && (
-                  <button
-                    onClick={onEdit}
-                    title="Panoyu Düzenle"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: spacing[8],
-                      height: spacing[8],
-                      borderRadius: radius.lg,
-                      border: `1px solid ${themeColors.borderDefault}`,
-                      background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
-                      color: cssVars.textMuted,
-                      cursor: "pointer",
-                      transition: `all ${animation.duration.fast}`,
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = colors.brand.primary;
-                      e.currentTarget.style.borderColor = colors.brand.primary;
-                      e.currentTarget.style.background = colors.brand.primaryLight;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = cssVars.textMuted;
-                      e.currentTarget.style.borderColor = themeColors.borderDefault;
-                      e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
-                    }}
-                  >
-                    <Pencil size={16} />
-                  </button>
-                )}
-              </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5], flexShrink: 0 }}>
+              <button
+                onClick={() => navigate(`/boards/${board.slug}`)}
+                title="Panoya Git"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: spacing[8],
+                  height: spacing[8],
+                  borderRadius: radius.lg,
+                  border: `1px solid ${themeColors.borderDefault}`,
+                  background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+                  color: cssVars.textMuted,
+                  cursor: "pointer",
+                  transition: `all ${animation.duration.fast}`,
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = colors.brand.primary;
+                  e.currentTarget.style.borderColor = colors.brand.primary;
+                  e.currentTarget.style.background = colors.brand.primaryLight;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = cssVars.textMuted;
+                  e.currentTarget.style.borderColor = themeColors.borderDefault;
+                  e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
+                }}
+              >
+                <ExternalLink size={16} />
+              </button>
+              {board.isOwner && onEdit && (
+                <button
+                  onClick={onEdit}
+                  title="Panoyu Düzenle"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: spacing[8],
+                    height: spacing[8],
+                    borderRadius: radius.lg,
+                    border: `1px solid ${themeColors.borderDefault}`,
+                    background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+                    color: cssVars.textMuted,
+                    cursor: "pointer",
+                    transition: `all ${animation.duration.fast}`,
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = colors.brand.primary;
+                    e.currentTarget.style.borderColor = colors.brand.primary;
+                    e.currentTarget.style.background = colors.brand.primaryLight;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = cssVars.textMuted;
+                    e.currentTarget.style.borderColor = themeColors.borderDefault;
+                    e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
+                  }}
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexWrap: "wrap" }}>
             <span

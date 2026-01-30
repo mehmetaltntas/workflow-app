@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { useBoardsQuery } from "../hooks/queries/useBoards";
-import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import { useAssignedBoardsQuery } from "../hooks/queries/useAssignedBoards";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -13,7 +12,6 @@ import {
 } from "lucide-react";
 import type { Board } from "../types";
 import BoardCard from "../components/BoardCard";
-import BoardEditModal from "../components/BoardEditModal";
 import { EmptyState } from "../components/ui/EmptyState";
 import { NavbarViewSwitcher, type ViewMode } from "../components/ui/NavbarViewSwitcher";
 import { SortDropdown, type SortField, type SortDirection } from "../components/ui/SortDropdown";
@@ -25,13 +23,9 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { data: boards = [], isLoading: loading } = useBoardsQuery();
   const { data: assignedBoards = [], isLoading: assignedLoading } = useAssignedBoardsQuery();
-  const updateBoardMutation = useUpdateBoard();
-  const deleteBoardMutation = useDeleteBoard();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
   const pinnedBoardIds = useUIStore((state) => state.pinnedBoardIds);
   const unpinBoard = useUIStore((state) => state.unpinBoard);
   const togglePinBoard = useUIStore((state) => state.togglePinBoard);
@@ -121,48 +115,8 @@ const HomePage = () => {
     [activeAssignedBoards]
   );
 
-  const handleEdit = (board: Board) => {
-    setEditingBoard(board);
-    setIsEditModalOpen(true);
-  };
-
   const handleShowInfo = (board: Board) => {
     navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } });
-  };
-
-  const handleSaveBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string; boardType?: 'INDIVIDUAL' | 'TEAM' }) => {
-    if (editingBoard) {
-      const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
-      updateBoardMutation.mutate(
-        {
-          boardId: editingBoard.id,
-          data: {
-            name: data.name,
-            status: data.status || editingBoard.status || "PLANLANDI",
-            link: data.link,
-            description: data.description,
-            deadline: formattedDeadline,
-            category: data.category,
-            boardType: data.boardType
-          }
-        },
-        {
-          onSuccess: () => {
-            setIsEditModalOpen(false);
-            setEditingBoard(null);
-          },
-        }
-      );
-    }
-  };
-
-  const handleDeleteBoard = () => {
-    if (editingBoard) {
-      unpinBoard(editingBoard.id);
-      deleteBoardMutation.mutate(editingBoard.id);
-      setIsEditModalOpen(false);
-      setEditingBoard(null);
-    }
   };
 
   if (loading || assignedLoading) {
@@ -186,7 +140,6 @@ const HomePage = () => {
         <BoardCard
           board={board}
           onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
-          onEdit={() => handleEdit(board)}
           onShowInfo={() => handleShowInfo(board)}
           onTogglePin={() => togglePinBoard(board.id)}
           isPinned={boardIsPinned}
@@ -212,7 +165,6 @@ const HomePage = () => {
         <BoardCard
           board={board}
           onClick={() => navigate(`/boards/${board.slug}`, { state: { from: '/home' } })}
-          onEdit={effectivelyAssigned ? () => {} : () => handleEdit(board)}
           onShowInfo={effectivelyAssigned
             ? () => navigate(`/boards/info/${board.slug}`, { state: { from: '/home' } })
             : () => handleShowInfo(board)
@@ -352,27 +304,6 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Pano Duzenleme Modali */}
-      {isEditModalOpen && editingBoard && (
-        <BoardEditModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingBoard(null);
-          }}
-          onSave={handleSaveBoard}
-          onDelete={handleDeleteBoard}
-          initialData={{
-            name: editingBoard.name,
-            link: editingBoard.link,
-            description: editingBoard.description,
-            deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
-            status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
-            category: editingBoard.category,
-            boardType: editingBoard.boardType as "INDIVIDUAL" | "TEAM" | undefined
-          }}
-        />
-      )}
     </div>
   );
 };

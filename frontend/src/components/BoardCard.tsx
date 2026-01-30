@@ -9,7 +9,7 @@ import "./BoardCard.css";
 interface BoardCardProps {
   board: Board;
   onClick: () => void;
-  onEdit: () => void;
+  onEdit?: () => void;
   onShowInfo?: () => void;
   onTogglePin?: () => void;
   isPinned?: boolean;
@@ -42,11 +42,11 @@ const BoardCard: React.FC<BoardCardProps> = ({
       variant: "default" as const,
       icon: isPinned ? PinOff : Pin,
     }] : []),
-    {
+    ...(onEdit ? [{
       label: "Düzenle",
       onClick: onEdit,
       variant: "default" as const,
-    },
+    }] : []),
   ];
 
   // Liste gorunumu icin kompakt kart
