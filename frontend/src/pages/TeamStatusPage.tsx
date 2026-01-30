@@ -4,8 +4,10 @@ import type { Board } from "../types";
 import { ArrowLeft, Search, ChevronLeft, ChevronRight, Users, LayoutDashboard } from "lucide-react";
 
 import { useAssignedBoardsQuery, useMyTeamBoardsQuery } from "../hooks/queries/useAssignedBoards";
+import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import { typography, spacing, radius, cssVars, animation, colors } from '../styles/tokens';
 import BoardCard from "../components/BoardCard";
+import BoardEditModal from "../components/BoardEditModal";
 import { STATUS_COLORS, STATUS_LABELS, SLUG_TO_STATUS } from "../constants";
 import { BoardsPageSkeleton } from "../components/ui/Skeleton";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -28,10 +30,15 @@ const TeamStatusPage = () => {
   const { data: assignedBoards = [], isLoading: loadingAssigned } = useAssignedBoardsQuery();
   const { data: myTeamBoards = [], isLoading: loadingTeam } = useMyTeamBoardsQuery();
 
+  const updateBoardMutation = useUpdateBoard();
+  const deleteBoardMutation = useDeleteBoard();
+
   const [isVisible, setIsVisible] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<Board | null>(null);
 
   const sectionMeta = section ? SECTION_META[section] : undefined;
   const statusKey = statusSlug ? SLUG_TO_STATUS[statusSlug] : undefined;
@@ -139,6 +146,38 @@ const TeamStatusPage = () => {
       setSearchParams({ page: String(page) });
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openEditModal = (board: Board) => {
+    setEditingBoard(board);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditBoard = async (data: { name: string; link?: string; description?: string; deadline?: string; status?: string; category?: string; boardType?: 'INDIVIDUAL' | 'TEAM' }) => {
+    if (!editingBoard) return;
+    const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
+    await updateBoardMutation.mutateAsync({
+      boardId: editingBoard.id,
+      data: {
+        name: data.name,
+        status: data.status || editingBoard.status || "PLANLANDI",
+        link: data.link,
+        description: data.description,
+        deadline: formattedDeadline,
+        category: data.category,
+        boardType: data.boardType
+      }
+    });
+    setIsEditModalOpen(false);
+    setEditingBoard(null);
+  };
+
+  const handleDeleteBoard = () => {
+    if (editingBoard) {
+      deleteBoardMutation.mutate(editingBoard.id);
+      setIsEditModalOpen(false);
+      setEditingBoard(null);
+    }
   };
 
   const fromPath = `/team/status/${section}/${statusSlug}`;
@@ -312,7 +351,7 @@ const TeamStatusPage = () => {
                 <BoardCard
                   board={board}
                   onClick={() => navigate(`/boards/${board.slug}`, { state: { from: fromPath } })}
-                  onEdit={() => {}}
+                  onEdit={() => openEditModal(board)}
                   onShowInfo={() => navigate(`/boards/info/${board.slug}`, { state: { from: fromPath } })}
                   viewMode={viewMode === 'list' ? 'list' : 'grid'}
                   accentColor={colors.assigned.primary}
@@ -452,6 +491,28 @@ const TeamStatusPage = () => {
           </div>
         )}
       </div>
+
+      {/* Pano Düzenleme Modalı */}
+      {isEditModalOpen && editingBoard && (
+        <BoardEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingBoard(null);
+          }}
+          onSave={handleEditBoard}
+          onDelete={handleDeleteBoard}
+          initialData={{
+            name: editingBoard.name,
+            link: editingBoard.link,
+            description: editingBoard.description,
+            deadline: editingBoard.deadline ? editingBoard.deadline.split('T')[0] : undefined,
+            status: editingBoard.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
+            category: editingBoard.category,
+            boardType: editingBoard.boardType as "INDIVIDUAL" | "TEAM" | undefined
+          }}
+        />
+      )}
     </div>
   );
 };
