@@ -19,7 +19,7 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { STATUS_COLORS, STATUS_LABELS } from "../constants";
-import { typography, spacing, radius, colors, cssVars, animation } from "../styles/tokens";
+import { typography, spacing, radius, colors, cssVars, animation, shadows } from "../styles/tokens";
 import { calculateBoardProgress } from "../utils/progressCalculation";
 import BoardMembersSection from "./BoardMembersSection";
 import TaskAssignmentSection from "./TaskAssignmentSection";

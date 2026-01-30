@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { typography, spacing, radius, colors, cssVars, animation } from '../../styles/tokens';
 
@@ -13,7 +12,6 @@ export const ErrorFallback = ({
   onReset,
   variant = 'page',
 }: ErrorFallbackProps) => {
-  const navigate = useNavigate();
 
   if (variant === 'minimal') {
     return (
@@ -214,7 +212,7 @@ export const ErrorFallback = ({
             </button>
           )}
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => { window.location.href = '/home'; }}
             style={{
               display: 'flex',
               alignItems: 'center',

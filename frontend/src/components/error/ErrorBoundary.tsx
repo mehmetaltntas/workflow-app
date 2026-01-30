@@ -18,22 +18,6 @@ export class ErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false, error: null };
   }
 
-  private handleUnhandledRejection = (event: PromiseRejectionEvent): void => {
-    event.preventDefault();
-    const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
-    console.error('Unhandled promise rejection:', error);
-    this.props.onError?.(error, { componentStack: '' } as ErrorInfo);
-    this.setState({ hasError: true, error });
-  };
-
-  componentDidMount(): void {
-    window.addEventListener('unhandledrejection', this.handleUnhandledRejection);
-  }
-
-  componentWillUnmount(): void {
-    window.removeEventListener('unhandledrejection', this.handleUnhandledRejection);
-  }
-
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
