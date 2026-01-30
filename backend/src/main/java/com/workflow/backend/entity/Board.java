@@ -24,6 +24,7 @@ public class Board {
     @Version
     private Long version = 0L;
 
+    @Column(nullable = false)
     private String name;
 
     private String status = "PLANLANDI";
@@ -44,6 +45,7 @@ public class Board {
     @Column(unique = true)
     private String slug; // YENİ: URL dostu kimlik
 
+    @Column(nullable = false)
     private java.time.LocalDateTime createdAt; // Oluşturulma tarihi
 
     @PrePersist
@@ -59,7 +61,7 @@ public class Board {
     // "Board'u veritabanından çektiğimde, sahibini (User) hemen getirme.
     // Ne zaman user.getName() dersem o zaman git sorgu at getir." (Performans için)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") // Veritabanında oluşacak yabancı anahtar sütunu (FK)
+    @JoinColumn(name = "user_id", nullable = false) // Veritabanında oluşacak yabancı anahtar sütunu (FK)
     private User user;
 
     // Bir Pano'nun birden çok Listesi olur (To Do, Done vb.)

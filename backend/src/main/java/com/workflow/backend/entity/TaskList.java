@@ -31,6 +31,7 @@ public class TaskList {
     @Version
     private Long version = 0L;
 
+    @Column(nullable = false)
     private String name; // Örn: "To Do", "In Progress"
 
     @Column(length = 100)
@@ -51,7 +52,7 @@ public class TaskList {
 
     // İLİŞKİ: Hangi Board'a ait?
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id")
+    @JoinColumn(name = "board_id", nullable = false)
     private Board board;
 
     // İLİŞKİ: Bu listenin içindeki görevler

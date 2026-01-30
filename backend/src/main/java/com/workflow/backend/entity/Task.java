@@ -29,6 +29,7 @@ public class Task {
     @Version
     private Long version = 0L;
 
+    @Column(nullable = false)
     private String title;
 
     @Column(length = 500)
@@ -38,6 +39,7 @@ public class Task {
 
     private Boolean isCompleted = false; // Tamamlandı durumu
 
+    @Column(nullable = false)
     private java.time.LocalDateTime createdAt; // Oluşturulma tarihi
 
     private java.time.LocalDate dueDate; // Son tarih (deadline)
@@ -51,7 +53,7 @@ public class Task {
 
     // İLİŞKİ: Hangi Listeye ait? (Yapılacaklar mı, Bitti mi?)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_list_id")
+    @JoinColumn(name = "task_list_id", nullable = false)
     private TaskList taskList;
 
     // İLİŞKİ: Bu görevi kime atadık? (Opsiyonel)

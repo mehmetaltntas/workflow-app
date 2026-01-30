@@ -27,7 +27,7 @@ public class UserProfilePicture {
     @Version
     private Long version;
 
-    @Column(name = "file_path", length = 500)
+    @Column(name = "file_path", length = 500, nullable = false)
     private String filePath;
 
     public UserProfilePicture(User user, String filePath) {
