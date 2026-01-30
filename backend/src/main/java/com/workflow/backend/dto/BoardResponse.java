@@ -21,7 +21,6 @@ public class BoardResponse {
     private List<TaskListDto> taskLists; // YENİ EKLENDİ: Panodaki listeler
     private List<LabelDto> labels; // Panoya ait etiketler
     private List<BoardMemberDto> members; // Pano üyeleri (sorumlu kişiler)
-    private List<BoardMemberDto> pendingMembers; // Bekleyen ve reddedilen davetler (sadece pano sahibi için)
     private String boardType;
     private Boolean isOwner; // Mevcut kullanıcı pano sahibi mi?
     private Long currentUserId; // Mevcut kullanıcı ID'si

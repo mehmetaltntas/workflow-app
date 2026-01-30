@@ -301,7 +301,6 @@ const BoardMembersSection: React.FC<BoardMembersSectionProps> = ({ board }) => {
         onClose={() => setShowAddModal(false)}
         onAddMember={handleAddMember}
         existingMembers={members}
-        pendingMembers={board.pendingMembers || []}
       />
 
       <ConfirmationModal

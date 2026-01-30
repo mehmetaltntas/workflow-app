@@ -418,17 +418,6 @@ export const boardMemberService = {
   removeAssignment: async (boardId: number, memberId: number, assignmentId: number): Promise<void> => {
     await apiClient.delete(`/boards/${boardId}/members/${memberId}/assignments/${assignmentId}`);
   },
-  acceptInvitation: async (memberId: number): Promise<BoardMember> => {
-    const response = await apiClient.put<BoardMember>(`/board-members/invitations/${memberId}/accept`);
-    return extractEntity<BoardMember>(response);
-  },
-  rejectInvitation: async (memberId: number): Promise<void> => {
-    await apiClient.put(`/board-members/invitations/${memberId}/reject`);
-  },
-  getPendingInvitations: async (): Promise<BoardMember[]> => {
-    const response = await apiClient.get<PagedResponse<BoardMember>>("/board-members/invitations");
-    return extractCollection<BoardMember>(response);
-  },
 };
 
 // 12. Bildirim İşlemleri

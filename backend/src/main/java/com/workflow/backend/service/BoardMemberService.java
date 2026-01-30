@@ -32,10 +32,8 @@ public class BoardMemberService {
     private final TaskRepository taskRepository;
     private final SubtaskRepository subtaskRepository;
     private final UserProfilePictureRepository profilePictureRepository;
-    private final NotificationRepository notificationRepository;
     private final CurrentUserService currentUserService;
     private final AuthorizationService authorizationService;
-    private final NotificationService notificationService;
     private final ConnectionService connectionService;
 
     // Üye ekle
@@ -65,40 +63,17 @@ public class BoardMemberService {
             throw new BadRequestException("Bu kullanıcıyla kabul edilmiş bir bağlantınız bulunmamaktadır.");
         }
 
-        // Mevcut üyelik kaydı kontrolü (REJECTED ise tekrar davet et, PENDING ise mevcut kaydı dön, ACCEPTED ise hata)
-        java.util.Optional<BoardMember> existingMember = boardMemberRepository.findByBoardIdAndUserId(boardId, userId);
-        if (existingMember.isPresent()) {
-            BoardMember existing = existingMember.get();
-            if (existing.getStatus() == BoardMemberStatus.REJECTED) {
-                // Reddedilmiş daveti tekrar PENDING yap
-                existing.setStatus(BoardMemberStatus.PENDING);
-                BoardMember saved = boardMemberRepository.save(existing);
-
-                // Davet bildirimi gönder
-                User currentUser = currentUserService.getCurrentUser();
-                String message = currentUser.getUsername() + " sizi \"" + board.getName() + "\" panosuna sorumlu kişi olarak davet etti.";
-                notificationService.createNotification(user, currentUser, NotificationType.BOARD_MEMBER_INVITATION, message, saved.getId());
-
-                return mapToDto(saved);
-            }
-            if (existing.getStatus() == BoardMemberStatus.PENDING) {
-                // Zaten bekleyen davet var, mevcut kaydı dön (idempotent)
-                return mapToDto(existing);
-            }
+        // Mevcut üyelik kaydı kontrolü
+        if (boardMemberRepository.existsByBoardIdAndUserId(boardId, userId)) {
             throw new DuplicateResourceException("Pano üyesi", "userId", userId);
         }
 
         BoardMember member = new BoardMember();
         member.setBoard(board);
         member.setUser(user);
-        member.setStatus(BoardMemberStatus.PENDING);
+        member.setStatus(BoardMemberStatus.ACCEPTED);
 
         BoardMember saved = boardMemberRepository.save(member);
-
-        // Davet bildirimi gönder
-        User currentUser = currentUserService.getCurrentUser();
-        String message = currentUser.getUsername() + " sizi \"" + board.getName() + "\" panosuna sorumlu kişi olarak davet etti.";
-        notificationService.createNotification(user, currentUser, NotificationType.BOARD_MEMBER_INVITATION, message, saved.getId());
 
         return mapToDto(saved);
     }
@@ -367,71 +342,6 @@ public class BoardMemberService {
                 }
                 break;
         }
-    }
-
-    // Daveti kabul et
-    @Transactional
-    public BoardMemberDto acceptMemberInvitation(Long memberId) {
-        Long currentUserId = currentUserService.getCurrentUserId();
-        BoardMember member = boardMemberRepository.findPendingById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException("Davet", "id", memberId));
-
-        // Sadece davet edilen kişi kabul edebilir
-        if (!member.getUser().getId().equals(currentUserId)) {
-            throw new UnauthorizedAccessException("davet", memberId);
-        }
-
-        member.setStatus(BoardMemberStatus.ACCEPTED);
-        BoardMember saved = boardMemberRepository.save(member);
-
-        // Davet bildirimini sil
-        notificationRepository.deleteByReferenceIdAndType(memberId, NotificationType.BOARD_MEMBER_INVITATION);
-
-        // Pano sahibine kabul bildirimi gönder
-        User currentUser = currentUserService.getCurrentUser();
-        User boardOwner = member.getBoard().getUser();
-        String message = currentUser.getUsername() + " \"" + member.getBoard().getName() + "\" panosuna sorumlu kişi davetini kabul etti.";
-        notificationService.createNotification(boardOwner, currentUser, NotificationType.BOARD_MEMBER_ACCEPTED, message, saved.getId());
-
-        return mapToDto(saved);
-    }
-
-    // Daveti reddet
-    @Transactional
-    public void rejectMemberInvitation(Long memberId) {
-        Long currentUserId = currentUserService.getCurrentUserId();
-        BoardMember member = boardMemberRepository.findPendingById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException("Davet", "id", memberId));
-
-        // Sadece davet edilen kişi reddedebilir
-        if (!member.getUser().getId().equals(currentUserId)) {
-            throw new UnauthorizedAccessException("davet", memberId);
-        }
-
-        // Davet bildirimini sil
-        notificationRepository.deleteByReferenceIdAndType(memberId, NotificationType.BOARD_MEMBER_INVITATION);
-
-        // Durumu REJECTED olarak güncelle (tekrar davet edilebilmesi için kayıt korunur)
-        member.setStatus(BoardMemberStatus.REJECTED);
-        boardMemberRepository.save(member);
-    }
-
-    // Bekleyen davetleri getir
-    @Transactional(readOnly = true)
-    public List<BoardMemberDto> getPendingInvitations() {
-        Long currentUserId = currentUserService.getCurrentUserId();
-        List<BoardMember> pendingMembers = boardMemberRepository.findPendingByUserId(currentUserId);
-
-        // Profil resmi URL'lerini toplu olarak ön-yükle (N+1 sorgu önleme)
-        Set<Long> userIds = pendingMembers.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
-        Map<Long, String> profilePictureMap = userIds.isEmpty() ? Map.of() :
-                profilePictureRepository.findFilePathsByUserIds(userIds).stream()
-                        .collect(Collectors.toMap(row -> (Long) row[0],
-                                row -> "/users/" + row[0] + "/profile-picture"));
-
-        return pendingMembers.stream()
-                .map(m -> mapToDto(m, true, profilePictureMap))
-                .collect(Collectors.toList());
     }
 
     // Entity -> DTO (tam profil bilgisi - geriye uyumlu)

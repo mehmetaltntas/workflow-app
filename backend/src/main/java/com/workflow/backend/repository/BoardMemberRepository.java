@@ -30,12 +30,4 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
     @Query("SELECT bm.board FROM BoardMember bm WHERE bm.user.id = :userId AND bm.status = 'ACCEPTED' AND bm.board.boardType = com.workflow.backend.entity.BoardType.TEAM")
     List<Board> findAcceptedBoardsByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT bm FROM BoardMember bm WHERE bm.id = :id AND bm.status = 'PENDING'")
-    Optional<BoardMember> findPendingById(@Param("id") Long id);
-
-    @Query("SELECT bm FROM BoardMember bm JOIN FETCH bm.user JOIN FETCH bm.board b JOIN FETCH b.user WHERE bm.user.id = :userId AND bm.status = 'PENDING'")
-    List<BoardMember> findPendingByUserId(@Param("userId") Long userId);
-
-    @Query("SELECT bm FROM BoardMember bm JOIN FETCH bm.user WHERE bm.board.id = :boardId AND bm.status IN ('PENDING', 'REJECTED')")
-    List<BoardMember> findPendingAndRejectedByBoardIdWithUser(@Param("boardId") Long boardId);
 }

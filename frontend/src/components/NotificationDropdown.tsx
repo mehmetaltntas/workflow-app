@@ -2,7 +2,6 @@ import { User, Check, X } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useNotifications } from "../hooks/queries/useNotifications";
 import { useAcceptConnectionRequest, useRejectConnectionRequest } from "../hooks/queries/useConnectionMutations";
-import { useAcceptBoardMemberInvitation, useRejectBoardMemberInvitation } from "../hooks/queries/useBoardMemberInvitationMutations";
 import type { Notification } from "../types";
 import "./NotificationDropdown.css";
 
@@ -15,8 +14,6 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
   const { data: notifications = [], isLoading } = useNotifications();
   const { mutate: acceptConnection } = useAcceptConnectionRequest();
   const { mutate: rejectConnection } = useRejectConnectionRequest();
-  const { mutate: acceptBoardInvitation } = useAcceptBoardMemberInvitation();
-  const { mutate: rejectBoardInvitation } = useRejectBoardMemberInvitation();
 
   const handleAccept = (e: React.MouseEvent, referenceId: number | null) => {
     e.stopPropagation();
@@ -29,20 +26,6 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
     e.stopPropagation();
     if (referenceId) {
       rejectConnection(referenceId);
-    }
-  };
-
-  const handleAcceptBoardInvitation = (e: React.MouseEvent, referenceId: number | null) => {
-    e.stopPropagation();
-    if (referenceId) {
-      acceptBoardInvitation(referenceId);
-    }
-  };
-
-  const handleRejectBoardInvitation = (e: React.MouseEvent, referenceId: number | null) => {
-    e.stopPropagation();
-    if (referenceId) {
-      rejectBoardInvitation(referenceId);
     }
   };
 
@@ -109,24 +92,6 @@ const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
                   <button
                     className="notification-dropdown__reject"
                     onClick={(e) => handleReject(e, notification.referenceId)}
-                  >
-                    <X size={14} />
-                    Reddet
-                  </button>
-                </div>
-              )}
-              {notification.type === "BOARD_MEMBER_INVITATION" && notification.referenceId && (
-                <div className="notification-dropdown__actions">
-                  <button
-                    className="notification-dropdown__accept"
-                    onClick={(e) => handleAcceptBoardInvitation(e, notification.referenceId)}
-                  >
-                    <Check size={14} />
-                    Kabul Et
-                  </button>
-                  <button
-                    className="notification-dropdown__reject"
-                    onClick={(e) => handleRejectBoardInvitation(e, notification.referenceId)}
                   >
                     <X size={14} />
                     Reddet

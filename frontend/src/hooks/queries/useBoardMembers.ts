@@ -10,21 +10,21 @@ export const useAddBoardMember = (boardId: number, slug: string) => {
   return useMutation({
     mutationFn: (userId: number) => boardMemberService.addMember(boardId, userId),
     onSuccess: (data: BoardMember) => {
-      // Immediately update board detail cache with the new pending member
+      // Immediately update board detail cache with the new member
       queryClient.setQueryData(queryKeys.boards.detail(slug), (oldBoard: Board | undefined) => {
         if (!oldBoard) return oldBoard;
-        const pendingMembers = [...(oldBoard.pendingMembers || [])];
-        const existingIdx = pendingMembers.findIndex((m) => m.userId === data.userId);
+        const members = [...(oldBoard.members || [])];
+        const existingIdx = members.findIndex((m) => m.userId === data.userId);
         if (existingIdx >= 0) {
-          pendingMembers[existingIdx] = data;
+          members[existingIdx] = data;
         } else {
-          pendingMembers.push(data);
+          members.push(data);
         }
-        return { ...oldBoard, pendingMembers };
+        return { ...oldBoard, members };
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
       queryClient.invalidateQueries({ queryKey: queryKeys.boardMembers.list(boardId) });
-      toast.success('Davet gönderildi');
+      toast.success('Üye eklendi');
     },
     onError: (error) => {
       const err = error as { response?: { status?: number; data?: string } };

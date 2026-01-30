@@ -214,34 +214,6 @@ public class BoardService {
             response.setMembers(Collections.emptyList());
         }
 
-        // Bekleyen ve reddedilen davetler (sadece pano sahibi için)
-        if (isOwner && board.getBoardType() == BoardType.TEAM) {
-            List<BoardMember> pendingAndRejected = boardMemberRepository.findPendingAndRejectedByBoardIdWithUser(board.getId());
-            if (pendingAndRejected != null && !pendingAndRejected.isEmpty()) {
-                Set<Long> pendingUserIds = pendingAndRejected.stream().map(m -> m.getUser().getId()).collect(Collectors.toSet());
-                Map<Long, String> pendingProfilePicMap = pendingUserIds.isEmpty() ? Map.of() :
-                        profilePictureRepository.findFilePathsByUserIds(pendingUserIds).stream()
-                                .collect(Collectors.toMap(row -> (Long) row[0],
-                                        row -> "/users/" + row[0] + "/profile-picture"));
-
-                List<BoardMemberDto> pendingDtos = pendingAndRejected.stream().map(member -> {
-                    BoardMemberDto memberDto = new BoardMemberDto();
-                    memberDto.setId(member.getId());
-                    memberDto.setUserId(member.getUser().getId());
-                    memberDto.setUsername(member.getUser().getUsername());
-                    memberDto.setFirstName(member.getUser().getFirstName());
-                    memberDto.setLastName(member.getUser().getLastName());
-                    memberDto.setStatus(member.getStatus().name());
-                    memberDto.setCreatedAt(member.getCreatedAt());
-                    memberDto.setProfilePicture(pendingProfilePicMap.get(member.getUser().getId()));
-                    return memberDto;
-                }).collect(Collectors.toList());
-                response.setPendingMembers(pendingDtos);
-            } else {
-                response.setPendingMembers(Collections.emptyList());
-            }
-        }
-
         // Board Labels (@BatchSize ile batch yüklenir)
         if (board.getLabels() != null && !board.getLabels().isEmpty()) {
             List<LabelDto> labelDtos = board.getLabels().stream().map(label -> {

@@ -110,7 +110,7 @@ export interface BoardMember extends HateoasModel {
   firstName?: string;
   lastName?: string;
   profilePicture?: string | null;
-  status?: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  status?: 'ACCEPTED';
   createdAt: string;
   assignments?: BoardMemberAssignment[];
 }
@@ -134,7 +134,6 @@ export interface Board extends HateoasModel {
   taskLists: TaskList[]; // İçinde listeler dizisi var
   labels?: Label[]; // Panoya ait etiketler
   members?: BoardMember[]; // Pano üyeleri (sorumlu kişiler)
-  pendingMembers?: BoardMember[]; // Bekleyen ve reddedilen davetler (sadece pano sahibi için)
   boardType?: 'INDIVIDUAL' | 'TEAM';
 }
 
@@ -152,7 +151,7 @@ export interface User extends HateoasModel {
 export type ConnectionStatus = 'PENDING' | 'PENDING_RECEIVED' | 'ACCEPTED' | 'REJECTED' | 'SELF' | null;
 
 // Bildirim tipi
-export type NotificationType = 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED' | 'CONNECTION_REJECTED' | 'BOARD_MEMBER_INVITATION' | 'BOARD_MEMBER_ACCEPTED';
+export type NotificationType = 'CONNECTION_REQUEST' | 'CONNECTION_ACCEPTED' | 'CONNECTION_REJECTED';
 
 // Kullanici arama sonucu
 export interface UserSearchResult extends HateoasModel {

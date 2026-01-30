@@ -107,8 +107,6 @@ public class NotificationService {
     public void cleanupStaleNotifications() {
         notificationRepository.deleteStaleConnectionRequestNotifications();
         log.info("Eski CONNECTION_REQUEST bildirimleri temizlendi");
-        notificationRepository.deleteStaleBoardMemberInvitationNotifications();
-        log.info("Eski BOARD_MEMBER_INVITATION bildirimleri temizlendi");
     }
 
     private NotificationResponse mapToResponse(Notification notification, Map<Long, String> profilePictureMap) {

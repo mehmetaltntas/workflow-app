@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, UserPlus, User as UserIcon, Check, RefreshCw } from "lucide-react";
+import { X, UserPlus, User as UserIcon, Check } from "lucide-react";
 import type { BoardMember } from "../types";
 import { useAcceptedConnections } from "../hooks/queries/useConnectionMutations";
 import { useAuthStore } from "../stores/authStore";
@@ -13,7 +13,6 @@ interface AddBoardMemberModalProps {
   onClose: () => void;
   onAddMember: (userId: number) => Promise<void>;
   existingMembers: BoardMember[];
-  pendingMembers: BoardMember[];
 }
 
 const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
@@ -21,7 +20,6 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
   onClose,
   onAddMember,
   existingMembers,
-  pendingMembers,
 }) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
@@ -31,22 +29,22 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
 
   const { data: connections = [], isLoading } = useAcceptedConnections();
 
-  // Track locally invited user IDs for immediate UI feedback
-  const [locallyInvitedIds, setLocallyInvitedIds] = useState<Set<number>>(new Set());
+  // Track locally added user IDs for immediate UI feedback
+  const [locallyAddedIds, setLocallyAddedIds] = useState<Set<number>>(new Set());
 
   // Reset local state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setLocallyInvitedIds(new Set());
+      setLocallyAddedIds(new Set());
     }
   }, [isOpen]);
 
-  const handleInvite = async (userId: number) => {
-    setLocallyInvitedIds((prev) => new Set(prev).add(userId));
+  const handleAdd = async (userId: number) => {
+    setLocallyAddedIds((prev) => new Set(prev).add(userId));
     try {
       await onAddMember(userId);
     } catch {
-      setLocallyInvitedIds((prev) => {
+      setLocallyAddedIds((prev) => {
         const next = new Set(prev);
         next.delete(userId);
         return next;
@@ -100,18 +98,12 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Build maps for existing (ACCEPTED) and pending/rejected members by userId
-  const acceptedUserIds = new Set(existingMembers.map((m) => m.userId));
-  const pendingMemberMap = new Map<number, BoardMember>();
-  for (const pm of pendingMembers) {
-    if (pm.userId) pendingMemberMap.set(pm.userId, pm);
-  }
-
-  // Filter connections: exclude ACCEPTED members only (PENDING and REJECTED are shown with status)
+  // Filter connections: exclude existing members
+  const memberUserIds = new Set(existingMembers.map((m) => m.userId));
   const availableConnections = connections.filter((conn) => {
     const otherUserId =
       conn.senderUsername === currentUsername ? conn.receiverId : conn.senderId;
-    return !acceptedUserIds.has(otherUserId);
+    return !memberUserIds.has(otherUserId);
   });
 
   return createPortal(
@@ -230,12 +222,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                   ? conn.receiverProfilePicture
                   : conn.senderProfilePicture;
 
-                // Determine invitation status
-                const pendingMember = pendingMemberMap.get(otherUserId);
-                const invitationStatus = pendingMember?.status; // 'PENDING' | 'REJECTED' | undefined
-
-                const isPending = invitationStatus === "PENDING" || locallyInvitedIds.has(otherUserId);
-                const isRejected = !locallyInvitedIds.has(otherUserId) && invitationStatus === "REJECTED";
+                const isAdded = locallyAddedIds.has(otherUserId);
 
                 return (
                   <div
@@ -298,8 +285,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                       </span>
                     </div>
 
-                    {isPending ? (
-                      /* Davet gönderilmiş - bekleniyor */
+                    {isAdded ? (
                       <span
                         style={{
                           display: "flex",
@@ -308,41 +294,18 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                           padding: `${spacing[2]} ${spacing[4]}`,
                           borderRadius: radius.lg,
                           border: "none",
-                          background: colors.semantic.warning + "18",
-                          color: colors.semantic.warning,
+                          background: colors.semantic.success + "18",
+                          color: colors.semantic.success,
                           fontWeight: typography.fontWeight.semibold,
                           fontSize: typography.fontSize.sm,
                         }}
                       >
                         <Check size={14} />
-                        Davet Edildi
+                        Eklendi
                       </span>
-                    ) : isRejected ? (
-                      /* Davet reddedilmiş - tekrar davet et */
-                      <button
-                        onClick={() => handleInvite(otherUserId)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: spacing[1.5],
-                          padding: `${spacing[2]} ${spacing[4]}`,
-                          borderRadius: radius.lg,
-                          border: "none",
-                          background: colors.semantic.danger + "15",
-                          color: colors.semantic.danger,
-                          cursor: "pointer",
-                          fontWeight: typography.fontWeight.semibold,
-                          fontSize: typography.fontSize.sm,
-                          transition: `background ${animation.duration.fast}`,
-                        }}
-                      >
-                        <RefreshCw size={14} />
-                        Tekrar Davet Et
-                      </button>
                     ) : (
-                      /* Yeni davet */
                       <button
-                        onClick={() => handleInvite(otherUserId)}
+                        onClick={() => handleAdd(otherUserId)}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -359,7 +322,7 @@ const AddBoardMemberModal: React.FC<AddBoardMemberModalProps> = ({
                         }}
                       >
                         <UserPlus size={14} />
-                        Davet Et
+                        Ekle
                       </button>
                     )}
                   </div>

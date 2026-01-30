@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { Bell, AlertCircle, User, Trash2, Check, X } from "lucide-react";
 import { useNotifications, useDeleteNotification, useMarkAllNotificationsAsRead } from "../hooks/queries/useNotifications";
 import { useAcceptConnectionRequest, useRejectConnectionRequest } from "../hooks/queries/useConnectionMutations";
-import { useAcceptBoardMemberInvitation, useRejectBoardMemberInvitation } from "../hooks/queries/useBoardMemberInvitationMutations";
 import type { Notification } from "../types";
 import "./NotificationsPage.css";
 
@@ -13,8 +12,6 @@ const NotificationsPage = () => {
   const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
   const { mutate: acceptConnection } = useAcceptConnectionRequest();
   const { mutate: rejectConnection } = useRejectConnectionRequest();
-  const { mutate: acceptBoardInvitation } = useAcceptBoardMemberInvitation();
-  const { mutate: rejectBoardInvitation } = useRejectBoardMemberInvitation();
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -126,24 +123,6 @@ const NotificationsPage = () => {
                     <button
                       className="notifications-page__reject"
                       onClick={(e) => { e.stopPropagation(); rejectConnection(notification.referenceId!); }}
-                    >
-                      <X size={14} />
-                      Reddet
-                    </button>
-                  </div>
-                )}
-                {notification.type === "BOARD_MEMBER_INVITATION" && notification.referenceId && (
-                  <div className="notifications-page__actions">
-                    <button
-                      className="notifications-page__accept"
-                      onClick={(e) => { e.stopPropagation(); acceptBoardInvitation(notification.referenceId!); }}
-                    >
-                      <Check size={14} />
-                      Kabul Et
-                    </button>
-                    <button
-                      className="notifications-page__reject"
-                      onClick={(e) => { e.stopPropagation(); rejectBoardInvitation(notification.referenceId!); }}
                     >
                       <X size={14} />
                       Reddet

@@ -38,9 +38,4 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             "AND NOT EXISTS (SELECT 1 FROM Connection c WHERE c.id = n.referenceId AND c.status = 'PENDING')")
     void deleteStaleConnectionRequestNotifications();
 
-    @Modifying
-    @Query("DELETE FROM Notification n WHERE n.type = 'BOARD_MEMBER_INVITATION' " +
-            "AND n.referenceId IS NOT NULL " +
-            "AND NOT EXISTS (SELECT 1 FROM BoardMember bm WHERE bm.id = n.referenceId AND bm.status = 'PENDING')")
-    void deleteStaleBoardMemberInvitationNotifications();
 }
