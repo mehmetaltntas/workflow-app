@@ -223,8 +223,8 @@
 }
 
 .home-page__section-count--default {
-  color: var(--text-muted);
-  background: var(--bg-secondary);
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.08);
 }
 
 .home-page__section-count--assigned {

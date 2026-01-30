@@ -231,7 +231,7 @@ const HomePage = () => {
                 {/* Section Header */}
                 <div className="home-page__section-header">
                   <div className="home-page__section-icon">
-                    <User size={16} color={colors.brand.primary} />
+                    <User size={16} color={colors.semantic.success} />
                   </div>
                   <h2 className="home-page__section-title">Aktif Bireysel Panolar</h2>
                   <span className="home-page__section-count home-page__section-count--default">
