@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useBoardDetailQuery } from "../hooks/queries/useBoards";
+import { useUpdateBoard, useDeleteBoard } from "../hooks/queries/useBoardMutations";
 import { BoardInfoPanel } from "../components/BoardInfoPanel";
+import BoardEditModal from "../components/BoardEditModal";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
 import { ArrowLeft } from "lucide-react";
@@ -13,6 +16,41 @@ const BoardInfoPage = () => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const { data: board = null, isLoading, error } = useBoardDetailQuery(slug);
+  const updateBoardMutation = useUpdateBoard();
+  const deleteBoardMutation = useDeleteBoard();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEditBoard = async (data: {
+    name: string;
+    link?: string;
+    description?: string;
+    deadline?: string;
+    status?: string;
+    category?: string;
+    boardType?: 'INDIVIDUAL' | 'TEAM';
+  }) => {
+    if (!board) return;
+    const formattedDeadline = data.deadline ? `${data.deadline}T23:59:59` : undefined;
+    await updateBoardMutation.mutateAsync({
+      boardId: board.id,
+      data: {
+        name: data.name,
+        status: data.status || board.status || "PLANLANDI",
+        link: data.link,
+        description: data.description,
+        deadline: formattedDeadline,
+        category: data.category,
+        boardType: data.boardType,
+      },
+    });
+    setIsEditModalOpen(false);
+  };
+
+  const handleDeleteBoard = () => {
+    if (!board) return;
+    deleteBoardMutation.mutate(board.id);
+    navigate("/boards");
+  };
 
   const handleGoBack = () => {
     const from = (location.state as { from?: string })?.from;
@@ -144,9 +182,28 @@ const BoardInfoPage = () => {
           <BoardInfoPanel
             board={board}
             onClose={handleGoBack}
+            onEdit={() => setIsEditModalOpen(true)}
           />
         </div>
       </div>
+
+      {isEditModalOpen && board && (
+        <BoardEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSave={handleEditBoard}
+          onDelete={handleDeleteBoard}
+          initialData={{
+            name: board.name,
+            link: board.link,
+            description: board.description,
+            deadline: board.deadline ? board.deadline.split('T')[0] : undefined,
+            status: board.status as "PLANLANDI" | "DEVAM_EDIYOR" | "TAMAMLANDI" | "DURDURULDU" | "BIRAKILDI",
+            category: board.category,
+            boardType: board.boardType as "INDIVIDUAL" | "TEAM" | undefined,
+          }}
+        />
+      )}
     </div>
   );
 };

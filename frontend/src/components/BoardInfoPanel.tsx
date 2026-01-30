@@ -15,6 +15,7 @@ import {
   Target,
   Clock,
   UserPlus,
+  Pencil,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -27,6 +28,7 @@ import TaskAssignmentSection from "./TaskAssignmentSection";
 interface BoardInfoPanelProps {
   board: Board | null;
   onClose: () => void;
+  onEdit?: () => void;
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -134,6 +136,7 @@ const getDeadlineInfo = (deadline: string | undefined) => {
 export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   board,
   onClose: _onClose,
+  onEdit,
 }) => {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
@@ -267,20 +270,55 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
           }}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2
-            style={{
-              fontSize: typography.fontSize["2xl"],
-              fontWeight: typography.fontWeight.bold,
-              color: cssVars.textMain,
-              margin: 0,
-              marginBottom: spacing[1.5],
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {board.name}
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[2], marginBottom: spacing[1.5] }}>
+            <h2
+              style={{
+                fontSize: typography.fontSize["2xl"],
+                fontWeight: typography.fontWeight.bold,
+                color: cssVars.textMain,
+                margin: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {board.name}
+            </h2>
+            {board.isOwner && onEdit && (
+              <button
+                onClick={onEdit}
+                title="Panoyu Düzenle"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: spacing[8],
+                  height: spacing[8],
+                  borderRadius: radius.lg,
+                  border: `1px solid ${themeColors.borderDefault}`,
+                  background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+                  color: cssVars.textMuted,
+                  cursor: "pointer",
+                  transition: `all ${animation.duration.fast}`,
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = colors.brand.primary;
+                  e.currentTarget.style.borderColor = colors.brand.primary;
+                  e.currentTarget.style.background = colors.brand.primaryLight;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = cssVars.textMuted;
+                  e.currentTarget.style.borderColor = themeColors.borderDefault;
+                  e.currentTarget.style.background = isLight ? colors.light.bg.card : colors.dark.glass.bg;
+                }}
+              >
+                <Pencil size={16} />
+              </button>
+            )}
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexWrap: "wrap" }}>
             <span
               style={{
