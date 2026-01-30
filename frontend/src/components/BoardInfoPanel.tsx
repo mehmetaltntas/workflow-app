@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import type { Board } from "../types";
+import React, { useMemo, useState } from "react";
+import type { Board, BoardMember, BoardMemberAssignment } from "../types";
 import {
   ListChecks,
   CheckSquare,
@@ -11,6 +11,10 @@ import {
   AlertTriangle,
   FolderOpen,
   User,
+  Info,
+  Target,
+  Clock,
+  UserPlus,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
@@ -135,6 +139,10 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
   const themeColors = getThemeColors(theme);
   const isLight = theme === 'light';
 
+  const isTeamBoard = board?.boardType === 'TEAM';
+  type TabKey = 'info' | 'assignments' | 'updates';
+  const [activeTab, setActiveTab] = useState<TabKey>('info');
+
   const stats = useMemo(() => board ? calculateBoardStats(board) : null, [board]);
   const deadlineInfo = useMemo(() => board ? getDeadlineInfo(board.deadline) : null, [board]);
 
@@ -203,127 +211,155 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
     ? `${board.ownerFirstName} ${board.ownerLastName}`
     : board.ownerName;
 
-  return (
+  // ─── Tab definitions for TEAM boards ───
+  const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+    { key: 'info', label: 'Bilgi', icon: <Info size={14} /> },
+    { key: 'assignments', label: 'Görev Atamaları', icon: <Target size={14} /> },
+    { key: 'updates', label: 'Güncellemeler', icon: <Clock size={14} /> },
+  ];
+
+  // ─── Compute assignment updates for "Güncellemeler" tab ───
+  const assignmentUpdates = useMemo(() => {
+    if (!isTeamBoard) return [];
+    const members = board.members || [];
+    const updates: {
+      member: BoardMember;
+      assignment: BoardMemberAssignment;
+    }[] = [];
+
+    for (const member of members) {
+      for (const assignment of member.assignments || []) {
+        updates.push({ member, assignment });
+      }
+    }
+
+    // Sort by createdAt descending (most recent first)
+    updates.sort((a, b) => {
+      const dateA = new Date(a.assignment.createdAt).getTime();
+      const dateB = new Date(b.assignment.createdAt).getTime();
+      return dateB - dateA;
+    });
+
+    return updates;
+  }, [isTeamBoard, board.members]);
+
+  // ─── Shared content renderers ───
+
+  const renderHeroSection = () => (
     <div
       style={{
+        ...cardStyle,
+        padding: spacing[5],
         display: "flex",
         flexDirection: "column",
-        gap: spacing[4],
-        animation: `fadeIn ${animation.duration.slow} ${animation.easing.spring}`,
+        gap: spacing[3],
+        background: `linear-gradient(135deg, ${statusColor}08, ${isLight ? colors.light.bg.card : colors.dark.glass.bg})`,
       }}
     >
-      {/* Hero Section — Compact */}
-      <div
-        style={{
-          ...cardStyle,
-          padding: spacing[5],
-          display: "flex",
-          flexDirection: "column",
-          gap: spacing[3],
-          background: `linear-gradient(135deg, ${statusColor}08, ${isLight ? colors.light.bg.card : colors.dark.glass.bg})`,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
-          <div
+      <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+        <div
+          style={{
+            width: spacing[1.5],
+            height: spacing[10],
+            borderRadius: radius.full,
+            background: `linear-gradient(180deg, ${statusColor}, ${statusColor}60)`,
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2
             style={{
-              width: spacing[1.5],
-              height: spacing[10],
-              borderRadius: radius.full,
-              background: `linear-gradient(180deg, ${statusColor}, ${statusColor}60)`,
-              flexShrink: 0,
+              fontSize: typography.fontSize["2xl"],
+              fontWeight: typography.fontWeight.bold,
+              color: cssVars.textMain,
+              margin: 0,
+              marginBottom: spacing[1.5],
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
-          />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h2
+          >
+            {board.name}
+          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexWrap: "wrap" }}>
+            <span
               style={{
-                fontSize: typography.fontSize["2xl"],
+                display: "inline-flex",
+                alignItems: "center",
+                fontSize: typography.fontSize.xs,
                 fontWeight: typography.fontWeight.bold,
-                color: cssVars.textMain,
-                margin: 0,
-                marginBottom: spacing[1.5],
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                color: statusColor,
+                background: `${statusColor}15`,
+                padding: `${spacing[0.5]} ${spacing[2.5]}`,
+                borderRadius: radius.full,
+                textTransform: "uppercase",
+                letterSpacing: typography.letterSpacing.wider,
               }}
             >
-              {board.name}
-            </h2>
-            <div style={{ display: "flex", alignItems: "center", gap: spacing[2], flexWrap: "wrap" }}>
+              {STATUS_LABELS[board.status || "PLANLANDI"]}
+            </span>
+            {hasCategory && (
               <span
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
+                  gap: spacing[1],
                   fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.bold,
-                  color: statusColor,
-                  background: `${statusColor}15`,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: colors.brand.primary,
+                  background: colors.brand.primaryLight,
                   padding: `${spacing[0.5]} ${spacing[2.5]}`,
                   borderRadius: radius.full,
-                  textTransform: "uppercase",
-                  letterSpacing: typography.letterSpacing.wider,
                 }}
               >
-                {STATUS_LABELS[board.status || "PLANLANDI"]}
+                <FolderOpen size={11} />
+                {CATEGORY_MAP[board.category!] || board.category}
               </span>
-              {hasCategory && (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: spacing[1],
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.semibold,
-                    color: colors.brand.primary,
-                    background: colors.brand.primaryLight,
-                    padding: `${spacing[0.5]} ${spacing[2.5]}`,
-                    borderRadius: radius.full,
-                  }}
-                >
-                  <FolderOpen size={11} />
-                  {CATEGORY_MAP[board.category!] || board.category}
-                </span>
-              )}
-            </div>
+            )}
           </div>
-        </div>
-
-        {/* Inline Progress Bar */}
-        <div style={{ display: "flex", alignItems: "center", gap: spacing[3], paddingLeft: spacing[3] }}>
-          <div
-            style={{
-              flex: 1,
-              height: spacing[1.5],
-              background: themeColors.bgActive,
-              borderRadius: radius.full,
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                width: `${stats.overallProgress}%`,
-                background: stats.overallProgress === 100
-                  ? colors.semantic.success
-                  : `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
-                borderRadius: radius.full,
-                transition: `width ${animation.duration.slow}`,
-              }}
-            />
-          </div>
-          <span
-            style={{
-              fontSize: typography.fontSize.lg,
-              fontWeight: typography.fontWeight.bold,
-              color: stats.overallProgress === 100 ? colors.semantic.success : colors.brand.primary,
-              minWidth: spacing[10],
-              textAlign: "right",
-            }}
-          >
-            %{stats.overallProgress}
-          </span>
         </div>
       </div>
 
+      {/* Inline Progress Bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: spacing[3], paddingLeft: spacing[3] }}>
+        <div
+          style={{
+            flex: 1,
+            height: spacing[1.5],
+            background: themeColors.bgActive,
+            borderRadius: radius.full,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${stats.overallProgress}%`,
+              background: stats.overallProgress === 100
+                ? colors.semantic.success
+                : `linear-gradient(90deg, ${colors.brand.primary}, ${colors.brand.primaryHover})`,
+              borderRadius: radius.full,
+              transition: `width ${animation.duration.slow}`,
+            }}
+          />
+        </div>
+        <span
+          style={{
+            fontSize: typography.fontSize.lg,
+            fontWeight: typography.fontWeight.bold,
+            color: stats.overallProgress === 100 ? colors.semantic.success : colors.brand.primary,
+            minWidth: spacing[10],
+            textAlign: "right",
+          }}
+        >
+          %{stats.overallProgress}
+        </span>
+      </div>
+    </div>
+  );
+
+  const renderInfoContent = () => (
+    <>
       {/* Metadata Grid — Consolidated */}
       {(hasDeadline || hasLink || true) && (
         <div style={cardStyle}>
@@ -501,10 +537,317 @@ export const BoardInfoPanel: React.FC<BoardInfoPanelProps> = ({
       )}
 
       {/* Board Members Section — only for TEAM boards */}
-      {board.boardType === 'TEAM' && <BoardMembersSection board={board} />}
+      {isTeamBoard && <BoardMembersSection board={board} />}
+    </>
+  );
 
-      {/* Task Assignment Section — only for TEAM boards */}
-      {board.boardType === 'TEAM' && <TaskAssignmentSection board={board} />}
+  const renderUpdatesContent = () => {
+    const TARGET_TYPE_LABELS: Record<string, string> = {
+      LIST: 'listeye',
+      TASK: 'göreve',
+      SUBTASK: 'alt göreve',
+    };
+
+    if (assignmentUpdates.length === 0) {
+      return (
+        <div
+          style={{
+            ...cardStyle,
+            textAlign: "center",
+            padding: `${spacing[8]} ${spacing[4]}`,
+          }}
+        >
+          <Clock
+            size={32}
+            strokeWidth={1.5}
+            style={{ opacity: 0.3, marginBottom: spacing[3], color: cssVars.textMuted }}
+          />
+          <p
+            style={{
+              fontSize: typography.fontSize.sm,
+              color: cssVars.textMuted,
+              margin: 0,
+            }}
+          >
+            Henüz güncelleme bulunmuyor
+          </p>
+        </div>
+      );
+    }
+
+    // Group updates by date
+    const groupedByDate = new Map<string, typeof assignmentUpdates>();
+    for (const update of assignmentUpdates) {
+      const dateKey = new Date(update.assignment.createdAt).toLocaleDateString('tr-TR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      if (!groupedByDate.has(dateKey)) groupedByDate.set(dateKey, []);
+      groupedByDate.get(dateKey)!.push(update);
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
+        {Array.from(groupedByDate.entries()).map(([dateLabel, updates]) => (
+          <div key={dateLabel} style={cardStyle}>
+            {/* Date Header */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing[2],
+                marginBottom: spacing[3],
+                paddingBottom: spacing[2],
+                borderBottom: `1px solid ${themeColors.borderDefault}`,
+              }}
+            >
+              <Calendar size={13} color={cssVars.textMuted} />
+              <span
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.bold,
+                  color: cssVars.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: typography.letterSpacing.wide,
+                }}
+              >
+                {dateLabel}
+              </span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: colors.brand.primary,
+                  background: colors.brand.primaryLight,
+                  padding: `${spacing[0.5]} ${spacing[2]}`,
+                  borderRadius: radius.full,
+                }}
+              >
+                {updates.length}
+              </span>
+            </div>
+
+            {/* Updates List */}
+            <div style={{ display: "flex", flexDirection: "column", gap: spacing[1] }}>
+              {updates.map((update) => {
+                const memberName =
+                  update.member.firstName && update.member.lastName
+                    ? `${update.member.firstName} ${update.member.lastName}`
+                    : update.member.username;
+
+                const time = new Date(update.assignment.createdAt).toLocaleTimeString('tr-TR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+
+                const targetTypeLabel = TARGET_TYPE_LABELS[update.assignment.targetType] || 'öğeye';
+                const targetName = update.assignment.targetName || `#${update.assignment.targetId}`;
+
+                const initials =
+                  update.member.firstName && update.member.lastName
+                    ? `${update.member.firstName.charAt(0)}${update.member.lastName.charAt(0)}`.toUpperCase()
+                    : update.member.username.substring(0, 2).toUpperCase();
+
+                return (
+                  <div
+                    key={update.assignment.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: spacing[2.5],
+                      padding: `${spacing[2]} ${spacing[2.5]}`,
+                      borderRadius: radius.md,
+                      background: isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)",
+                      transition: `background ${animation.duration.fast}`,
+                    }}
+                  >
+                    {/* Avatar */}
+                    {update.member.profilePicture ? (
+                      <img
+                        src={update.member.profilePicture}
+                        alt={update.member.username}
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: radius.full,
+                          objectFit: "cover",
+                          flexShrink: 0,
+                          marginTop: spacing[0.5],
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: radius.full,
+                          background: colors.brand.primaryLight,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: colors.brand.primary,
+                          fontWeight: typography.fontWeight.bold,
+                          fontSize: typography.fontSize.xs,
+                          flexShrink: 0,
+                          marginTop: spacing[0.5],
+                        }}
+                      >
+                        {initials}
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: spacing[1.5], flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.sm,
+                            fontWeight: typography.fontWeight.semibold,
+                            color: cssVars.textMain,
+                          }}
+                        >
+                          {memberName}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.sm,
+                            color: cssVars.textMuted,
+                          }}
+                        >
+                          {targetTypeLabel} atandı
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing[2],
+                          marginTop: spacing[1],
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: spacing[1],
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.medium,
+                            color: colors.brand.primary,
+                            background: colors.brand.primaryLight,
+                            padding: `${spacing[0.5]} ${spacing[2]}`,
+                            borderRadius: radius.sm,
+                            maxWidth: "200px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          <UserPlus size={10} />
+                          {targetName}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: typography.fontSize.xs,
+                            color: cssVars.textMuted,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: spacing[1],
+                          }}
+                        >
+                          <Clock size={10} />
+                          {time}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: spacing[4],
+        animation: `fadeIn ${animation.duration.slow} ${animation.easing.spring}`,
+      }}
+    >
+      {/* Hero Section — Always visible */}
+      {renderHeroSection()}
+
+      {/* Tab Bar — Only for TEAM boards */}
+      {isTeamBoard && (
+        <div
+          style={{
+            display: "flex",
+            gap: spacing[1],
+            padding: spacing[1],
+            borderRadius: radius.xl,
+            background: isLight ? colors.light.bg.card : colors.dark.glass.bg,
+            border: `1px solid ${themeColors.borderDefault}`,
+          }}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: spacing[1.5],
+                  padding: `${spacing[2]} ${spacing[2.5]}`,
+                  borderRadius: radius.lg,
+                  border: "none",
+                  background: isActive
+                    ? isLight
+                      ? "#fff"
+                      : "rgba(255,255,255,0.1)"
+                    : "transparent",
+                  color: isActive ? colors.brand.primary : cssVars.textMuted,
+                  fontWeight: isActive
+                    ? typography.fontWeight.semibold
+                    : typography.fontWeight.medium,
+                  fontSize: typography.fontSize.xs,
+                  cursor: "pointer",
+                  transition: `all ${animation.duration.fast}`,
+                  boxShadow: isActive ? shadows.sm : "none",
+                }}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Tab Content */}
+      {isTeamBoard ? (
+        <>
+          {activeTab === 'info' && renderInfoContent()}
+          {activeTab === 'assignments' && (
+            <div style={{ marginBottom: spacing[8] }}>
+              <TaskAssignmentSection board={board} />
+            </div>
+          )}
+          {activeTab === 'updates' && renderUpdatesContent()}
+        </>
+      ) : (
+        /* Non-TEAM boards: show info content directly */
+        renderInfoContent()
+      )}
 
       {/* CSS Animation */}
       <style>{`
