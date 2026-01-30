@@ -67,7 +67,16 @@ const getPriorityColor = (priority?: string) => {
   }
 };
 
-export const MillerColumn: React.FC<MillerColumnProps> = ({
+const getPriorityLabel = (priority?: string) => {
+  switch (priority) {
+    case 'HIGH': return 'Yüksek';
+    case 'MEDIUM': return 'Orta';
+    case 'LOW': return 'Düşük';
+    default: return '';
+  }
+};
+
+export const MillerColumn: React.FC<MillerColumnProps> = React.memo(function MillerColumn({
   title,
   items,
   selectedId,
@@ -81,7 +90,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
   onItemEdit,
   onItemDelete,
   onItemToggle,
-}) => {
+}) {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const columnRef = useRef<HTMLDivElement>(null);
@@ -259,6 +268,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
               boxShadow: shadows.sm,
             }}
             title="Ekle"
+            aria-label="Ekle"
           >
             <Plus size={16} />
           </button>
@@ -390,6 +400,8 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                   {/* Priority Indicator */}
                   {item.metadata?.priority && item.metadata.priority !== 'NONE' && (
                     <div
+                      aria-label={`Öncelik: ${getPriorityLabel(item.metadata.priority)}`}
+                      title={`Öncelik: ${getPriorityLabel(item.metadata.priority)}`}
                       style={{
                         position: 'absolute',
                         left: spacing[1],
@@ -401,6 +413,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                         background: getPriorityColor(item.metadata.priority),
                         boxShadow: `0 0 8px ${getPriorityColor(item.metadata.priority)}60`,
                       }}
+                      role="img"
                     />
                   )}
 
@@ -463,6 +476,38 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                           }}
                         >
                           {item.subtitle}
+                        </span>
+                      )}
+
+                      {/* Priority Label */}
+                      {item.metadata?.priority && item.metadata.priority !== 'NONE' && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: spacing[1],
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.semibold,
+                            color: isSelected
+                              ? 'rgba(0, 0, 0, 0.7)'
+                              : getPriorityColor(item.metadata.priority),
+                            background: isSelected
+                              ? 'rgba(255, 255, 255, 0.15)'
+                              : `${getPriorityColor(item.metadata.priority)}18`,
+                            padding: `${spacing[0.5]} ${spacing[1.5]}`,
+                            borderRadius: radius.sm,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: radius.full,
+                              background: getPriorityColor(item.metadata.priority),
+                              flexShrink: 0,
+                            }}
+                          />
+                          {getPriorityLabel(item.metadata.priority)}
                         </span>
                       )}
 
@@ -540,6 +585,9 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                             setActionMenuId(item.id);
                           }
                         }}
+                        aria-label="İşlem menüsü"
+                        aria-haspopup="true"
+                        aria-expanded={actionMenuId === item.id}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -593,6 +641,7 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                               boxShadow: shadows.dropdown,
                               backdropFilter: 'blur(12px)',
                             }}
+                            role="menu"
                           >
                             {onItemToggle && (
                               <button
@@ -601,6 +650,8 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                                   onItemToggle(item);
                                   setActionMenuId(null);
                                 }}
+                                role="menuitem"
+                                aria-label={item.isCompleted ? 'Geri Al' : 'Tamamla'}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -629,6 +680,8 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                                   onItemEdit(item);
                                   setActionMenuId(null);
                                 }}
+                                role="menuitem"
+                                aria-label="Düzenle"
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -657,6 +710,8 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
                                   onItemDelete(item);
                                   setActionMenuId(null);
                                 }}
+                                role="menuitem"
+                                aria-label="Sil"
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
@@ -738,6 +793,6 @@ export const MillerColumn: React.FC<MillerColumnProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default MillerColumn;

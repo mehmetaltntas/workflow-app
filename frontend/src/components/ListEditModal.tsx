@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Save, Link as LinkIcon, Trash2, CheckSquare, Square, Settings, Flag, Tag, Check } from "lucide-react";
 import type { Task, TaskList, Label, Priority } from "../types";
 import { colors, cssVars, typography, spacing, radius, shadows, zIndex, animation } from "../styles/tokens";
@@ -31,6 +31,7 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
   const [showUndoBar, setShowUndoBar] = useState(false);
   const [deletedTaskIds, setDeletedTaskIds] = useState<number[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const modal = modalRef.current;
@@ -133,13 +134,13 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
     }, 5000);
 
     // Store timeout ID for potential cancellation
-    (window as unknown as { undoTimeout?: ReturnType<typeof setTimeout> }).undoTimeout = timeoutId;
+    undoTimeoutRef.current = timeoutId;
   };
 
   const handleUndo = () => {
-    const timeout = (window as unknown as { undoTimeout?: ReturnType<typeof setTimeout> }).undoTimeout;
-    if (timeout) {
-      clearTimeout(timeout);
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = null;
     }
     setShowUndoBar(false);
     setDeletedTaskIds([]);
@@ -610,12 +611,6 @@ export const ListEditModal: React.FC<ListEditModalProps> = ({ list, boardLabels 
           </div>
         )}
       </div>
-      <style>{`
-        @keyframes modalFadeIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   );
 };

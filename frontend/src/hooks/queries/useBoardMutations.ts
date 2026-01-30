@@ -35,8 +35,11 @@ export const useCreateBoard = () => {
       });
     },
     onSuccess: () => {
-      // Invalidate and refetch boards list
+      // Invalidate and refetch boards list + cross-query caches
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(userId) });
+      }
       if (username) {
         queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
       }
@@ -125,8 +128,11 @@ export const useUpdateBoard = () => {
       toast.success('Pano güncellendi');
     },
     onSettled: () => {
-      // Always refetch after error or success
+      // Always refetch after error or success - cross-query invalidation
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(userId) });
+      }
       if (username) {
         queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
       }
@@ -184,7 +190,11 @@ export const useDeleteBoard = () => {
       toast.success('Pano silindi');
     },
     onSettled: () => {
+      // Cross-query invalidation
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(userId) });
+      }
       if (username) {
         queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
       }
@@ -245,7 +255,11 @@ export const useUpdateBoardStatus = () => {
       toast.success('Statü güncellendi');
     },
     onSettled: () => {
+      // Cross-query invalidation
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.all });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(userId) });
+      }
       if (username) {
         queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
       }

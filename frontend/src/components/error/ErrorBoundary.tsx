@@ -25,6 +25,26 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.props.onError?.(error, errorInfo);
+
+    // Production'da error monitoring servisine gönder
+    if (import.meta.env.PROD) {
+      // Sentry.captureException(error, { extra: errorInfo });
+      // veya custom endpoint'e POST
+      try {
+        fetch('/api/error-reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            timestamp: new Date().toISOString(),
+          }),
+        }).catch(() => { /* sessizce başarısız ol */ });
+      } catch {
+        // Hata raporlama başarısız olsa bile uygulamayı etkilemesin
+      }
+    }
   }
 
   handleReset = (): void => {

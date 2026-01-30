@@ -138,6 +138,7 @@ const Layout = () => {
             onClick={toggleTheme}
             className="layout__theme-toggle"
             title={theme === "dark" ? "Açık Tema" : "Koyu Tema"}
+            aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
           >
             {theme === "dark" ? <Sun size={parseInt(sizes.iconMd)} /> : <Moon size={parseInt(sizes.iconMd)} />}
           </button>

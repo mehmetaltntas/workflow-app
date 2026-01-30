@@ -18,7 +18,7 @@ interface BoardCardProps {
   accentColor?: string;
 }
 
-const BoardCard: React.FC<BoardCardProps> = ({
+const BoardCard: React.FC<BoardCardProps> = React.memo(function BoardCard({
   board,
   onClick,
   onEdit,
@@ -28,7 +28,7 @@ const BoardCard: React.FC<BoardCardProps> = ({
   canPin = true,
   viewMode = 'grid',
   accentColor,
-}) => {
+}) {
   const statusColor = accentColor || STATUS_COLORS[board.status || "PLANLANDI"] || "var(--border)";
 
   // CSS custom property for dynamic status color
@@ -124,6 +124,6 @@ const BoardCard: React.FC<BoardCardProps> = ({
       <div className="board-card__spacer" />
     </div>
   );
-};
+});
 
 export default BoardCard;

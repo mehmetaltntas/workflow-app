@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutDashboard, Users } from "lucide-react";
-import { useBoards } from "../hooks/useBoards";
+import { useBoardsQuery } from "../hooks/queries/useBoards";
 import { useMyTeamBoardsQuery, useAssignedBoardsQuery } from "../hooks/queries/useAssignedBoards";
 import { typography, spacing, radius, cssVars, colors, animation } from "../styles/tokens";
 import { STATUS_LABELS, STATUS_COLORS } from "../constants";
@@ -38,35 +38,35 @@ const formatLocalDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Son tarihe göre renk hesapla (component dışında tanımlandı - her renderda yeniden oluşturulmaz)
+function getDeadlineColor(deadline: string) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const deadlineDate = new Date(deadline);
+  deadlineDate.setHours(0, 0, 0, 0);
+
+  const diffTime = deadlineDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return { color: '#dc2626', days: diffDays }; // Kırmızı - geçmiş
+  } else if (diffDays <= 3) {
+    return { color: '#f97316', days: diffDays }; // Turuncu - acil
+  } else if (diffDays <= 7) {
+    return { color: '#eab308', days: diffDays }; // Sarı - yaklaşıyor
+  } else {
+    return { color: '#22c55e', days: diffDays }; // Yeşil - normal
+  }
+}
+
 const CalendarPage = () => {
   const navigate = useNavigate();
-  const { boards, loading } = useBoards();
+  const { data: boards = [], isLoading: loading } = useBoardsQuery();
   const { data: myTeamBoards = [], isLoading: teamLoading } = useMyTeamBoardsQuery();
   const { data: assignedBoards = [], isLoading: assignedLoading } = useAssignedBoardsQuery();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
-
-  // Son tarihe göre renk hesapla
-  const getDeadlineColor = (deadline: string) => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const deadlineDate = new Date(deadline);
-    deadlineDate.setHours(0, 0, 0, 0);
-
-    const diffTime = deadlineDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) {
-      return { color: '#dc2626', days: diffDays }; // Kırmızı - geçmiş
-    } else if (diffDays <= 3) {
-      return { color: '#f97316', days: diffDays }; // Turuncu - acil
-    } else if (diffDays <= 7) {
-      return { color: '#eab308', days: diffDays }; // Sarı - yaklaşıyor
-    } else {
-      return { color: '#22c55e', days: diffDays }; // Yeşil - normal
-    }
-  };
 
   // Board deadline'larından etkinlikleri çıkar (kendi panolar + ekip panolar)
   const events = useMemo(() => {
@@ -306,6 +306,7 @@ const CalendarPage = () => {
         <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
           <button
             onClick={() => changeMonth(-1)}
+            aria-label="Önceki ay"
             style={{
               display: "flex",
               alignItems: "center",
@@ -337,6 +338,7 @@ const CalendarPage = () => {
 
           <button
             onClick={() => changeMonth(1)}
+            aria-label="Sonraki ay"
             style={{
               display: "flex",
               alignItems: "center",

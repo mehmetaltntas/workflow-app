@@ -34,7 +34,7 @@ const MONTH_NAMES = [
 // Gün isimleri (Türkçe)
 const DAY_NAMES = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }) => {
+export const CalendarView: React.FC<CalendarViewProps> = React.memo(function CalendarView({ board, onTaskClick }) {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -363,4 +363,4 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ board, onTaskClick }
       </div>
     </div>
   );
-};
+});

@@ -77,6 +77,7 @@ const apiClient = axios.create({
   },
   // HttpOnly cookie'lerin otomatik gönderilmesi için
   withCredentials: true,
+  timeout: 30000, // 30 saniye
 });
 
 // Token yenileme durumu için flag
@@ -280,8 +281,10 @@ export const subtaskService = {
   },
 
   // Görevin alt görevlerini getir
-  getSubtasksByTask: async (taskId: number): Promise<Subtask[]> => {
-    const response = await apiClient.get<PagedResponse<Subtask>>(`/subtasks/task/${taskId}`);
+  getSubtasksByTask: async (taskId: number, options?: { signal?: AbortSignal }): Promise<Subtask[]> => {
+    const response = await apiClient.get<PagedResponse<Subtask>>(`/subtasks/task/${taskId}`, {
+      signal: options?.signal,
+    });
     return extractCollection<Subtask>(response);
   },
 };
@@ -322,7 +325,19 @@ export const userService = {
     const response = await apiClient.get<User>(`/users/${userId}`);
     return extractEntity<User>(response);
   },
-  updateProfile: async (userId: number, data: { username?: string; firstName?: string; lastName?: string; profilePicture?: string }): Promise<User> => {
+  updateProfile: async (userId: number, data: { username?: string; firstName?: string; lastName?: string; profilePicture?: string | File }): Promise<User> => {
+    // Check if we need multipart
+    if (data.profilePicture instanceof File) {
+      const formData = new FormData();
+      formData.append('profilePicture', data.profilePicture);
+      if (data.username) formData.append('username', data.username);
+      if (data.firstName) formData.append('firstName', data.firstName);
+      if (data.lastName) formData.append('lastName', data.lastName);
+      const response = await apiClient.put<User>(`/users/${userId}/profile`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return extractEntity<User>(response);
+    }
     const response = await apiClient.put<User>(`/users/${userId}/profile`, data);
     return extractEntity<User>(response);
   },

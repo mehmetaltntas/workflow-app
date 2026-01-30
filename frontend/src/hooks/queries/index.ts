@@ -5,3 +5,4 @@ export {
   useDeleteBoard,
   useUpdateBoardStatus,
 } from './useBoardMutations';
+export { useSubtasksByTask } from './useSubtasks';

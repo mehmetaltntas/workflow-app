@@ -146,6 +146,7 @@ export interface User extends HateoasModel {
   email: string;
   firstName?: string;
   lastName?: string;
+  profilePicture?: string | null;
   deletionScheduledAt?: string | null;
 }
 

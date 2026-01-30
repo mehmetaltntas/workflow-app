@@ -2,13 +2,14 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { AxiosError } from "axios";
 import { taskService, labelService } from "../services/api";
+import { handleError } from "../utils/errorHandler";
 import { useBoardDetailQuery } from "../hooks/queries/useBoards";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "../lib/queryClient";
-import type { Board, Task, TaskList, Subtask, Priority, Label } from "../types";
+import { useAuthStore } from "../stores/authStore";
+import type { Board, Task, TaskList, Subtask, Priority } from "../types";
 
 import toast from "react-hot-toast";
-import { ArrowLeft, X, ArrowUp, ArrowDown, Tag, Home, ChevronRight, Info } from "lucide-react";
 import { MillerColumn, type MillerColumnItem } from "../components/MillerColumn";
 import { MillerPreviewPanel } from "../components/MillerPreviewPanel";
 import { subtaskService } from "../services/api";
@@ -17,12 +18,19 @@ import { TaskEditModal } from "../components/TaskEditModal";
 import { ListEditModal } from "../components/ListEditModal";
 import { SubtaskEditModal } from "../components/SubtaskEditModal";
 import { LabelManager } from "../components/LabelManager";
-import { FilterBar, getDefaultFilters } from "../components/FilterBar";
-import { StatsBar } from "../components/StatsBar";
+import { getDefaultFilters } from "../components/FilterBar";
 import type { FilterState } from "../components/FilterBar";
 import { useTheme } from "../contexts/ThemeContext";
 import { getThemeColors } from "../utils/themeColors";
-import { colors as tokenColors } from "../styles/tokens";
+
+import {
+  BoardHeader,
+  BoardStatsSection,
+  BoardFilterSection,
+  CreateListModal,
+  CreateTaskModal,
+  CreateSubtaskModal,
+} from "../components/board";
 
 const BoardDetailPage = () => {
   const { slug } = useParams();
@@ -35,6 +43,8 @@ const BoardDetailPage = () => {
 
   // Data State - React Query
   const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.userId);
+  const username = useAuthStore((state) => state.username);
   const { data: board = null, isLoading: loading, error: boardError } = useBoardDetailQuery(slug);
 
   // Board ownership & member assignment logic
@@ -147,12 +157,18 @@ const BoardDetailPage = () => {
     }
   }, [boardError]);
 
-  // Helper to invalidate board query (replaces loadBoardData)
+  // Helper to invalidate board query and related caches (cross-query invalidation)
   const invalidateBoard = useCallback(() => {
     if (slug) {
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.detail(slug) });
     }
-  }, [queryClient, slug]);
+    if (userId) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.list(userId) });
+    }
+    if (username) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userProfileStats(username) });
+    }
+  }, [queryClient, slug, userId, username]);
 
   // URL sync for Miller navigation
   useEffect(() => {
@@ -163,14 +179,15 @@ const BoardDetailPage = () => {
   }, [searchParams]);
 
   // Subtasks lazy loading
-  const loadSubtasks = useCallback(async (taskId: number) => {
+  const loadSubtasks = useCallback(async (taskId: number, signal?: AbortSignal) => {
     if (subtaskCacheRef.current.has(taskId)) return;
 
     try {
       setIsLoadingSubtasks(true);
-      const subtasks = await subtaskService.getSubtasksByTask(taskId);
+      const subtasks = await subtaskService.getSubtasksByTask(taskId, { signal });
       setSubtaskCache(prev => new Map(prev).set(taskId, subtasks));
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
       console.error('Alt görevler yüklenemedi:', error);
     } finally {
       setIsLoadingSubtasks(false);
@@ -201,13 +218,7 @@ const BoardDetailPage = () => {
       invalidateBoard();
       toast.success("Liste eklendi");
     } catch (error) {
-      console.error(error);
-      const axiosErr = error as AxiosError<{ status?: number }>;
-      if (axiosErr.response?.status === 409) {
-        toast.error("Bu isimde bir liste zaten mevcut");
-      } else {
-        toast.error("Hata oluştu");
-      }
+      handleError(error, 'Liste oluşturulamadı');
     }
   }, [newListName, newListDescription, newListLink, newListPriority, newListLabelIds, board, invalidateBoard, resetListForm]);
 
@@ -334,13 +345,7 @@ const BoardDetailPage = () => {
       invalidateBoard();
       toast.success("Görev eklendi");
     } catch (error) {
-      console.error(error);
-      const axiosErr = error as AxiosError<{ status?: number }>;
-      if (axiosErr.response?.status === 409) {
-        toast.error("Bu isimde bir görev zaten mevcut");
-      } else {
-        toast.error("Görev eklenemedi");
-      }
+      handleError(error, 'Görev oluşturulamadı');
     }
   }, [newTaskTitle, newTaskDescription, newTaskLink, invalidateBoard]);
 
@@ -366,13 +371,7 @@ const BoardDetailPage = () => {
       invalidateBoard();
       toast.success("Alt görev eklendi");
     } catch (error) {
-      console.error(error);
-      const axiosErr = error as AxiosError<{ status?: number }>;
-      if (axiosErr.response?.status === 409) {
-        toast.error("Bu isimde bir alt görev zaten mevcut");
-      } else {
-        toast.error("Alt görev eklenemedi");
-      }
+      handleError(error, 'Alt görev oluşturulamadı');
     }
   }, [newSubtaskTitle, newSubtaskDescription, newSubtaskLink, invalidateBoard]);
 
@@ -413,13 +412,7 @@ const BoardDetailPage = () => {
       invalidateBoard();
       toast.success("Güncellendi");
     } catch (error) {
-      console.error(error);
-      const axiosErr = error as AxiosError<{ status?: number }>;
-      if (axiosErr.response?.status === 409) {
-        toast.error("Bu isimde bir görev zaten mevcut");
-      } else {
-        toast.error("Hata oluştu");
-      }
+      handleError(error, 'Görev güncellenemedi');
       throw error;
     }
   }, [invalidateBoard]);
@@ -431,13 +424,7 @@ const BoardDetailPage = () => {
       invalidateBoard();
       toast.success("Liste güncellendi");
     } catch (error) {
-      console.error(error);
-      const axiosErr = error as AxiosError<{ status?: number }>;
-      if (axiosErr.response?.status === 409) {
-        toast.error("Bu isimde bir liste zaten mevcut");
-      } else {
-        toast.error("Güncellenemedi");
-      }
+      handleError(error, 'Liste güncellenemedi');
       throw error;
     }
   }, [invalidateBoard]);
@@ -445,9 +432,7 @@ const BoardDetailPage = () => {
   // Handler for bulk deleting tasks from modal
   const handleBulkDeleteTasks = useCallback(async (taskIds: number[]) => {
     try {
-      for (const taskId of taskIds) {
-        await taskService.deleteTask(taskId);
-      }
+      await Promise.all(taskIds.map(taskId => taskService.deleteTask(taskId)));
       invalidateBoard();
       toast.success(`${taskIds.length} görev silindi`);
     } catch (error) {
@@ -778,13 +763,7 @@ const BoardDetailPage = () => {
       invalidateBoard();
       toast.success("Alt görev güncellendi");
     } catch (error) {
-      console.error(error);
-      const axiosErr = error as AxiosError<{ status?: number }>;
-      if (axiosErr.response?.status === 409) {
-        toast.error("Bu isimde bir alt görev zaten mevcut");
-      } else {
-        toast.error("Alt görev güncellenemedi");
-      }
+      handleError(error, 'Alt görev güncellenemedi');
       throw error;
     }
   }, [selectedTask, loadSubtasks, invalidateBoard]);
@@ -805,6 +784,21 @@ const BoardDetailPage = () => {
         break;
     }
   }, [selectedListId, setSearchParams]);
+
+  // Close handlers for modals
+  const handleCloseTaskModal = useCallback(() => {
+    setActiveListId(null);
+    setNewTaskTitle("");
+    setNewTaskDescription("");
+    setNewTaskLink("");
+  }, []);
+
+  const handleCloseSubtaskModal = useCallback(() => {
+    setActiveTaskIdForSubtask(null);
+    setNewSubtaskTitle("");
+    setNewSubtaskDescription("");
+    setNewSubtaskLink("");
+  }, []);
 
   if (loading)
     return (
@@ -905,278 +899,31 @@ const BoardDetailPage = () => {
       )}
 
       {/* Modern Header with Breadcrumb */}
-      <div style={{ padding: "16px 24px", background: colors.bgHeader, borderBottom: `1px solid ${colors.borderDefault}`, display: "flex", justifyContent: "space-between", alignItems: "center", backdropFilter: "blur(20px)", zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button onClick={() => navigate(backPath)} className="btn btn-ghost" style={{ padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px", borderRadius: '12px', color: 'var(--text-muted)' }}>
-            <ArrowLeft size={16} />
-          </button>
-
-          {/* Breadcrumb Navigation */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={() => handleBreadcrumbClick('board')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: 'none',
-                background: !selectedListId ? 'var(--primary)' : 'transparent',
-                color: !selectedListId ? tokenColors.dark.text.primary : 'var(--text-main)',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 600,
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Home size={14} />
-              {board.name}
-            </button>
-
-            {selectedList && (
-              <>
-                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
-                <button
-                  onClick={() => handleBreadcrumbClick('list')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: selectedList && !selectedTaskId ? 'var(--primary)' : 'transparent',
-                    color: selectedList && !selectedTaskId ? tokenColors.dark.text.primary : 'var(--text-main)',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {selectedList.name}
-                </button>
-              </>
-            )}
-
-            {selectedTask && (
-              <>
-                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
-                <button
-                  onClick={() => setSelectedSubtaskId(null)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: selectedTask && !selectedSubtask ? 'var(--primary)' : 'transparent',
-                    color: selectedTask && !selectedSubtask ? tokenColors.dark.text.primary : 'var(--text-main)',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    maxWidth: '200px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {selectedTask.title}
-                </button>
-              </>
-            )}
-
-            {selectedSubtask && (
-              <>
-                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    background: 'var(--primary)',
-                    color: tokenColors.dark.text.primary,
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    maxWidth: '200px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {selectedSubtask.title}
-                </span>
-              </>
-            )}
-          </nav>
-        </div>
-
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          {/* Bilgi Button */}
-          <button
-            onClick={() => navigate(`/boards/info/${slug}`, { state: { from: `/boards/${slug}` } })}
-            className="header-btn"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              borderRadius: '12px',
-              border: `1px solid ${colors.borderDefault}`,
-              background: colors.bgElevated,
-              color: colors.textSecondary,
-              fontSize: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <Info size={14} />
-            Bilgi
-          </button>
-
-          {/* Labels Button - only visible to owner */}
-          {isOwner && (
-            <button
-              onClick={() => setShowLabelManager(true)}
-              className="header-btn"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                borderRadius: '12px',
-                border: `1px solid ${colors.borderDefault}`,
-                background: colors.bgElevated,
-                color: colors.textSecondary,
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              <Tag size={14} />
-              Etiketler
-              {board.labels && board.labels.length > 0 && (
-                <span style={{
-                  background: 'var(--primary)',
-                  color: tokenColors.dark.text.primary,
-                  fontSize: '10px',
-                  fontWeight: '700',
-                  padding: '2px 6px',
-                  borderRadius: '8px',
-                  minWidth: '18px',
-                  textAlign: 'center',
-                }}>
-                  {board.labels.length}
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* Sort Controls - only visible to owner */}
-          {isOwner && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: colors.bgElevated,
-              padding: '4px',
-              borderRadius: '14px',
-              border: `1px solid ${colors.borderDefault}`,
-              backdropFilter: 'blur(10px)',
-              boxShadow: 'var(--shadow-md)',
-            }}>
-              {/* Sort Type Buttons */}
-              <div style={{ display: 'flex', gap: '2px' }}>
-                <button
-                  onClick={() => setSortBy("name")}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    borderRadius: '10px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    letterSpacing: '0.03em',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: sortBy === "name" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
-                    color: sortBy === "name" ? 'var(--primary)' : colors.textMuted,
-                    boxShadow: sortBy === "name" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
-                  }}
-                >
-                  Alfabetik
-                </button>
-                <button
-                  onClick={() => setSortBy("date")}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 14px',
-                    borderRadius: '10px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    letterSpacing: '0.03em',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: sortBy === "date" ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent',
-                    color: sortBy === "date" ? 'var(--primary)' : colors.textMuted,
-                    boxShadow: sortBy === "date" ? '0 2px 8px rgba(var(--primary-rgb), 0.2)' : 'none',
-                  }}
-                >
-                  Tarih
-                </button>
-              </div>
-
-              {/* Divider */}
-              <div style={{
-                width: '1px',
-                height: '20px',
-                background: colors.divider,
-                margin: '0 6px'
-              }} />
-
-              {/* Direction Toggle Arrow */}
-              <button
-                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: colors.bgHover,
-                  color: 'var(--primary)',
-                  transition: 'all 0.2s ease',
-                }}
-                title={
-                  sortBy === "name"
-                    ? (sortOrder === "asc" ? "A'dan Z'ye" : "Z'den A'ya")
-                    : (sortOrder === "asc" ? "Eskiden Yeniye" : "Yeniden Eskiye")
-                }
-              >
-                {sortOrder === "asc" ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <BoardHeader
+        boardName={board.name}
+        boardLabels={board.labels || []}
+        slug={slug}
+        backPath={backPath}
+        isOwner={isOwner}
+        selectedList={selectedList}
+        selectedTask={selectedTask}
+        selectedTaskId={selectedTaskId}
+        selectedListId={selectedListId}
+        selectedSubtask={selectedSubtask}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        colors={colors}
+        onNavigateBack={() => navigate(backPath)}
+        onNavigateInfo={() => navigate(`/boards/info/${slug}`, { state: { from: `/boards/${slug}` } })}
+        onBreadcrumbClick={handleBreadcrumbClick}
+        onClearSubtaskSelection={() => setSelectedSubtaskId(null)}
+        onShowLabelManager={() => setShowLabelManager(true)}
+        onSortByChange={setSortBy}
+        onSortOrderToggle={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+      />
 
       {/* Stats Bar */}
-      <StatsBar
+      <BoardStatsSection
         board={board}
         selectedList={selectedList}
         selectedTask={selectedTask}
@@ -1184,7 +931,7 @@ const BoardDetailPage = () => {
       />
 
       {/* Filter Bar */}
-      <FilterBar
+      <BoardFilterSection
         labels={board.labels || []}
         filters={filters}
         onFilterChange={setFilters}
@@ -1309,439 +1056,53 @@ const BoardDetailPage = () => {
         </div>
       </div>
 
-      {/* Add List Modal/Inline UI */}
+      {/* Add List Modal */}
       {isAddingList && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: tokenColors.dark.bg.modalOverlay,
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={resetListForm}
-        >
-          <div
-            style={{
-              background: tokenColors.dark.bg.card,
-              borderRadius: '20px',
-              padding: '28px',
-              width: '550px',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              border: `1px solid ${tokenColors.dark.border.strong}`,
-              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
-              <span style={{ fontSize: "16px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Liste</span>
-              <button onClick={resetListForm} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
-            </div>
-
-            {/* Liste Adı */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Liste Adı *</label>
-              <input
-                autoFocus
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-                maxLength={25}
-                placeholder="Liste adı..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                }}
-              />
-            </div>
-
-            {/* Açıklama */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Açıklama</label>
-              <textarea
-                value={newListDescription}
-                onChange={(e) => setNewListDescription(e.target.value)}
-                placeholder="Liste açıklaması..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                  minHeight: '80px',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            {/* Link */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Link</label>
-              <input
-                type="url"
-                value={newListLink}
-                onChange={(e) => setNewListLink(e.target.value)}
-                placeholder="https://..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--primary)',
-                }}
-              />
-            </div>
-
-            {/* Öncelik */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Öncelik</label>
-              <select
-                value={newListPriority}
-                onChange={(e) => setNewListPriority(e.target.value as Priority)}
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="NONE">Yok</option>
-                <option value="LOW">Düşük</option>
-                <option value="MEDIUM">Orta</option>
-                <option value="HIGH">Yüksek</option>
-              </select>
-            </div>
-
-            {/* Etiketler */}
-            {board?.labels && board.labels.length > 0 && (
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Etiketler</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {board.labels.map((label: Label) => {
-                    const isSelected = newListLabelIds.includes(label.id);
-                    return (
-                      <button
-                        key={label.id}
-                        type="button"
-                        onClick={() => setNewListLabelIds(prev =>
-                          isSelected ? prev.filter(id => id !== label.id) : [...prev, label.id]
-                        )}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          border: `1px solid ${isSelected ? label.color : tokenColors.dark.border.subtle}`,
-                          background: isSelected ? `${label.color}25` : 'transparent',
-                          color: isSelected ? label.color : 'var(--text-muted)',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: label.color }} />
-                        {label.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={handleCreateList}
-              disabled={!newListName.trim()}
-              className="btn btn-primary font-semibold"
-              style={{
-                width: '100%',
-                borderRadius: '10px',
-                height: '42px',
-                opacity: !newListName.trim() ? 0.5 : 1,
-                cursor: !newListName.trim() ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Oluştur
-            </button>
-          </div>
-        </div>
+        <CreateListModal
+          newListName={newListName}
+          newListDescription={newListDescription}
+          newListLink={newListLink}
+          newListPriority={newListPriority}
+          newListLabelIds={newListLabelIds}
+          boardLabels={board.labels || []}
+          onNameChange={setNewListName}
+          onDescriptionChange={setNewListDescription}
+          onLinkChange={setNewListLink}
+          onPriorityChange={setNewListPriority}
+          onLabelIdsChange={setNewListLabelIds}
+          onSubmit={handleCreateList}
+          onClose={resetListForm}
+        />
       )}
 
-      {/* Add Task Modal/Inline UI */}
+      {/* Add Task Modal */}
       {activeListId && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: tokenColors.dark.bg.modalOverlay,
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => {
-            setActiveListId(null);
-            setNewTaskTitle("");
-            setNewTaskDescription("");
-            setNewTaskLink("");
-          }}
-        >
-          <div
-            style={{
-              background: tokenColors.dark.bg.card,
-              borderRadius: '20px',
-              padding: '28px',
-              width: '500px',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              border: `1px solid ${tokenColors.dark.border.strong}`,
-              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
-              <span style={{ fontSize: "16px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Görev</span>
-              <button onClick={() => {
-                setActiveListId(null);
-                setNewTaskTitle("");
-                setNewTaskDescription("");
-                setNewTaskLink("");
-              }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
-            </div>
-
-            {/* İsim */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Görev Adı *</label>
-              <input
-                autoFocus
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                maxLength={25}
-                placeholder="Görev adı..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                }}
-                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleCreateTask(activeListId); } }}
-              />
-            </div>
-
-            {/* Açıklama */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Açıklama</label>
-              <textarea
-                value={newTaskDescription}
-                onChange={(e) => setNewTaskDescription(e.target.value)}
-                placeholder="Görev açıklaması..."
-                style={{
-                  width: "100%",
-                  minHeight: "80px",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            {/* Link */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Bağlantı</label>
-              <input
-                type="url"
-                value={newTaskLink}
-                onChange={(e) => setNewTaskLink(e.target.value)}
-                placeholder="https://..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--primary)',
-                }}
-              />
-            </div>
-
-            <button
-              onClick={() => handleCreateTask(activeListId)}
-              disabled={!newTaskTitle.trim()}
-              className="btn btn-primary font-semibold"
-              style={{
-                width: '100%',
-                borderRadius: '10px',
-                height: '42px',
-                opacity: !newTaskTitle.trim() ? 0.5 : 1,
-                cursor: !newTaskTitle.trim() ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Oluştur
-            </button>
-          </div>
-        </div>
+        <CreateTaskModal
+          activeListId={activeListId}
+          newTaskTitle={newTaskTitle}
+          newTaskDescription={newTaskDescription}
+          newTaskLink={newTaskLink}
+          onTitleChange={setNewTaskTitle}
+          onDescriptionChange={setNewTaskDescription}
+          onLinkChange={setNewTaskLink}
+          onSubmit={handleCreateTask}
+          onClose={handleCloseTaskModal}
+        />
       )}
 
       {/* Add Subtask Modal */}
       {activeTaskIdForSubtask && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: tokenColors.dark.bg.modalOverlay,
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => {
-            setActiveTaskIdForSubtask(null);
-            setNewSubtaskTitle("");
-            setNewSubtaskDescription("");
-            setNewSubtaskLink("");
-          }}
-        >
-          <div
-            style={{
-              background: tokenColors.dark.bg.card,
-              borderRadius: '20px',
-              padding: '28px',
-              width: '500px',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              border: `1px solid ${tokenColors.dark.border.strong}`,
-              boxShadow: '0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center" style={{ marginBottom: '20px' }}>
-              <span style={{ fontSize: "16px", fontWeight: "700", color: 'var(--text-main)' }}>Yeni Alt Görev</span>
-              <button onClick={() => {
-                setActiveTaskIdForSubtask(null);
-                setNewSubtaskTitle("");
-                setNewSubtaskDescription("");
-                setNewSubtaskLink("");
-              }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
-            </div>
-
-            {/* İsim */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Alt Görev Adı *</label>
-              <input
-                autoFocus
-                value={newSubtaskTitle}
-                onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                maxLength={25}
-                placeholder="Alt görev adı..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                }}
-                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleCreateSubtask(activeTaskIdForSubtask); } }}
-              />
-            </div>
-
-            {/* Açıklama */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Açıklama</label>
-              <textarea
-                value={newSubtaskDescription}
-                onChange={(e) => setNewSubtaskDescription(e.target.value)}
-                placeholder="Alt görev açıklaması..."
-                style={{
-                  width: "100%",
-                  minHeight: "80px",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            {/* Link */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Bağlantı</label>
-              <input
-                type="url"
-                value={newSubtaskLink}
-                onChange={(e) => setNewSubtaskLink(e.target.value)}
-                placeholder="https://..."
-                style={{
-                  width: "100%",
-                  borderRadius: '10px',
-                  background: tokenColors.dark.bg.hover,
-                  border: `1px solid ${tokenColors.dark.border.subtle}`,
-                  padding: '12px',
-                  fontSize: '14px',
-                  color: 'var(--primary)',
-                }}
-              />
-            </div>
-
-            <button
-              onClick={() => handleCreateSubtask(activeTaskIdForSubtask)}
-              disabled={!newSubtaskTitle.trim()}
-              className="btn btn-primary font-semibold"
-              style={{
-                width: '100%',
-                borderRadius: '10px',
-                height: '42px',
-                opacity: !newSubtaskTitle.trim() ? 0.5 : 1,
-                cursor: !newSubtaskTitle.trim() ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Oluştur
-            </button>
-          </div>
-        </div>
+        <CreateSubtaskModal
+          activeTaskId={activeTaskIdForSubtask}
+          newSubtaskTitle={newSubtaskTitle}
+          newSubtaskDescription={newSubtaskDescription}
+          newSubtaskLink={newSubtaskLink}
+          onTitleChange={setNewSubtaskTitle}
+          onDescriptionChange={setNewSubtaskDescription}
+          onLinkChange={setNewSubtaskLink}
+          onSubmit={handleCreateSubtask}
+          onClose={handleCloseSubtaskModal}
+        />
       )}
 
       {/* CSS Animations */}

@@ -18,7 +18,7 @@ import {
   Trash2
 } from 'lucide-react';
 import type { Task, TaskList, Subtask, Priority } from '../types';
-import { colors, typography, spacing, radius, shadows, animation } from '../styles/tokens';
+import { colors, typography, spacing, radius, shadows, animation, cssVars } from '../styles/tokens';
 
 type PreviewType = 'list' | 'task' | 'subtask' | null;
 
@@ -96,7 +96,7 @@ const formatDueDate = (dateString?: string | null) => {
   } else {
     return {
       label: date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }),
-      color: colors.dark.text.secondary,
+      color: cssVars.textSecondary,
       isUrgent: false
     };
   }
@@ -108,22 +108,22 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
-    background: 'rgba(18, 19, 22, 0.98)',
+    background: cssVars.bgBody,
     overflow: 'hidden',
     animation: `fadeIn ${animation.duration.normal} ${animation.easing.smooth}`,
-    borderLeft: `1px solid ${colors.dark.border.default}`,
+    borderLeft: `1px solid ${cssVars.border}`,
   },
   header: {
     padding: spacing[6],
-    background: `linear-gradient(180deg, rgba(30, 32, 38, 0.95) 0%, rgba(22, 24, 28, 0.92) 100%)`,
-    borderBottom: `1px solid ${colors.dark.border.strong}`,
+    background: cssVars.bgElevated,
+    borderBottom: `1px solid ${cssVars.borderStrong}`,
   },
   sectionTitle: {
     margin: 0,
     marginBottom: spacing[3],
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
-    color: colors.dark.text.muted,
+    color: cssVars.textMuted,
     textTransform: 'uppercase' as const,
     letterSpacing: typography.letterSpacing.wider,
     display: 'flex',
@@ -136,10 +136,10 @@ const styles = {
     gap: spacing[3],
     padding: `${spacing[3]} ${spacing[4]}`,
     borderRadius: radius.lg,
-    background: 'rgba(35, 38, 45, 0.8)',
-    border: `1px solid ${colors.dark.border.default}`,
+    background: cssVars.bgCard,
+    border: `1px solid ${cssVars.border}`,
     transition: `all ${animation.duration.fast} ${animation.easing.smooth}`,
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
+    boxShadow: cssVars.shadowSm,
   },
   badge: {
     display: 'inline-flex',
@@ -179,7 +179,7 @@ const styles = {
   progressBar: {
     height: '8px',
     borderRadius: radius.full,
-    background: colors.dark.border.strong,
+    background: cssVars.borderStrong,
     overflow: 'hidden',
   },
   progressFill: {
@@ -202,21 +202,21 @@ const InfoRow: React.FC<{
         width: '32px',
         height: '32px',
         borderRadius: radius.md,
-        background: color ? `${color}20` : colors.dark.bg.active,
+        background: color ? `${color}20` : cssVars.bgActive,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}
     >
-      <Icon size={16} style={{ color: color || colors.dark.text.muted }} />
+      <Icon size={16} style={{ color: color || cssVars.textMuted }} />
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
       <div
         style={{
           fontSize: typography.fontSize.xs,
           fontWeight: typography.fontWeight.medium,
-          color: colors.dark.text.muted,
+          color: cssVars.textMuted,
           marginBottom: spacing[0.5],
           textTransform: 'uppercase',
           letterSpacing: typography.letterSpacing.wide,
@@ -228,7 +228,7 @@ const InfoRow: React.FC<{
         style={{
           fontSize: typography.fontSize.base,
           fontWeight: typography.fontWeight.medium,
-          color: color || colors.dark.text.primary,
+          color: color || cssVars.textMain,
         }}
       >
         {value}
@@ -248,11 +248,11 @@ const ProgressSection: React.FC<{
   return (
     <div style={{ marginBottom: spacing[5] }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[2] }}>
-        <span style={{ fontSize: typography.fontSize.sm, color: colors.dark.text.muted, fontWeight: typography.fontWeight.medium }}>
+        <span style={{ fontSize: typography.fontSize.sm, color: cssVars.textMuted, fontWeight: typography.fontWeight.medium }}>
           {label}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-          <span style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: colors.dark.text.primary }}>
+          <span style={{ fontSize: typography.fontSize.lg, fontWeight: typography.fontWeight.bold, color: cssVars.textMain }}>
             {completed}/{total}
           </span>
           <span
@@ -323,7 +323,7 @@ const LabelsSection: React.FC<{
   );
 };
 
-export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
+export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = React.memo(function MillerPreviewPanel({
   type,
   data,
   tasks,
@@ -338,7 +338,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   onDeleteTask,
   onDeleteList,
   onDeleteSubtask,
-}) => {
+}) {
   // Boş durum
   if (!type || !data) {
     return (
@@ -350,10 +350,10 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           padding: spacing[10],
-          color: colors.dark.text.muted,
+          color: cssVars.textMuted,
           textAlign: 'center',
-          background: 'rgba(18, 19, 22, 0.98)',
-          borderLeft: `1px solid ${colors.dark.border.default}`,
+          background: cssVars.bgBody,
+          borderLeft: `1px solid ${cssVars.border}`,
         }}
       >
         <div
@@ -361,7 +361,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
             width: '80px',
             height: '80px',
             borderRadius: radius.xl,
-            background: colors.dark.bg.active,
+            background: cssVars.bgActive,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -390,9 +390,9 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           padding: spacing[10],
-          color: colors.dark.text.muted,
-          background: 'rgba(18, 19, 22, 0.98)',
-          borderLeft: `1px solid ${colors.dark.border.default}`,
+          color: cssVars.textMuted,
+          background: cssVars.bgBody,
+          borderLeft: `1px solid ${cssVars.border}`,
         }}
       >
         <div style={{ textAlign: 'center' }}>
@@ -400,7 +400,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
             style={{
               width: '40px',
               height: '40px',
-              border: `3px solid ${colors.dark.border.default}`,
+              border: `3px solid ${cssVars.border}`,
               borderTopColor: colors.brand.primary,
               borderRadius: radius.full,
               margin: '0 auto',
@@ -444,9 +444,9 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
               }}
             >
               {list.isCompleted ? (
-                <CheckCircle2 size={26} color={colors.dark.text.primary} />
+                <CheckCircle2 size={26} color={cssVars.textMain} />
               ) : (
-                <Folder size={26} color={colors.dark.text.primary} />
+                <Folder size={26} color={cssVars.textMain} />
               )}
             </div>
 
@@ -457,7 +457,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   margin: 0,
                   fontSize: typography.fontSize['2xl'],
                   fontWeight: typography.fontWeight.bold,
-                  color: colors.dark.text.primary,
+                  color: cssVars.textMain,
                   lineHeight: typography.lineHeight.tight,
                 }}
               >
@@ -491,6 +491,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: list.isCompleted ? colors.semantic.warning : colors.semantic.success,
                   }}
                   title={list.isCompleted ? 'Geri Al' : 'Tamamla'}
+                  aria-label={list.isCompleted ? 'Geri Al' : 'Tamamla'}
                 >
                   {list.isCompleted ? <Square size={18} /> : <CheckSquare size={18} />}
                 </button>
@@ -504,6 +505,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: colors.brand.primary,
                   }}
                   title="Düzenle"
+                  aria-label="Düzenle"
                 >
                   <Edit2 size={18} />
                 </button>
@@ -517,6 +519,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: colors.semantic.danger,
                   }}
                   title="Sil"
+                  aria-label="Sil"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -595,12 +598,12 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
               style={{
                 marginTop: spacing[6],
                 paddingTop: spacing[4],
-                borderTop: `1px solid ${colors.dark.border.subtle}`,
+                borderTop: `1px solid ${cssVars.borderSubtle}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing[2],
                 fontSize: typography.fontSize.sm,
-                color: colors.dark.text.muted,
+                color: cssVars.textMuted,
               }}
             >
               <Clock size={14} />
@@ -636,19 +639,19 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 borderRadius: radius.xl,
                 background: task.isCompleted
                   ? `linear-gradient(135deg, ${colors.semantic.success}, ${colors.semantic.successDark})`
-                  : colors.dark.bg.active,
+                  : cssVars.bgActive,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: task.isCompleted ? shadows.md : 'none',
-                border: task.isCompleted ? 'none' : `2px solid ${colors.dark.border.strong}`,
+                border: task.isCompleted ? 'none' : `2px solid ${cssVars.borderStrong}`,
                 flexShrink: 0,
               }}
             >
               {task.isCompleted ? (
-                <CheckCircle2 size={26} color={colors.dark.text.primary} />
+                <CheckCircle2 size={26} color={cssVars.textMain} />
               ) : (
-                <FileText size={26} style={{ color: colors.dark.text.muted }} />
+                <FileText size={26} style={{ color: cssVars.textMuted }} />
               )}
             </div>
 
@@ -659,7 +662,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   margin: 0,
                   fontSize: typography.fontSize['2xl'],
                   fontWeight: typography.fontWeight.bold,
-                  color: colors.dark.text.primary,
+                  color: cssVars.textMain,
                   lineHeight: typography.lineHeight.tight,
                 }}
               >
@@ -693,6 +696,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: task.isCompleted ? colors.semantic.warning : colors.semantic.success,
                   }}
                   title={task.isCompleted ? 'Geri Al' : 'Tamamla'}
+                  aria-label={task.isCompleted ? 'Geri Al' : 'Tamamla'}
                 >
                   {task.isCompleted ? <Square size={18} /> : <Check size={18} />}
                 </button>
@@ -706,6 +710,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: colors.brand.primary,
                   }}
                   title="Düzenle"
+                  aria-label="Düzenle"
                 >
                   <Edit2 size={18} />
                 </button>
@@ -719,6 +724,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: colors.semantic.danger,
                   }}
                   title="Sil"
+                  aria-label="Sil"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -761,12 +767,12 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
               style={{
                 marginTop: spacing[6],
                 paddingTop: spacing[4],
-                borderTop: `1px solid ${colors.dark.border.subtle}`,
+                borderTop: `1px solid ${cssVars.borderSubtle}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing[2],
                 fontSize: typography.fontSize.sm,
-                color: colors.dark.text.muted,
+                color: cssVars.textMuted,
               }}
             >
               <Clock size={14} />
@@ -799,19 +805,19 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 borderRadius: radius.lg,
                 background: subtask.isCompleted
                   ? `linear-gradient(135deg, ${colors.semantic.success}, ${colors.semantic.successDark})`
-                  : colors.dark.bg.active,
+                  : cssVars.bgActive,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: subtask.isCompleted ? shadows.md : 'none',
-                border: subtask.isCompleted ? 'none' : `2px solid ${colors.dark.border.strong}`,
+                border: subtask.isCompleted ? 'none' : `2px solid ${cssVars.borderStrong}`,
                 flexShrink: 0,
               }}
             >
               {subtask.isCompleted ? (
-                <CheckCircle2 size={24} color={colors.dark.text.primary} />
+                <CheckCircle2 size={24} color={cssVars.textMain} />
               ) : (
-                <ListTodo size={24} style={{ color: colors.dark.text.muted }} />
+                <ListTodo size={24} style={{ color: cssVars.textMuted }} />
               )}
             </div>
 
@@ -822,7 +828,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                   margin: 0,
                   fontSize: typography.fontSize.xl,
                   fontWeight: typography.fontWeight.bold,
-                  color: colors.dark.text.primary,
+                  color: cssVars.textMain,
                   lineHeight: typography.lineHeight.tight,
                 }}
               >
@@ -856,6 +862,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: subtask.isCompleted ? colors.semantic.warning : colors.semantic.success,
                   }}
                   title={subtask.isCompleted ? 'Geri Al' : 'Onayla'}
+                  aria-label={subtask.isCompleted ? 'Geri Al' : 'Onayla'}
                 >
                   {subtask.isCompleted ? <Square size={18} /> : <Check size={18} />}
                 </button>
@@ -869,6 +876,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: colors.brand.primary,
                   }}
                   title="Düzenle"
+                  aria-label="Düzenle"
                 >
                   <Edit2 size={18} />
                 </button>
@@ -882,6 +890,7 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                     color: colors.semantic.danger,
                   }}
                   title="Sil"
+                  aria-label="Sil"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -903,15 +912,15 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
                 style={{
                   padding: spacing[4],
                   borderRadius: radius.lg,
-                  background: colors.dark.glass.bg,
-                  border: `1px solid ${colors.dark.border.subtle}`,
+                  background: cssVars.glassBg,
+                  border: `1px solid ${cssVars.borderSubtle}`,
                 }}
               >
                 <p
                   style={{
                     margin: 0,
                     fontSize: typography.fontSize.lg,
-                    color: colors.dark.text.primary,
+                    color: cssVars.textMain,
                     lineHeight: typography.lineHeight.relaxed,
                     whiteSpace: 'pre-wrap',
                   }}
@@ -947,12 +956,12 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
               style={{
                 marginTop: spacing[6],
                 paddingTop: spacing[4],
-                borderTop: `1px solid ${colors.dark.border.subtle}`,
+                borderTop: `1px solid ${cssVars.borderSubtle}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing[2],
                 fontSize: typography.fontSize.sm,
-                color: colors.dark.text.muted,
+                color: cssVars.textMuted,
               }}
             >
               <Clock size={14} />
@@ -969,6 +978,6 @@ export const MillerPreviewPanel: React.FC<MillerPreviewPanelProps> = ({
   }
 
   return null;
-};
+});
 
 export default MillerPreviewPanel;

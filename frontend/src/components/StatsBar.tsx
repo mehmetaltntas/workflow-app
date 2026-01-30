@@ -121,7 +121,7 @@ const calculateStats = (
   };
 };
 
-export const StatsBar: React.FC<StatsBarProps> = ({ board, selectedList, selectedTask, subtasks }) => {
+export const StatsBar: React.FC<StatsBarProps> = React.memo(function StatsBar({ board, selectedList, selectedTask, subtasks }) {
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
   const stats = useMemo(
@@ -245,7 +245,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ board, selectedList, selecte
       </div>
     </div>
   );
-};
+});
 
 interface StatItemProps {
   icon: React.ReactNode;

@@ -1,3 +1,4 @@
+import React from "react";
 import type { LucideIcon } from "lucide-react";
 import { typography, spacing, radius, cssVars, colors, animation, shadows } from "../styles/tokens";
 
@@ -10,14 +11,14 @@ interface StatCardProps {
   bgColor?: string;
 }
 
-export const StatCard = ({
+export const StatCard = React.memo(function StatCard({
   icon: Icon,
   title,
   value,
   subtitle,
   color = colors.brand.primary,
   bgColor = colors.brand.primaryLight,
-}: StatCardProps) => {
+}: StatCardProps) {
   return (
     <div
       style={{
@@ -93,6 +94,6 @@ export const StatCard = ({
       )}
     </div>
   );
-};
+});
 
 export default StatCard;

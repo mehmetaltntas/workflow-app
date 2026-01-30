@@ -24,7 +24,7 @@ const completionOptions = [
   { value: "completed", label: "Tamamlanan" },
 ];
 
-export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterChange }) => {
+export const FilterBar: React.FC<FilterBarProps> = React.memo(function FilterBar({ labels, filters, onFilterChange }) {
   const { theme } = useTheme();
   const themeColors = getThemeColors(theme);
   const [showLabelDropdown, setShowLabelDropdown] = useState(false);
@@ -557,7 +557,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ labels, filters, onFilterC
       )}
     </div>
   );
-};
+});
 
 export const getDefaultFilters = (): FilterState => ({
   searchText: "",

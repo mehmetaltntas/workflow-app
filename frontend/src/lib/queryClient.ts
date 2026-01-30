@@ -3,10 +3,10 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,  // 5 dakika
-      gcTime: 10 * 60 * 1000,    // 10 dakika (eski adıyla cacheTime)
+      staleTime: 60 * 1000,       // 1 dakika
+      gcTime: 5 * 60 * 1000,      // 5 dakika
       retry: 1,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
     },
   },
 });
@@ -26,6 +26,9 @@ export const queryKeys = {
   userSearch: (query: string) => ['userSearch', query] as const,
   userProfile: (username: string) => ['userProfile', username] as const,
   userProfileStats: (username: string) => ['userProfileStats', username] as const,
+  subtasks: {
+    byTask: (taskId: number) => ['subtasks', taskId] as const,
+  },
   boardMembers: {
     list: (boardId: number) => ['boardMembers', boardId] as const,
   },
