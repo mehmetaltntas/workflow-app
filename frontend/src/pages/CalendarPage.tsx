@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, LayoutDashboard, Users } from "lucide-react";
 import { useBoards } from "../hooks/useBoards";
-import { useMyTeamBoardsQuery } from "../hooks/queries/useAssignedBoards";
+import { useMyTeamBoardsQuery, useAssignedBoardsQuery } from "../hooks/queries/useAssignedBoards";
 import { typography, spacing, radius, cssVars, colors, animation } from "../styles/tokens";
 import { STATUS_LABELS, STATUS_COLORS } from "../constants";
 import type { Board } from "../types";
@@ -42,6 +42,7 @@ const CalendarPage = () => {
   const navigate = useNavigate();
   const { boards, loading } = useBoards();
   const { data: myTeamBoards = [], isLoading: teamLoading } = useMyTeamBoardsQuery();
+  const { data: assignedBoards = [], isLoading: assignedLoading } = useAssignedBoardsQuery();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
@@ -108,11 +109,32 @@ const CalendarPage = () => {
           status: board.status || "PLANLANDI",
           isTeamBoard: true,
         });
+        addedBoardIds.add(board.id);
+      }
+    });
+
+    // Üye olunan ekip panolarini ekle (duplicate kontrolu ile)
+    assignedBoards.forEach((board: Board) => {
+      if (board.deadline && !addedBoardIds.has(board.id)) {
+        const deadlineInfo = getDeadlineColor(board.deadline);
+        allEvents.push({
+          id: `assigned-board-${board.id}`,
+          title: board.name,
+          date: board.deadline.split('T')[0],
+          type: "board",
+          boardSlug: board.slug,
+          boardName: board.name,
+          color: deadlineInfo.color,
+          daysRemaining: deadlineInfo.days,
+          status: board.status || "PLANLANDI",
+          isTeamBoard: true,
+        });
+        addedBoardIds.add(board.id);
       }
     });
 
     return allEvents;
-  }, [boards, myTeamBoards]);
+  }, [boards, myTeamBoards, assignedBoards]);
 
   // Ay başlangıç ve bitiş günlerini hesapla
   const calendarDays = useMemo(() => {
@@ -201,7 +223,7 @@ const CalendarPage = () => {
     }
   };
 
-  if (loading || teamLoading) {
+  if (loading || teamLoading || assignedLoading) {
     return (
       <div
         style={{
