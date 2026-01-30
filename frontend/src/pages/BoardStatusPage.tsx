@@ -29,6 +29,7 @@ const BoardStatusPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortField, setSortField] = useState<SortField>('alphabetic');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [boardTypeFilter, setBoardTypeFilter] = useState<'ALL' | 'INDIVIDUAL' | 'TEAM'>('ALL');
 
   const statusKey = statusSlug ? SLUG_TO_STATUS[statusSlug] : undefined;
   const statusLabel = statusKey ? STATUS_LABELS[statusKey] : undefined;
@@ -68,7 +69,11 @@ const BoardStatusPage = () => {
     );
   }
 
-  const filteredBoards = boards.filter(b => (b.status || "PLANLANDI") === statusKey);
+  const filteredBoards = boards.filter(b => {
+    if ((b.status || "PLANLANDI") !== statusKey) return false;
+    if (boardTypeFilter !== "ALL" && (b.boardType || "INDIVIDUAL") !== boardTypeFilter) return false;
+    return true;
+  });
 
   // Sıralama - tüm filtrelenmiş panolara uygulanır (sayfalama öncesi)
   const sortedBoards = useMemo(() => {
@@ -264,6 +269,50 @@ const BoardStatusPage = () => {
 
             {/* Controls */}
             <div style={{ display: "flex", alignItems: "center", gap: spacing[3] }}>
+              {/* Board Type Filter */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                background: cssVars.bgSecondary,
+                padding: 4,
+                borderRadius: 12,
+                border: `1px solid ${cssVars.border}`,
+                gap: 2,
+              }}>
+                {([['ALL', 'Hepsi'], ['INDIVIDUAL', 'Bireysel'], ['TEAM', 'Ekip']] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => { setBoardTypeFilter(value); setSearchParams({}); }}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: boardTypeFilter === value ? "var(--primary)" : "transparent",
+                      color: boardTypeFilter === value ? "#fff" : cssVars.textMuted,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: `all ${animation.duration.normal}`,
+                      whiteSpace: "nowrap" as const,
+                      boxShadow: boardTypeFilter === value ? "0 2px 8px rgba(77, 171, 247, 0.25)" : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (boardTypeFilter !== value) {
+                        e.currentTarget.style.color = cssVars.textMain;
+                        e.currentTarget.style.background = cssVars.bgHover;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (boardTypeFilter !== value) {
+                        e.currentTarget.style.color = cssVars.textMuted;
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <NavbarViewSwitcher value={viewMode} onChange={setViewMode} />
               <SortDropdown
                 sortField={sortField}
@@ -276,7 +325,19 @@ const BoardStatusPage = () => {
         </div>
 
         {/* Empty State */}
-        {filteredBoards.length === 0 && (
+        {filteredBoards.length === 0 && boardTypeFilter !== "ALL" && (
+          <EmptyState
+            icon={<Search size={36} strokeWidth={1.5} />}
+            title="Bu filtrede pano bulunamadı"
+            description="Seçili filtreye uygun pano bulunmuyor. Filtreyi değiştirmeyi deneyin."
+            variant="filtered"
+            action={{
+              label: "Tüm Panoları Göster",
+              onClick: () => setBoardTypeFilter("ALL"),
+            }}
+          />
+        )}
+        {filteredBoards.length === 0 && boardTypeFilter === "ALL" && (
           <EmptyState
             icon={<Search size={36} strokeWidth={1.5} />}
             title={`"${statusLabel}" durumunda pano bulunamadı`}
