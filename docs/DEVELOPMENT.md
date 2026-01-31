@@ -71,7 +71,7 @@ export GOOGLE_CLIENT_ID=your_google_client_id
 mvn spring-boot:run
 ```
 
-The backend will start at `http://localhost:8080`.
+The backend will start at `http://localhost:8080`. Flyway migrations run automatically on startup.
 
 #### Verify Backend
 
@@ -95,7 +95,8 @@ npm install
 Create `.env.local` for custom settings:
 
 ```bash
-VITE_API_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
 #### Run the Frontend
@@ -160,7 +161,6 @@ For VS Code users, create `.vscode/launch.json`:
 
 - TypeScript strict mode enabled
 - ESLint for linting
-- Prettier for formatting (recommended)
 
 ```bash
 # Run linter
@@ -181,7 +181,7 @@ npm run lint -- --fix
 ### Frontend Tests
 
 ```bash
-# Run unit tests
+# Run unit tests (Vitest)
 npm run test
 
 # Run tests with UI
@@ -214,10 +214,18 @@ npm run cypress:run     # Headless mode
 
 | File/Directory | Purpose |
 |----------------|---------|
-| `src/App.tsx` | Root component, routing setup |
-| `src/services/api.ts` | Axios client, API services |
-| `src/stores/` | Zustand state stores |
-| `src/hooks/queries/` | React Query hooks |
+| `src/App.tsx` | Root component, routing setup (19 routes) |
+| `src/services/api.ts` | Axios client, all API service methods |
+| `src/stores/authStore.ts` | Authentication state & token management |
+| `src/stores/uiStore.ts` | UI preferences (view mode, sort, pinned boards) |
+| `src/hooks/queries/` | React Query hooks for server state |
+| `src/components/auth/` | Route guards (PrivateRoute, PublicRoute) |
+| `src/components/board/` | Board-specific components & modals |
+| `src/components/settings/` | Settings page sections (Profile, Privacy, Security, Account) |
+| `src/components/ui/` | Reusable UI components (Skeleton, EmptyState, etc.) |
+| `src/components/error/` | Error boundary & fallback components |
+| `src/contexts/ThemeContext.tsx` | Dark/light theme context |
+| `src/utils/` | Helpers (errorHandler, validation, progressCalculation) |
 | `src/styles/tokens.ts` | Design tokens |
 
 ### Backend Key Files
@@ -228,6 +236,10 @@ npm run cypress:run     # Headless mode
 | `SecurityConfig.java` | Security configuration |
 | `JwtService.java` | JWT token handling |
 | `application.properties` | App configuration |
+| `src/main/resources/db/migration/` | 27 Flyway migration files |
+| `controller/` | 9 REST controllers (Auth, Board, Task, Subtask, Label, User, BoardMember, Notification, Connection) |
+| `hateoas/model/` | HATEOAS resource representations |
+| `hateoas/assembler/` | DTO to HATEOAS model converters |
 
 ## Common Tasks
 
@@ -237,14 +249,15 @@ npm run cypress:run     # Headless mode
 2. Add repository method if needed
 3. Implement service method
 4. Create controller endpoint
-5. Add Swagger annotations
-6. Write tests
+5. Add HATEOAS model and assembler if returning resources
+6. Add Swagger annotations
+7. Write tests
 
 ### Add a New React Component
 
-1. Create component in `components/`
-2. Add types if needed in `types/`
-3. Create query hook if fetching data
+1. Create component in appropriate `components/` subdirectory
+2. Add types if needed in `types/index.ts`
+3. Create React Query hook in `hooks/queries/` if fetching data
 4. Import and use in pages
 5. Write tests
 
@@ -252,8 +265,15 @@ npm run cypress:run     # Headless mode
 
 1. Create page component in `pages/`
 2. Add route in `App.tsx`
-3. Add to navigation if needed
-4. Protect with `PrivateRoute` if authenticated
+3. Wrap with `PrivateRoute` if authenticated-only
+4. Add to navigation (Layout.tsx) if needed
+
+### Add a Database Migration
+
+1. Create a new file in `backend/src/main/resources/db/migration/`
+2. Name it following the pattern: `V{next_number}__description.sql` (e.g., `V28__add_new_feature.sql`)
+3. Write SQL DDL statements
+4. Restart the backend - Flyway runs migrations automatically
 
 ## Troubleshooting
 
@@ -263,6 +283,7 @@ npm run cypress:run     # Headless mode
 2. Verify database exists
 3. Check environment variables
 4. Look for port conflicts (8080)
+5. Check Flyway migration errors in logs
 
 ```bash
 # Check if port is in use
@@ -285,7 +306,7 @@ npm run dev
 ### CORS Errors
 
 1. Verify `CORS_ORIGINS` includes frontend URL
-2. Check browser console for specific error
+2. Default allowed origins: `http://localhost:3000,http://localhost:5173,http://localhost:5174`
 3. Restart backend after changing CORS config
 
 ### Database Connection Issues
@@ -301,15 +322,25 @@ pg_isready -h localhost -p 5432
 ### JWT Token Issues
 
 1. Verify `JWT_SECRET` is at least 64 characters
-2. Check token expiration times
+2. Access token expires in 15 minutes, refresh token in 3 days
 3. Clear browser storage and re-login
+
+### Flyway Migration Errors
+
+1. Check the migration SQL syntax
+2. Ensure migration version numbers are sequential
+3. Never modify an already-applied migration - create a new one instead
+4. Check `flyway_schema_history` table for applied migrations
+
+```bash
+psql -U postgres -d workflow -c "SELECT * FROM flyway_schema_history ORDER BY installed_rank;"
+```
 
 ## IDE Recommendations
 
 ### VS Code Extensions
 
 - ESLint
-- Prettier
 - TypeScript Importer
 - Extension Pack for Java
 - Spring Boot Extension Pack
@@ -319,14 +350,6 @@ pg_isready -h localhost -p 5432
 - Use Ultimate for Spring Boot support
 - Enable Lombok annotation processing
 - Configure code style for Java
-
-## Database Migrations
-
-Currently using `spring.jpa.hibernate.ddl-auto=update` for development.
-
-For production, consider:
-- Flyway
-- Liquibase
 
 ## Useful Commands
 
@@ -341,6 +364,9 @@ For production, consider:
 npm run dev                   # Start dev server
 npm run build                 # Production build
 npm run preview               # Preview build
-npm run test                  # Run tests
+npm run test                  # Run unit tests
+npm run test:coverage         # Run tests with coverage
 npm run lint                  # Lint code
+npm run cypress:open          # E2E tests (interactive)
+npm run cypress:run           # E2E tests (headless)
 ```

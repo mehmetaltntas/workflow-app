@@ -6,9 +6,26 @@ All protected endpoints require `Authorization: Bearer <token>` header.
 
 ## Authentication
 
+### Check Username Availability
+
+```http
+GET /auth/check-username?username=john
+```
+
+### Send Registration Verification Code
+
+```http
+POST /auth/register/send-code
+Content-Type: application/json
+
+{
+  "email": "john@example.com"
+}
+```
+
 ### Register
 
-Create a new user account.
+Create a new user account (requires email verification code).
 
 ```http
 POST /auth/register
@@ -17,7 +34,10 @@ Content-Type: application/json
 {
   "username": "john",
   "email": "john@example.com",
-  "password": "securePassword123"
+  "password": "securePassword123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "code": "123456"
 }
 ```
 
@@ -174,6 +194,7 @@ Authorization: Bearer <token>
         "slug": "my-project",
         "description": "Project description",
         "status": "IN_PROGRESS",
+        "boardType": "INDIVIDUAL",
         "deadline": "2025-12-31",
         "_links": {
           "self": { "href": "/boards/1" },
@@ -194,6 +215,24 @@ Authorization: Bearer <token>
 }
 ```
 
+### Get Assigned Boards
+
+Get boards where the current user is a member.
+
+```http
+GET /boards/assigned
+Authorization: Bearer <token>
+```
+
+### Get My Team Boards
+
+Get the current user's TEAM type boards.
+
+```http
+GET /boards/my-team-boards
+Authorization: Bearer <token>
+```
+
 ### Create Board
 
 ```http
@@ -205,10 +244,13 @@ Content-Type: application/json
   "name": "New Project",
   "description": "Project description",
   "status": "PLANNED",
+  "boardType": "INDIVIDUAL",
   "deadline": "2025-12-31",
   "userId": 1
 }
 ```
+
+**Board types**: `INDIVIDUAL`, `TEAM`
 
 ### Get Board Details
 
@@ -222,7 +264,7 @@ Authorization: Bearer <token>
 ### Update Board
 
 ```http
-PUT /boards/{id}
+PUT /boards/{identifier}
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -238,7 +280,7 @@ Content-Type: application/json
 ### Update Board Status
 
 ```http
-PUT /boards/{id}/status
+PUT /boards/{identifier}/status
 Authorization: Bearer <token>
 Content-Type: text/plain
 
@@ -250,11 +292,18 @@ IN_PROGRESS
 ### Delete Board
 
 ```http
-DELETE /boards/{id}
+DELETE /boards/{identifier}
 Authorization: Bearer <token>
 ```
 
 **Response** `204 No Content`
+
+### Get Board Labels
+
+```http
+GET /boards/{boardId}/labels
+Authorization: Bearer <token>
+```
 
 ---
 
@@ -263,7 +312,7 @@ Authorization: Bearer <token>
 ### Create Task List
 
 ```http
-POST /lists
+POST /api/lists
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -276,7 +325,7 @@ Content-Type: application/json
 ### Update Task List
 
 ```http
-PUT /lists/{id}
+PUT /api/lists/{id}
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -287,12 +336,19 @@ Content-Type: application/json
 }
 ```
 
+### Toggle Task List Completion
+
+```http
+PATCH /api/lists/{id}/toggle
+Authorization: Bearer <token>
+```
+
 ### Delete Task List
 
 Deletes the list and all tasks within it.
 
 ```http
-DELETE /lists/{id}
+DELETE /api/lists/{id}
 Authorization: Bearer <token>
 ```
 
@@ -303,7 +359,7 @@ Authorization: Bearer <token>
 ### Create Task
 
 ```http
-POST /tasks
+POST /api/tasks
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -317,12 +373,12 @@ Content-Type: application/json
 }
 ```
 
-**Priority values**: `LOW`, `MEDIUM`, `HIGH`
+**Priority values**: `HIGH`, `MEDIUM`, `LOW`, `NONE`
 
 ### Update Task
 
 ```http
-PUT /tasks/{id}
+PUT /api/tasks/{id}
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -336,10 +392,17 @@ Content-Type: application/json
 }
 ```
 
+### Toggle Task Completion
+
+```http
+PATCH /api/tasks/{id}/toggle
+Authorization: Bearer <token>
+```
+
 ### Delete Task
 
 ```http
-DELETE /tasks/{id}
+DELETE /api/tasks/{id}
 Authorization: Bearer <token>
 ```
 
@@ -348,7 +411,7 @@ Authorization: Bearer <token>
 Move task within list or to another list.
 
 ```http
-PUT /tasks/{id}/reorder
+PUT /api/tasks/{id}/reorder
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -363,7 +426,7 @@ Content-Type: application/json
 Update positions of multiple tasks at once.
 
 ```http
-PUT /tasks/batch-reorder
+PUT /api/tasks/batch-reorder
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -491,6 +554,14 @@ GET /users/{id}
 Authorization: Bearer <token>
 ```
 
+### Get Profile Picture
+
+```http
+GET /users/{id}/profile-picture
+```
+
+No authentication required.
+
 ### Update Profile
 
 ```http
@@ -500,7 +571,8 @@ Content-Type: application/json
 
 {
   "username": "newusername",
-  "profilePicture": "https://example.com/avatar.jpg"
+  "firstName": "John",
+  "lastName": "Doe"
 }
 ```
 
@@ -516,6 +588,255 @@ Content-Type: application/json
   "newPassword": "newPassword456"
 }
 ```
+
+### Search Users
+
+```http
+GET /users/search?username=john
+Authorization: Bearer <token>
+```
+
+### Get Public Profile
+
+```http
+GET /users/profile/{username}
+Authorization: Bearer <token>
+```
+
+### Get Profile Stats
+
+```http
+GET /users/profile/{username}/stats
+Authorization: Bearer <token>
+```
+
+### Get Privacy Settings
+
+```http
+GET /users/{id}/privacy
+Authorization: Bearer <token>
+```
+
+### Update Privacy Settings
+
+```http
+PUT /users/{id}/privacy
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "showProfilePicture": true,
+  "showOverallProgress": true,
+  "showBoardStats": true,
+  "showListStats": true,
+  "showTaskStats": true,
+  "showSubtaskStats": true,
+  "showTeamBoardStats": true,
+  "showTopCategories": true,
+  "showConnectionCount": true
+}
+```
+
+### Schedule Account Deletion
+
+```http
+POST /users/{id}/schedule-deletion
+Authorization: Bearer <token>
+```
+
+### Cancel Account Deletion
+
+```http
+POST /users/{id}/cancel-deletion
+Authorization: Bearer <token>
+```
+
+---
+
+## Board Members
+
+### Get Board Members
+
+```http
+GET /boards/{boardId}/members?page=0&size=10
+Authorization: Bearer <token>
+```
+
+### Add Board Member
+
+```http
+POST /boards/{boardId}/members
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "userId": 2
+}
+```
+
+### Remove Board Member
+
+```http
+DELETE /boards/{boardId}/members/{memberId}
+Authorization: Bearer <token>
+```
+
+### Update Member Role
+
+```http
+PUT /boards/{boardId}/members/{memberId}/role
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "role": "MODERATOR"
+}
+```
+
+**Roles**: `MEMBER`, `MODERATOR`
+
+### Create Member Assignment
+
+Assign a member to a specific task, list, or subtask.
+
+```http
+POST /boards/{boardId}/members/{memberId}/assignments
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "targetType": "TASK",
+  "targetId": 1
+}
+```
+
+**Target types**: `LIST`, `TASK`, `SUBTASK`
+
+### Bulk Create Assignments
+
+```http
+POST /boards/{boardId}/members/{memberId}/assignments/bulk
+Authorization: Bearer <token>
+Content-Type: application/json
+
+[
+  { "targetType": "TASK", "targetId": 1 },
+  { "targetType": "TASK", "targetId": 2 }
+]
+```
+
+### Remove Assignment
+
+```http
+DELETE /boards/{boardId}/members/{memberId}/assignments/{assignmentId}
+Authorization: Bearer <token>
+```
+
+---
+
+## Connections
+
+### Send Connection Request
+
+```http
+POST /connections
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "receiverId": 2
+}
+```
+
+### Accept Connection Request
+
+```http
+PATCH /connections/{id}/accept
+Authorization: Bearer <token>
+```
+
+### Reject Connection Request
+
+```http
+PATCH /connections/{id}/reject
+Authorization: Bearer <token>
+```
+
+### Get Pending Requests
+
+```http
+GET /connections/pending?page=0&size=10
+Authorization: Bearer <token>
+```
+
+### Get Sent Requests
+
+```http
+GET /connections/sent?page=0&size=10
+Authorization: Bearer <token>
+```
+
+### Get Accepted Connections
+
+```http
+GET /connections/accepted?page=0&size=10
+Authorization: Bearer <token>
+```
+
+### Get Connection Count
+
+```http
+GET /connections/count
+Authorization: Bearer <token>
+```
+
+### Remove Connection
+
+```http
+DELETE /connections/{id}
+Authorization: Bearer <token>
+```
+
+---
+
+## Notifications
+
+### Get Notifications
+
+```http
+GET /notifications?page=0&size=10
+Authorization: Bearer <token>
+```
+
+### Get Unread Count
+
+```http
+GET /notifications/unread-count
+Authorization: Bearer <token>
+```
+
+### Mark as Read
+
+```http
+PUT /notifications/{id}/read
+Authorization: Bearer <token>
+```
+
+### Mark All as Read
+
+```http
+PATCH /notifications/read-all
+Authorization: Bearer <token>
+```
+
+### Delete Notification
+
+```http
+DELETE /notifications/{id}
+Authorization: Bearer <token>
+```
+
+**Notification types**: `CONNECTION_REQUEST`, `CONNECTION_ACCEPTED`, `CONNECTION_REJECTED`
 
 ---
 
@@ -545,6 +866,7 @@ All errors follow this format:
 | 403 | Forbidden (no permission) |
 | 404 | Not Found |
 | 409 | Conflict (duplicate resource) |
+| 429 | Too Many Requests (rate limited) |
 | 500 | Internal Server Error |
 
 ---

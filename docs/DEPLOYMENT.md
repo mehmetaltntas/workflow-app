@@ -43,9 +43,16 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGINS: ${CORS_ORIGINS}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/workflow
     ports:
       - "8080:8080"
+    volumes:
+      - profile_pictures:./uploads/profile-pictures
     depends_on:
       - postgres
     networks:
@@ -57,7 +64,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${API_URL}
+        VITE_API_BASE_URL: ${API_BASE_URL}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     container_name: workflow-frontend
     ports:
       - "80:80"
@@ -70,6 +78,7 @@ services:
 
 volumes:
   postgres_data:
+  profile_pictures:
 
 networks:
   workflow-network:
@@ -98,6 +107,9 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
+# Create directory for profile picture uploads
+RUN mkdir -p ./uploads/profile-pictures
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
@@ -115,8 +127,10 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_API_BASE_URL
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 
 FROM nginx:alpine
@@ -191,7 +205,12 @@ DB_USERNAME=workflow
 DB_PASSWORD=secure_password_here
 JWT_SECRET=your_64_character_secret_key_here_make_it_very_long_and_random
 CORS_ORIGINS=https://your-domain.com
-API_URL=https://your-domain.com/api
+API_BASE_URL=https://your-domain.com/api
+GOOGLE_CLIENT_ID=your_google_client_id
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
 EOF
 
 # Build and start
@@ -239,6 +258,11 @@ Environment="DB_USERNAME=workflow"
 Environment="DB_PASSWORD=secure_password"
 Environment="JWT_SECRET=your_64_char_secret"
 Environment="CORS_ORIGINS=https://your-domain.com"
+Environment="GOOGLE_CLIENT_ID=your_google_client_id"
+Environment="MAIL_HOST=smtp.gmail.com"
+Environment="MAIL_PORT=587"
+Environment="MAIL_USERNAME=your_email@gmail.com"
+Environment="MAIL_PASSWORD=your_app_password"
 
 [Install]
 WantedBy=multi-user.target
@@ -255,7 +279,7 @@ sudo systemctl start workflow-backend
 
 ```bash
 cd frontend
-VITE_API_URL=https://your-domain.com/api npm run build
+VITE_API_BASE_URL=https://your-domain.com/api npm run build
 ```
 
 The build will be in the `dist/` directory.
@@ -313,7 +337,13 @@ sudo certbot --nginx -d your-domain.com
 # Auto-renewal is set up automatically
 ```
 
-## Database Backup
+## Database
+
+### Migrations
+
+The application uses Flyway for database migrations. Migrations run automatically on startup - no manual schema management is needed. The migration files are located at `backend/src/main/resources/db/migration/`.
+
+In production, the application validates the schema using Flyway (no auto-DDL generation).
 
 ### Automated Backups
 
@@ -334,6 +364,15 @@ Add to crontab:
 
 ```bash
 0 2 * * * /opt/workflow/backup.sh
+```
+
+### Profile Picture Storage
+
+Profile pictures are stored on the filesystem at `./uploads/profile-pictures` relative to the backend working directory. Ensure this directory exists and has proper write permissions in production:
+
+```bash
+mkdir -p /opt/workflow/backend/uploads/profile-pictures
+chown www-data:www-data /opt/workflow/backend/uploads/profile-pictures
 ```
 
 ## Monitoring
@@ -377,11 +416,13 @@ docker-compose logs -f backend
 
 | Variable | Description |
 |----------|-------------|
-| `MAIL_HOST` | SMTP host for password reset |
+| `MAIL_HOST` | SMTP host for email verification & password reset |
 | `MAIL_PORT` | SMTP port |
 | `MAIL_USERNAME` | SMTP username |
 | `MAIL_PASSWORD` | SMTP password |
 | `GOOGLE_CLIENT_ID` | For Google OAuth |
+| `VITE_API_BASE_URL` | Backend API URL (frontend build arg) |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (frontend build arg) |
 
 ## Security Checklist
 
@@ -390,36 +431,43 @@ docker-compose logs -f backend
 - [ ] Random 64+ char JWT secret
 - [ ] Restrict CORS to your domain only
 - [ ] Configure firewall (allow 80, 443 only)
-- [ ] Enable rate limiting
+- [ ] Rate limiting is enabled by default (Bucket4j)
 - [ ] Set up automated backups
 - [ ] Monitor for security updates
 - [ ] Use non-root users for services
+- [ ] Ensure profile picture upload directory has proper permissions
+- [ ] Configure email for account verification and password reset
 
 ## Performance Optimization
 
 ### Backend
 
-```properties
-# application-prod.properties
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=false
-server.compression.enabled=true
-```
+The application already includes:
+- Flyway for schema management (no auto-DDL)
+- Caffeine caching for frequently accessed data
+- Bucket4j rate limiting on auth endpoints
+- HikariCP connection pooling
+- Pagination on all list endpoints
+- Database indexes on common query patterns
 
 ### Frontend
 
 - Enable gzip compression in nginx
 - Set long cache headers for static assets
 - Use CDN for static files (optional)
+- Vite production build includes tree-shaking and code splitting
 
 ### Database
 
-```sql
--- Add indexes for common queries
-CREATE INDEX idx_board_user ON board(user_id);
-CREATE INDEX idx_task_list ON task(task_list_id);
-CREATE INDEX idx_board_slug ON board(slug);
-```
+Key indexes are created via Flyway migrations:
+- `boards(user_id)`, `boards(slug)`, `boards(board_type)`, `boards(status)`
+- `tasks(task_list_id)`, `tasks(assignee_id)`, `tasks(due_date)`
+- `task_lists(board_id)`, `task_lists(due_date)`
+- `subtasks(task_id)`
+- `labels(board_id)`
+- `connections(sender_id, receiver_id)` with bidirectional unique index
+- `notifications(recipient_id, type)`
+- `users(LOWER(email))`
 
 ## Troubleshooting
 
@@ -434,6 +482,9 @@ netstat -tlnp | grep 8080
 
 # Check database connection
 psql -h localhost -U workflow -d workflow
+
+# Check Flyway migration status
+psql -U workflow -d workflow -c "SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;"
 ```
 
 ### 502 Bad Gateway
