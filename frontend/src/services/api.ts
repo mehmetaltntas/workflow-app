@@ -174,12 +174,12 @@ export const boardService = {
     return extractEntity<Board>(response);
   },
   getAssignedBoards: async (): Promise<Board[]> => {
-    const response = await apiClient.get<Board[]>("/boards/assigned");
-    return response.data;
+    const response = await apiClient.get<PagedResponse<Board>>("/boards/assigned");
+    return extractCollection<Board>(response);
   },
   getMyTeamBoards: async (): Promise<Board[]> => {
-    const response = await apiClient.get<Board[]>("/boards/my-team-boards");
-    return response.data;
+    const response = await apiClient.get<PagedResponse<Board>>("/boards/my-team-boards");
+    return extractCollection<Board>(response);
   },
 };
 
