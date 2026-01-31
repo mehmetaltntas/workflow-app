@@ -268,10 +268,10 @@ const Footer = () => {
             <div className="layout__footer-links">
               <Link to="/" className="layout__footer-link">Ana Sayfa</Link>
               <Link to="/boards" className="layout__footer-link">Panolarım</Link>
+              <Link to="/team" className="layout__footer-link">Ekip</Link>
               <Link to="/calendar" className="layout__footer-link">Takvim</Link>
               <Link to="/profile" className="layout__footer-link">Profil</Link>
               <Link to="/connections" className="layout__footer-link">Ağım</Link>
-              <Link to="/team" className="layout__footer-link">Ekip</Link>
               <Link to="/notifications" className="layout__footer-link">Bildirimler</Link>
             </div>
           </div>
@@ -280,7 +280,7 @@ const Footer = () => {
           <div>
             <h4 className="layout__footer-section-title">Destek</h4>
             <div className="layout__footer-links">
-              <Link to="/settings" className="layout__footer-link">Ayarlar</Link>
+              <Link to="/settings" className="layout__footer-link">Ayarlar ve Gizlilik</Link>
               <a href="mailto:destek@workflow.app" className="layout__footer-link">Bize Ulaşın</a>
               <a href="#" className="layout__footer-link">SSS</a>
               <a href="#" className="layout__footer-link">Gizlilik Politikası</a>
