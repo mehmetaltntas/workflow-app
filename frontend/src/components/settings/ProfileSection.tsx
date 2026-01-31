@@ -56,8 +56,8 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
         setEmail(user.email);
         setProfilePicture((user as { profilePicture?: string }).profilePicture || null);
       } catch (error) {
-        console.error("Kullanici bilgileri alinamadi:", error);
-        toast.error("Kullanici bilgileri alinamadi");
+        console.error("Kullanıcı bilgileri alınamadı:", error);
+        toast.error("Kullanıcı bilgileri alınamadı");
       } finally {
         setIsLoadingProfile(false);
       }
@@ -80,7 +80,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
       const response = await authService.checkUsername(value);
       setUsernameAvailable(response.data.available);
       if (!response.data.available) {
-        setUsernameError("Bu kullanici adi zaten alinmis");
+        setUsernameError("Bu kullanıcı adı zaten alınmış");
       }
     } catch {
       setUsernameAvailable(null);
@@ -124,7 +124,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error("Dosya boyutu 2MB'dan kucuk olmalidir");
+        toast.error("Dosya boyutu 2MB'dan küçük olmalıdır");
         return;
       }
       const reader = new FileReader();
@@ -144,13 +144,13 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
         return;
       }
       if (usernameAvailable === false) {
-        toast.error("Bu kullanici adi zaten alinmis");
+        toast.error("Bu kullanıcı adı zaten alınmış");
         return;
       }
     }
 
     setIsSavingProfile(true);
-    const loadingToast = toast.loading("Profil guncelleniyor...");
+    const loadingToast = toast.loading("Profil güncelleniyor...");
 
     try {
       const data: { username?: string; firstName?: string; lastName?: string; profilePicture?: string } = {};
@@ -194,13 +194,13 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
       setLastName("");
 
       setHasProfileChanges(false);
-      toast.success("Profil basariyla guncellendi!", { id: loadingToast });
+      toast.success("Profil başarıyla güncellendi!", { id: loadingToast });
     } catch (error: unknown) {
-      console.error("Profil guncellenemedi:", error);
+      console.error("Profil güncellenemedi:", error);
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data || "Profil guncellenemedi", { id: loadingToast });
+        toast.error(error.response?.data || "Profil güncellenemedi", { id: loadingToast });
       } else {
-        toast.error("Profil guncellenemedi", { id: loadingToast });
+        toast.error("Profil güncellenemedi", { id: loadingToast });
       }
     } finally {
       setIsSavingProfile(false);
@@ -253,7 +253,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
           color: cssVars.textMuted,
           margin: 0,
         }}>
-          Profil resminizi ve kullanici bilgilerinizi guncelleyin
+          Profil resminizi ve kullanıcı bilgilerinizi güncelleyin
         </p>
       </div>
 
@@ -361,7 +361,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
               e.currentTarget.style.color = colors.brand.primary;
             }}
           >
-            Resim Yukle
+            Resim Yükle
           </button>
         </div>
       </div>
@@ -381,13 +381,13 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
               marginBottom: spacing[2],
             }}>
               <User size={14} />
-              Isim
+              İsim
             </label>
             <input
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              placeholder={originalFirstName || "Isminizi girin"}
+              placeholder={originalFirstName || "İsminizi girin"}
               maxLength={50}
               style={{
                 width: "100%",
@@ -438,13 +438,13 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
             marginBottom: spacing[2],
           }}>
             <User size={14} />
-            Kullanici Adi
+            Kullanıcı Adı
           </label>
           <input
             type="text"
             value={username}
             onChange={(e) => handleUsernameChange(e.target.value)}
-            placeholder="Kullanici adinizi girin"
+            placeholder="Kullanıcı adınızı girin"
             maxLength={30}
             style={{
               width: "100%",
@@ -472,13 +472,13 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
               {!usernameError && !checkingUsername && usernameAvailable === true && (
                 <span style={{ display: "flex", alignItems: "center", gap: spacing[1], color: colors.semantic.success }}>
                   <Check size={13} />
-                  Kullanici adi musait
+                  Kullanıcı adı müsait
                 </span>
               )}
             </div>
           )}
           <p style={{ fontSize: typography.fontSize.xs, color: cssVars.textMuted, marginTop: spacing[1] }}>
-            3-30 karakter. Harf, rakam, nokta (.) ve alt tire (_) kullanilabilir.
+            3-30 karakter. Harf, rakam, nokta (.) ve alt tire (_) kullanılabilir.
           </p>
         </div>
 
@@ -521,7 +521,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
               padding: `${spacing[1]} ${spacing[2]}`,
               borderRadius: radius.sm,
             }}>
-              Degistirilemez
+              Değiştirilemez
             </span>
           </div>
         </div>
@@ -563,7 +563,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
           ) : hasProfileChanges ? (
             <>
               <Save size={16} />
-              Degisiklikleri Kaydet
+              Değişiklikleri Kaydet
             </>
           ) : (
             <>

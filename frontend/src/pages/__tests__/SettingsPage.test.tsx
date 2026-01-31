@@ -107,7 +107,7 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
 
     expect(screen.getByText('Profil bilgilerinizi düzenleyin')).toBeInTheDocument();
-    expect(screen.getByText('Profil gizlilik ayarlari')).toBeInTheDocument();
+    expect(screen.getByText('Profil gizlilik ayarları')).toBeInTheDocument();
     expect(screen.getByText('Şifre ve güvenlik ayarları')).toBeInTheDocument();
     expect(screen.getByText('Hesap silme işlemleri')).toBeInTheDocument();
   });

@@ -91,13 +91,13 @@ const PrivacySection = ({ userId }: PrivacySectionProps) => {
       setOriginalGranularSettings({ ...granularSettings });
 
       const labels: Record<PrivacyMode, string> = {
-        HIDDEN: 'Profil gizli yapildi',
-        PUBLIC: 'Profil herkese acik yapildi',
-        PRIVATE: 'Ozel gizlilik ayarlari kaydedildi',
+        HIDDEN: 'Profil gizli yapıldı',
+        PUBLIC: 'Profil herkese açık yapıldı',
+        PRIVATE: 'Özel gizlilik ayarları kaydedildi',
       };
       toast.success(labels[privacyMode]);
     } catch {
-      toast.error('Gizlilik ayari guncellenemedi');
+      toast.error('Gizlilik ayarı güncellenemedi');
     } finally {
       setIsSavingPrivacy(false);
     }
@@ -142,23 +142,23 @@ const PrivacySection = ({ userId }: PrivacySectionProps) => {
           margin: 0,
           marginBottom: spacing[1],
         }}>
-          Gizlilik Ayarlari
+          Gizlilik Ayarları
         </h2>
         <p style={{
           fontSize: typography.fontSize.base,
           color: cssVars.textMuted,
           margin: 0,
         }}>
-          Profilinizin gorunurlugunu yonetin
+          Profilinizin görünürlüğünü yönetin
         </p>
       </div>
 
       {/* Privacy Mode Selector - 3 cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: spacing[3], marginBottom: spacing[6] }}>
         {([
-          { mode: 'HIDDEN' as PrivacyMode, icon: EyeOff, label: 'Gizli', description: 'Profiliniz tamamen gizli. Sadece baglantilariniz gorebilir.' },
-          { mode: 'PUBLIC' as PrivacyMode, icon: Globe, label: 'Herkese Acik', description: 'Profiliniz tum kullanicilar tarafindan gorulebilir.' },
-          { mode: 'PRIVATE' as PrivacyMode, icon: Shield, label: 'Ozel', description: 'Hangi bilgilerin gorunur olacagini secin.' },
+          { mode: 'HIDDEN' as PrivacyMode, icon: EyeOff, label: 'Gizli', description: 'Profiliniz tamamen gizli. Sadece bağlantılarınız görebilir.' },
+          { mode: 'PUBLIC' as PrivacyMode, icon: Globe, label: 'Herkese Açık', description: 'Profiliniz tüm kullanıcılar tarafından görülebilir.' },
+          { mode: 'PRIVATE' as PrivacyMode, icon: Shield, label: 'Özel', description: 'Hangi bilgilerin görünür olacağını seçin.' },
         ]).map(({ mode, icon: Icon, label, description }) => {
           const isSelected = privacyMode === mode;
           return (
@@ -257,7 +257,7 @@ const PrivacySection = ({ userId }: PrivacySectionProps) => {
             margin: 0,
             marginBottom: spacing[2],
           }}>
-            Detayli Ayarlar
+            Detaylı Ayarlar
           </h3>
           <p style={{
             fontSize: typography.fontSize.base,
@@ -265,19 +265,19 @@ const PrivacySection = ({ userId }: PrivacySectionProps) => {
             margin: 0,
             marginBottom: spacing[2],
           }}>
-            Profilinizde hangi bilgilerin gorunecegini secin
+            Profilinizde hangi bilgilerin görüneceğini seçin
           </p>
 
           {([
-            { key: 'showProfilePicture' as keyof GranularPrivacySettings, label: 'Profil Resmi', description: 'Profil resminiz diger kullanicilara gosterilsin' },
-            { key: 'showConnectionCount' as keyof GranularPrivacySettings, label: 'Baglanti Sayisi', description: 'Baglanti sayiniz profilde gorunsun' },
-            { key: 'showOverallProgress' as keyof GranularPrivacySettings, label: 'Genel Ilerleme', description: 'Genel ilerleme yuzdesi ve cubugu gosterilsin' },
-            { key: 'showBoardStats' as keyof GranularPrivacySettings, label: 'Pano Istatistikleri', description: 'Toplam pano sayisi ve durum dagilimi gosterilsin' },
-            { key: 'showListStats' as keyof GranularPrivacySettings, label: 'Liste Istatistikleri', description: 'Toplam ve tamamlanan liste sayisi gosterilsin' },
-            { key: 'showTaskStats' as keyof GranularPrivacySettings, label: 'Gorev Istatistikleri', description: 'Toplam ve tamamlanan gorev sayisi gosterilsin' },
-            { key: 'showSubtaskStats' as keyof GranularPrivacySettings, label: 'Alt Gorev Istatistikleri', description: 'Toplam ve tamamlanan alt gorev sayisi gosterilsin' },
-            { key: 'showTeamBoardStats' as keyof GranularPrivacySettings, label: 'Ekip Panosu Istatistikleri', description: 'Ekip ve bireysel pano sayilari gosterilsin' },
-            { key: 'showTopCategories' as keyof GranularPrivacySettings, label: 'Populer Kategoriler', description: 'En cok kullanilan pano kategorileri gosterilsin' },
+            { key: 'showProfilePicture' as keyof GranularPrivacySettings, label: 'Profil Resmi', description: 'Profil resminiz diğer kullanıcılara gösterilsin' },
+            { key: 'showConnectionCount' as keyof GranularPrivacySettings, label: 'Bağlantı Sayısı', description: 'Bağlantı sayınız profilde görünsün' },
+            { key: 'showOverallProgress' as keyof GranularPrivacySettings, label: 'Genel İlerleme', description: 'Genel ilerleme yüzdesi ve çubuğu gösterilsin' },
+            { key: 'showBoardStats' as keyof GranularPrivacySettings, label: 'Pano İstatistikleri', description: 'Toplam pano sayısı ve durum dağılımı gösterilsin' },
+            { key: 'showListStats' as keyof GranularPrivacySettings, label: 'Liste İstatistikleri', description: 'Toplam ve tamamlanan liste sayısı gösterilsin' },
+            { key: 'showTaskStats' as keyof GranularPrivacySettings, label: 'Görev İstatistikleri', description: 'Toplam ve tamamlanan görev sayısı gösterilsin' },
+            { key: 'showSubtaskStats' as keyof GranularPrivacySettings, label: 'Alt Görev İstatistikleri', description: 'Toplam ve tamamlanan alt görev sayısı gösterilsin' },
+            { key: 'showTeamBoardStats' as keyof GranularPrivacySettings, label: 'Ekip Panosu İstatistikleri', description: 'Ekip ve bireysel pano sayıları gösterilsin' },
+            { key: 'showTopCategories' as keyof GranularPrivacySettings, label: 'Popüler Kategoriler', description: 'En çok kullanılan pano kategorileri gösterilsin' },
           ]).map(({ key, label, description }) => {
             const isOn = granularSettings[key];
             return (

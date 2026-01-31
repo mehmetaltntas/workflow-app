@@ -26,7 +26,7 @@ const SettingsPage = () => {
 
   const menuItems = [
     { id: 'profile' as const, label: 'Profil', icon: User, description: 'Profil bilgilerinizi düzenleyin' },
-    { id: 'privacy' as const, label: 'Gizlilik', icon: Globe, description: 'Profil gizlilik ayarlari' },
+    { id: 'privacy' as const, label: 'Gizlilik', icon: Globe, description: 'Profil gizlilik ayarları' },
     { id: 'security' as const, label: 'Güvenlik', icon: Shield, description: 'Şifre ve güvenlik ayarları' },
     { id: 'account' as const, label: 'Hesap', icon: Trash2, description: 'Hesap silme işlemleri' },
   ];

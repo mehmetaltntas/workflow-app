@@ -33,7 +33,7 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
     if (!canSubmitPassword) return;
 
     setIsSubmittingPassword(true);
-    const loadingToast = toast.loading("Sifre degistiriliyor...");
+    const loadingToast = toast.loading("Şifre değiştiriliyor...");
 
     try {
       await userService.updatePassword(userId, {
@@ -41,16 +41,16 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
         newPassword,
       });
 
-      toast.success("Sifre basariyla degistirildi!", { id: loadingToast });
+      toast.success("Şifre başarıyla değiştirildi!", { id: loadingToast });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: unknown) {
-      console.error("Sifre degistirilemedi:", error);
+      console.error("Şifre değiştirilemedi:", error);
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data || "Sifre degistirilemedi", { id: loadingToast });
+        toast.error(error.response?.data || "Şifre değiştirilemedi", { id: loadingToast });
       } else {
-        toast.error("Sifre degistirilemedi", { id: loadingToast });
+        toast.error("Şifre değiştirilemedi", { id: loadingToast });
       }
     } finally {
       setIsSubmittingPassword(false);
@@ -72,14 +72,14 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
           margin: 0,
           marginBottom: spacing[1],
         }}>
-          Sifre Degistir
+          Şifre Değiştir
         </h2>
         <p style={{
           fontSize: typography.fontSize.base,
           color: cssVars.textMuted,
           margin: 0,
         }}>
-          Hesabiniz icin yeni bir sifre belirleyin
+          Hesabınız için yeni bir şifre belirleyin
         </p>
       </div>
 
@@ -101,14 +101,14 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
             marginBottom: spacing[2],
           }}>
             <Lock size={14} />
-            Mevcut Sifre
+            Mevcut Şifre
           </label>
           <div style={{ position: "relative" }}>
             <input
               type={showCurrentPassword ? "text" : "password"}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Mevcut sifrenizi girin"
+              placeholder="Mevcut şifrenizi girin"
               style={{
                 width: "100%",
                 padding: `${spacing[3]} ${spacing[12]} ${spacing[3]} ${spacing[4]}`,
@@ -151,14 +151,14 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
             marginBottom: spacing[2],
           }}>
             <Lock size={14} />
-            Yeni Sifre
+            Yeni Şifre
           </label>
           <div style={{ position: "relative" }}>
             <input
               type={showNewPassword ? "text" : "password"}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Yeni sifrenizi girin"
+              placeholder="Yeni şifrenizi girin"
               style={{
                 width: "100%",
                 padding: `${spacing[3]} ${spacing[12]} ${spacing[3]} ${spacing[4]}`,
@@ -198,7 +198,7 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
               color: colors.semantic.danger,
             }}>
               <AlertCircle size={14} />
-              Sifre en az 4 karakter olmalidir
+              Şifre en az 4 karakter olmalıdır
             </p>
           )}
         </div>
@@ -215,14 +215,14 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
             marginBottom: spacing[2],
           }}>
             <Lock size={14} />
-            Yeni Sifre (Tekrar)
+            Yeni Şifre (Tekrar)
           </label>
           <div style={{ position: "relative" }}>
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Yeni sifrenizi tekrar girin"
+              placeholder="Yeni şifrenizi tekrar girin"
               style={{
                 width: "100%",
                 padding: `${spacing[3]} ${spacing[12]} ${spacing[3]} ${spacing[4]}`,
@@ -263,7 +263,7 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
               color: colors.semantic.danger,
             }}>
               <AlertCircle size={14} />
-              Sifreler eslesmiyor
+              Şifreler eşleşmiyor
             </p>
           )}
           {confirmPassword && passwordsMatch && isNewPasswordValid && (
@@ -276,7 +276,7 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
               color: colors.semantic.success,
             }}>
               <Check size={14} />
-              Sifreler eslesiyor
+              Şifreler eşleşiyor
             </p>
           )}
         </div>
@@ -312,12 +312,12 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
                   borderRadius: radius.full,
                   animation: "spin 1s linear infinite",
                 }} />
-                Degistiriliyor...
+                Değiştiriliyor...
               </>
             ) : (
               <>
                 <Lock size={16} />
-                Sifreyi Degistir
+                Şifreyi Değiştir
               </>
             )}
           </button>
@@ -342,7 +342,7 @@ const SecuritySection = ({ userId }: SecuritySectionProps) => {
           lineHeight: typography.lineHeight.normal,
         }}>
           <AlertCircle size={18} style={{ flexShrink: 0, marginTop: "2px", color: colors.brand.primary }} />
-          Sifrenizi degistirdikten sonra mevcut oturumunuz devam edecektir. Guvenlik icin tarayicinizi kapatip yeniden giris yapmanizi oneririz.
+          Şifrenizi değiştirdikten sonra mevcut oturumunuz devam edecektir. Güvenlik için tarayıcınızı kapatıp yeniden giriş yapmanızı öneririz.
         </p>
       </div>
     </div>

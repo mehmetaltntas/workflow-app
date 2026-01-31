@@ -27,10 +27,10 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
       if (scheduledAt) {
         const deleteDate = new Date(scheduledAt);
         deleteDate.setDate(deleteDate.getDate() + 30);
-        toast.success(`Hesabiniz ${deleteDate.toLocaleDateString('tr-TR')} tarihinde silinecek`);
+        toast.success(`Hesabınız ${deleteDate.toLocaleDateString('tr-TR')} tarihinde silinecek`);
       }
     } catch {
-      toast.error("Hesap silme zamanlanamadi");
+      toast.error("Hesap silme zamanlanamadı");
     } finally {
       setIsDeletionLoading(false);
     }
@@ -41,9 +41,9 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
     try {
       await userService.cancelDeletion(userId);
       onDeletionScheduled(null);
-      toast.success("Hesap silme islemi iptal edildi");
+      toast.success("Hesap silme işlemi iptal edildi");
     } catch {
-      toast.error("Hesap silme iptali basarisiz");
+      toast.error("Hesap silme iptali başarısız");
     } finally {
       setIsDeletionLoading(false);
     }
@@ -71,7 +71,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
           color: cssVars.textMuted,
           margin: 0,
         }}>
-          Hesabinizi kalici olarak silebilirsiniz
+          Hesabınızı kalıcı olarak silebilirsiniz
         </p>
       </div>
 
@@ -97,7 +97,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
                 fontWeight: typography.fontWeight.semibold,
                 color: colors.semantic.danger,
               }}>
-                Hesabiniz silinmek uzere zamanlandi
+                Hesabınız silinmek üzere zamanlandı
               </span>
             </div>
             <p style={{
@@ -114,7 +114,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
                 const now = new Date();
                 const diffTime = deleteDate.getTime() - now.getTime();
                 const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-                return `Hesabiniz ${diffDays} gun icinde (${deleteDate.toLocaleDateString('tr-TR')}) kalici olarak silinecektir. Bu sure icinde iptal edebilirsiniz.`;
+                return `Hesabınız ${diffDays} gün içinde (${deleteDate.toLocaleDateString('tr-TR')}) kalıcı olarak silinecektir. Bu süre içinde iptal edebilirsiniz.`;
               })()}
             </p>
             <button
@@ -139,7 +139,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
                 if (!isDeletionLoading) e.currentTarget.style.opacity = "1";
               }}
             >
-              {isDeletionLoading ? "Iptal ediliyor..." : "Silme Islemini Iptal Et"}
+              {isDeletionLoading ? "İptal ediliyor..." : "Silme İşlemini İptal Et"}
             </button>
           </div>
         </div>
@@ -158,7 +158,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
               color: cssVars.textMain,
               marginBottom: spacing[2],
             }}>
-              Hesabi Sil
+              Hesabı Sil
             </div>
             <p style={{
               fontSize: typography.fontSize.base,
@@ -167,7 +167,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
               marginBottom: spacing[4],
               lineHeight: typography.lineHeight.normal,
             }}>
-              Hesabinizi sildiginizde 30 gun icinde geri alabilirsiniz. Bu sure sonunda tum verileriniz kalici olarak silinecektir.
+              Hesabınızı sildiğinizde 30 gün içinde geri alabilirsiniz. Bu süre sonunda tüm verileriniz kalıcı olarak silinecektir.
             </p>
 
             {!showDeleteConfirm ? (
@@ -193,7 +193,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
               >
                 <span style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
                   <Trash2 size={16} />
-                  Hesabi Sil
+                  Hesabı Sil
                 </span>
               </button>
             ) : (
@@ -210,7 +210,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
                   margin: 0,
                   marginBottom: spacing[3],
                 }}>
-                  Emin misiniz? Hesabiniz 30 gun sonra kalici olarak silinecektir.
+                  Emin misiniz? Hesabınız 30 gün sonra kalıcı olarak silinecektir.
                 </p>
                 <div style={{ display: "flex", gap: spacing[3] }}>
                   <button
@@ -228,7 +228,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
                       opacity: isDeletionLoading ? 0.6 : 1,
                     }}
                   >
-                    {isDeletionLoading ? "Isleniyor..." : "Evet, Hesabimi Sil"}
+                    {isDeletionLoading ? "İşleniyor..." : "Evet, Hesabımı Sil"}
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
@@ -244,7 +244,7 @@ const AccountSection = ({ userId, deletionScheduledAt, onDeletionScheduled }: Ac
                       cursor: "pointer",
                     }}
                   >
-                    Vazgec
+                    Vazgeç
                   </button>
                 </div>
               </div>
