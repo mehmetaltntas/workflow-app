@@ -385,11 +385,11 @@ export const connectionService = {
     return extractEntity<Connection>(response);
   },
   acceptRequest: async (connectionId: number): Promise<Connection> => {
-    const response = await apiClient.put<Connection>(`/connections/${connectionId}/accept`);
+    const response = await apiClient.patch<Connection>(`/connections/${connectionId}/accept`);
     return extractEntity<Connection>(response);
   },
   rejectRequest: async (connectionId: number): Promise<Connection> => {
-    const response = await apiClient.put<Connection>(`/connections/${connectionId}/reject`);
+    const response = await apiClient.patch<Connection>(`/connections/${connectionId}/reject`);
     return extractEntity<Connection>(response);
   },
   getPendingRequests: async (): Promise<Connection[]> => {
@@ -401,8 +401,8 @@ export const connectionService = {
     return response.data.count;
   },
   getAcceptedConnections: async (): Promise<Connection[]> => {
-    const response = await apiClient.get<{ content: Connection[] }>("/connections/accepted");
-    return response.data.content ?? [];
+    const response = await apiClient.get<PagedResponse<Connection>>("/connections/accepted");
+    return extractCollection<Connection>(response);
   },
   removeConnection: async (connectionId: number): Promise<void> => {
     await apiClient.delete(`/connections/${connectionId}`);
