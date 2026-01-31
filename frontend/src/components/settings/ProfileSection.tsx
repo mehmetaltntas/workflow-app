@@ -207,7 +207,9 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
     }
   }, [userId, username, originalUsername, usernameAvailable, firstName, originalFirstName, lastName, originalLastName, profilePicture, onProfileUpdated]);
 
-  const initials = username.substring(0, 2).toUpperCase();
+  const initials = originalFirstName && originalLastName
+    ? (originalFirstName.charAt(0) + originalLastName.charAt(0)).toUpperCase()
+    : username.substring(0, 2).toUpperCase();
 
   if (isLoadingProfile) {
     return (
