@@ -49,8 +49,8 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
         const user = await userService.getUser(userId);
         setUsername(user.username);
         setOriginalUsername(user.username);
-        setFirstName(user.firstName || "");
-        setLastName(user.lastName || "");
+        setFirstName("");
+        setLastName("");
         setOriginalFirstName(user.firstName || "");
         setOriginalLastName(user.lastName || "");
         setEmail(user.email);
@@ -69,8 +69,8 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
   useEffect(() => {
     setHasProfileChanges(
       username !== originalUsername ||
-      firstName !== originalFirstName ||
-      lastName !== originalLastName
+      (firstName !== "" && firstName !== originalFirstName) ||
+      (lastName !== "" && lastName !== originalLastName)
     );
   }, [username, originalUsername, firstName, originalFirstName, lastName, originalLastName]);
 
@@ -159,11 +159,11 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
         data.username = username;
       }
 
-      if (firstName !== originalFirstName) {
+      if (firstName && firstName !== originalFirstName) {
         data.firstName = firstName;
       }
 
-      if (lastName !== originalLastName) {
+      if (lastName && lastName !== originalLastName) {
         data.lastName = lastName;
       }
 
@@ -190,6 +190,8 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
       if (updatedUser.lastName !== undefined) {
         setOriginalLastName(updatedUser.lastName || "");
       }
+      setFirstName("");
+      setLastName("");
 
       setHasProfileChanges(false);
       toast.success("Profil basariyla guncellendi!", { id: loadingToast });
