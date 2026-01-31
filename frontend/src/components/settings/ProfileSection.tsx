@@ -383,7 +383,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Isminizi girin"
+              placeholder={originalFirstName || "Isminizi girin"}
               maxLength={50}
               style={{
                 width: "100%",
@@ -410,7 +410,7 @@ const ProfileSection = ({ userId, onProfileUpdated }: ProfileSectionProps) => {
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              placeholder="Soyisminizi girin"
+              placeholder={originalLastName || "Soyisminizi girin"}
               maxLength={50}
               style={{
                 width: "100%",
